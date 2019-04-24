@@ -52,25 +52,25 @@ class Pipeline extends Component {
     const view = props.section || props.match.params.section || PIPELINE_SECTION_INPUT
 
     this.state = {
-      view: (view === CONTRACT_SECTION_SETTINGS) ? CONTRACT_SECTION_ENTITY_TYPES : view,
-      showSettings: (view === CONTRACT_SECTION_SETTINGS),
-      showOutput: false,
       fullscreen: false,
+      isNew: props.location.state && props.location.state.isNewContract,
       newContract: null,
       showCancelModal: false,
+      showSettings: (view === CONTRACT_SECTION_SETTINGS),
+      showOutput: false,
       onContractSavedCallback: null,
-      isNew: props.location.state && props.location.state.isNewContract
+      view: (view === CONTRACT_SECTION_SETTINGS) ? CONTRACT_SECTION_ENTITY_TYPES : view
     }
 
-    this.linksCallBack = this.linksCallBack.bind(this)
     this.addNewContract = this.addNewContract.bind(this)
-    this.onSettingsClosed = this.onSettingsClosed.bind(this)
-    this.onSave = this.onSave.bind(this)
-    this.onNewContractCreated = this.onNewContractCreated.bind(this)
+    this.linksCallBack = this.linksCallBack.bind(this)
     this.onCancelContract = this.onCancelContract.bind(this)
+    this.onContracts = this.onContracts.bind(this)
     this.onContractTabSelected = this.onContractTabSelected.bind(this)
     this.onInputHandle = this.onInputHandle.bind(this)
-    this.onContracts = this.onContracts.bind(this)
+    this.onNewContractCreated = this.onNewContractCreated.bind(this)
+    this.onSave = this.onSave.bind(this)
+    this.onSettingsClosed = this.onSettingsClosed.bind(this)
   }
 
   componentDidMount () {
