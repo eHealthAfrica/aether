@@ -58,9 +58,18 @@ class Pipeline extends Component {
       fullscreen: false,
       newContract: null,
       showCancelModal: false,
+      showDeleteModal: false,
       onContractSavedCallback: null,
-      isNew: props.location.state && props.location.state.isNewContract
+      isNew: props.location.state && props.location.state.isNewContract,
+      deleteOptions: {
+        entityTpes: false,
+        schemaDecorations: false,
+        entities: false
+      }
     }
+
+    this.onDeleteContract = this.onDeleteContract.bind(this)
+    this.deleteContract = this.deleteContract.bind(this)
   }
 
   componentDidMount () {
@@ -209,6 +218,7 @@ class Pipeline extends Component {
               isNew={this.state.isNew}
               onSave={this.onSave.bind(this)}
               onNew={this.onNewContractCreated.bind(this)}
+              onDelete={this.onDeleteContract}
             />
           }
           <div className='pipeline-sections'>
@@ -221,6 +231,7 @@ class Pipeline extends Component {
           { this.props.contract && <div className='pipeline-output'><Output /></div> }
         </div>
         { this.renderCancelationModal() }
+        { this.renderDeletionModal() }
       </div>
     )
   }
@@ -244,6 +255,18 @@ class Pipeline extends Component {
       this.props.selectSection(this.state.view === CONTRACT_SECTION_SETTINGS
         ? CONTRACT_SECTION_ENTITY_TYPES : this.state.view)
     }
+  }
+
+  onDeleteContract () {
+    this.setState({
+      showDeleteModal: true
+    })
+  }
+
+  deleteContract () {
+    this.setState({
+      showDeleteModal: false
+    })
   }
 
   renderCancelationModal () {
@@ -281,6 +304,112 @@ class Pipeline extends Component {
 
     return (
       <Modal header={header} buttons={buttons} />
+    )
+  }
+
+  renderDeletionModal () {
+    if (!this.state.showDeleteModal) {
+      return null
+    }
+
+    const header = (
+      <span>
+        <FormattedMessage
+          id='contract.delete.modal.header'
+          defaultMessage='Delete contract '
+        />
+        <span>{this.props.contract.name}</span>
+      </span>
+    )
+
+    const buttons = (
+      <div>
+        <button
+          data-qa='pipeline.delete.contract.cancel'
+          className='btn btn-w'
+          onClick={() => { this.setState({ showDeleteModal: false }) }}>
+          <FormattedMessage
+            id='pipeline.delete.contract.cancel'
+            defaultMessage='Cancel'
+          />
+        </button>
+
+        <button className='btn btn-w btn-primary' onClick={this.deleteContract}>
+          <FormattedMessage
+            id='pipeline.delete.contract.delete'
+            defaultMessage='Delete'
+          />
+        </button>
+      </div>
+    )
+
+    return (
+      <Modal header={header} buttons={buttons}>
+        <label className='title-medium'>
+          <FormattedMessage
+            id='pipeline.delete.modal.message-1'
+            defaultMessage='Include for deletion'
+          />
+        </label>
+        <div style={{ marginLeft: '40px' }}>
+          <input type='checkbox' checked readOnly />
+          <label>
+            <FormattedMessage
+              id='pipeline.delete.modal.all.mappings'
+              defaultMessage='all Mappings in this contract'
+            />
+          </label>
+        </div>
+        <label className='title-medium'>
+          <FormattedMessage
+            id='pipelineList.delete.modal.message-2'
+            defaultMessage='Optionally delete:'
+          />
+        </label>
+        <div style={{ marginLeft: '40px' }}>
+          <input type='checkbox' checked={this.state.deleteOptions.entityTpes}
+            onChange={(e) => {
+              this.setState({
+                deleteOptions: { ...this.state.deleteOptions, entityTpes: e.target.checked }
+              })
+            }}
+          />
+          <label>
+            <FormattedMessage
+              id='pipeline.delete.modal.all.entity-types'
+              defaultMessage='all Entity Types linked to the contract (Schemas)'
+            />
+          </label>
+          <br />
+          <input type='checkbox' checked={this.state.deleteOptions.schemaDecorations}
+            onChange={(e) => {
+              this.setState({
+                deleteOptions: { ...this.state.deleteOptions, schemaDecorations: e.target.checked }
+              })
+            }}
+          />
+          <label>
+            <FormattedMessage
+              id='pipeline.delete.modal.all.schema-decorations'
+              defaultMessage='all Schema Decorations used in this contract'
+            />
+          </label>
+          <br />
+          <input type='checkbox' checked={this.state.deleteOptions.entities}
+            onChange={(e) => {
+              this.setState({
+                deleteOptions: { ...this.state.deleteOptions, entities: e.target.checked }
+              })
+            }}
+          />
+          <label>
+            <FormattedMessage
+              id='pipeline.delete.modal.all.data'
+              defaultMessage='all Data Generated by this contract (Entities)'
+            />
+          </label>
+        </div>
+      </Modal>
     )
   }
 
