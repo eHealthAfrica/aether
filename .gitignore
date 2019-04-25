@@ -5,6 +5,9 @@ __pycache__/
 *$py.class
 *.whl
 
+# TO BE FIXED: temporary wheel file
+!local-setip/pip/dependencies/django_eha_sdk-0.0.0-py2.py3-none-any.whl
+
 # C extensions
 *.so
 
