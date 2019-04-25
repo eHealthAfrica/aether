@@ -344,7 +344,7 @@ class Input extends Component {
 
 const mapStateToProps = ({ pipelines }) => ({
   pipeline: pipelines.currentPipeline,
-  highlight: pipelines.currentContract.highlightSource
+  highlight: pipelines.currentContract && pipelines.currentContract.highlightSource
 })
 const mapDispatchToProps = { updatePipeline }
 

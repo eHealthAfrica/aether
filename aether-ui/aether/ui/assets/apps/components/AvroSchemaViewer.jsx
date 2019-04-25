@@ -26,7 +26,7 @@ import { parseSchema } from '../utils/avro-utils'
 
 class AvroSchemaViewer extends Component {
   getHighlightedClassName (jsonPath) {
-    const { highlight } = this.props
+    const { highlight = {} } = this.props
     // the simplest way (equality)
     // TODO: check that the jsonPath is included in any of the keys,
     // because they can also be "formulas"

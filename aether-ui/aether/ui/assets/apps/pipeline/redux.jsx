@@ -293,8 +293,7 @@ const reducer = (state = INITIAL_STATE, action) => {
         pipelineList: [ newPipeline, ...state.pipelineList ],
 
         currentSection: PIPELINE_SECTION_INPUT,
-        currentPipeline: newPipeline,
-        currentContract: newPipeline.contracts[0]
+        currentPipeline: newPipeline
       }
     }
 
