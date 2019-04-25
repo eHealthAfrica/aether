@@ -17,8 +17,10 @@
 # under the License.
 
 import copy
+import uuid
 
 from django.test import RequestFactory, TestCase
+from rest_framework.serializers import ValidationError
 
 from aether.kernel.api import models, serializers
 
@@ -266,3 +268,45 @@ class SerializersTests(TestCase):
         self.assertTrue(entity_4.is_valid(), entity_4.errors)
         entity_4.save()
         self.assertEqual(entity_2.data['id'], entity_4.data['id'])
+
+        # bulk create
+
+        # bad bulk entity
+        bad_bulk = serializers.EntitySerializer(
+            data=[{
+                'schemadecorator': schemadecorator.data['id'],
+                'status': 'Pending Approval',
+                'payload': {'bad': 'entity'}
+            }],
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertTrue(bad_bulk.is_valid(), bad_bulk.errors)
+        try:
+            bad_bulk.save()
+            self.assertTrue(False), 'This should have raised a ValidationError'
+        except ValidationError:
+            self.assertTrue(True)
+
+        # good bulk
+
+        create_count = 6
+        # make objects
+        payloads = [EXAMPLE_SOURCE_DATA_ENTITY for i in range(create_count)]
+        for pl in payloads:
+            pl.update({'id': str(uuid.uuid4())})
+        data = [
+            {
+                'schemadecorator': schemadecorator.data['id'],
+                'status': 'Pending Approval',
+                'payload': pl
+            } for pl in payloads
+        ]
+        # submit at once
+        bulk_entities = serializers.EntitySerializer(
+            data=data,
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertTrue(bulk_entities.is_valid(), bulk_entities.errors)
+        bulk_entities.save()
