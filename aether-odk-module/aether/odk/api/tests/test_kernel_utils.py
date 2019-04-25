@@ -17,15 +17,15 @@
 # under the License.
 
 import json
-import mock
+from unittest import mock
 import requests
 
 from django.test import override_settings
 
-from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
-
 from . import CustomTestCase, MockResponse
 from ..kernel_utils import (
+    get_kernel_url,
+    get_kernel_auth_header,
     propagate_kernel_project,
     propagate_kernel_artefacts,
     KernelPropagationError,
@@ -38,8 +38,6 @@ class KernelUtilsTest(CustomTestCase):
 
     def setUp(self):
         super(KernelUtilsTest, self).setUp()
-
-        self.kernel_url = get_kernel_server_url()
 
         # create project entry
         self.project = self.helper_create_project()
@@ -57,14 +55,16 @@ class KernelUtilsTest(CustomTestCase):
         self.KERNEL_ID_1 = str(self.xform_1.kernel_id)
         self.KERNEL_ID_2 = str(self.xform_2.kernel_id)
 
-        self.KERNEL_HEADERS = get_auth_header()
-        self.PROJECT_URL = f'{self.kernel_url}/projects/{str(self.project.project_id)}/'
+        self.KERNEL_HEADERS = get_kernel_auth_header()
 
-        self.MAPPING_URL_1 = f'{self.kernel_url}/mappings/{self.KERNEL_ID_1}/'
-        self.SCHEMA_URL_1 = f'{self.kernel_url}/schemas/{self.KERNEL_ID_1}/'
+        self.KERNEL_URL = get_kernel_url()
+        self.PROJECT_URL = f'{self.KERNEL_URL}/projects/{str(self.project.project_id)}/'
 
-        self.MAPPING_URL_2 = f'{self.kernel_url}/mappings/{self.KERNEL_ID_2}/'
-        self.SCHEMA_URL_2 = f'{self.kernel_url}/schemas/{self.KERNEL_ID_2}/'
+        self.MAPPING_URL_1 = f'{self.KERNEL_URL}/mappings/{self.KERNEL_ID_1}/'
+        self.SCHEMA_URL_1 = f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID_1}/'
+
+        self.MAPPING_URL_2 = f'{self.KERNEL_URL}/mappings/{self.KERNEL_ID_2}/'
+        self.SCHEMA_URL_2 = f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID_2}/'
 
         # check that nothing exists already in kernel
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
@@ -89,7 +89,7 @@ class KernelUtilsTest(CustomTestCase):
         requests.delete(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
 
     @mock.patch('aether.odk.api.kernel_utils.request', return_value=MockResponse(status_code=400))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value=None)
+    @mock.patch('aether.odk.api.kernel_utils.get_kernel_auth_header', return_value=None)
     def test__upsert_kernel_artefacts__no_connection(self, mock_auth, mock_patch):
         with self.assertRaises(KernelPropagationError) as kpe:
             upsert_kernel(
@@ -105,7 +105,7 @@ class KernelUtilsTest(CustomTestCase):
 
     @mock.patch('aether.odk.api.kernel_utils.request',
                 return_value=MockResponse(status_code=400))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header',
+    @mock.patch('aether.odk.api.kernel_utils.get_kernel_auth_header',
                 return_value={'Authorization': 'Token ABCDEFGH'})
     def test__upsert_kernel_artefacts__unexpected_error(self, mock_auth, mock_patch):
         with self.assertRaises(KernelPropagationError) as kpe:
@@ -123,14 +123,14 @@ class KernelUtilsTest(CustomTestCase):
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
             method='patch',
-            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/avro-schemas/',
+            url=f'{self.KERNEL_URL}/projects/{str(self.project.project_id)}/avro-schemas/',
             json={'avro_schemas': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
 
     @mock.patch('aether.odk.api.kernel_utils.request',
                 return_value=MockResponse(status_code=200))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header',
+    @mock.patch('aether.odk.api.kernel_utils.get_kernel_auth_header',
                 return_value={'Authorization': 'Token ABCDEFGH'})
     def test__upsert_kernel_artefacts__ok(self, mock_auth, mock_patch):
         self.assertTrue(upsert_kernel(
@@ -141,7 +141,7 @@ class KernelUtilsTest(CustomTestCase):
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
             method='patch',
-            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/avro-schemas/',
+            url=f'{self.KERNEL_URL}/projects/{str(self.project.project_id)}/avro-schemas/',
             json={'avro_schemas': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )

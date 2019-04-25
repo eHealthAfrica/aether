@@ -38,14 +38,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from aether.common.kernel.utils import (
-    get_attachments_url,
-    get_auth_header,
-    get_submissions_url,
-    submit_to_kernel,
-)
-from aether.common.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
-from aether.common.utils import request as exec_request
+from django_eha_sdk.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
+from django_eha_sdk.utils import request as exec_request
 
 from .models import Project, XForm, MediaFile
 from .serializers import (
@@ -55,6 +49,10 @@ from .serializers import (
     XFormSerializer,
 )
 from .kernel_utils import (
+    check_kernel_connection,
+    get_attachments_url,
+    get_kernel_auth_header,
+    get_submissions_url,
     propagate_kernel_project,
     propagate_kernel_artefacts,
     KernelPropagationError,
@@ -455,8 +453,7 @@ def xform_submission(request, *args, **kwargs):
         )
 
     # first of all check if the connection is possible
-    auth_header = get_auth_header()
-    if not auth_header:
+    if not check_kernel_connection():
         return _respond(
             nature=NATURE_SUBMIT_ERROR,
             message=MSG_KERNEL_CONNECTION_ERR,
@@ -564,6 +561,7 @@ def xform_submission(request, *args, **kwargs):
 
     data = parse_submission(data, xform.xml_data)
     submissions_url = get_submissions_url()
+    auth_header = get_kernel_auth_header()
 
     try:
         submission_id = None
@@ -581,9 +579,11 @@ def xform_submission(request, *args, **kwargs):
         # `submission_id`.
         if previous_submissions_count == 0:
             submission_id = None
-            response = submit_to_kernel(
-                submission=data,
-                mappingset_id=str(xform.kernel_id),
+            response = exec_request(
+                method='post',
+                url=submissions_url,
+                json={'payload': data, 'mappingset': str(xform.kernel_id)},
+                headers=auth_header,
             )
             submission_content = response.content.decode('utf-8')
 
