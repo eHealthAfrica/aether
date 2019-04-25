@@ -30,7 +30,6 @@ import PipelineOptions from './PipelineOptions'
 import { selectPipeline } from '../redux'
 
 class PipelineCard extends Component {
-
   onPipelineSelect (pipeline) {
     this.props.selectPipeline(pipeline.id)
     this.props.history.push(`/${pipeline.id}`)
@@ -40,8 +39,8 @@ class PipelineCard extends Component {
     const { pipeline } = this.props
 
     return (
-      <div className='pipeline-preview' style={{ display: 'block'}}>
-        <div style={{ padding: '10px 0', display: 'flow-root'}}>
+      <div className='pipeline-preview' style={{ display: 'block' }}>
+        <div style={{ padding: '10px 0', display: 'flow-root' }}>
           <span className='input-name'>
             // { pipeline.name }
           </span>
@@ -53,7 +52,7 @@ class PipelineCard extends Component {
             <ContractAddButton pipeline={pipeline} history={this.props.history} />
           </div>
         </div>
-        <div style={{ display: 'flex', clear: 'both'}}>
+        <div style={{ display: 'flex', clear: 'both' }}>
           <div
             className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`}
             onClick={this.onPipelineSelect.bind(this, pipeline)}>

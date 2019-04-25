@@ -28,7 +28,7 @@ class PipelineOptions extends Component {
     this.state = {
       show: false
     }
-  } 
+  }
 
   handleClickOutside () {
     this.setState({
@@ -68,8 +68,8 @@ class PipelineOptions extends Component {
               marginTop: '2px'
             }}>
             <ul>
-              <li onClick={() => this.props.rename() }>Rename Pipeline</li>
-              <li onClick={() => this.props.delete() }>Delete Pipeline</li>
+              <li onClick={() => this.props.rename()}>Rename Pipeline</li>
+              <li onClick={() => this.props.delete()}>Delete Pipeline</li>
             </ul>
           </div>
         }

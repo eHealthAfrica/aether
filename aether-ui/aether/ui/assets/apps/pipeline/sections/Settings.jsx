@@ -348,7 +348,7 @@ class Settings extends Component {
 
               <button
                 className='btn btn-d btn-primary btn-big ml-4'
-                onClick={() => this.props.onDelete()} style={{ float: 'right'}}>
+                onClick={() => this.props.onDelete()} style={{ float: 'right' }}>
                 <span className='details-title'>
                   <FormattedMessage
                     id='settings.contract.delete'
