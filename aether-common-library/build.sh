@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -15,7 +17,20 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+set -Eeuo pipefail
 
+# test before building
+flake8 /code/. --config=/code/flake8.cfg
 
-class SubmissionError(Exception):
-    pass
+# remove previous build if needed
+rm -rf dist/*
+rm -rf build
+rm -rf aether.common.egg-info
+
+# create the distribution
+python setup.py bdist_wheel --universal
+
+# remove useless content
+rm -rf build
+rm -rf aether.common.egg-info

@@ -16,14 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from rest_framework.routers import DefaultRouter
+import os
 
-from .views import TestModelViewSet, TestChildModelViewSet, TestUserViewSet
+from django_eha_sdk.conf.settings import *  # noqa
+from django_eha_sdk.conf.settings import INSTALLED_APPS
 
 
-router = DefaultRouter()
-router.register('testmodel', TestModelViewSet)
-router.register('testchildmodel', TestChildModelViewSet)
-router.register('user', TestUserViewSet)
+# Common Configuration
+# ------------------------------------------------------------------------------
 
-urlpatterns = router.urls
+APP_NAME = os.environ.get('APP_NAME', 'aether')
+APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
+
+APP_NAME_HTML = '<b>ae</b>ther'
+APP_FAVICON = 'aether/images/aether.png'
+APP_LOGO = 'aether/images/aether-white.png'
+
+APP_EXTRA_STYLE = 'aether/css/styles.css'
+APP_EXTRA_META = (
+    'A free, open source development platform'
+    ' for data curation, exchange, and publication'
+)
+
+INSTALLED_APPS += ['aether.common', ]  # includes static content
