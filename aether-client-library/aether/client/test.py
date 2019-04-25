@@ -16,12 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from datetime import datetime
-
 from .test_fixtures import *  # noqa
 import bravado
-
-from aether.client import LOG
 
 
 def test_1_check_fixture_creation(client, project, schemas, schemadecorators, mapping):
