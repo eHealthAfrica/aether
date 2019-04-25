@@ -58,7 +58,7 @@ export const makeOptionalField = (field) => {
   return { ...field, type: makeOptionalType(field.type) }
 }
 
-export const deriveEntityTypes = (schema) => {
+export const deriveEntityTypes = (schema, schemaName = null) => {
   const fields = schema.fields.map(makeOptionalField)
   if (!fields.find(field => field.name === 'id')) {
     // DETECTED CONFLICT
@@ -70,15 +70,15 @@ export const deriveEntityTypes = (schema) => {
       type: 'string'
     })
   }
-  return [{ ...schema, fields }]
+  return [{ ...schema, fields, name: schemaName || schema.name }]
 }
 
-export const deriveMappingRules = (schema) => {
+export const deriveMappingRules = (schema, schemaName = null) => {
   const fieldToMappingRule = (field) => {
     return {
       id: generateGUID(),
       source: `$.${field.name}`,
-      destination: `${schema.name}.${field.name}`
+      destination: `${schemaName || schema.name}.${field.name}`
     }
   }
   const rules = schema.fields.map(fieldToMappingRule)
@@ -87,7 +87,7 @@ export const deriveMappingRules = (schema) => {
     rules.push({
       id: generateGUID(),
       source: `#!uuid`,
-      destination: `${schema.name}.id`
+      destination: `${schemaName || schema.name}.id`
     })
   }
   return rules

@@ -68,6 +68,11 @@ $output-nav-width: 10rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    &.new {
+      font-style: italic;
+      padding-right: 2rem;
+    }
   }
 
   .settings-button {
@@ -126,39 +131,39 @@ $output-nav-width: 10rem;
 
 .fullscreen-toggle {
   height: 1.8rem;
-  position: relative;
-  margin-left: 1rem;
   align-items: center;
-  transition: margin-left $transition-speed;
   display: none;
+  position: absolute;
+  bottom: $unit;
+  right: $unit-xl;
 
   &::before,
   &::after {
+    @include shadow-flat-dark;
     font: 1rem $icon-font;
-    padding: .45rem;
+    padding: .5rem;
     position: absolute;
     top: 0;
-    width: 1.8rem;
-    height: 1.8rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: 50%;
+    right: 0;
+    background: $dark-blue;
+    text-align: center;
   }
 
   &::before {
     content: '\f31e'; // fa-expand-arrows-alt
     display: block;
-    left: 0;
   }
 
   &::after {
-    @include shadow-flat-dark;
-
     content: '\f78c'; // fa-compress-arrows-alt
     display: none;
-    right: 1rem;
   }
 
   span {
-    padding: 0 3.2rem 0 2.3rem;
+    padding: 0 2.3rem;
     opacity: 0;
     transition: opacity .2s;
   }
@@ -173,6 +178,15 @@ $output-nav-width: 10rem;
     span {
       opacity: 1;
     }
+  }
+}
+
+.fullscreen.pipeline {
+  top: 0;
+
+  div[class^='pipeline-section__'],
+  .pipeline-output {
+    height: 100vh;
   }
 }
 
@@ -276,7 +290,7 @@ div[class^='pipeline-section__'],
   width: 0;
   height: calc(100vh - #{$navbar-height-xs});
   padding-top: $pipeline-nav-height;
-  transition: width $transition-speed;
+  transition: width $transition-speed, height .4s .5s;
   position: relative;
 }
 
@@ -290,10 +304,6 @@ div[class^='pipeline-section__'],
     .fa-caret-right {
       transform: rotate(90deg);
     }
-  }
-
-  .fullscreen-toggle {
-    display: flex;
   }
 }
 
@@ -350,6 +360,10 @@ div[class^='pipeline-section__'],
 
   div.pipeline-section__entityTypes {
     width: calc(100% - #{$column-width});
+
+    .fullscreen-toggle {
+      display: flex;
+    }
   }
 }
 
@@ -401,6 +415,10 @@ div[class^='pipeline-section__'],
 
   div.pipeline-section__mapping {
     width: calc(100% - #{$column-width}*2);
+
+    .fullscreen-toggle {
+      display: flex;
+    }
   }
 }
 
