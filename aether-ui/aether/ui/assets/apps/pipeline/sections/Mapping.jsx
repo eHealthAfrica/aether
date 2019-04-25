@@ -84,7 +84,11 @@ class Mapping extends Component {
     if (this.props.contract.is_read_only) {
       return
     }
-    this.props.updateContract({ ...this.props.contract, mapping_rules: this.state.mappingRules })
+    this.props.updateContract({
+      ...this.props.contract,
+      mapping_rules: this.state.mappingRules,
+      is_identity: false
+    })
   }
 
   notifyChangeJSON (event) {
@@ -97,7 +101,11 @@ class Mapping extends Component {
 
     try {
       const rules = this.JSONToMapping(this.state.mappingRulesInput)
-      this.props.updateContract({ ...this.props.contract, mapping_rules: rules })
+      this.props.updateContract({
+        ...this.props.contract,
+        mapping_rules: rules,
+        is_identity: false
+      })
     } catch (error) {
       this.setState({ jsonError: error.message })
     }

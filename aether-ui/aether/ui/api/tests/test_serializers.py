@@ -61,7 +61,7 @@ class SerializersTests(TestCase):
         pipeline.save()
 
         self.assertIsNotNone(pipeline.data['project'])
-        self.assertEqual(len(pipeline.data['contracts']), 1, 'Created default contract')
+        self.assertEqual(len(pipeline.data['contracts']), 0, 'Do not create default contract')
 
         # try to update the pipeline
         pipeline_2 = serializers.PipelineSerializer(

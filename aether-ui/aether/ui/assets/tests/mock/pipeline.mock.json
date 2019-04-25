@@ -1,0 +1,211 @@
+{
+  "id": "c0ea9b02-46e6-4088-94a1-631018c99cbd",
+  "contracts": [
+    {
+      "id": "c0ea9b02-46e6-4088-94a1-631018c99cbd",
+      "name": "test-contract",
+      "entity_types": [
+        {
+          "name": "entity-1",
+          "type": "record",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "facility_name",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            {
+              "name": "staff",
+              "type": [
+                "null",
+                {
+                  "name": "Auto_1",
+                  "type": "record",
+                  "fields": [
+                    {
+                      "name": "doctor",
+                      "type": "int"
+                    },
+                    {
+                      "name": "nurse",
+                      "type": "int"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "opening_hour",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            {
+              "name": "patient",
+              "type": [
+                "null",
+                {
+                  "name": "Auto_2",
+                  "type": "record",
+                  "fields": [
+                    {
+                      "name": "patient_id",
+                      "type": "string"
+                    },
+                    {
+                      "name": "name",
+                      "type": "string"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "mapping_rules": [
+        {
+          "id": "ecfd13d6-1659-83c8-bd80-8c2050780976",
+          "source": "$.id",
+          "destination": "entity-1.id"
+        },
+        {
+          "id": "32c44538-fc58-1242-16cc-a5680a2fc1d4",
+          "source": "$.facility_name",
+          "destination": "entity-1.facility_name"
+        },
+        {
+          "id": "810facd8-65e9-3e58-db5d-59fc3711482c",
+          "source": "$.staff",
+          "destination": "entity-1.staff"
+        },
+        {
+          "id": "5e65820f-d755-3523-6ea9-b492404c946e",
+          "source": "$.opening_hour",
+          "destination": "entity-1.opening_hour"
+        },
+        {
+          "id": "4c5fc943-8e41-283b-5c6d-c10ba764d704",
+          "source": "$.patient",
+          "destination": "entity-1.patient"
+        }
+      ],
+      "mapping_errors": [],
+      "output": [
+        {
+          "id": "a5336669-605c-4a65-ab4c-c0318e28115b",
+          "staff": {
+            "nurse": 40,
+            "doctor": 15
+          },
+          "patient": {
+            "name": "Nancy William",
+            "patient_id": "c55021d0-cc34-46ba-ac5b-4cd5bcbde3f9"
+          },
+          "opening_hour": "7AM working days",
+          "facility_name": "Primary Health Care Abuja"
+        }
+      ],
+      "mapping": null,
+      "kernel_refs": null,
+      "published_on": null,
+      "is_active": true,
+      "is_read_only": false,
+      "is_identity": true,
+      "pipeline": "c0ea9b02-46e6-4088-94a1-631018c99cbd",
+      "highlightSource": {
+        "id": 1,
+        "facility_name": 1,
+        "staff": 1,
+        "opening_hour": 1,
+        "patient": 1
+      },
+      "highlightDestination": [
+        "entity-1.id",
+        "entity-1.facility_name",
+        "entity-1.staff",
+        "entity-1.opening_hour",
+        "entity-1.patient"
+      ]
+    }
+  ],
+  "is_read_only": false,
+  "project": "aa63244c-2c28-4876-9672-84c238e4b195",
+  "created": "2019-04-23T10:25:24.779930Z",
+  "modified": "2019-04-23T10:32:07.008989Z",
+  "name": "test-pipeline",
+  "schema": {
+    "name": "testpipeline",
+    "type": "record",
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "facility_name",
+        "type": "string"
+      },
+      {
+        "name": "staff",
+        "type": {
+          "name": "Auto_1",
+          "type": "record",
+          "fields": [
+            {
+              "name": "doctor",
+              "type": "int"
+            },
+            {
+              "name": "nurse",
+              "type": "int"
+            }
+          ]
+        }
+      },
+      {
+        "name": "opening_hour",
+        "type": "string"
+      },
+      {
+        "name": "patient",
+        "type": {
+          "name": "Auto_2",
+          "type": "record",
+          "fields": [
+            {
+              "name": "patient_id",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "input": {
+    "id": "a5336669-605c-4a65-ab4c-c0318e28115b",
+    "staff": {
+      "nurse": 40,
+      "doctor": 15
+    },
+    "patient": {
+      "name": "Nancy William",
+      "patient_id": "c55021d0-cc34-46ba-ac5b-4cd5bcbde3f9"
+    },
+    "opening_hour": "7AM working days",
+    "facility_name": "Primary Health Care Abuja"
+  },
+  "mappingset": null,
+  "isInputReadOnly": false
+}
