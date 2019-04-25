@@ -33,8 +33,8 @@ check_variable "$ADMIN_USERNAME"      "Admin user username (ADMIN_USERNAME)"
 check_variable "$ADMIN_PASSWORD"      "Admin user password (ADMIN_PASSWORD)"
 
 # Aether kernel
-check_variable "$AETHER_KERNEL_URL"   "Aether KERNEL url (AETHER_KERNEL_URL)"
-check_variable "$AETHER_KERNEL_TOKEN" "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
+check_variable "$EXTERNAL_APP_URL_KERNEL"   "Aether KERNEL url (EXTERNAL_APP_URL_KERNEL)"
+check_variable "$EXTERNAL_APP_TOKEN_KERNEL" "Aether KERNEL token (EXTERNAL_APP_TOKEN_KERNEL)"
 
 # App requirements
 check_variable "$DB_NAME"             "Database name (DB_NAME)"

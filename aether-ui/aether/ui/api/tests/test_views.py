@@ -49,7 +49,7 @@ class ViewsTest(TransactionTestCase):
         response = self.client.get(url)
         self.assertEqual(
             response.json(),
-            os.environ.get('AETHER_KERNEL_URL_TEST')
+            os.environ.get('EXTERNAL_APP_URL_TEST_KERNEL')
         )
 
     @mock.patch('aether.ui.api.views.utils.kernel_artefacts_to_ui_artefacts')

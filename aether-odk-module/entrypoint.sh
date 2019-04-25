@@ -146,6 +146,8 @@ function test_coverage {
 
 BACKUPS_FOLDER=/backups
 
+export EXTERNAL_APPS=kernel
+
 case "$1" in
     bash )
         bash
@@ -220,7 +222,7 @@ case "$1" in
     ;;
 
     check_kernel )
-        ./manage.py check_url --url=$AETHER_KERNEL_URL --token=$AETHER_KERNEL_TOKEN
+        ./manage.py check_url --url=$EXTERNAL_APP_URL_KERNEL --token=$EXTERNAL_APP_TOKEN_KERNEL
     ;;
 
     help )
