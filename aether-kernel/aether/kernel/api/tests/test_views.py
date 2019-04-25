@@ -18,7 +18,7 @@
 
 import dateutil.parser
 import json
-import mock
+from unittest import mock
 import uuid
 
 from django.contrib.auth import get_user_model

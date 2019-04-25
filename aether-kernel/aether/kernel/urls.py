@@ -18,7 +18,7 @@
 
 from django.urls import include, path, re_path
 
-from aether.common.conf.urls import generate_urlpatterns
+from django_eha_sdk.conf.urls import generate_urlpatterns
 from aether.kernel.api.views import AetherSchemaView
 
 API_PREFIX = '^(?P<version>v1)'
