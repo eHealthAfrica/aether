@@ -56,7 +56,7 @@ class Pipeline extends Component {
         entityTpes: false,
         schemaDecorations: false,
         entities: false
-      }
+      },
       fullscreen: false,
       isNew: props.location.state && props.location.state.isNewContract,
       newContract: null,

@@ -340,6 +340,7 @@ class Settings extends Component {
           { !contract.is_read_only &&
             <div style={{ display: 'inline' }}>
               <button
+                id='settings-contract-save'
                 className='btn btn-d btn-primary btn-big ml-4'
                 onClick={() => this.onSave(contract)}>
                 <span className='details-title'>

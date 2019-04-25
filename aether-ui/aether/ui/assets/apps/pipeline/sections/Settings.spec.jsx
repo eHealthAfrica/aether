@@ -153,7 +153,7 @@ describe('Pipeline Settings Component', () => {
     expect(settings.state().isIdentity).toBeTruthy()
 
     expect(component.find('Modal').exists()).toBeFalsy()
-    const saveButton = component.find('button[className="btn btn-d btn-primary btn-big ml-4"]')
+    const saveButton = component.find('button[id="settings-contract-save"]')
     saveButton.simulate('click')
 
     expect(component.find('Modal').exists()).toBeTruthy()
@@ -197,7 +197,7 @@ describe('Pipeline Settings Component', () => {
 
     const settings = component.find('Settings').instance()
     jest.spyOn(settings, 'performSave')
-    const saveButton = component.find('button[className="btn btn-d btn-primary btn-big ml-4"]')
+    const saveButton = component.find('button[id="settings-contract-save"]')
     saveButton.simulate('click')
 
     expect(component.find('Modal').exists()).toBeFalsy()
@@ -230,7 +230,7 @@ describe('Pipeline Settings Component', () => {
 
     const settings = component.find('Settings').instance()
     jest.spyOn(settings, 'performSave')
-    const saveButton = component.find('button[className="btn btn-d btn-primary btn-big ml-4"]')
+    const saveButton = component.find('button[id="settings-contract-save"]')
     saveButton.simulate('click')
 
     expect(component.find('Modal').exists()).toBeFalsy()
