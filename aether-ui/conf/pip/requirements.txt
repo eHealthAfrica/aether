@@ -13,6 +13,8 @@
 ################################################################################
 
 aether.common
+django-eha-sdk
+
 certifi==2019.3.9
 chardet==3.0.4
 coverage==4.5.3
@@ -22,19 +24,16 @@ django-cors-headers==2.5.2
 django-debug-toolbar==1.11
 django-model-utils==3.1.2
 django-prometheus==1.0.15
-django-ums-client==0.2.6
 django-uwsgi==0.2.2
 django-webpack-loader==0.6.0
 djangorestframework==3.9.2
 drf-dynamic-fields==0.3.1
 entrypoints==0.3
 flake8==3.7.7
-flake8-quotes==2.0.0
+flake8-quotes==2.0.1
 idna==2.8
 lxml==4.3.3
 mccabe==0.6.1
-mock==2.0.0
-pbr==5.1.3
 prometheus-client==0.6.0
 psycopg2-binary==2.8.2
 pycodestyle==2.5.0
@@ -44,7 +43,7 @@ python-cas==1.4.0
 python-json-logger==0.1.11
 pytz==2019.1
 requests==2.21.0
-sentry-sdk==0.7.10
+sentry-sdk==0.7.12
 six==1.12.0
 sqlparse==0.3.0
 tblib==1.3.2

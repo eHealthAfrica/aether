@@ -16,7 +16,8 @@
 # Main libraries
 
 # Aether common library with extras
-aether.common[cas,server,storage,test]
+aether.common
+django_eha_sdk[cas,server,storage,test]
 
 
 # Django specific
