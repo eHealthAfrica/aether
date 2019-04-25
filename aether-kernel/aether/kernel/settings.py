@@ -21,8 +21,8 @@
 
 import os
 
-from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import (
+from aether.common.settings import *  # noqa
+from aether.common.settings import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
     REST_FRAMEWORK,

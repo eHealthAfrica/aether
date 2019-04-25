@@ -21,8 +21,8 @@ import os
 # Common settings
 # ------------------------------------------------------------------------------
 
-from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, MIGRATION_MODULES
+from aether.common.settings import *  # noqa
+from aether.common.settings import INSTALLED_APPS, MIGRATION_MODULES
 
 
 # Sync Configuration

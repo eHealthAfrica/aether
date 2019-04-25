@@ -19,8 +19,8 @@
 # Common settings
 # ------------------------------------------------------------------------------
 
-from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import (
+from aether.common.settings import *  # noqa
+from aether.common.settings import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
     check_storage,
@@ -35,9 +35,7 @@ ROOT_URLCONF = 'aether.odk.urls'
 # Allow cors for all origins but only for the submission endpoint
 CORS_URLS_REGEX = r'^/submission/.*$'
 
-INSTALLED_APPS += [
-    'aether.odk',
-]
+INSTALLED_APPS += ['aether.odk', ]
 
 MULTITENANCY_MODEL = 'odk.Project'
 MIGRATION_MODULES['odk'] = 'aether.odk.api.migrations'
