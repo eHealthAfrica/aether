@@ -16,8 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime
+
 from .test_fixtures import *  # noqa
 import bravado
+
+from aether.client import LOG
 
 
 def test_1_check_fixture_creation(client, project, schemas, schemadecorators, mapping):
@@ -45,8 +49,21 @@ def test_4_iterate_schemas(client, schemas):
     assert(len(_schemas) == len(schemas))
 
 
+def test_5_make_entites(client, single_entities, bulk_entities):
+    single = single_entities(1)
+    assert(single is not None)
+    many = bulk_entities(10)
+    assert(many is not None)
+    entities = client.entities.paginated('list')
+    i = 0
+    for e in entities:
+        print(e)
+        i += 1
+    assert(i == 11)
+
+
 # After this point, the artifacts we cached are invalidated.
-def test_5_update_project(client):
+def test_6_update_project(client):
     project = client.projects.first('list')
     new_name = 'a new name'
     project.name = new_name
@@ -55,7 +72,7 @@ def test_5_update_project(client):
     assert(project.name == new_name)
 
 
-def test_6_update_project_partial(client, project):
+def test_7_update_project_partial(client, project):
     new_name = 'yet another new name'
     pkg = {'name': new_name}
     client.projects.partial_update(id=project.id, data=pkg)
