@@ -5,7 +5,7 @@
   <mediaFile>
     <filename>{{ media_file.name }}</filename>
     <hash>{{ media_file.hash }}</hash>
-    <downloadUrl>{{ media_file.media_file.url }}</downloadUrl>
+    <downloadUrl>{{ media_file.download_url }}</downloadUrl>
   </mediaFile>
   {% endfor %}
 </manifest>
