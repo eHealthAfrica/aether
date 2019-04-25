@@ -69,19 +69,42 @@
   margin-bottom: 4rem;
 }
 
-.pipeline-preview {
+.pipeline-previews {
   border-top: 1px dashed rgba($white, .2);
+}
+
+.pipeline-preview {
   display: flex;
-  padding: 1.4rem 0;
+  flex-wrap: wrap;
+  position: relative;
+  padding: 1rem;
+  margin-top: 1.4rem;
+  background: rgba($background-color, .2);
+  border-radius: $border-radius;
+}
+
+.preview-heading {
+  width: 100%;
+  padding-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.pipeline-name {
+  font-weight: 300;
+  font-size: $font-size-l;
+}
+
+.pipeline-actions {
+  margin-left: auto;
+  display: flex;
 }
 
 .preview-input {
-  background: rgba($background-color, .2);
-  padding: 1rem;
-  border-radius: $border-radius;
+  @include card;
   margin-right: .8rem;
   width: 25%;
-  transition: box-shadow .5s, background .5s;
+  transition: box-shadow .5s;
 
   .badge {
     margin-left: 0;
@@ -89,13 +112,13 @@
 
   &:hover {
     cursor: pointer;
-    background: rgba($background-color, .3);
-    box-shadow: 1px 1px 2px $shadow-color;
+    box-shadow: 3px 3px 5px rgba($text-color, .4), -1px -1px 1px $light-grey inset;
+    background: $background-color;
   }
 }
 
 .pipeline-readonly {
-  @include stripy(rgba($light-grey, .2), rgba($white, .3));
+  @include stripy(rgba($white, 1), rgba($background-color, 1));
 
   .tag {
     position: relative;
@@ -104,10 +127,12 @@
 }
 
 .input-heading {
-  font-size: $font-size-m;
+  font-size: $font-size-standard;
   font-weight: 300;
+  font-style: italic;
   display: flex;
   align-items: center;
+  color: $grey;
 
   .input-name {
     word-wrap: break-word;
@@ -115,17 +140,28 @@
     max-width: calc(100% - 1rem - 1rem - 1.8rem);
     line-height: 1.3em;
   }
+
+  .badge {
+    color: $white;
+    background: $grey;
+  }
 }
 
 .preview-contracts {
-  width: 75%;
+  flex: 1;
 }
 
 .preview-contract {
   @include card;
+  background: rgba($mid-blue, .8);
+  color: $white;
   margin-bottom: .8rem;
   position: relative;
   transition: box-shadow .5s;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 
   .contract-heading {
     display: flex;
@@ -133,7 +169,7 @@
   }
 
   .contract-name {
-    color: $action-color;
+    color: $action-color-b;
     font-weight: 300;
     font-size: $font-size-xl;
     margin-bottom: .5rem;
@@ -143,22 +179,22 @@
     min-width: 0;
   }
 
-  &:hover {
-    cursor: pointer;
-    box-shadow: 3px 3px 5px rgba($text-color, .4), -1px -1px 1px $light-grey inset;
-    background: $background-color;
-
-    .contract-name {
-      color: darken($hover-color, 10);
-    }
-  }
-
   &.pipeline-readonly {
-    @include stripy(rgba($white, .8), $white);
+    @include stripy(rgba($mid-blue, .8), rgba($mid-blue, 1));
 
     .tag {
       position: relative;
       top: -.2rem;
+    }
+  }
+
+  &:hover {
+    cursor: pointer;
+    box-shadow: 3px 3px 5px rgba($text-color, .4);
+    background: rgba($mid-blue, 1);
+
+    .contract-name {
+      color: lighten($hover-color, 10);
     }
   }
 }
@@ -197,7 +233,7 @@
 
 .contract-publish {
   padding-top: 1rem;
-  border-top: 1px dotted $grey;
+  border-top: 1px dotted rgba($grey, .5);
   width: 100%;
   display: flex;
   align-items: baseline;

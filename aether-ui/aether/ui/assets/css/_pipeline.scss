@@ -81,13 +81,6 @@ $output-nav-width: 10rem;
     margin-left: 2rem;
     display: none;
 
-    i {
-      box-shadow: none;
-      width: 1.6rem;
-      height: 1.6rem;
-      padding: .3em;
-    }
-
     &.active {
       color: $white;
     }

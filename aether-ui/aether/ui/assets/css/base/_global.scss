@@ -59,6 +59,8 @@ small {
   background: rgba($grey, .1);
   border-radius: $font-size-standard;
   padding: .3rem .6rem;
+  min-height: 1.8rem;
+  min-width: 1.8rem;
   font-weight: 300;
   font-size: $font-size-standard;
   margin: 0 .4em;
@@ -201,6 +203,26 @@ select:-webkit-autofill {
     position: absolute;
     left: 1.8rem;
     top: -6px;
+  }
+}
+
+.options {
+  @include card;
+  box-shadow: 2px 2px 3px rgba($text-color, .5);
+  position: absolute;
+  margin: -5px 0 0 -5px;
+  padding:.6em 0;
+  z-index: 3;
+  min-width: 190px;
+  list-style: none;
+
+  li {
+    padding: .3em 1em;
+    cursor: pointer;
+    &:hover {
+      color: $action-color;
+      cursor: pointer;
+    }
   }
 }
 

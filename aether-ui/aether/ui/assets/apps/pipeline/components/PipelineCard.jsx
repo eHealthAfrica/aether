@@ -39,12 +39,12 @@ class PipelineCard extends Component {
     const { pipeline } = this.props
 
     return (
-      <div className='pipeline-preview' style={{ display: 'block' }}>
-        <div style={{ padding: '10px 0', display: 'flow-root' }}>
-          <span className='input-name'>
+      <div className='pipeline-preview'>
+        <div className='preview-heading'>
+          <span className='pipeline-name'>
             // { pipeline.name }
           </span>
-          <div style={{ float: 'right' }}>
+          <div className='pipeline-actions'>
             <PipelineOptions
               rename={this.props.rename}
               delete={this.props.delete}
@@ -52,41 +52,41 @@ class PipelineCard extends Component {
             <ContractAddButton pipeline={pipeline} history={this.props.history} />
           </div>
         </div>
-        <div style={{ display: 'flex', clear: 'both' }}>
-          <div
-            className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`}
-            onClick={this.onPipelineSelect.bind(this, pipeline)}>
-            { pipeline.isInputReadOnly &&
-              <span className='tag'>
-                <FormattedMessage
-                  id='pipeline.card.read-only'
-                  defaultMessage='read-only'
-                />
-              </span>
-            }
 
-            <div className='input-heading'>
-              <span className='badge badge-c badge-big'>
-                <i className='fas fa-file fa-sm' />
-              </span>
-              <span className='input-name'>
-                { pipeline.name } { pipeline.mappingset && <PipelineInfoButton pipeline={pipeline} /> }
-              </span>
-            </div>
-          </div>
+        <div
+          className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`}
+          onClick={this.onPipelineSelect.bind(this, pipeline)}>
+          { pipeline.isInputReadOnly &&
+            <span className='tag'>
+              <FormattedMessage
+                id='pipeline.card.read-only'
+                defaultMessage='read-only'
+              />
+            </span>
+          }
 
-          <div className='preview-contracts'>
-            {
-              pipeline.contracts.map(contract => (
-                <ContractCard
-                  key={contract.id}
-                  contract={contract}
-                  history={this.props.history}
-                />
-              ))
-            }
+          <div className='input-heading'>
+            <span className='badge badge-c'>
+              <i className='fas fa-file' />
+            </span>
+            <span className='input-name'>
+              { pipeline.name } { pipeline.mappingset && <PipelineInfoButton pipeline={pipeline} /> }
+            </span>
           </div>
         </div>
+
+        <div className='preview-contracts'>
+          {
+            pipeline.contracts.map(contract => (
+              <ContractCard
+                key={contract.id}
+                contract={contract}
+                history={this.props.history}
+              />
+            ))
+          }
+        </div>
+
       </div>
     )
   }

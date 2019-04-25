@@ -184,16 +184,18 @@ class Pipeline extends Component {
                 defaultMessage='Pipelines'
               />
             </Link>
-            <span> // </span>
-            { pipeline.name }
-            { pipeline.isInputReadOnly &&
-              <span className='tag'>
-                <FormattedMessage
-                  id='pipeline.navbar.read-only'
-                  defaultMessage='read-only'
-                />
-              </span>
-            }
+            <span className='breadcrumb-pipeline-name'>
+              <span>// </span>
+              { pipeline.name }
+              { pipeline.isInputReadOnly &&
+                <span className='tag'>
+                  <FormattedMessage
+                    id='pipeline.navbar.read-only'
+                    defaultMessage='read-only'
+                  />
+                </span>
+              }
+            </span>
           </div>
         </NavBar>
 
@@ -476,7 +478,7 @@ class Pipeline extends Component {
         <div
           className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
           onClick={() => { this.toggleSettings() }}>
-          <i className='fas fa-ellipsis-h' />
+          <i className='fas fa-wrench' />
         </div>
       </div>
     ))

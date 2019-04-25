@@ -44,34 +44,21 @@ class PipelineOptions extends Component {
 
   render () {
     return (
-      <div style={{ position: 'relative', display: 'inline-block' }}>
+      <div>
         <button
           type='button'
-          className='btn btn-c'
+          className='btn btn-c btn-square mr-2'
           onClick={this.toggle.bind(this)}>
           <span className='details-title'>
             <i className='fas fa-ellipsis-h' />
           </span>
         </button>
         {
-          this.state.show && <div
-            style={{
-              background: '#fff',
-              padding: '10px',
-              cornerRadius: '5px',
-              color: '#000',
-              position: 'absolute',
-              zIndex: 3,
-              minWidth: '190px',
-              borderRadius: '5px',
-              boxShadow: '2px 2px 5px 1px rgba(0,0,0,0.5)',
-              marginTop: '2px'
-            }}>
-            <ul>
-              <li onClick={() => this.props.rename()}>Rename Pipeline</li>
-              <li onClick={() => this.props.delete()}>Delete Pipeline</li>
-            </ul>
-          </div>
+          this.state.show && <ul
+            className='options'>
+            <li onClick={() => this.props.rename()}>Rename Pipeline</li>
+            <li onClick={() => this.props.delete()}>Delete Pipeline</li>
+          </ul>
         }
       </div>
     )

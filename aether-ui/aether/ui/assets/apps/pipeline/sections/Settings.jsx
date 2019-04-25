@@ -352,7 +352,7 @@ class Settings extends Component {
               </button>
 
               <button
-                className='btn btn-d btn-primary btn-big ml-4'
+                className='btn btn-d btn-red btn-big ml-4'
                 onClick={() => this.props.onDelete()} style={{ float: 'right' }}>
                 <span className='details-title'>
                   <FormattedMessage
