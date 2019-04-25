@@ -319,6 +319,16 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
     def media_file_url(self):
         return self.media_file.url
 
+    @property
+    def download_url(self):
+        # include "response-content-disposition" as part of the query string
+        # required for AWS and minio storage system
+        # https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html
+        url = self.media_file_url
+        qs_ch = '?' if '?' not in url else '&'
+        header = 'response-content-disposition=attachment%3B%20filename%3D'
+        return f'{url}{qs_ch}{header}{self.name}'
+
     def save(self, *args, **kwargs):
         # calculate hash
         md5hash = md5()

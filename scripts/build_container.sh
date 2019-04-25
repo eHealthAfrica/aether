@@ -38,3 +38,5 @@ if [[ $1 == "kernel" ]]
 then
     create_readonly_user
 fi
+
+./scripts/clean_all.sh
