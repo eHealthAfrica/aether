@@ -18,85 +18,259 @@
  * under the License.
  */
 
-/* global describe, expect, it, jest */
+/* global describe, it, expect, beforeEach, jest */
 
 import React from 'react'
+import { createStore, applyMiddleware } from 'redux'
+import { Provider } from 'react-redux'
 import { mountWithIntl } from 'enzyme-react-intl'
+import nock from 'nock'
 
-import Modal from '../../components/Modal'
-import { IdentityMapping } from './Settings'
+import Settings from './Settings'
+import { mockPipeline } from '../../../tests/mock'
+import middleware from '../../redux/middleware'
+import reducer from '../../redux/reducers'
+import { contractChanged } from '../redux'
 
-const schema = {
-  type: 'record',
-  name: 'Test',
-  fields: [
-    {
-      name: 'a',
-      type: ['null', 'string']
+describe('Pipeline Settings Component', () => {
+  let store
+  const initialState = {
+    pipelines: {
+      currentPipeline: mockPipeline
     }
-    // there is no "id" field !!!
-  ]
-}
+  }
+  const onClose = jest.fn()
+  const onSave = jest.fn()
+  const onNew = jest.fn()
 
-const contract = {
-  is_read_only: false
-}
-
-describe('IdentityMapping component', () => {
-  it('triggers pipeline updates and closes modal', () => {
-    const updateContractMock = jest.fn()
-    const component = mountWithIntl(
-      <IdentityMapping
-        inputSchema={schema}
-        contract={contract}
-        updateContract={updateContractMock}
-      />
+  beforeEach(() => {
+    // create a new store instance for each test
+    store = createStore(
+      reducer,
+      initialState,
+      applyMiddleware(...middleware)
     )
-
-    expect(component.find(Modal).length).toEqual(0)
-    global.findByDataQa(component, 'contract.identity.button.apply').simulate('click')
-    expect(component.find(Modal).length).toEqual(1)
-    global.findByDataQa(component, 'contract.identity.button.confirm').simulate('click')
-    expect(component.find(Modal).length).toEqual(0)
-
-    expect(updateContractMock).toHaveBeenCalledTimes(1)
-
-    const {
-      mapping_rules: mappingRules,
-      entity_types: entityTypes
-    } = updateContractMock.mock.calls[0][0]
-
-    expect(mappingRules[0].source).toEqual('$.a')
-    expect(mappingRules[0].destination).toEqual('Test.a')
-
-    // added the "id" rule
-    expect(mappingRules[1].source).toEqual('#!uuid')
-    expect(mappingRules[1].destination).toEqual('Test.id')
-
-    expect(entityTypes.length).toEqual(1) // only one Entity Type
-    expect(entityTypes[0]).toEqual({
-      type: 'record',
-      name: 'Test',
-      fields: [
-        {
-          name: 'a',
-          type: ['null', 'string']
-        },
-        {
-          name: 'id',
-          type: 'string'
-        }
-      ]
-    })
   })
 
-  it('opens modal', () => {
+  it('should render the settings component', () => {
     const component = mountWithIntl(
-      <IdentityMapping inputSchema={schema} contract={contract} />
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          onSave={onSave}
+          onNew={onNew}
+        />
+      </Provider>
     )
+    expect(component.find('Settings').exists()).toBeTruthy()
+    expect(store.getState().pipelines.currentContract)
+      .toEqual(undefined)
+  })
 
-    expect(component.find(Modal).length).toEqual(0)
-    global.findByDataQa(component, 'contract.identity.button.apply').simulate('click')
-    expect(component.find(Modal).length).toEqual(1)
+  it('should render the settings of selected contract', () => {
+    const selectedContract = mockPipeline.contracts[0]
+    store.dispatch(contractChanged(selectedContract))
+    const component = mountWithIntl(
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          onSave={onSave}
+          onNew={onNew}
+        />
+      </Provider>
+    )
+    expect(component.find('[className="input-d contract-name"]')
+      .html()).toContain(`value="${selectedContract.name}"`)
+  })
+
+  it('should render the settings with a new contract', () => {
+    mountWithIntl(
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          isNew
+          onSave={onSave}
+          onNew={onNew}
+        />
+      </Provider>
+    )
+    expect(store.getState().pipelines.currentContract.name)
+      .toEqual('Contract 0')
+  })
+
+  it('should toggle identity mapping', () => {
+    const component = mountWithIntl(
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          isNew
+          onSave={onSave}
+          onNew={onNew}
+        />
+      </Provider>
+    )
+    expect(component.find('Settings').exists()).toBeTruthy()
+    const settings = component.find('Settings')
+
+    expect(settings.state().isIdentity).toBeFalsy()
+    expect(component.find('[id="settings.contract.identity.name"]')
+      .exists()).toBeFalsy()
+
+    const identityMappingToggle = component.find('input[id="toggle"]')
+    identityMappingToggle.simulate('change', { target: { checked: true } })
+    expect(settings.state().isIdentity).toBeTruthy()
+
+    expect(component.find('[id="settings.contract.identity.name"]')
+      .exists()).toBeTruthy()
+
+    identityMappingToggle.simulate('change', { target: { checked: false } })
+    expect(settings.state().isIdentity).toBeFalsy()
+    expect(component.find('[id="settings.contract.identity.name"]')
+      .exists()).toBeFalsy()
+  })
+
+  it('should render identity mapping warning', () => {
+    nock('http://localhost')
+      .post(`/api/contracts/`)
+      .reply(200, (_, reqBody) => {
+        return reqBody
+      })
+    const component = mountWithIntl(
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          isNew
+          onSave={onSave}
+          onNew={onNew}
+        />
+      </Provider>
+    )
+    expect(component.find('Settings').exists()).toBeTruthy()
+    const settings = component.find('Settings')
+
+    const identityMappingToggle = component.find('input[id="toggle"]')
+    identityMappingToggle.simulate('change', { target: { checked: true } })
+    expect(settings.state().isIdentity).toBeTruthy()
+
+    expect(component.find('Modal').exists()).toBeFalsy()
+    const saveButton = component.find('button[className="btn btn-d btn-primary btn-big ml-4"]')
+    saveButton.simulate('click')
+
+    expect(component.find('Modal').exists()).toBeTruthy()
+
+    const modalCancelButton = component.find('button[id="settings.identity.modal.cancel"]')
+    modalCancelButton.simulate('click')
+    expect(component.find('Modal').exists()).toBeFalsy()
+
+    saveButton.simulate('click')
+    expect(component.find('Modal').exists()).toBeTruthy()
+
+    const modalYesButton = component.find('button[id="settings.identity.modal.yes"]')
+    modalYesButton.simulate('click')
+    expect(component.find('Modal').exists()).toBeFalsy()
+  })
+
+  it('should save and close settings without warning', () => {
+    const selectedContract = mockPipeline.contracts[0]
+    let expectedContract
+    nock('http://localhost')
+      .put(`/api/contracts/${selectedContract.id}/`)
+      .reply(200, (_, reqBody) => {
+        expectedContract = reqBody
+        return reqBody
+      })
+
+    store.dispatch(contractChanged(selectedContract))
+    const component = mountWithIntl(
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          onSave={onSave}
+          onNew={onNew}
+        />
+      </Provider>
+    )
+    expect(component.find('Modal').exists()).toBeFalsy()
+
+    const inputContractName = component.find('input[className="input-d contract-name"]')
+    inputContractName.simulate('change', { target: { value: 'contract-updated' } })
+
+    const settings = component.find('Settings').instance()
+    jest.spyOn(settings, 'performSave')
+    const saveButton = component.find('button[className="btn btn-d btn-primary btn-big ml-4"]')
+    saveButton.simulate('click')
+
+    expect(component.find('Modal').exists()).toBeFalsy()
+    expect(settings.performSave).toHaveBeenCalledWith(expectedContract)
+  })
+
+  it('should save and close settings without warning on a new contract', () => {
+    let expectedContract
+    nock('http://localhost')
+      .post(`/api/contracts/`)
+      .reply(200, (_, reqBody) => {
+        expectedContract = reqBody
+        return reqBody
+      })
+
+    const component = mountWithIntl(
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          onSave={onSave}
+          onNew={onNew}
+          isNew
+        />
+      </Provider>
+    )
+    expect(component.find('Modal').exists()).toBeFalsy()
+
+    const inputContractName = component.find('input[className="input-d contract-name"]')
+    inputContractName.simulate('change', { target: { value: 'new-contract-updated' } })
+
+    const settings = component.find('Settings').instance()
+    jest.spyOn(settings, 'performSave')
+    const saveButton = component.find('button[className="btn btn-d btn-primary btn-big ml-4"]')
+    saveButton.simulate('click')
+
+    expect(component.find('Modal').exists()).toBeFalsy()
+    expect(settings.performSave).toHaveBeenCalledWith(expectedContract)
+  })
+
+  it('should create a new contract while an existing contract is selected', () => {
+    const component = mountWithIntl(
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          onSave={onSave}
+          onNew={onNew}
+        />
+      </Provider>
+    )
+    const settingInstance = component.find('Settings').instance()
+    jest.spyOn(settingInstance, 'createNewContract')
+    component.setProps({ children: <Settings
+      onClose={onClose}
+      onSave={onSave}
+      onNew={onNew}
+      isNew
+    /> })
+    expect(settingInstance.createNewContract).toBeCalled()
+  })
+
+  it('should close the settings component', () => {
+    const component = mountWithIntl(
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          onSave={onSave}
+          onNew={onNew}
+        />
+      </Provider>
+    )
+    const cancelButton = component.find('button[id="pipeline.settings.cancel.button"]')
+    cancelButton.simulate('click')
+
+    expect(onClose).toBeCalled()
   })
 })

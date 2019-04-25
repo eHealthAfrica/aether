@@ -113,6 +113,10 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(media.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
         self.assertEqual(media.hash, 'md5:e2fc714c4727ee9395f324cd2e7f331f')
         self.assertEqual(media.media_file_url, media.media_file.url)
+        self.assertEqual(
+            media.download_url,
+            f'{media.media_file_url}?response-content-disposition=attachment%3B%20filename%3D{media.name}'
+        )
         # with media files there is manifest_url
         self.assertEqual(xform.manifest_url,
                          '/forms/{}/manifest.xml?version={}'.format(xform.id, xform.version))

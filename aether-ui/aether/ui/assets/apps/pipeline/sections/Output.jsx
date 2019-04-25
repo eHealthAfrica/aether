@@ -64,8 +64,8 @@ class Output extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  errors: pipelines.currentContract.mapping_errors || [],
-  output: pipelines.currentContract.output || []
+  errors: (pipelines.currentContract && pipelines.currentContract.mapping_errors) || [],
+  output: (pipelines.currentContract && pipelines.currentContract.output) || []
 })
 const mapDispatchToProps = {}
 
