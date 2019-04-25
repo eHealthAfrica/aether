@@ -17,14 +17,14 @@
 # under the License.
 
 import json
-import mock
+from unittest import mock
 import requests
 
 from django.test import TestCase, override_settings
 
-from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
-
 from ..kernel_utils import (
+    get_kernel_auth_header,
+    get_kernel_url,
     propagate_kernel_project,
     propagate_kernel_artefacts,
     KernelPropagationError,
@@ -41,7 +41,7 @@ class KernelUtilsTest(TestCase):
     def setUp(self):
         super(KernelUtilsTest, self).setUp()
 
-        self.kernel_url = get_kernel_server_url()
+        self.kernel_url = get_kernel_url()
 
         # create project entry
         self.project = Project.objects.create(name='sample')
@@ -70,7 +70,7 @@ class KernelUtilsTest(TestCase):
         self.KERNEL_ID_1 = str(self.schema_1.kernel_id)
         self.KERNEL_ID_2 = str(self.schema_2.kernel_id)
 
-        self.KERNEL_HEADERS = get_auth_header()
+        self.KERNEL_HEADERS = get_kernel_auth_header()
         self.PROJECT_URL = f'{self.kernel_url}/projects/{str(self.project.project_id)}/'
 
         self.MAPPING_URL_1 = f'{self.kernel_url}/mappings/{self.KERNEL_ID_1}/'
@@ -102,7 +102,7 @@ class KernelUtilsTest(TestCase):
         requests.delete(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
 
     @mock.patch('aether.sync.api.kernel_utils.request', return_value=MockResponse(status_code=400))
-    @mock.patch('aether.sync.api.kernel_utils.get_auth_header', return_value=None)
+    @mock.patch('aether.sync.api.kernel_utils.get_kernel_auth_header', return_value=None)
     def test__upsert_kernel_artefacts__no_connection(self, mock_auth, mock_patch):
         with self.assertRaises(KernelPropagationError) as kpe:
             upsert_kernel(
@@ -118,7 +118,7 @@ class KernelUtilsTest(TestCase):
 
     @mock.patch('aether.sync.api.kernel_utils.request',
                 return_value=MockResponse(status_code=400))
-    @mock.patch('aether.sync.api.kernel_utils.get_auth_header',
+    @mock.patch('aether.sync.api.kernel_utils.get_kernel_auth_header',
                 return_value={'Authorization': 'Token ABCDEFGH'})
     def test__upsert_kernel_artefacts__unexpected_error(self, mock_auth, mock_patch):
         with self.assertRaises(KernelPropagationError) as kpe:
@@ -143,7 +143,7 @@ class KernelUtilsTest(TestCase):
 
     @mock.patch('aether.sync.api.kernel_utils.request',
                 return_value=MockResponse(status_code=200))
-    @mock.patch('aether.sync.api.kernel_utils.get_auth_header',
+    @mock.patch('aether.sync.api.kernel_utils.get_kernel_auth_header',
                 return_value={'Authorization': 'Token ABCDEFGH'})
     def test__upsert_kernel_artefacts__ok(self, mock_auth, mock_patch):
         self.assertTrue(upsert_kernel(

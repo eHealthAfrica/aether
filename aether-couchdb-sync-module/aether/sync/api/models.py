@@ -26,8 +26,8 @@ from django.dispatch import receiver
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
-from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
-from aether.common.utils import json_prettified
+from django_eha_sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
+from django_eha_sdk.utils import json_prettified
 
 from .couchdb_helpers import delete_user, generate_db_name
 

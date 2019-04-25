@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from django.urls import reverse
 from django.test import TestCase
@@ -32,19 +32,6 @@ def get_scheduler_mocked(*args, **kwargs):
 
 
 class TestViews(TestCase):
-
-    def test__health_check(self):
-        response = self.client.get(reverse('health'))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {})
-
-    def test__kernel_check(self):
-        response = self.client.get(reverse('check-kernel'))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.content.decode(),
-            'Brought to you by eHealth Africa - good tech for hard places'
-        )
 
     def test__check_rq(self):
         response = self.client.get(reverse('check-rq'))

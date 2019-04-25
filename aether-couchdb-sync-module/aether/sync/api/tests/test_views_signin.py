@@ -23,7 +23,7 @@ from oauth2client.crypt import AppIdentityError
 
 # This was really helpful about mocking:
 # http://fgimian.github.io/blog/2014/04/10/using-the-python-mock-library-to-fake-regular-functions-during-tests/
-import mock
+from unittest import mock
 
 from ...couchdb import api
 from ..models import MobileUser, DeviceDB

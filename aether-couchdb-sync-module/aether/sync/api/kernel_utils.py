@@ -18,9 +18,13 @@
 
 from django.utils.translation import ugettext as _
 
-from aether.common.utils import request
-from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
-from aether.common.multitenancy.utils import add_instance_realm_in_headers
+from django_eha_sdk.health.utils import (
+    check_external_app,
+    get_external_app_url,
+    get_external_app_token,
+)
+from django_eha_sdk.utils import request
+from django_eha_sdk.multitenancy.utils import add_instance_realm_in_headers
 
 from ..errors import KernelPropagationError
 
@@ -34,6 +38,18 @@ MSG_KERNEL_RESPONSE_ERR = _(
     'while trying to create/update the project artefacts "{project_id}".\n'
     'Response: {content}'
 )
+
+
+def check_kernel_connection():
+    return check_external_app('kernel')
+
+
+def get_kernel_url():
+    return get_external_app_url('kernel')
+
+
+def get_kernel_auth_header():
+    return {'Authorization': 'Token {}'.format(get_external_app_token('kernel'))}
 
 
 def propagate_kernel_project(project, family=None):
@@ -80,6 +96,22 @@ def propagate_kernel_artefacts(schema, family=None):
     return True
 
 
+def submit_to_kernel(payload, mappingset_id, submission_id=None):
+    '''
+    Push the submission to Aether Kernel
+    '''
+
+    return request(
+        method='put' if submission_id else 'post',
+        url=__get_type_url('submissions', submission_id),
+        json={
+            'payload': payload,
+            'mappingset': mappingset_id,
+        },
+        headers=get_kernel_auth_header(),
+    )
+
+
 def __upsert_kernel_artefacts(project, artefacts={}):
     '''
     This method pushes the project artefacts to Aether Kernel.
@@ -87,12 +119,12 @@ def __upsert_kernel_artefacts(project, artefacts={}):
 
     project_id = str(project.project_id)
 
-    auth_header = get_auth_header()
+    auth_header = get_kernel_auth_header()
     if not auth_header:
         raise KernelPropagationError(MSG_KERNEL_CONNECTION_ERR)
     headers = add_instance_realm_in_headers(project, auth_header)
 
-    kernel_url = get_kernel_server_url()
+    kernel_url = get_kernel_url()
     url = f'{kernel_url}/projects/{project_id}/avro-schemas/'
 
     response = request(method='patch', url=url, json=artefacts, headers=headers)
@@ -110,3 +142,20 @@ def __parse_schema(schema):
         'id': str(schema.kernel_id),
         'definition': schema.avro_schema,
     }
+
+
+def __get_type_url(model_type, id=None):
+    '''
+    Returns Aether Kernel url for type "XXX"
+    '''
+    if not id:
+        return '{kernel_url}/{type}/'.format(
+            kernel_url=get_kernel_url(),
+            type=model_type,
+        )
+    else:
+        return '{kernel_url}/{type}/{id}/'.format(
+            kernel_url=get_kernel_url(),
+            type=model_type,
+            id=id,
+        )

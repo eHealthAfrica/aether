@@ -22,8 +22,8 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from aether.common.multitenancy.serializers import MtModelSerializer, MtPrimaryKeyRelatedField
-from aether.common.multitenancy.utils import add_user_to_realm
+from django_eha_sdk.multitenancy.serializers import MtModelSerializer, MtPrimaryKeyRelatedField
+from django_eha_sdk.multitenancy.utils import add_user_to_realm
 
 from .models import Project, Schema, MobileUser
 

@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 from django.test import TestCase
 
 from .. import couchdb_helpers
