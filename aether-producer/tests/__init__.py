@@ -205,6 +205,7 @@ def generate_kernel_entities(get_kernel, get_kernel_fixtures):
     cleanup_keys = []
     sd = sds[0]
     Entity = kernel.get_model('Entity')
+    LOG.debug(dir(Entity))
 
     def make_entity_instances(
         count: int,
@@ -213,26 +214,38 @@ def generate_kernel_entities(get_kernel, get_kernel_fixtures):
         value_size: int = 32,
         delay=None
     ):
+
+        LOG.debug(dir(kernel))
+        LOG.debug(dir(kernel.entities))
+        start = datetime.now()
+        entities = []
         for e in entity_generator(count, tenant, decorator_id, value_size):
-            entity = Entity(**{
+            entity = {
                 'id': e.id,
                 'schemadecorator': sd.id,
                 'status': 'Publishable',
                 'payload': e.payload
-            })
-            try:
-                entity = kernel.entities.create(data=entity)
-                cleanup_keys.append(entity.id)
-            except Exception as err:
-                LOG.error(err)
+            }
+            cleanup_keys.append(e.id)
+            entities.append(entity)
+        try:
+            entities = kernel.entities.create(data=entities, many=True)
+            LOG.debug(entities)
+        except Exception as err:
+            LOG.error(err)
+
+        end = datetime.now()
+        run_time = (end - start).total_seconds()
+        LOG.debug(f'generated {count} entities @ {count / run_time}')
 
     yield make_entity_instances
     # clean-up kernel
-    for _id in cleanup_keys:
-        try:
-            kernel.entities.delete(id=_id)
-        except Exception as err:
-            LOG.error(err)
+    
+    # for _id in cleanup_keys:
+    #     try:
+    #         kernel.entities.delete(id=_id)
+    #     except Exception as err:
+    #         LOG.error(err)
 
 
 @pytest.mark.integration

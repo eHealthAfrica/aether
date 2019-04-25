@@ -344,10 +344,12 @@ def test_kernel_entities_get(get_resource_helper):
     start = datetime.now()
     entities = get_all_db_updates(min_lag=0.01)
     keys = []
+    c = 0
     for e in entities:
+        c += 1
         keys.append(enqueue_entity(e))
     end = datetime.now()
     run_time = (end - start).total_seconds()
-    LOG.debug(f'moved {count} from db -> redis in {run_time} @ {int(count/run_time)}/s')
+    LOG.debug(f'moved {c} from db -> redis in {run_time} @ {int(count/run_time)}/s')
     for k in keys:
         RH.remove(k, 'entities')
