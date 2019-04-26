@@ -66,7 +66,7 @@ class PipelineCard extends Component {
           }
 
           <div className='input-heading'>
-            <span className='badge badge-c'>
+            <span className='badge badge-circle badge-c'>
               <i className='fas fa-file' />
             </span>
             <span className='input-name'>

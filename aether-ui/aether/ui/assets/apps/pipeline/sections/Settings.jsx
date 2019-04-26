@@ -324,21 +324,20 @@ class Settings extends Component {
               </div>
             }
           </div>
-
-          <button
-            onClick={() => this.props.onClose()}
-            type='button'
-            className='btn btn-d btn-big'
-            id='pipeline.settings.cancel.button' >
-            <span className='details-title'>
-              <FormattedMessage
-                id='settings.button.cancel'
-                defaultMessage='Cancel'
-              />
-            </span>
-          </button>
-          { !contract.is_read_only &&
-            <div style={{ display: 'inline' }}>
+          <div className='settings-actions'>
+            <button
+              onClick={() => this.props.onClose()}
+              type='button'
+              className='btn btn-d btn-big'
+              id='pipeline.settings.cancel.button' >
+              <span className='details-title'>
+                <FormattedMessage
+                  id='settings.button.cancel'
+                  defaultMessage='Cancel'
+                />
+              </span>
+            </button>
+            { !contract.is_read_only &&
               <button
                 id='settings-contract-save'
                 className='btn btn-d btn-primary btn-big ml-4'
@@ -350,10 +349,11 @@ class Settings extends Component {
                   />
                 </span>
               </button>
-
+            }
+            { !contract.is_read_only &&
               <button
-                className='btn btn-d btn-red btn-big ml-4'
-                onClick={() => this.props.onDelete()} style={{ float: 'right' }}>
+                className='btn btn-d btn-red btn-big'
+                onClick={() => this.props.onDelete()}>
                 <span className='details-title'>
                   <FormattedMessage
                     id='settings.contract.delete'
@@ -361,8 +361,8 @@ class Settings extends Component {
                   />
                 </span>
               </button>
-            </div>
-          }
+            }
+          </div>
         </div>
       </div>
     )
