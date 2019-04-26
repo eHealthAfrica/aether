@@ -23,13 +23,7 @@ import logging
 # ------------------------------------------------------------------------------
 
 from aether.common.settings import *  # noqa
-from aether.common.settings import (
-    DEBUG,
-    INSTALLED_APPS,
-    LOGGING_LEVEL,
-    MIGRATION_MODULES,
-    STATIC_ROOT,
-)
+from aether.common.settings import LOGGING_LEVEL, MIGRATION_MODULES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)
@@ -39,8 +33,6 @@ logger.setLevel(LOGGING_LEVEL)
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.ui.urls'
-
-INSTALLED_APPS += ['aether.ui', ]
 
 MULTITENANCY_MODEL = 'ui.Project'
 MIGRATION_MODULES['ui'] = 'aether.ui.api.migrations'

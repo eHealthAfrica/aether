@@ -15,7 +15,7 @@
 
 # Main libraries
 
-# Aether common library with extras
+# Aether common and Django-eHa-SDK library with extras
 aether.common
 django_eha_sdk[cas,server,storage,test]
 
@@ -23,7 +23,6 @@ django_eha_sdk[cas,server,storage,test]
 # Django specific
 django-filter
 django-model-utils
-drf-dynamic-fields
 drf_yasg
 python-dateutil
 

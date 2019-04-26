@@ -22,7 +22,7 @@ import os
 # ------------------------------------------------------------------------------
 
 from aether.common.settings import *  # noqa
-from aether.common.settings import INSTALLED_APPS, MIGRATION_MODULES
+from aether.common.settings import MIGRATION_MODULES
 
 
 # Sync Configuration
@@ -40,31 +40,14 @@ FIXTURE_DIRS = (
     'aether/sync/fixtures/',
 )
 
-INSTALLED_APPS += [
-    'django_rq',
-    'aether.sync',
-]
-
 MULTITENANCY_MODEL = 'sync.Project'
 MIGRATION_MODULES['sync'] = 'aether.sync.api.migrations'
+
+
+# CouchDB Configuration
+# ------------------------------------------------------------------------------
 
 COUCHDB_URL = os.environ['COUCHDB_URL']
 COUCHDB_USER = os.environ['COUCHDB_USER']
 COUCHDB_PASSWORD = os.environ['COUCHDB_PASSWORD']
 COUCHDB_DIR = os.environ.get('COUCHDB_DIR', './couchdb')
-
-REDIS_HOST = os.environ['REDIS_HOST']
-REDIS_PORT = os.environ['REDIS_PORT']
-REDIS_DB = os.environ.get('REDIS_DB', 0)
-REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
-
-RQ_QUEUES = {
-    'default': {
-        'HOST': REDIS_HOST,
-        'PORT': REDIS_PORT,
-        'DB': REDIS_DB,
-        'PASSWORD': REDIS_PASSWORD,
-        'DEFAULT_TIMEOUT': 360,
-    },
-}
-RQ_SHOW_ADMIN_LINK = True

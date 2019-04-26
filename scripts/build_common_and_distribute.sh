@@ -20,9 +20,6 @@
 #
 set -Eeuo pipefail
 
-DC_FILE="docker-compose -f ./aether-common-library/docker-compose.yml"
-$DC_FILE down
-
 if [ ! -f VERSION ]; then
     APP_VERSION="0.0.0"
 else
@@ -30,29 +27,37 @@ else
 fi
 
 # create the distribution
+DC_FILE="docker-compose -f ./aether-common-library/docker-compose.yml"
+$DC_FILE kill
+$DC_FILE down
 $DC_FILE build \
     --no-cache --force-rm --pull \
     --build-arg VERSION=$APP_VERSION \
     common
 $DC_FILE run common
+$DC_FILE kill
 $DC_FILE down
 
 # new release package name
-PCK_FILE=aether.common-${APP_VERSION}-py2.py3-none-any.whl
+PCK_FILE=aether.common-${APP_VERSION}-py3-none-any.whl
 # folder with all pip dependencies
 PIP_DEPS=./local-setup/pip/dependencies/
 # remove previous releases of the package
-rm -f ${PIP_DEPS}/aether.common-*-py2.py3-none-any.whl
+rm -f ${PIP_DEPS}/aether.common-*.whl
 # copy new release
 cp -r ./aether-common-library/dist/$PCK_FILE $PIP_DEPS
 
-ls $PIP_DEPS
+echo "----------------------------------------------------------------------"
+ls -l $PIP_DEPS
+echo "----------------------------------------------------------------------"
 
 # distribute within the containers
 FOLDERS=( aether-kernel aether-odk-module aether-couchdb-sync-module aether-ui )
 for FOLDER in "${FOLDERS[@]}"
 do
     DEST=./$FOLDER/conf/pip/
+    # remove previous dependencies
+    rm -r -f "${DEST}dependencies"
     # copy pip dependencies
     cp -r $PIP_DEPS $DEST
 

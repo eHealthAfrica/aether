@@ -364,7 +364,6 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
-      WEBPACK_ENABLED: "true"
       # use this value with "start_dev" command and webpack otherwise comment it out
       WEBPACK_STATS_FILE: /code/aether/ui/assets/bundles/webpack-stats.json
 

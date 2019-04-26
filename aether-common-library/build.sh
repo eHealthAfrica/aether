@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 # test before building
-flake8 /code/. --config=/code/flake8.cfg
+flake8 /code/. --config=/code/setup.cfg
 
 # remove previous build if needed
 rm -rf dist/*
@@ -29,7 +29,7 @@ rm -rf build
 rm -rf aether.common.egg-info
 
 # create the distribution
-python setup.py bdist_wheel --universal
+python setup.py bdist_wheel
 
 # remove useless content
 rm -rf build

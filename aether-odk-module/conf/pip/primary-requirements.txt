@@ -15,13 +15,9 @@
 
 # Main libraries
 
-# Aether common library with extras
+# Aether common and Django-eHa-SDK library with extras
 aether.common
 django_eha_sdk[cas,server,storage,test]
-
-
-# Django specific
-drf-dynamic-fields
 
 
 # xForm and data manipulation

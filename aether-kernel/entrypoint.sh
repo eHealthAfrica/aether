@@ -145,6 +145,11 @@ function test_coverage {
 
 BACKUPS_FOLDER=/backups
 
+export APP_MODULE=aether.kernel
+export DJANGO_SETTINGS_MODULE="${APP_MODULE}.settings"
+
+export STORAGE_REQUIRED=true
+
 case "$1" in
     bash )
         bash
@@ -200,7 +205,6 @@ case "$1" in
     start )
         # ensure that DEBUG mode is disabled
         export DEBUG=
-        export DJANGO_SETTINGS_MODULE="aether.kernel.settings"
         # Export woraround: in seconds: 20min
         export UWSGI_HARAKIRI=${UWSGI_HARAKIRI:-1200}
 

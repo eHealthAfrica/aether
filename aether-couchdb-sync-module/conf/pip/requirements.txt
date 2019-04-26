@@ -13,8 +13,6 @@
 ################################################################################
 
 aether.common
-django-eha-sdk
-
 certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
@@ -24,6 +22,7 @@ Django==2.2
 django-cas-ng==3.6.0
 django-cors-headers==2.5.2
 django-debug-toolbar==1.11
+django-eha-sdk==0.0.1
 django-prometheus==1.0.15
 django-rq==2.0
 django-uwsgi==0.2.2
@@ -57,5 +56,5 @@ sentry-sdk==0.7.12
 six==1.12.0
 sqlparse==0.3.0
 tblib==1.3.2
-urllib3==1.25
+urllib3==1.25.1
 uWSGI==2.0.18

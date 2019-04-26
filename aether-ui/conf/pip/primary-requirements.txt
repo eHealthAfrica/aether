@@ -15,11 +15,10 @@
 
 # Main libraries
 
-# Aether common library with extras
+# Aether common and Django-eHa-SDK library with extras
 aether.common
 django_eha_sdk[cas,server,webpack,test]
 
 
 # Django specific
 django-model-utils
-drf-dynamic-fields

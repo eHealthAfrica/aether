@@ -28,6 +28,11 @@ class SettingsTest(TestCase):
         self.assertTrue(settings.TESTING)
         self.assertFalse(settings.DEBUG)
 
+        self.assertFalse(settings.SCHEDULER_REQUIRED)
+        self.assertFalse(settings.STORAGE_REQUIRED)
+        self.assertTrue(settings.WEBPACK_REQUIRED)
+
+        self.assertEqual(settings.APP_MODULE, 'aether.ui')
         self.assertEqual(settings.ROOT_URLCONF, 'aether.ui.urls')
+
         self.assertEqual(settings.APP_NAME, 'Aether')
-        self.assertIsNone(settings.DJANGO_STORAGE_BACKEND)

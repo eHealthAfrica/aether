@@ -152,7 +152,11 @@ function test_coverage {
 
 BACKUPS_FOLDER=/backups
 
+export APP_MODULE=aether.ui
+export DJANGO_SETTINGS_MODULE="${APP_MODULE}.settings"
+
 export EXTERNAL_APPS=kernel
+export WEBPACK_REQUIRED=true
 
 case "$1" in
     bash )
@@ -209,7 +213,6 @@ case "$1" in
     start )
         # ensure that DEBUG mode is disabled
         export DEBUG=
-        export DJANGO_SETTINGS_MODULE="aether.ui.settings"
 
         setup
         ./conf/uwsgi/start.sh
