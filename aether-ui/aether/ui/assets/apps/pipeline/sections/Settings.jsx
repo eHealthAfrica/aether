@@ -370,9 +370,9 @@ class Settings extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  mappingset: pipelines.currentPipeline.mappingset,
-  inputData: pipelines.currentPipeline.input,
-  inputSchema: pipelines.currentPipeline.schema,
+  mappingset: pipelines.currentPipeline && pipelines.currentPipeline.mappingset,
+  inputData: pipelines.currentPipeline && pipelines.currentPipeline.input,
+  inputSchema: pipelines.currentPipeline && pipelines.currentPipeline.schema,
 
   contract: pipelines.currentContract,
   pipeline: pipelines.currentPipeline
