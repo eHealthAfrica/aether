@@ -219,9 +219,9 @@ services:
       ADMIN_TOKEN: ${ODK_ADMIN_TOKEN}
 
       # external apps
-      EXTERNAL_APP_URL_KERNEL: http://${NETWORK_DOMAIN}/kernel
-      EXTERNAL_APP_TOKEN_KERNEL: ${KERNEL_ADMIN_TOKEN}
-      EXTERNAL_APP_URL_TEST_KERNEL: http://kernel-test:9100
+      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9100
 
       DB_NAME: odk
       PGHOST: db
@@ -282,9 +282,9 @@ services:
       ADMIN_TOKEN: ${COUCHDB_SYNC_ADMIN_TOKEN}
 
       # external apps
-      EXTERNAL_APP_URL_KERNEL: http://${NETWORK_DOMAIN}/kernel
-      EXTERNAL_APP_TOKEN_KERNEL: ${KERNEL_ADMIN_TOKEN}
-      EXTERNAL_APP_URL_TEST_KERNEL: http://kernel-test:9100
+      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9100
 
       GOOGLE_CLIENT_ID: ${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
 
@@ -354,9 +354,9 @@ services:
       ADMIN_PASSWORD: ${UI_ADMIN_PASSWORD}
 
       # external apps
-      EXTERNAL_APP_URL_KERNEL: http://${NETWORK_DOMAIN}/kernel
-      EXTERNAL_APP_TOKEN_KERNEL: ${KERNEL_ADMIN_TOKEN}
-      EXTERNAL_APP_URL_TEST_KERNEL: http://kernel-test:9100
+      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9100
 
       DB_NAME: ui
       PGHOST: db

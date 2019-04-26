@@ -34,8 +34,8 @@ check_variable "$ADMIN_PASSWORD"      "Admin user password (ADMIN_PASSWORD)"
 check_variable "$ADMIN_TOKEN"         "Admin user authorization token (ADMIN_TOKEN)"
 
 # Aether kernel
-check_variable "$EXTERNAL_APP_URL_KERNEL"   "Aether KERNEL url (EXTERNAL_APP_URL_KERNEL)"
-check_variable "$EXTERNAL_APP_TOKEN_KERNEL" "Aether KERNEL token (EXTERNAL_APP_TOKEN_KERNEL)"
+check_variable "$AETHER_KERNEL_URL"   "Aether KERNEL url (AETHER_KERNEL_URL)"
+check_variable "$AETHER_KERNEL_TOKEN" "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
 
 # Google ID
 check_variable "$GOOGLE_CLIENT_ID"    "Google Client ID (GOOGLE_CLIENT_ID)"

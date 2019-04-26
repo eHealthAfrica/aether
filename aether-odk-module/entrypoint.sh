@@ -152,7 +152,7 @@ BACKUPS_FOLDER=/backups
 export APP_MODULE=aether.odk
 export DJANGO_SETTINGS_MODULE="${APP_MODULE}.settings"
 
-export EXTERNAL_APPS=kernel
+export EXTERNAL_APPS=aether-kernel
 export STORAGE_REQUIRED=true
 
 case "$1" in
@@ -228,7 +228,7 @@ case "$1" in
     ;;
 
     check_kernel )
-        ./manage.py check_url --url=$EXTERNAL_APP_URL_KERNEL --token=$EXTERNAL_APP_TOKEN_KERNEL
+        ./manage.py check_url --url=$AETHER_KERNEL_URL --token=$AETHER_KERNEL_TOKEN
     ;;
 
     help )

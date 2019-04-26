@@ -39,6 +39,7 @@ MSG_KERNEL_RESPONSE_ERR = _(
 )
 
 NAMESPACE = 'org.ehealthafrica.aether.odk.xforms'
+EXTERNAL_APP_KERNEL = 'aether-kernel'
 
 
 class KernelSubmissionError(Exception):
@@ -50,15 +51,15 @@ class KernelPropagationError(Exception):
 
 
 def check_kernel_connection():
-    return check_external_app('kernel')
+    return check_external_app(EXTERNAL_APP_KERNEL)
 
 
 def get_kernel_url():
-    return get_external_app_url('kernel')
+    return get_external_app_url(EXTERNAL_APP_KERNEL)
 
 
 def get_kernel_auth_header():
-    return {'Authorization': 'Token {}'.format(get_external_app_token('kernel'))}
+    return {'Authorization': f'Token {get_external_app_token(EXTERNAL_APP_KERNEL)}'}
 
 
 def get_submissions_url(submission_id=None):

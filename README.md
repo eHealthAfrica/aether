@@ -285,24 +285,27 @@ The default values for the export feature:
 
 #### Aether ODK Module
 
-- `EXTERNAL_APP_TOKEN_KERNEL`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `EXTERNAL_APP_URL_KERNEL`: `http://aether.local/kernel/` Aether Kernel Server url.
-- `EXTERNAL_APP_URL_TEST_KERNEL`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
+- `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 #### Aether UI
 
-- `EXTERNAL_APP_TOKEN_KERNEL`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `EXTERNAL_APP_URL_KERNEL`: `http://aether.local/kernel/` Aether Kernel Server url.
-- `EXTERNAL_APP_URL_TEST_KERNEL`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
+- `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 #### Aether CouchDB Sync Module
 
 - `GOOGLE_CLIENT_ID`: `generate_it_in_your_google_developer_console`
   Token used to verify the device identity with Google.
   See more in https://developers.google.com/identity/protocols/OAuth2
-- `EXTERNAL_APP_TOKEN_KERNEL`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `EXTERNAL_APP_URL_KERNEL`: `http://aether.local/kernel/` Aether Kernel Server url.
-- `EXTERNAL_APP_URL_TEST_KERNEL`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
+- `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 ## Usage
 
@@ -412,7 +415,7 @@ The internal communication between the containers is done via
 
 In the case of `aether-odk-module`, `aether-ui` and `aether-couchdb-sync-module`
 there is a global token to connect to `aether-kernel` set in the **required**
-environment variable `EXTERNAL_APP_TOKEN_KERNEL`. Take in mind that this token
+environment variable `AETHER_KERNEL_TOKEN`. Take in mind that this token
 belongs to an active `aether-kernel` user but not necessarily to an admin user.
 
 *[Return to TOC](#table-of-contents)*
@@ -472,10 +475,10 @@ To learn more about the Aether release process, refer to the [release management
 Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
 activate the CAS integration in each container.
 
-Set the `EXTERNAL_APP_TOKEN_KERNEL` and `EXTERNAL_APP_URL_KERNEL` environment variables when
+Set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables when
 starting the `aether-odk-module` to have ODK Collect submissions posted to Aether Kernel.
 
-If a valid `EXTERNAL_APP_TOKEN_KERNEL` and `EXTERNAL_APP_URL_KERNEL` combination is not set,
+If a valid `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` combination is not set,
 the server will still start, but ODK Collect submissions will fail.
 
 To check if it is possible to connect to Aether Kernel with those variables
@@ -581,7 +584,7 @@ Never run `odk`, `ui` or `couchdb-sync` tests against any PRODUCTION server.
 The tests clean up would **DELETE ALL PROJECTS!!!**
 
 Look into [docker-compose-base.yml](docker-compose-base.yml), the variable
-`EXTERNAL_APP_URL_TEST_KERNEL` indicates the Aether Kernel Server used in tests.
+`AETHER_KERNEL_URL_TEST` indicates the Aether Kernel Server used in tests.
 
 The tests are run in parallel, use the `TEST_PARALLEL` environment variable
 to indicate the number of concurrent jobs.

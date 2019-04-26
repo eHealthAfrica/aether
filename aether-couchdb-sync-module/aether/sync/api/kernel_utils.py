@@ -39,17 +39,19 @@ MSG_KERNEL_RESPONSE_ERR = _(
     'Response: {content}'
 )
 
+EXTERNAL_APP_KERNEL = 'aether-kernel'
+
 
 def check_kernel_connection():
-    return check_external_app('kernel')
+    return check_external_app(EXTERNAL_APP_KERNEL)
 
 
 def get_kernel_url():
-    return get_external_app_url('kernel')
+    return get_external_app_url(EXTERNAL_APP_KERNEL)
 
 
 def get_kernel_auth_header():
-    return {'Authorization': 'Token {}'.format(get_external_app_token('kernel'))}
+    return {'Authorization': f'Token {get_external_app_token(EXTERNAL_APP_KERNEL)}'}
 
 
 def propagate_kernel_project(project, family=None):

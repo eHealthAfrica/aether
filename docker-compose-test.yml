@@ -96,10 +96,10 @@ services:
       file: ./docker-compose-base.yml
       service: odk-base
     environment:
+      AETHER_KERNEL_URL: http://kernel-test:9100
       APP_URL: /
       BUCKET_NAME: test-odk
       DB_NAME: test-odk
-      EXTERNAL_APP_URL_KERNEL: http://kernel-test:9100
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       MULTITENANCY: "true"
       PGHOST: db-test
@@ -124,10 +124,10 @@ services:
       file: ./docker-compose-base.yml
       service: couchdb-sync-base
     environment:
+      AETHER_KERNEL_URL: http://kernel-test:9100
       APP_URL: /
       COUCHDB_URL: http://couchdb-test:5984
       DB_NAME: test-couchdb-sync
-      EXTERNAL_APP_URL_KERNEL: http://kernel-test:9100
       GOOGLE_CLIENT_ID: secret_google_client_id
       MULTITENANCY: "true"
       PGHOST: db-test
@@ -150,9 +150,9 @@ services:
       file: ./docker-compose-base.yml
       service: ui-base
     environment:
+      AETHER_KERNEL_URL: http://kernel-test:9100
       APP_URL: /
       DB_NAME: test-ui
-      EXTERNAL_APP_URL_KERNEL: http://kernel-test:9100
       MULTITENANCY: "true"
       PGHOST: db-test
       STATIC_URL: /static/
