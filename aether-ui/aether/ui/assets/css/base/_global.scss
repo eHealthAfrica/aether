@@ -211,7 +211,7 @@ select:-webkit-autofill {
   box-shadow: 2px 2px 3px rgba($text-color, .5);
   position: absolute;
   margin: -5px 0 0 -5px;
-  padding:.6em 0;
+  padding: .6em 0;
   z-index: 3;
   min-width: 190px;
   list-style: none;
@@ -219,6 +219,7 @@ select:-webkit-autofill {
   li {
     padding: .3em 1em;
     cursor: pointer;
+
     &:hover {
       color: $action-color;
       cursor: pointer;
