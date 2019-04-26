@@ -126,19 +126,22 @@ function setup {
     cp /var/tmp/REVISION ${STATIC_ROOT}/REVISION 2>/dev/null || true
 }
 
-function test_flake8 {
-    flake8 /code/. --config=/code/conf/extras/flake8.cfg
+function test_lint {
+    flake8
 }
 
 function test_coverage {
-    RCFILE=/code/conf/extras/coverage.rc
-    PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
-    PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
-
     rm -R /code/.coverage* 2>/dev/null || true
-    coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
-    coverage combine --rcfile="$RCFILE" --append
-    coverage report  --rcfile="$RCFILE"
+
+    coverage run \
+        --concurrency=multiprocessing \
+        --parallel-mode \
+        manage.py test \
+        --noinput \
+        --parallel ${TEST_PARALLEL:-} \
+        "${@:1}"
+    coverage combine --append
+    coverage report
     coverage erase
 
     cat /code/conf/extras/good_job.txt
@@ -186,7 +189,7 @@ case "$1" in
         export MULTITENANCY=true
 
         setup
-        test_flake8
+        test_lint
         test_coverage "${@:2}"
     ;;
 
@@ -194,7 +197,7 @@ case "$1" in
         export TESTING=true
         export MULTITENANCY=true
 
-        test_flake8
+        test_lint
     ;;
 
     test_py | test_coverage )
