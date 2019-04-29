@@ -81,8 +81,6 @@ services:
     command: minio server --quiet --address minio:9000 /data
     ports:
       - 9000:9000
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
   keycloak-base:
     image: jboss/keycloak:latest
@@ -98,8 +96,6 @@ services:
       KEYCLOAK_HTTP_PORT: 8080
     ports:
       - 8080:8080
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
 
   # ---------------------------------
@@ -172,8 +168,6 @@ services:
       - ./.persistent_data/backups/kernel:/backups
     ports:
       - 8100:8100
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start_dev
 
 
@@ -244,8 +238,6 @@ services:
       - 8102:8102
       # standalone (without nginx)
       # - 8443:8443
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start_dev
 
 
@@ -311,8 +303,6 @@ services:
       - ./.persistent_data/backups/sync:/backups
     ports:
       - 8106:8106
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start_dev
 
   couchdb-sync-rq-base:
@@ -374,8 +364,6 @@ services:
       - ./.persistent_data/backups/ui:/backups
     ports:
       - 8104:8104
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start_dev
 
   ui-assets-base:
@@ -465,6 +453,4 @@ services:
       PRODUCER_SETTINGS_FILE: /code/producer/settings.json
     ports:
       - 5005:5005
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start

@@ -113,7 +113,7 @@ function setup {
     ./manage.py migrate --noinput
 
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
+    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=${ADMIN_TOKEN:-}
 
     # cleaning
     STATIC_UI=/code/aether/ui/static
