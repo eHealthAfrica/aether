@@ -204,6 +204,11 @@ case "$1" in
         # Export woraround: in seconds: 20min
         export UWSGI_HARAKIRI=${UWSGI_HARAKIRI:-1200}
 
+        # DISABLE MULTITENANCY FEATURE!!!
+        export MULTITENANCY=
+        export KEYCLOAK_SERVER_URL=
+        # ---------------------------------
+
         setup
         ./conf/uwsgi/start.sh
     ;;
@@ -211,6 +216,11 @@ case "$1" in
     start_dev )
         # ensure that DEBUG mode is enabled
         export DEBUG=true
+
+        # DISABLE MULTITENANCY FEATURE!!!
+        export MULTITENANCY=
+        export KEYCLOAK_SERVER_URL=
+        # ---------------------------------
 
         setup
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
