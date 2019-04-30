@@ -213,6 +213,16 @@ case "$1" in
         ./conf/uwsgi/start.sh
     ;;
 
+    start_test )
+        export DEBUG=
+        export TESTING=true
+        export MULTITENANCY=true
+        export DJANGO_SETTINGS_MODULE="aether.kernel.settings"
+
+        setup
+        ./conf/uwsgi/start.sh
+    ;;
+
     start_dev )
         # ensure that DEBUG mode is enabled
         export DEBUG=true
