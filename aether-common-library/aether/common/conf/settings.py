@@ -452,7 +452,7 @@ if not TESTING and DEBUG:
     INSTALLED_APPS += ['debug_toolbar', ]
     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
     DEBUG_TOOLBAR_URL = os.environ.get('DEBUG_TOOLBAR_URL', '__debug__')
-    if GATEWAY_SERVICE_ID:
+    if KEYCLOAK_SERVER_URL and GATEWAY_SERVICE_ID:
         DEBUG_TOOLBAR_URL = os.environ.get('DEBUG_TOOLBAR_URL', f'{GATEWAY_PUBLIC_PATH}/__debug__')
 
     DEBUG_TOOLBAR_CONFIG = {

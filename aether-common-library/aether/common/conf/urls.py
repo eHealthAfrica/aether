@@ -65,7 +65,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # KEYCLOAK GATEWAY endpoints
-    if settings.GATEWAY_SERVICE_ID:
+    if settings.KEYCLOAK_SERVER_URL and settings.GATEWAY_SERVICE_ID:
         urlpatterns = [
             # this is reachable using internal network
             path(route='', view=include(urlpatterns)),
