@@ -29,13 +29,6 @@ def marshal_model(swagger_spec, model_spec, model_value):
     if model_value is None:
         return handle_null_value(swagger_spec, model_spec)
 
-    # if not isinstance(model_value, Model):
-    #     raise SwaggerMappingError(
-    #         'Expected {0.__module__}.{0.__name__} object but got {1.__module__}.{1.__name__}'.format(  # noqa
-    #             Model, type(model_value),
-    #         ),
-    #     )
-
     # just convert the model to a dict and feed into `marshal_object` because
     # models are essentially 'type':'object' when marshaled
     if not isinstance(model_value, list):
@@ -61,8 +54,6 @@ def marshal_object(swagger_spec, object_spec, object_value):
         return handle_null_value(swagger_spec, object_spec)
 
     if not is_dict_like(object_value):
-        # raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
-        #     type(object_value), object_value))
         return object_value
 
     object_spec = deref(object_spec)
@@ -113,10 +104,6 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     is_bulk = False
     if not is_dict_like(model_value):
         is_bulk = True
-        # raise SwaggerMappingError(
-        #     "Expected type to be dict for value {0} to unmarshal to a {1}."
-        #     "Was {2} instead."
-        #     .format(model_value, model_type, type(model_value)))
 
     # Check if model is polymorphic
     discriminator = model_spec.get('discriminator')

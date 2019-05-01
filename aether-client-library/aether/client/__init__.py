@@ -29,7 +29,12 @@ bravado_core.unmarshal.unmarshal_model = patches.unmarshal_model  # noqa
 
 import bravado
 
-from bravado.client import SwaggerClient, ResourceDecorator, CallableOperation, construct_request
+from bravado.client import (
+    SwaggerClient,
+    ResourceDecorator,
+    CallableOperation,
+    construct_request
+)
 from bravado.config import bravado_config_from_config_dict
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
@@ -100,7 +105,11 @@ class Client(SwaggerClient):
         # Wrap bravado-core's Resource and Operation objects in order to
         # execute a service call via the http_client.
         # Replaces with AetherSpecific handler
-        return AetherDecorator(resource, self.__also_return_response, self.swagger_spec)
+        return AetherDecorator(
+            resource,
+            self.__also_return_response,
+            self.swagger_spec
+        )
 
     def __getitem__(self, name):
         return getattr(self, name)
