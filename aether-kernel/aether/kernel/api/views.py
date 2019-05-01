@@ -436,12 +436,7 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
     schema_order = '-schemadecorator__schema__created'
 
     def get_serializer(self, *args, **kwargs):
-        if 'data' in kwargs:
-            data = kwargs['data']
-
-            if isinstance(data, list):
-                kwargs['many'] = True
-
+        kwargs['many'] = isinstance(kwargs.get('data'), list)
         return super(EntityViewSet, self).get_serializer(*args, **kwargs)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
