@@ -438,8 +438,8 @@ code {
 .check-indent {
   padding-left: 1.6rem;
 
-  &:before {
-    content:'';
+  &::before {
+    content: '';
     display: block;
     width: .8rem;
     height: 1rem;
