@@ -19,10 +19,22 @@
 import logging
 from time import sleep
 
-import bravado
 import bravado_core
+from . import patches
 
-from bravado.client import SwaggerClient, ResourceDecorator, CallableOperation, construct_request
+# monkey patch so that bulk insertion works
+bravado_core.marshal.marshal_model = patches.marshal_model  # noqa
+bravado_core.marshal.marshal_object = patches.marshal_object  # noqa
+bravado_core.unmarshal.unmarshal_model = patches.unmarshal_model  # noqa
+
+import bravado
+
+from bravado.client import (
+    SwaggerClient,
+    ResourceDecorator,
+    CallableOperation,
+    construct_request
+)
 from bravado.config import bravado_config_from_config_dict
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
@@ -93,7 +105,11 @@ class Client(SwaggerClient):
         # Wrap bravado-core's Resource and Operation objects in order to
         # execute a service call via the http_client.
         # Replaces with AetherSpecific handler
-        return AetherDecorator(resource, self.__also_return_response, self.swagger_spec)
+        return AetherDecorator(
+            resource,
+            self.__also_return_response,
+            self.swagger_spec
+        )
 
     def __getitem__(self, name):
         return getattr(self, name)
@@ -173,7 +189,7 @@ class AetherDecorator(ResourceDecorator):
                     # When the exception is caught and handled normally, this is impossible.
                     # Hence the lambda returning the exception itself when an exception occurs.
                     response = future.response(
-                        timeout=1,
+                        timeout=10,
                         fallback_result=lambda x: x,
                         exceptions_to_catch=tuple(self.handled_exceptions)
                     )
@@ -214,7 +230,7 @@ class AetherDecorator(ResourceDecorator):
     def _verify_param(self, name, param_name):
         operation = getattr(self.resource, self._get_full_name(name))
         # allow searching for arbitrary fields within the payload
-        if param_name.startswith('payload__'):
+        if param_name.startswith('payload__') or param_name == 'many':
             # add it to the allowed list of parameters
             operation.params[param_name] = mockParam(param_name, operation, self.swagger_spec)
             return True
