@@ -1,5 +1,23 @@
 [
   {
+    "doc": "Simplest Possible Record",
+    "name": "Simple",
+    "type": "record",
+    "fields": [
+      {
+        "doc": "ID",
+        "name": "id",
+        "type": "string",
+        "jsonldPredicate": "@id"
+      },
+      {
+        "type": "string",
+        "name": "value"
+      }
+    ],
+    "namespace": "eha.demo"
+  },
+  {
     "doc": "Health Facility",
     "name": "Facility",
     "type": "record",
