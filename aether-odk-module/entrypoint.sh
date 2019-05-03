@@ -137,8 +137,8 @@ function test_coverage {
         --concurrency=multiprocessing \
         --parallel-mode \
         manage.py test \
-        --noinput \
         --parallel ${TEST_PARALLEL:-} \
+        --noinput \
         "${@:1}"
     coverage combine --append
     coverage report
