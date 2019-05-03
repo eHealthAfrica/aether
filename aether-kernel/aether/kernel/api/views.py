@@ -312,6 +312,19 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     filter_class = filters.MappingSetFilter
     mt_field = 'project'
 
+    def destroy(self, request, *args, **kwargs):
+        '''
+        PATCH: Creates or updates the project and its artefacts:
+        schemas, schema decorators and mappings.
+
+        PATCH|GET: Returns the list of project and affected artefact ids by type.
+
+        Reachable at ``/projects/{pk}/artefacts/``
+        '''
+
+        print('DATA1', request.data)
+        return Response(data='delete success')
+
 
 class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
