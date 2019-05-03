@@ -401,7 +401,7 @@ code {
     height: 16px;
     margin-right: .6rem;
     border-radius: 16px;
-    border: 2px solid $grey;
+    border: 2px solid $action-color-b;
   }
 
   input {
@@ -412,7 +412,7 @@ code {
 
     &::before {
       background: $action-color;
-      border-color: transparent;
+      border-color: $action-color;
       color: $white;
     }
 
@@ -424,12 +424,30 @@ code {
 
   input:checked + label {
 
+    cursor: default;
+
     &::before {
-      background: rgba($action-color, .3);
+      background: none;
       border-color: transparent;
       color: $text-color;
     }
 
+  }
+}
+
+.check-indent {
+  padding-left: 1.6rem;
+
+  &::before {
+    content: '';
+    display: block;
+    width: .8rem;
+    height: 1rem;
+    position: absolute;
+    left: 7px;
+    top: -.4rem;
+    border-left: 2px solid $action-color-b;
+    border-bottom: 2px solid $action-color-b;
   }
 }
 

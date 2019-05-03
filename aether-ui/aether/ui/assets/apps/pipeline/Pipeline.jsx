@@ -328,7 +328,7 @@ class Pipeline extends Component {
           id='contract.delete.modal.header'
           defaultMessage='Delete contract '
         />
-        <span className='bold'>{this.props.contract.name}</span>
+        <span className='bold'>{this.props.contract.name}?</span>
       </span>
     )
 
@@ -380,7 +380,7 @@ class Pipeline extends Component {
             />
           </label>
         </div>
-        <div className='check-default ml-4' style={{ paddingLeft: '40px' }}>
+        <div className='check-default ml-4 check-indent'>
           <input type='checkbox' id='check3' checked={this.state.deleteOptions.entities}
             onChange={(e) => {
               if (!e.target.checked) {
@@ -403,7 +403,7 @@ class Pipeline extends Component {
               id='pipeline.delete.modal.all.data-0'
               defaultMessage='Data'
             />
-            <span style={{ fontWeight: 'bold' }}>
+            <span className='bold'>
               <FormattedMessage
                 id='pipeline.delete.modal.all.data-1'
                 defaultMessage='&nbsp;created by&nbsp;'
