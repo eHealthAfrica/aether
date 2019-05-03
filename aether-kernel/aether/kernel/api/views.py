@@ -560,6 +560,14 @@ SchemaView = get_schema_view(
 class AetherSchemaView(SchemaView):
     versioning_class = versioning.URLPathVersioning
 
+    def get(self, *args, **kwargs):
+        # this SchemaView doesn't know about realms, so we'll strip that out
+        try:
+            del kwargs['realm']
+        except KeyError:
+            pass
+        return super().get(*args, **kwargs)
+
 
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
