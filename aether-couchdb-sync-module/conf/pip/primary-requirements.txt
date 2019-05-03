@@ -15,8 +15,7 @@
 
 # Main libraries
 
-# Aether common and Django-eHa-SDK library with extras
-aether.common
+# Django-eHa-SDK library with extras
 django_eha_sdk[cas,server,scheduler,test]
 
 
