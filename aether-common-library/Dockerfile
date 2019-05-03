@@ -1,26 +1,12 @@
 FROM python:3.7-slim-stretch
 
-################################################################################
-## install app
-################################################################################
-
+ARG VERSION
 WORKDIR /code
 COPY ./ /code
 
 RUN pip install -q --upgrade pip && \
-    pip install flake8 flake8-quotes
-
-################################################################################
-## copy application version and create git revision
-################################################################################
-
-ARG VERSION
-
-RUN mkdir -p /var/tmp && \
+    pip install flake8 flake8-quotes && \
+    mkdir -p /var/tmp && \
     echo $VERSION > /var/tmp/VERSION
-
-################################################################################
-## last setup steps
-################################################################################
 
 ENTRYPOINT ["/code/build.sh"]

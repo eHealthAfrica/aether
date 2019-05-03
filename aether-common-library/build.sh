@@ -20,17 +20,27 @@
 #
 set -Eeuo pipefail
 
-# test before building
-flake8 /code/. --config=/code/setup.cfg
+EGG_INFO=aether.common.egg-info
 
-# remove previous build if needed
+# ----------------------------------------
+# test before building
+# ----------------------------------------
+flake8
+
+# ----------------------------------------
+# remove previous packages if needed
+# ----------------------------------------
 rm -rf dist/*
 rm -rf build
-rm -rf aether.common.egg-info
+rm -rf $EGG_INFO
 
-# create the distribution
-python setup.py bdist_wheel
+# ----------------------------------------
+# create the distribution package
+# ----------------------------------------
+python3 setup.py bdist_wheel
 
+# ----------------------------------------
 # remove useless content
+# ----------------------------------------
 rm -rf build
-rm -rf aether.common.egg-info
+rm -rf $EGG_INFO
