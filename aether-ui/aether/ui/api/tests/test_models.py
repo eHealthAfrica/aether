@@ -16,11 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase, override_settings
+from django_eha_sdk.unittest import MockResponse
 
 from ..kernel_utils import (
     check_kernel_connection,
@@ -58,24 +58,6 @@ def mock_return_false(*args):
 
 def mock_return_true(*args):
     return True
-
-
-class MockResponse:
-
-    def __init__(self, status_code, json_data=None, text=None):
-        if json_data is None:
-            json_data = {}
-        self.status_code = status_code
-        self.json_data = json_data
-        self.content = json.dumps(json_data)
-        self.text = text
-
-    def raise_for_status(self):
-        if self.status_code >= 400:
-            raise Exception(self.status_code)
-
-    def json(self):
-        return self.json_data
 
 
 @override_settings(MULTITENANCY=False)

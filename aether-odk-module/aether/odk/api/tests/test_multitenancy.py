@@ -29,6 +29,7 @@ from rest_framework import status
 
 from django_eha_sdk.multitenancy.models import MtInstance
 from django_eha_sdk.multitenancy import utils
+from django_eha_sdk.unittest import MockResponse
 
 from .. import models, serializers
 from ..kernel_utils import (
@@ -37,7 +38,7 @@ from ..kernel_utils import (
 )
 from ..surveyors_utils import is_surveyor
 
-from . import CustomTestCase, MockResponse
+from . import CustomTestCase
 
 CURRENT_REALM = 'realm'
 

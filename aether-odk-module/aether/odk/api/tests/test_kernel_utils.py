@@ -21,8 +21,9 @@ from unittest import mock
 import requests
 
 from django.test import override_settings
+from django_eha_sdk.unittest import MockResponse
 
-from . import CustomTestCase, MockResponse
+from . import CustomTestCase
 from ..kernel_utils import (
     get_kernel_url,
     get_kernel_auth_header,

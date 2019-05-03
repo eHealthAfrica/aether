@@ -29,13 +29,13 @@ from rest_framework import status
 
 from django_eha_sdk.multitenancy.models import MtInstance
 from django_eha_sdk.multitenancy import utils
+from django_eha_sdk.unittest import MockResponse
 
 from .. import models, serializers
 from ..kernel_utils import (
     get_kernel_url,
     __upsert_kernel_artefacts as upsert_kernel,
 )
-from . import MockResponse
 
 CURRENT_REALM = 'realm'
 ANOTHER_REALM = 'another'

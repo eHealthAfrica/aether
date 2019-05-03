@@ -21,6 +21,7 @@ from unittest import mock
 import requests
 
 from django.test import TestCase, override_settings
+from django_eha_sdk.unittest import MockResponse
 
 from ..kernel_utils import (
     get_kernel_auth_header,
@@ -31,8 +32,6 @@ from ..kernel_utils import (
     __upsert_kernel_artefacts as upsert_kernel,
 )
 from ..models import Project, Schema
-
-from . import MockResponse
 
 
 @override_settings(MULTITENANCY=False)

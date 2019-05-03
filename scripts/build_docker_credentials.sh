@@ -69,7 +69,7 @@ cat << EOF
 # ------------------------------------------------------------------
 # Authentication
 # ==================================================================
-# KEYCLOAK_BEHIND_SCENES=true
+KEYCLOAK_BEHIND_SCENES=
 KEYCLOAK_SERVER_URL=http://aether.local/auth/realms
 KEYCLOAK_ADMIN_USERNAME=admin
 KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
