@@ -562,10 +562,7 @@ class AetherSchemaView(SchemaView):
 
     def get(self, *args, **kwargs):
         # this SchemaView doesn't know about realms, so we'll strip that out
-        try:
-            del kwargs['realm']
-        except KeyError:
-            pass
+        kwargs.pop('realm', None)
         return super().get(*args, **kwargs)
 
 
