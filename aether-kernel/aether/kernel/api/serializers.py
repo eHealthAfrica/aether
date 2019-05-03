@@ -266,6 +266,27 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, serializers.ModelSerializer)
         fields = '__all__'
 
 
+class EntityListSerializer(serializers.ListSerializer):
+
+    def create(self, validated_data):
+        # remove helper field
+        [i.pop('merge') for i in validated_data]
+        entities = [models.Entity(**e) for e in validated_data]
+        errors = []
+        for e in entities:
+            try:
+                # validate entities
+                e.clean()
+            except Exception as err:
+                # either the generated or passed ID.
+                errors.append((e.id, err))
+        if errors:
+            # reject ALL if ANY invalid entities are included
+            raise(serializers.ValidationError(errors))
+        # bulk database operation
+        return models.Entity.objects.bulk_create(entities)
+
+
 class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='entity-detail')
@@ -353,6 +374,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = models.Entity
         fields = '__all__'
+        list_serializer_class = EntityListSerializer
 
 
 class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
