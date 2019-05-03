@@ -40,26 +40,18 @@ $DC_FILE down
 
 # new release package name
 PCK_FILE=aether.common-${APP_VERSION}-py3-none-any.whl
-# folder with all pip dependencies
-PIP_DEPS=./local-setup/pip/dependencies/
-# remove previous releases of the package
-rm -f ${PIP_DEPS}/aether.common-*.whl
-# copy new release
-cp -r ./aether-common-library/dist/$PCK_FILE $PIP_DEPS
-
-echo "----------------------------------------------------------------------"
-ls -l $PIP_DEPS
-echo "----------------------------------------------------------------------"
 
 # distribute within the containers
 FOLDERS=( aether-kernel aether-odk-module aether-couchdb-sync-module aether-ui )
 for FOLDER in "${FOLDERS[@]}"
 do
-    DEST=./$FOLDER/conf/pip/
+    DEST=./$FOLDER/conf/pip/dependencies
+    # create folder if missing
+    mkdir -p $DEST
     # remove previous dependencies
-    rm -r -f "${DEST}dependencies"
-    # copy pip dependencies
-    cp -r $PIP_DEPS $DEST
+    rm -r -f ${DEST}/aether.common-*.whl
+    # copy new release
+    cp -r ./aether-common-library/dist/$PCK_FILE $DEST
 
     echo "----------------------------------------------------------------------"
     echo "Distributed [${PCK_FILE}] into [$DEST]"

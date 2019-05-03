@@ -22,7 +22,7 @@ Django==2.2.1
 django-cas-ng==3.6.0
 django-cors-headers==2.5.3
 django-debug-toolbar==1.11
-django-eha-sdk==0.0.1
+django-eha-sdk==1.0.0
 django-prometheus==1.0.15
 django-rq==2.0
 django-uwsgi==0.2.2
