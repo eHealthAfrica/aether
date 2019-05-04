@@ -39,10 +39,9 @@ function test_flake8 {
 }
 
 function test {
-    python3 setup.py -q test "${@:1}"
+    export PYTHONDONTWRITEBYTECODE=1
+    pytest -p no:cacheprovider
     cat /code/conf/extras/good_job.txt
-    rm -R ./*.egg*
-    rm -R .pytest_cache
 }
 
 case "$1" in
