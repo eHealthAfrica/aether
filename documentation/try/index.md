@@ -6,7 +6,9 @@ description: Aether Documentation – Try It for yourself
 
 # Try Aether For Yourself
 
-Aether is a platform. This means that it doesn’t do much on its own: it only makes sense to use it in the context of creating a solution. For this initial run-through, we’re going to create a simple solution that takes data collected in a microcensus and feeds it out to dashboards. We’ll start with some raw json input data, and create some mappings to transform it into a more useable state. After that, we'll see how that data can then be fed through to CKAN by using Aether Connect. But first things first...
+Aether is a platform. This means that it doesn’t do much on its own: it only makes sense to use it in the context of creating a solution. For this initial run-through, we’re going to create a simple solution that takes data collected in a microcensus and feeds it out to dashboards. We’ll start with some raw json input data, and create some mappings to transform it into a more useable state. After that, we'll see how that data can then be fed through to Kibana or CKAN by using Aether Connect.
+
+_**If you have already tried the Gather demo, and that environement is still available, you can skip past the Prerequisites, go to [Installing Aether](install)**_
 
 ## Prerequisites
 Since Aether is a development platform, these instructions assume that you are a Developer or DevOps type person with familiarity with the commandline, github and docker. There isn't any programming required but the instructions will be challenging if you are not used to scripts, config files, JSON and just generally performing system admin type tasks.  If this is not you, Gather may be more apropriate.

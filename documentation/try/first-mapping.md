@@ -8,11 +8,11 @@ description: Aether Documentation – Try It for yourself
 
 Aether is a platform for building solutions that curate and exchange live information. Structured data is "pushed" to Aether via client API.  The input data is combined with known schemas and _mapping functions_ resulting in the extraction of one or more _entity objects._
 
-Entities are standalone data documents that each contain a matadata "contract" or schema.  The schema describes the structure of the data represented by the entity.  The entities (document/schema bundles) are passed along to a queing mechanism and made available to downstream data consumers.  
+Entities are standalone data documents that each contain a metadata "contract" or schema.  The schema describes the structure of the data represented by the entity.  The entities (document/schema bundles) are passed along to a queuing mechanism and made available to downstream data consumers.  
 
 ![Highlevel Flow](/images/highlevel-flow.png)
 
-An example of this type of entity extraction is [normalizing](https://en.wikipedia.org/wiki/Database_normalization) an entry of data from a census form.  There may be information about the physical location, some household information, the names, ages and sex of people living in the houshold etc.  Using a mapping that you build, Aether's entity extractor could generate 3 kinds of entities from this row of data:  Location, Household and Person.  You also have the ability to give each entity a globally unique ID and link the entities together logically.  
+    
 
 In Aether speak, we call this process a **pipeline**.  A pipeline consists of a path that data takes through Aether, and the transformations that it goes through along the way. Within a pipeline, we define one or more _data contracts_ that specify the format of the transformed data, along with rules that define how the input data is transformed to comply with those contracts.
 
@@ -49,7 +49,7 @@ _**So what just happened?**_
 3. _Aether showed us a graphical representation of the schema it generated._ 
 
 ### Output
-We used a data sample to generate the schema used as the input contract for facility registration.  For the facility entity that we will send out, we will use an [AVRO Schema](https://en.wikipedia.org/wiki/Apache_Avro).  To keep this example simple, we will not add too much to the facility entity that will we will generate. We already have a name and a location for our clinic but to ensure consistancy, in case a clinic is renamed or the original data was incorrect, we should give it an ID and include a revision field as well. Taking that into account, we need a schema for `Health Facility` that looks like this:
+We used a data sample to generate the schema used as the input contract for facility registration.  For the facility entity that we will send out, we will use an [AVRO Schema](https://en.wikipedia.org/wiki/Apache_Avro).  To keep this example simple, we will not add too much to the facility entity that will we will generate. We already have a name and a location for our clinic but to ensure consistency, in case a clinic is renamed or the original data was incorrect, we should give it an ID and include a revision field as well. Taking that into account, we need a schema for `Health Facility` that looks like this:
 
 ```json
 [

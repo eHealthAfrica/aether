@@ -24,13 +24,15 @@ _NOTE: Editing your **/etc/hosts** file will **not** be required in a production
 ## Into the Aether
 We’ve created an **aether-bootstrap** repository to make it easy for you to get up and running with your first Aether-based solution. It contains a series of **docker-compose** files and shell scripts that will pull Docker images of the latest version of Aether from Docker Hub and start them up. 
 
+_**If you have already tried the Gather demo, and that environement is still available, you don't need to clone the "aether-bootstrap" repository.  The "aether-bootstrap" folder can be found in the "gather-deploy" repository.**_
+
 ```
 git clone https://github.com/eHealthAfrica/aether-bootstrap.git
 
 cd aether-bootstrap
 ```
 
-If you are starting Aether for the first time, you will need to create some docker resources (networks and volumes) and generate credentials for all applications:
+If you are starting Aether or Gather for the first time, you will need to create some docker resources (networks and volumes) and generate credentials for all applications:
 
 ```
 ./scripts/initialise_docker_environment.sh

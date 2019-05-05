@@ -11,10 +11,15 @@ This guide will take you through the steps required to create and configure an E
 ## Overview of the setup process
 If you are already comfortable with configuring and running Amazon EC2 instances, just follow this list of steps and return to [Try Gather](http://gather.ehealthafrica.org/documentation/try/setup) or [Try Aether](index#into-the-aether)
 * Create an EC2 Ubuntu instance with at least 2 processors, 8GB RAM and 8GB Storage **t2.large**
-* Configure your VPC to be accessible from the internet with these ports open: 22, 80, 8000, 8443 and 5000
+* Configure your VPC to be accessible from the internet with the following ports open . _For demo purposes, it's okay to open all the ones below if you are not sure which ones you will need:_ 
+  * 22 - ssh for setup and configuration. Always required.
+  * 80 - http for UI. Always required.
+  * 8000 - For submitting data to the Aether REST API.  
+  * 8443 - ODK port for submitting surveys from ODK Collect to Gather.
+  * 5000 - Demo CKAN Portal where Aether/Gather can send data.
+  * 5601 - Demo Kibana instance to analyze data sent from Aether/Gather to Elasticsearch
 * Verify/Install git, Docker and Docker Compose. It helps if Docker can be [run as a non-root user](https://docs.docker.com/install/linux/linux-postinstall/)
 * Use *Stop* instead of *Terminate* if you want to preserve data between sessions.
-
 ## Very detailed steps for people new to AWS
 [ ![AWS EC2 Launch](/images/aws-ec2-launch.png)](/images/aws-ec2-launch.png){: .scalable}Log into your Amazon Web Services account and navigate to the EC2 Management Console.  Select an availability zone appropriate to your location. The screenshot shows that my zone is set to Frankfurt. 
 
@@ -26,7 +31,7 @@ Click **Launch Image** to create a new EC2 image.
 
 <p style="clear: both;"/>
 
-[![AWS EC2 Instance Type](/images/aws-ec2-step2.png)](/images/aws-ec2-step2.png){: .scalable}**Step 2: Choose an Instance Type -** Select **x2.large** with 2 CPUs and 8 GB RAM
+[![AWS EC2 Instance Type](/images/aws-ec2-step2.png)](/images/aws-ec2-step2.png){: .scalable}**Step 2: Choose an Instance Type -** Select **t2.large** with 2 CPUs and 8 GB RAM
 
 <p style="clear: both;"/>
 
@@ -42,7 +47,7 @@ Click **Launch Image** to create a new EC2 image.
 
 <p style="clear: both;"/>
 
-[![AWS EC2 Ports](/images/aws-ec2-step6.png)](/images/aws-ec2-step6.png){: .scalable}**Step 6: Configure Security Group -** Open up the the following ports so that you can access them from your local computer. Ports 22, 80, 8000, 8443 and 5000.  The screenshot on the left has more detail about each port.
+[![AWS EC2 Ports](/images/aws-ec2-step6.png)](/images/aws-ec2-step6.png){: .scalable}**Step 6: Configure Security Group -** Open up the the following ports so that you can access them from your local computer. Ports 22, 80, 8000, 8443, 5000 and 5601. _Note: The screenshot is missing port 5601_
 
 <p style="clear: both;"/>
 
