@@ -162,10 +162,13 @@ class MultitenancyTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         response = self.client.patch(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
         url = reverse('mappingset-detail', kwargs={'pk': child2.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        # schema endpoint
+        url = reverse('api_schema', kwargs={'version': 'v1'})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_views__project(self):
         url = reverse('project-list')
