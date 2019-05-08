@@ -17,7 +17,7 @@
 # under the License.
 
 import uuid
-import mock
+from unittest import mock
 
 from django.conf import settings
 from django.test import RequestFactory, TestCase, override_settings

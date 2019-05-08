@@ -16,14 +16,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
-import mock
+from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase, override_settings
+from django_eha_sdk.unittest import MockResponse
 
-from aether.common.kernel import utils as kernel_utils
-
+from ..kernel_utils import (
+    check_kernel_connection,
+    get_kernel_url,
+    get_kernel_auth_header,
+)
 from ..models import Project, Pipeline, Contract
 
 
@@ -57,24 +60,6 @@ def mock_return_true(*args):
     return True
 
 
-class MockResponse:
-
-    def __init__(self, status_code, json_data=None, text=None):
-        if json_data is None:
-            json_data = {}
-        self.status_code = status_code
-        self.json_data = json_data
-        self.content = json.dumps(json_data)
-        self.text = text
-
-    def raise_for_status(self):
-        if self.status_code >= 400:
-            raise Exception(self.status_code)
-
-    def json(self):
-        return self.json_data
-
-
 @override_settings(MULTITENANCY=False)
 class ModelsTests(TestCase):
 
@@ -82,9 +67,9 @@ class ModelsTests(TestCase):
         super(ModelsTests, self).setUp()
 
         # check Kernel testing server
-        self.assertTrue(kernel_utils.test_connection())
-        self.KERNEL_URL = kernel_utils.get_kernel_server_url() + '/validate-mappings/'
-        self.KERNEL_HEADERS = kernel_utils.get_auth_header()
+        self.assertTrue(check_kernel_connection())
+        self.KERNEL_URL = get_kernel_url() + '/validate-mappings/'
+        self.KERNEL_HEADERS = get_kernel_auth_header()
 
     def test__models(self):
         project = Project.objects.create(name='Project test')
@@ -159,7 +144,7 @@ class ModelsTests(TestCase):
         self.assertEqual(contract.mapping_errors, [])
         self.assertEqual(contract.output, [])
 
-    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_false)
+    @mock.patch('aether.ui.api.utils.kernel_utils.check_kernel_connection', new=mock_return_false)
     def test__contract__save__test_connection_fail(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
@@ -180,7 +165,7 @@ class ModelsTests(TestCase):
         )
         self.assertEqual(contract.output, [])
 
-    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('aether.ui.api.utils.kernel_utils.check_kernel_connection', new=mock_return_true)
     @mock.patch('aether.ui.api.utils.request',
                 return_value=MockResponse(500, text='Internal Server Error'))
     def test__contract__save__with_server_error(self, mock_post):
@@ -221,7 +206,7 @@ class ModelsTests(TestCase):
             },
         )
 
-    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('aether.ui.api.utils.kernel_utils.check_kernel_connection', new=mock_return_true)
     @mock.patch('aether.ui.api.utils.request',
                 return_value=MockResponse(400, {
                     'entities': [],
@@ -265,7 +250,7 @@ class ModelsTests(TestCase):
             },
         )
 
-    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('aether.ui.api.utils.kernel_utils.check_kernel_connection', new=mock_return_true)
     @mock.patch('aether.ui.api.utils.request',
                 return_value=MockResponse(200, {
                     'entities_2': 'something',
@@ -305,7 +290,7 @@ class ModelsTests(TestCase):
             },
         )
 
-    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('aether.ui.api.utils.kernel_utils.check_kernel_connection', new=mock_return_true)
     @mock.patch('aether.ui.api.utils.request',
                 return_value=MockResponse(200, {
                     'entities': 'something',

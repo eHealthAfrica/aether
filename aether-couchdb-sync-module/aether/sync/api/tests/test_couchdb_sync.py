@@ -17,14 +17,18 @@
 # under the License.
 
 import uuid
-import mock
+from unittest import mock
 import requests
 
-from aether.common.utils import get_all_docs
-from aether.common.kernel import utils as kernel_utils
+from django_eha_sdk.utils import get_all_docs
 
 from ...couchdb import api as couchdb
 from ..couchdb_helpers import create_db
+from ..kernel_utils import (
+    check_kernel_connection,
+    get_kernel_auth_header,
+    get_kernel_url,
+)
 from ..models import DeviceDB, Project, Schema
 
 from ..couchdb_sync import (
@@ -35,14 +39,16 @@ from ..couchdb_sync import (
 from . import ApiTestCase
 
 
-HEADERS_TESTING = kernel_utils.get_auth_header()
+KERNEL_URL = get_kernel_url()
+KERNEL_HEADERS = get_kernel_auth_header()
+
 SUBMISSION_FK = 'mappingset'
 DEVICE_ID = 'test_import-from-couch'
 
 
 def get_aether_submissions():
-    url = kernel_utils.get_submissions_url()
-    return list(get_all_docs(url, headers=HEADERS_TESTING))
+    url = f'{KERNEL_URL}/submissions/'
+    return list(get_all_docs(url, headers=KERNEL_HEADERS))
 
 
 class CouchDbSyncTestCase(ApiTestCase):
@@ -51,11 +57,10 @@ class CouchDbSyncTestCase(ApiTestCase):
         super(CouchDbSyncTestCase, self).setUp()
 
         # Check that we can connect to the kernel container.
-        self.assertTrue(kernel_utils.test_connection())
+        self.assertTrue(check_kernel_connection())
 
         # use same ID for all artefacts
         self.KERNEL_ID = str(uuid.uuid4())
-        self.KERNEL_URL = kernel_utils.get_kernel_server_url()
         self.SCHEMA_NAME = 'example'
 
         Schema.objects.create(
@@ -99,10 +104,10 @@ class CouchDbSyncTestCase(ApiTestCase):
     def tearDown(self):
         super(CouchDbSyncTestCase, self).tearDown()
 
-        requests.delete(f'{self.KERNEL_URL}/projects/{self.KERNEL_ID}/', headers=HEADERS_TESTING)
-        requests.delete(f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID}/', headers=HEADERS_TESTING)
+        requests.delete(f'{KERNEL_URL}/projects/{self.KERNEL_ID}/', headers=KERNEL_HEADERS)
+        requests.delete(f'{KERNEL_URL}/schemas/{self.KERNEL_ID}/', headers=KERNEL_HEADERS)
 
-    @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=False)
+    @mock.patch('aether.sync.api.couchdb_sync.check_kernel_connection', return_value=False)
     def test_post_to_aether_no_kernel(self, mock_test):
         self.assertRaises(
             RuntimeError,
@@ -123,8 +128,8 @@ class CouchDbSyncTestCase(ApiTestCase):
         )
 
     @mock.patch('aether.sync.api.couchdb_sync.propagate_kernel_artefacts')
-    @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=True)
-    @mock.patch('aether.common.kernel.utils.request')
+    @mock.patch('aether.sync.api.couchdb_sync.check_kernel_connection', return_value=True)
+    @mock.patch('aether.sync.api.kernel_utils.request')
     def test_post_to_aether__without_aether_id(self, mock_req, mock_auth, mock_propagate):
         post_to_aether(document={'_id': f'{self.SCHEMA_NAME}-b'}, aether_id=None)
         mock_req.assert_called_with(
@@ -135,8 +140,8 @@ class CouchDbSyncTestCase(ApiTestCase):
         )
 
     @mock.patch('aether.sync.api.couchdb_sync.propagate_kernel_artefacts')
-    @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=True)
-    @mock.patch('aether.common.kernel.utils.request')
+    @mock.patch('aether.sync.api.couchdb_sync.check_kernel_connection', return_value=True)
+    @mock.patch('aether.sync.api.kernel_utils.request')
     def test_post_to_aether__with_aether_id(self, mock_req, mock_auth, mock_propagate):
         post_to_aether(document={'_id': f'{self.SCHEMA_NAME}-b'}, aether_id=1)
         mock_req.assert_called_with(

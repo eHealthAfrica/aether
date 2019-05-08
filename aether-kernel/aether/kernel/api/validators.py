@@ -32,6 +32,9 @@ from . import avro_tools
 
 
 MESSAGE_REQUIRED_ID = _('A schema is required to have a field "id" of type "string"')
+MESSAGE_NOT_OBJECT = _('Value {} is not an Object')
+MESSAGE_NOT_UUID = _('Entity id "{}" is not a valid uuid')
+MESSAGE_NOT_VALID = _('Extracted record did not conform to registered schema')
 
 MAPPING_DEFINITION_SCHEMA = {
     'description': _(
@@ -143,7 +146,7 @@ def validate_mapping_definition(value):
 
 def validate_schemas(value):
     if not isinstance(value, dict):
-        raise ValidationError(_('Value {} is not an Object').format(value))
+        raise ValidationError(MESSAGE_NOT_OBJECT.format(value))
 
     for schema in value.values():
         validate_schema_definition(schema)
@@ -157,8 +160,7 @@ def validate_entity_payload(schema_definition, payload):
         avro_schema = parse(json.dumps(schema_definition))
         valid = validate(avro_schema, payload)
         if not valid:
-            msg = _('Extracted record did not conform to registered schema')
-            raise ValidationError(msg)
+            raise ValidationError(MESSAGE_NOT_VALID)
         return True
     except Exception as err:
         raise ValidationError(str(err))
@@ -170,7 +172,7 @@ def validate_entity_payload_id(entity_payload):
         uuid.UUID(id_, version=4)
         return None
     except (ValueError, AttributeError, TypeError):
-        return {'description': _('Entity id "{}" is not a valid uuid').format(id_)}
+        return {'description': MESSAGE_NOT_UUID.format(id_)}
 
 
 def validate_avro(schema, datum):

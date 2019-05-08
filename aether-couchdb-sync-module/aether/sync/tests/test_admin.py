@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.contrib.admin.sites import AdminSite

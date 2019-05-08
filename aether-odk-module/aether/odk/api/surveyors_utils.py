@@ -20,7 +20,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from aether.common.multitenancy.utils import get_auth_group
+from django_eha_sdk.multitenancy.utils import get_auth_group
 
 from .models import Project, XForm, MediaFile
 

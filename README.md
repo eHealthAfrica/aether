@@ -286,12 +286,14 @@ The default values for the export feature:
 #### Aether ODK Module
 
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 #### Aether UI
 
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
@@ -301,6 +303,7 @@ The default values for the export feature:
   Token used to verify the device identity with Google.
   See more in https://developers.google.com/identity/protocols/OAuth2
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 

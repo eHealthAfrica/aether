@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from aether.sync.api.tests import ApiTestCase, DEVICE_TEST_FILE
 
