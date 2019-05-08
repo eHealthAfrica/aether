@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -16,14 +16,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django_rq import job
+from django_eha_sdk.health.utils import (
+    check_external_app,
+    get_external_app_url,
+    get_external_app_token,
+)
 
-from .api.kernel_utils import check_kernel_connection
-from .api.couchdb_sync import import_synced_devices
+EXTERNAL_APP_KERNEL = 'aether-kernel'
 
 
-@job('default', timeout=15 * 60)
-def import_synced_devices_task():
-    if check_kernel_connection():
-        return import_synced_devices()
-    return {}
+def check_kernel_connection():
+    return check_external_app(EXTERNAL_APP_KERNEL)
+
+
+def get_kernel_url():
+    return get_external_app_url(EXTERNAL_APP_KERNEL)
+
+
+def get_kernel_auth_header():
+    return {'Authorization': f'Token {get_external_app_token(EXTERNAL_APP_KERNEL)}'}

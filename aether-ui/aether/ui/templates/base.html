@@ -1,4 +1,4 @@
-{% extends 'aether/base.html' %}
+{% extends 'eha/base.html' %}
 
 {% comment 'LICENSE' %}
 Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
@@ -24,13 +24,12 @@ under the License.
 
 
 {% block scripts %}
-
   {# Common JS libraries #}
   {% render_bundle 'common' %}
 {% endblock scripts %}
 
 
-{% block styles %}
+{% block style %}
   {% if dev_mode %}
     {# this is for CSS Hot reloading in development (render as another JS file) #}
     {% render_bundle 'styles' 'js' %}
@@ -38,4 +37,4 @@ under the License.
     {# render as CSS file #}
     {% render_bundle 'styles' 'css' %}
   {% endif %}
-{% endblock styles %}
+{% endblock style %}

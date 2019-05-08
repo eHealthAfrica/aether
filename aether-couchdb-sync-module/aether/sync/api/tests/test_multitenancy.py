@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from http.cookies import SimpleCookie
 
@@ -27,13 +27,15 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from aether.common.kernel.utils import get_kernel_server_url
-from aether.common.multitenancy.models import MtInstance
-from aether.common.multitenancy import utils
+from django_eha_sdk.multitenancy.models import MtInstance
+from django_eha_sdk.multitenancy import utils
+from django_eha_sdk.unittest import MockResponse
 
 from .. import models, serializers
-from ..kernel_utils import __upsert_kernel_artefacts as upsert_kernel
-from . import MockResponse
+from ..kernel_utils import (
+    get_kernel_url,
+    __upsert_kernel_artefacts as upsert_kernel,
+)
 
 CURRENT_REALM = 'realm'
 ANOTHER_REALM = 'another'
@@ -192,10 +194,10 @@ class MultitenancyTests(TestCase):
 
     @mock.patch('aether.sync.api.kernel_utils.request',
                 return_value=MockResponse(status_code=200))
-    @mock.patch('aether.sync.api.kernel_utils.get_auth_header',
+    @mock.patch('aether.sync.api.kernel_utils.get_kernel_auth_header',
                 return_value={'Authorization': 'Token ABCDEFGH'})
     def test__upsert_kernel_artefacts(self, mock_auth, mock_patch):
-        kernel_url = get_kernel_server_url()
+        kernel_url = get_kernel_url()
 
         project = models.Project.objects.create(name='p')
         project.add_to_realm(self.request)

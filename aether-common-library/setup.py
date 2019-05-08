@@ -39,40 +39,8 @@ setup(
     license='Apache2 License',
 
     python_requires='>=3.6',
-    install_requires=[
-        'django',
-        'django-cors-headers',
-        'django-debug-toolbar',
-        'django-prometheus',
-        'django-uwsgi',
-        'djangorestframework',
-        'psycopg2-binary',
-        'pygments',
-        'python-json-logger',
-        'requests',
-    ],
-    extras_require={
-        'cas': [
-            'django-cas-ng',
-            'django-ums-client',
-        ],
-        'storage': [
-            'django-minio-storage',
-            'django-storages[boto3,google]',
-        ],
-        'server': [
-            'sentry-sdk',
-            'uwsgi',
-        ],
-        'test': [
-            'coverage',
-            'flake8',
-            'flake8-quotes',
-            'mock',
-            'tblib',  # for paralell test runner
-        ],
-    },
+    install_requires=['django_eha_sdk'],
 
-    packages=find_packages(exclude=['*tests*']),
+    packages=find_packages(),
     include_package_data=True,
 )

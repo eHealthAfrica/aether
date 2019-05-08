@@ -15,11 +15,9 @@
 
 # Main libraries
 
-# Aether common library with extras
-aether.common[cas,server,test]
+# Django-eHa-SDK library with extras
+django_eha_sdk[cas,server,webpack,test]
 
 
 # Django specific
 django-model-utils
-django-webpack-loader  # load JS assets
-drf-dynamic-fields

@@ -28,6 +28,12 @@ class SettingsTest(TestCase):
         self.assertTrue(settings.TESTING)
         self.assertFalse(settings.DEBUG)
 
+        self.assertTrue(settings.STORAGE_REQUIRED)
+        self.assertFalse(settings.SCHEDULER_REQUIRED)
+        self.assertFalse(settings.WEBPACK_REQUIRED)
+
+        self.assertEqual(settings.APP_MODULE, 'aether.odk')
         self.assertEqual(settings.ROOT_URLCONF, 'aether.odk.urls')
+
         self.assertEqual(settings.SURVEYOR_GROUP_NAME, 'surveyor')
         self.assertIsNotNone(settings.DJANGO_STORAGE_BACKEND)

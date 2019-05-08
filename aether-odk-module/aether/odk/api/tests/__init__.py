@@ -17,7 +17,6 @@
 # under the License.
 
 import base64
-import json
 import os
 import uuid
 
@@ -228,17 +227,6 @@ XML_DATA_ERR = '''
         <h:head>
     </h:html>
 '''
-
-
-class MockResponse:
-
-    def __init__(self, status_code, json_data={}):
-        self.json_data = json_data
-        self.status_code = status_code
-        self.content = json.dumps(json_data).encode('utf-8')
-
-    def json(self):
-        return self.json_data
 
 
 class CustomTestCase(TransactionTestCase):

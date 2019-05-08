@@ -18,13 +18,13 @@
 
 from django.urls import include, path
 
-from aether.common.conf.urls import generate_urlpatterns
+from django_eha_sdk.conf.urls import generate_urlpatterns
 
 from .api.views import signin, load_file
 from .views import check_rq
 
 
-urlpatterns = generate_urlpatterns(token=True, kernel=True, app=[
+urlpatterns = generate_urlpatterns(token=True, app=[
     path('', include('aether.sync.api.urls')),
 
     path('check-rq', view=check_rq, name='check-rq'),

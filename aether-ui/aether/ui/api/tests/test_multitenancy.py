@@ -17,7 +17,7 @@
 # under the License.
 
 import uuid
-import mock
+from unittest import mock
 
 from http.cookies import SimpleCookie
 
@@ -28,13 +28,14 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from aether.common.kernel.utils import get_auth_header
-from aether.common.multitenancy.models import MtInstance
-from aether.common.multitenancy import utils as mt_utils
+from django_eha_sdk.multitenancy import utils as mt_utils
+from django_eha_sdk.multitenancy.models import MtInstance
 
+from ..kernel_utils import get_kernel_auth_header
 from .. import models, serializers, utils
 
 CURRENT_REALM = 'realm'
+KERNEL_HEADERS = get_kernel_auth_header()
 
 
 class MultitenancyTests(TestCase):
@@ -56,7 +57,7 @@ class MultitenancyTests(TestCase):
         self.client.cookies = SimpleCookie({settings.REALM_COOKIE: CURRENT_REALM})
         self.assertTrue(self.client.login(username=username, password=password))
 
-        auth_header = get_auth_header()
+        auth_header = get_kernel_auth_header()
         self.HEADERS = mt_utils.add_current_realm_in_headers(self.request, auth_header)
 
     def tearDown(self):
