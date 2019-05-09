@@ -21,12 +21,11 @@
 
 import os
 
-from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import (
+from aether.common.settings import *  # noqa
+from aether.common.settings import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
     REST_FRAMEWORK,
-    check_storage,
 )
 
 # Kernel Configuration
@@ -37,7 +36,6 @@ ROOT_URLCONF = 'aether.kernel.urls'
 INSTALLED_APPS += [
     'django_filters',
     'drf_yasg',
-    'aether.kernel',
 ]
 
 MULTITENANCY_MODEL = 'kernel.Project'
@@ -48,11 +46,6 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     'django_filters.rest_framework.DjangoFilterBackend',
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
-
-
-# Storage Configuration
-# ------------------------------------------------------------------------------
-check_storage()
 
 
 # Export Configuration

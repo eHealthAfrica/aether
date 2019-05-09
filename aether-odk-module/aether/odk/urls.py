@@ -18,9 +18,9 @@
 
 from django.urls import include, path
 
-from aether.common.conf.urls import generate_urlpatterns
+from django_eha_sdk.conf.urls import generate_urlpatterns
 
 
-urlpatterns = generate_urlpatterns(token=True, kernel=True, app=[
+urlpatterns = generate_urlpatterns(token=True, app=[
     path('', include('aether.odk.api.urls')),
 ])

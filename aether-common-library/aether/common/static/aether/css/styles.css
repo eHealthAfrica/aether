@@ -18,9 +18,10 @@
  * under the License.
  */
 
-@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,600);
 
-body {
+/* override eha-bg */
+
+.eha-bg {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   background: #50aef3;
@@ -31,20 +32,7 @@ body {
   line-height: 1.3rem;
 }
 
-/* background classes */
-
-.aether-bg {
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
-  background: #50aef3;
-  background-image: linear-gradient(to right, #50aef3, #7175dd);
-  color: #fff;
-  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
-  font-size: 15px;
-  line-height: 1.3rem;
-}
-
-.aether-bg:before {
+.eha-bg:before {
   content: '';
   display: block;
   position: fixed;
@@ -59,7 +47,7 @@ body {
   z-index: -1;
 }
 
-.aether-bg:after {
+.eha-bg:after {
   content: '';
   display: block;
   position: fixed;
@@ -72,86 +60,4 @@ body {
   border-right: 5vw solid #ffffff1a;
   border-top: 3vw solid #ffffff1a;
   z-index: -1;
-}
-
-/* branding classes */
-.brand {
-  display: block;
-  height: 1rem;
-  margin: 10vh 0 5rem;
-  position: relative;
-  transition: opacity 0.4s;
-  width: 2.4rem;
-}
-
-.brand span {
-  color: #fff;
-  display: inline-block;
-  font-size: 28px;
-  font-weight: 300;
-  line-height: 46px;
-  margin: 0 60px;
-}
-
-.brand span b {
-  font-weight: 600;
-}
-
-.logo-container {
-  perspective: 1000px;
-  position: absolute;
-}
-
-.logo-container:hover .flipper {
-  transform: rotateY(180deg);
-}
-
-.back,
-.front,
-.logo-container {
-  border-radius: 50%;
-  height: 46px;
-  width: 46px;
-}
-
-.flipper {
-  position: relative;
-  transform-style: preserve-3d;
-  transition: 1s;
-}
-
-.back,
-.front {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  box-sizing: border-box;
-  left: 0;
-  position: absolute;
-  top: 0;
-}
-
-/* navbar branding classes */
-.navbar-brand .back,
-.navbar-brand .front,
-.navbar-brand .logo-container {
-  height: 24px;
-  width: 24px;
-}
-
-.navbar-brand span {
-  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
-  display: inline-block;
-  margin-left: 32px;
-  line-height: 24px;
-}
-
-/* logged out info */
-.logout-info {
-  padding-left: 2rem;
-}
-
-.logout-info a,
-.logout-info a:visited {
-  color: #fff;
-  text-decoration: underline;
 }

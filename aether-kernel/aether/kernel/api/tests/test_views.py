@@ -18,7 +18,7 @@
 
 import dateutil.parser
 import json
-import mock
+from unittest import mock
 import uuid
 
 from django.contrib.auth import get_user_model
@@ -765,3 +765,14 @@ class ViewsTest(TestCase):
             models.Submission.objects.filter(mappingset=self.mappingset).count(),
             0
         )
+    def test_entity__submit_mutiple__success(self):
+        response = self.client.post(reverse('entity-list'),
+                                    json.dumps([]),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_swagger_schema_view__success(self):
+        # single tenant
+        url = reverse('api_schema', kwargs={'version': 'v1'})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

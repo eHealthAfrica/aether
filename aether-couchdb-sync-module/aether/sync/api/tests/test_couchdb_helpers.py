@@ -16,11 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 from django.test import TestCase
+from django_eha_sdk.unittest import MockResponse
 
 from .. import couchdb_helpers
-from . import MockResponse
 
 
 class CouchdbHelpersTests(TestCase):

@@ -12,9 +12,8 @@
 #                                                                              #
 ################################################################################
 
-aether.common
-boto3==1.9.140
-botocore==1.12.140
+boto3==1.9.141
+botocore==1.12.141
 cachetools==3.1.0
 certifi==2019.3.9
 chardet==3.0.4
@@ -23,10 +22,10 @@ Django==2.2.1
 django-cas-ng==3.6.0
 django-cors-headers==2.5.3
 django-debug-toolbar==1.11
+django-eha-sdk==1.0.0
 django-minio-storage==0.2.2
 django-prometheus==1.0.15
 django-storages==1.7.1
-django-ums-client==0.2.6
 django-uwsgi==0.2.2
 djangorestframework==3.9.3
 docutils==0.14
@@ -47,8 +46,6 @@ linecache2==1.0.0
 lxml==4.3.3
 mccabe==0.6.1
 minio==4.0.16
-mock==2.0.0
-pbr==5.2.0
 prometheus-client==0.6.0
 protobuf==3.7.1
 psycopg2-binary==2.8.2
@@ -69,7 +66,7 @@ sentry-sdk==0.7.14
 six==1.12.0
 spavro==1.1.22
 sqlparse==0.3.0
-tblib==1.3.2
+tblib==1.4.0
 traceback2==1.4.0
 unicodecsv==0.14.1
 unittest2==1.1.0

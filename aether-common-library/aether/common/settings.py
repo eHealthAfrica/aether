@@ -16,24 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.urls import include, path
-from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
+import os
 
-from django_eha_sdk.conf.urls import generate_urlpatterns
+from django_eha_sdk.conf.settings import *  # noqa
+from django_eha_sdk.conf.settings import INSTALLED_APPS
 
 
-urlpatterns = generate_urlpatterns(app=[
-    # API
-    path('api/', include('aether.ui.api.urls')),
+# Common Configuration
+# ------------------------------------------------------------------------------
 
-    # Pipeline builder app
-    path('',
-         view=login_required(TemplateView.as_view(template_name='pages/pipeline.html')),
-         name='pipeline-app'),
+APP_NAME = os.environ.get('APP_NAME', 'aether')
+APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
 
-    # styleguide
-    path('styleguide',
-         view=login_required(TemplateView.as_view(template_name='pages/styleguide.html')),
-         name='styleguide'),
-])
+APP_NAME_HTML = '<b>ae</b>ther'
+APP_FAVICON = 'aether/images/aether.png'
+APP_LOGO = 'aether/images/aether-white.png'
+
+APP_EXTRA_STYLE = 'aether/css/styles.css'
+APP_EXTRA_META = (
+    'A free, open source development platform'
+    ' for data curation, exchange, and publication'
+)
+
+INSTALLED_APPS += ['aether.common', ]  # includes static content

@@ -82,6 +82,8 @@ services:
         condition: service_healthy
     networks:
       - internal
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
 
   # ---------------------------------
@@ -103,6 +105,8 @@ services:
         condition: service_started
     networks:
       - internal
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
 
   # ---------------------------------
@@ -134,6 +138,8 @@ services:
       #   condition: service_started
     networks:
       - internal
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
 
   # ---------------------------------
@@ -157,6 +163,8 @@ services:
         condition: service_started
     networks:
       - internal
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
 
   # ---------------------------------
@@ -182,6 +190,8 @@ services:
         condition: service_started
     networks:
       - internal
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
   couchdb-sync-rq:
     extends:

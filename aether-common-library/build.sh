@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -15,25 +17,30 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+set -Eeuo pipefail
 
-from django.urls import include, path
-from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
+EGG_INFO=aether.common.egg-info
 
-from django_eha_sdk.conf.urls import generate_urlpatterns
+# ----------------------------------------
+# test before building
+# ----------------------------------------
+flake8
 
+# ----------------------------------------
+# remove previous packages if needed
+# ----------------------------------------
+rm -rf dist/*
+rm -rf build
+rm -rf $EGG_INFO
 
-urlpatterns = generate_urlpatterns(app=[
-    # API
-    path('api/', include('aether.ui.api.urls')),
+# ----------------------------------------
+# create the distribution package
+# ----------------------------------------
+python3 setup.py bdist_wheel
 
-    # Pipeline builder app
-    path('',
-         view=login_required(TemplateView.as_view(template_name='pages/pipeline.html')),
-         name='pipeline-app'),
-
-    # styleguide
-    path('styleguide',
-         view=login_required(TemplateView.as_view(template_name='pages/styleguide.html')),
-         name='styleguide'),
-])
+# ----------------------------------------
+# remove useless content
+# ----------------------------------------
+rm -rf build
+rm -rf $EGG_INFO

@@ -32,7 +32,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from aether.common.multitenancy.views import MtViewSetMixin
+from django_eha_sdk.multitenancy.views import MtViewSetMixin
 
 from .avro_tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH
@@ -649,6 +649,11 @@ SchemaView = get_schema_view(
 
 class AetherSchemaView(SchemaView):
     versioning_class = versioning.URLPathVersioning
+
+    def get(self, *args, **kwargs):
+        # this SchemaView doesn't know about realms, so we'll strip that out
+        kwargs.pop('realm', None)
+        return super().get(*args, **kwargs)
 
 
 @api_view(['POST'])

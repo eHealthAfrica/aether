@@ -12,7 +12,6 @@
 #                                                                              #
 ################################################################################
 
-aether.common
 certifi==2019.3.9
 chardet==3.0.4
 coverage==4.5.3
@@ -20,9 +19,9 @@ Django==2.2.1
 django-cas-ng==3.6.0
 django-cors-headers==2.5.3
 django-debug-toolbar==1.11
+django-eha-sdk==1.0.0
 django-model-utils==3.1.2
 django-prometheus==1.0.15
-django-ums-client==0.2.6
 django-uwsgi==0.2.2
 django-webpack-loader==0.6.0
 djangorestframework==3.9.3
@@ -33,8 +32,6 @@ flake8-quotes==2.0.1
 idna==2.8
 lxml==4.3.3
 mccabe==0.6.1
-mock==2.0.0
-pbr==5.2.0
 prometheus-client==0.6.0
 psycopg2-binary==2.8.2
 pycodestyle==2.5.0
@@ -47,6 +44,6 @@ requests==2.21.0
 sentry-sdk==0.7.14
 six==1.12.0
 sqlparse==0.3.0
-tblib==1.3.2
+tblib==1.4.0
 urllib3==1.25.2
 uWSGI==2.0.18
