@@ -324,7 +324,7 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
-    mt_field = 'mappingset__project'
+    mt_field = 'project'
 
     @action(detail=True, methods=['patch'])
     def extract(self, request, pk, *args, **kwargs):
@@ -358,7 +358,7 @@ class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
-    mt_field = 'submission__mappingset__project'
+    mt_field = 'submission__project'
 
 
 class SchemaViewSet(viewsets.ModelViewSet):
