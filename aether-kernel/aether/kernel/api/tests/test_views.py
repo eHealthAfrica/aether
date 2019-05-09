@@ -765,6 +765,7 @@ class ViewsTest(TestCase):
             models.Submission.objects.filter(mappingset=self.mappingset).count(),
             0
         )
+
     def test_entity__submit_mutiple__success(self):
         response = self.client.post(reverse('entity-list'),
                                     json.dumps([]),
