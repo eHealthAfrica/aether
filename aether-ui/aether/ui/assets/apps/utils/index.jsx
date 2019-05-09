@@ -126,6 +126,16 @@ export const replaceItemInList = (list, obj) => (
 )
 
 /**
+ * Removes the given object in the list, identified by the `id`
+ *
+ * @param {Array}   list
+ * @param {Object}  obj
+ */
+export const removeItemFromList = (list, obj) => (
+  list.filter(item => item.id !== obj.id)
+)
+
+/**
  * Takes the logged in user, id (int) and name, from the DOM element
  */
 export const getLoggedInUser = () => {

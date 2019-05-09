@@ -35,7 +35,8 @@ import {
   clearSelection,
   getPipelineById,
   selectContract,
-  selectSection
+  selectSection,
+  deleteContract
 } from './redux'
 
 import {
@@ -274,7 +275,10 @@ class Pipeline extends Component {
   }
 
   deleteContract () {
-    this.props.deleteContract()
+    this.props.deleteContract(this.props.contract.id, {
+      entity_types: this.state.deleteOptions.entityTypes,
+      entities: this.state.deleteOptions.entities
+    })
     this.setState({
       showDeleteModal: false
     })
@@ -597,7 +601,8 @@ const mapDispatchToProps = {
   clearSelection,
   getPipelineById,
   selectContract,
-  selectSection
+  selectSection,
+  deleteContract
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Pipeline)

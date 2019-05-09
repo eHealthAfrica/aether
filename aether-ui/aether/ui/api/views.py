@@ -76,6 +76,24 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+    @action(methods=['post'], detail=True, url_path='kernel-objects')
+    def delete_kernel_objects(self, request, *args, **kwargs):
+        kernel_object = request.query_params.get('object')
+        url = ''
+        if kernel_object == 'entity-types':
+            url = '/schemas/mapping-schema-delete'
+        elif kernel_object == 'entities':
+            url = '/entities/mapping-entity-delete'
+
+        # return Response(utils.kernel_data_request(
+        #     url,
+        #     method='post',
+        #     data=[self.mapping]
+        # ))
+        print('URL', url)
+        return Response(url)
+
+
     @action(methods=['get'], detail=True, url_path='publish-preflight')
     def publish_preflight(self, request, pk=None, *args, **kwargs):
         '''
