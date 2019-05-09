@@ -713,3 +713,55 @@ class ViewsTest(TestCase):
         response = self.client.patch(url)
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(self.submission.entities.count(), 0)
+
+    def test_mapping_schema_unique_usage_view(self):
+        url = reverse('mapping-schema-check')
+        data = [str(self.mapping.id)]
+        response = self.client.post(url, data, content_type='application/json')
+        result = response.json()
+        self.assertEqual(next(iter(result)), self.schema.name)
+
+        data = ['wrong-id']
+        response = self.client.post(url, data, content_type='application/json')
+        self.assertEqual(response.status_code, 500)
+
+    def test_mapping_entity_delete(self):
+        entity_count = models.Entity.objects.filter(mapping=self.mapping).count()
+        self.assertEqual(entity_count, 3)
+        url = reverse('entity-mapping-entity-delete')
+        data = [str(self.mapping.id)]
+        response = self.client.post(url, data, content_type='application/json')
+        result = response.json()
+        self.assertEqual(next(iter(result)), 'deleted')
+        self.assertEqual(result['deleted'], entity_count)
+        self.assertEqual(
+            models.Entity.objects.filter(mapping=self.mapping).count(),
+            0
+        )
+
+    def test_mapping_schema_delete(self):
+        schema_count = models.Schema.objects.count()
+        self.assertEqual(schema_count, 1)
+        url = reverse('schema-mapping-schema-delete')
+        data = [str(self.mapping.id)]
+        response = self.client.post(url, data, content_type='application/json')
+        result = response.json()
+        self.assertTrue(result[self.schema.name]['is_deleted'])
+        self.assertEqual(
+            models.Schema.objects.count(),
+            0
+        )
+
+    def test_mappingset_submission_delete(self):
+        count = models.Submission.objects.filter(mappingset=self.mappingset).count()
+        self.assertEqual(count, 1)
+        url = reverse('submission-mappingset-submission-delete')
+        data = [str(self.mappingset.id)]
+        response = self.client.post(url, data, content_type='application/json')
+        result = response.json()
+        self.assertEqual(next(iter(result)), 'deleted')
+        self.assertEqual(result['deleted'], count)
+        self.assertEqual(
+            models.Submission.objects.filter(mappingset=self.mappingset).count(),
+            0
+        )

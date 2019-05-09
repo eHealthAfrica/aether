@@ -17,6 +17,7 @@
 # under the License.
 
 from .constants import MergeOptions as MERGE_OPTIONS
+from . import models
 
 
 def object_contains(test, obj):
@@ -51,4 +52,22 @@ def merge_objects(source, target, direction):
         result = source
     else:
         result = target
+    return result
+
+
+def get_unique_schemas_used(mappings_ids):
+    result = {}
+    schemas = models.Schema.objects.filter(schemadecorators__mappings__id__in=mappings_ids)
+    for schema in schemas:
+        other_linked_mappings = models.Mapping.objects.filter(
+            schemadecorators__schema__id=schema.id
+        ).exclude(id__in=mappings_ids)
+        result[schema.name] = {
+            'id': schema.id,
+            'name': schema.definition['name'],
+        }
+        if other_linked_mappings:
+            result[schema.name]['is_unique'] = False
+        else:
+            result[schema.name]['is_unique'] = True
     return result

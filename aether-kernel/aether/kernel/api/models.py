@@ -246,16 +246,15 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     mappingset = models.ForeignKey(
         to=MappingSet,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name=_('mapping set'),
+        null=True,
     )
 
     # redundant but speed up queries
     project = models.ForeignKey(
         to=Project,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         verbose_name=_('project'),
     )
 
