@@ -274,6 +274,7 @@ class Pipeline extends Component {
   }
 
   deleteContract () {
+    this.props.deleteContract()
     this.setState({
       showDeleteModal: false
     })

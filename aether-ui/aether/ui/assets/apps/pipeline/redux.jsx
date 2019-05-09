@@ -44,9 +44,11 @@ export const types = {
 
   PIPELINE_ADD: 'pipeline.add',
   PIPELINE_UPDATE: 'pipeline.update',
+  PIPELINE_DELETE: 'pipeline.delete',
 
   CONTRACT_ADD: 'contract.add',
   CONTRACT_UPDATE: 'contract.update',
+  CONTRACT_DELETE: 'contract.delete',
 
   CONTRACT_PUBLISH_PREFLIGHT: 'contract.publish.preflight',
   CONTRACT_PUBLISH_SUCCESS: 'contract.publish.success',
@@ -131,6 +133,15 @@ export const updatePipeline = (pipeline) => {
   }
 }
 
+export const deletePipeline = (id, opts) => ({
+  types: ['', types.PIPELINE_DELETE, types.REQUEST_ERROR],
+  promise: client => client.delete(
+    `${PIPELINES_URL}${id}/`,
+    { 'Content-Type': 'application/json' },
+    { data: opts }
+  )
+})
+
 export const addContract = (contract) => ({
   types: ['', types.CONTRACT_ADD, types.REQUEST_ERROR],
   promise: client => client.post(
@@ -145,6 +156,15 @@ export const updateContract = (contract) => ({
     `${CONTRACTS_URL}${contract.id}/`,
     { 'Content-Type': 'application/json' },
     { data: contract })
+})
+
+export const deleteContract = (id, opts) => ({
+  types: ['', types.CONTRACT_DELETE, types.REQUEST_ERROR],
+  promise: client => client.delete(
+    `${CONTRACT_URL}${id}/`,
+    { 'Content-Type': 'application/json' },
+    { data: opts }
+  )
 })
 
 export const publishPreflightContract = (cid) => ({
