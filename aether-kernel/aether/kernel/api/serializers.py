@@ -168,13 +168,11 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         queryset=models.Project.objects.all(),
         required=False,
     )
-    mappingset = MtPrimaryKeyRelatedField(
-        queryset=models.MappingSet.objects.all(),
-        mt_field='project',
-    )
 
     def create(self, validated_data):
         instance = super(SubmissionSerializer, self).create(validated_data)
+        if instance.mappingset is None:
+            raise serializers.ValidationError('Mappingset must be provided on initial submission')
         try:
             run_entity_extraction(instance)
         except Exception as e:
