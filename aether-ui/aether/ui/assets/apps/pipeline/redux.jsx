@@ -161,8 +161,20 @@ export const updateContract = (contract) => ({
     { data: contract })
 })
 
+const apiclient = new ApiClient()
+const deleteEntities = (id) => (
+  apiclient.post(
+    `${CONTRACTS_URL}${id}/kernel-objects/?object=entities`,
+    { 'Content-Type': 'application/json' }
+  ).then(res => {
+    dispatch({
+      type: types.CONTRACT_DELETE_ENTITIES,
+      payload: res
+    })
+  })
+)
+
 export const deleteContract = (id, opts) => (dispatch) => {
-  const apiclient = new ApiClient()
   console.log(apiclient)
   if (opts.entities) {
     apiclient.post(
