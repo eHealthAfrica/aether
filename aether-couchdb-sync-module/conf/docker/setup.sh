@@ -25,7 +25,7 @@ set -Eeuo pipefail
 # define variables
 ################################################################################
 
-POSTGRES_PACKAGE=postgresql-client-9.6
+POSTGRES_PACKAGE=postgresql-client-10
 
 
 ################################################################################
