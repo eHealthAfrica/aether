@@ -170,14 +170,8 @@ def __get_type_url(model_type, id=None):
     Returns Aether Kernel url for type "XXX"
     '''
 
+    kernel_url = get_kernel_url()
     if not id:
-        return '{kernel_url}/{type}/'.format(
-            kernel_url=get_kernel_url(),
-            type=model_type,
-        )
+        return f'{kernel_url}/{model_type}/'
     else:
-        return '{kernel_url}/{type}/{id}/'.format(
-            kernel_url=get_kernel_url(),
-            type=model_type,
-            id=id,
-        )
+        return f'{kernel_url}/{model_type}/{id}/'

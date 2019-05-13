@@ -84,7 +84,7 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(instance.title, 'xForm - Test')
         self.assertEqual(instance.version, 'v1')
         self.assertEqual(instance.download_url,
-                         '/forms/{}/form.xml?version=v1'.format(instance.pk))
+                         f'/forms/{instance.pk}/form.xml?version=v1')
         self.assertEqual(instance.manifest_url, '', 'without media files no manifest url')
         self.assertEqual(str(instance), 'xForm - Test - xform-id-test')
 
@@ -119,7 +119,7 @@ class ModelsTests(CustomTestCase):
         )
         # with media files there is manifest_url
         self.assertEqual(xform.manifest_url,
-                         '/forms/{}/manifest.xml?version={}'.format(xform.id, xform.version))
+                         f'/forms/{xform.id}/manifest.xml?version={xform.version}')
 
     def test__xform__version_control(self):
         xform = XForm.objects.create(

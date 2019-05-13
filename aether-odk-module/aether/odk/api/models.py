@@ -97,7 +97,7 @@ class Project(ExportModelOperationsMixin('odk_project'), MtModelAbstract):
     )
 
     def __str__(self):
-        return '{} - {}'.format(str(self.project_id), self.name)
+        return f'{self.project_id} - {self.name}'
 
     class Meta:
         app_label = 'odk'
@@ -196,7 +196,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
     @property
     def hash(self):
-        return 'md5:{}'.format(self.md5sum)
+        return f'md5:{self.md5sum}'
 
     @property
     def download_url(self):
@@ -274,7 +274,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         return self.project
 
     def __str__(self):
-        return '{} - {}'.format(self.title, self.form_id)
+        return f'{self.title} - {self.form_id}'
 
     class Meta:
         app_label = 'odk'
@@ -313,7 +313,7 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
 
     @property
     def hash(self):
-        return 'md5:{}'.format(self.md5sum)
+        return f'md5:{self.md5sum}'
 
     @property
     def media_file_url(self):
