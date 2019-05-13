@@ -14,10 +14,14 @@
 aether.client
 confluent_kafka
 flask
-flake8
 gevent
-pytest
-psycopg2-binary
 psycogreen
+psycopg2-binary
 spavro
 sqlalchemy
+urllib3>=1.25  # due to security warning
+
+
+# Test libraries
+flake8
+pytest
