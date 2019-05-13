@@ -45,7 +45,7 @@ from rest_framework.response import Response
 
 from django_eha_sdk.utils import request as exec_request
 
-from .models import XForm
+from .models import XForm, MediaFile
 from .kernel_utils import (
     check_kernel_connection,
     get_attachments_url,
@@ -188,6 +188,33 @@ def xform_get_download(request, pk, *args, **kwargs):
 
 
 @api_view(['GET'])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def media_file_get_content(request, pk, *args, **kwargs):
+    '''
+    Returns the `<downloadUrl/>` content in the form manifest file.
+
+    '''
+
+    media = get_object_or_404(MediaFile, pk=pk)
+    if not is_surveyor(request, media.xform):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    # get content from File Storage and return it back
+    response = exec_request(method='GET', url=media.media_file_url)
+    http_response = HttpResponse(
+        content=response,
+        status=response.status_code,
+        content_type=response.headers.get('Content-Type'),
+    )
+    http_response['Content-Type'] = response.headers.get('Content-Type')
+    # include "content-disposition" as header (required by ODK Collect)
+    http_response['Content-Disposition'] = f'attachment; filename="{media.name}"'
+
+    return http_response
+
+
+@api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
@@ -215,8 +242,14 @@ def xform_get_manifest(request, pk, *args, **kwargs):
         logger.warning(MSG_XFORM_VERSION_WARNING.format(
             requested_version=version, current_version=xform.version))
 
+    host = request.build_absolute_uri(request.get_full_path()) \
+                  .replace(reverse('xform-get-manifest', kwargs={'pk': pk}), '')
+
     return Response(
-        data={'media_files': xform.media_files.all()},
+        data={
+            'host': host,
+            'media_files': xform.media_files.all(),
+        },
         template_name='xformManifest.xml',
         content_type='text/xml',
         headers=OPEN_ROSA_HEADERS,

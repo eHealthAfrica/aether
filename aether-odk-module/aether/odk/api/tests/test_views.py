@@ -33,6 +33,7 @@ class ViewsTests(CustomTestCase):
         self.formIdXml = '<formID>%s</formID>' % self.xform.form_id
         self.url_get_form = self.xform.download_url
         self.url_get_media = self.xform.manifest_url
+        self.url_get_media_content = self.xform.media_files.first().download_url
         self.url_list = reverse('xform-list-xml')
 
     def test__form_get__none(self):
@@ -61,6 +62,9 @@ class ViewsTests(CustomTestCase):
         response = self.client.get(self.url_get_media, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+        response = self.client.get(self.url_get_media_content, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test__form_get__as_surveyor(self):
         self.xform.surveyors.add(self.user)
 
@@ -73,6 +77,11 @@ class ViewsTests(CustomTestCase):
 
         response = self.client.get(self.url_get_media, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(self.url_get_media_content, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="sample.txt"')
+        self.assertEqual(response.content, b'abc')
 
         # change xform version
         self.xform.version = self.xform.version + '99'
