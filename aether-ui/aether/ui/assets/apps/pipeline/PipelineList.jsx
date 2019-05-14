@@ -26,8 +26,9 @@ import { ModalError, NavBar, Modal } from '../components'
 
 import PipelineNew from './components/PipelineNew'
 import PipelineCard from './components/PipelineCard'
+import DeleteStatus from './components/DeleteStatus'
 
-import { getPipelines } from './redux'
+import { getPipelines, deletePipeline, pipelineChanged } from './redux'
 
 class PipelineList extends Component {
   constructor (props) {
@@ -38,25 +39,33 @@ class PipelineList extends Component {
 
     this.state = {
       showDeleteModal: false,
-      selectedPipeline: null,
+      showDeleteProgress: false,
       deleteOptions: {
-        entityTypes: false,
+        schemas: false,
         entities: false,
         submissions: false
       }
     }
-  }
 
-  onRename (pipeline) {
-    console.log(`Rename Pipeline ${pipeline.name}`)
+    this.deletePipeline = this.deletePipeline.bind(this)
+    this.onDelete = this.onDelete.bind(this)
+    this.hideModalProgress = this.hideModalProgress.bind(this)
   }
 
   onDelete (pipeline) {
-    this.setState({ showDeleteModal: true, selectedPipeline: pipeline })
+    this.setState({ showDeleteModal: true })
+    this.props.pipelineChanged(pipeline)
   }
 
   deletePipeline () {
-    console.log(`Delete Pipeline ${this.state.selectedPipeline.name}`)
+    this.setState({
+      showDeleteModal: false,
+      showDeleteProgress: true
+    })
+    this.props.deletePipeline(
+      this.props.pipeline.id,
+      this.state.deleteOptions
+    )
   }
 
   renderDeletionModal () {
@@ -70,7 +79,7 @@ class PipelineList extends Component {
           id='pipeline.delete.modal.header'
           defaultMessage='Delete pipeline '
         />
-        <span className='bold'>{this.state.selectedPipeline.name}?</span>
+        <span className='bold'>{this.props.pipeline.name}?</span>
       </span>
     )
 
@@ -144,12 +153,12 @@ class PipelineList extends Component {
           </label>
         </div>
         <div className='check-default ml-4'>
-          <input type='checkbox' id='check2' checked={this.state.deleteOptions.entityTypes}
+          <input type='checkbox' id='check2' checked={this.state.deleteOptions.schemas}
             onChange={(e) => {
               this.setState({
                 deleteOptions: {
                   ...this.state.deleteOptions,
-                  entityTypes: e.target.checked,
+                  schemas: e.target.checked,
                   entities: e.target.checked
                 }
               })
@@ -170,7 +179,7 @@ class PipelineList extends Component {
                   deleteOptions: {
                     ...this.state.deleteOptions,
                     entities: e.target.checked,
-                    entityTypes: e.target.checked
+                    schemas: e.target.checked
                   }
                 })
               } else {
@@ -201,6 +210,24 @@ class PipelineList extends Component {
     )
   }
 
+  renderDeleteProgressModal () {
+    if (!this.state.showDeleteProgress) {
+      return null
+    }
+    return (
+      <DeleteStatus
+        header='Deleting pipeline '
+        deleteOptions={this.state.deleteOptions}
+        toggle={this.hideModalProgress}
+        showModal={this.state.showDeleteProgress}
+      />
+    )
+  }
+
+  hideModalProgress () {
+    this.setState({ showDeleteProgress: false })
+  }
+
   render () {
     return (
       <div className='pipelines-container show-index'>
@@ -223,13 +250,14 @@ class PipelineList extends Component {
                 key={pipeline.id}
                 pipeline={pipeline}
                 history={this.props.history}
-                rename={this.onRename.bind(this, pipeline)}
-                delete={this.onDelete.bind(this, pipeline)}
+                rename={() => {}}
+                delete={() => this.onDelete(pipeline)}
               />
             )) }
           </div>
         </div>
         { this.renderDeletionModal() }
+        { this.renderDeleteProgressModal() }
       </div>
     )
   }
@@ -237,8 +265,9 @@ class PipelineList extends Component {
 
 const mapStateToProps = ({ pipelines }) => ({
   list: pipelines.pipelineList || [],
-  error: pipelines.error
+  error: pipelines.error,
+  pipeline: pipelines.currentPipeline
 })
-const mapDispatchToProps = { getPipelines }
+const mapDispatchToProps = { getPipelines, deletePipeline, pipelineChanged }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PipelineList)

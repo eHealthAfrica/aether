@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.db import transaction
+
 from .constants import MergeOptions as MERGE_OPTIONS
 from . import models
 
@@ -70,4 +72,105 @@ def get_unique_schemas_used(mappings_ids):
             result[schema.name]['is_unique'] = False
         else:
             result[schema.name]['is_unique'] = True
+    return result
+
+
+@transaction.atomic
+def bulk_delete_by_mappings(delete_opts={}, mappingset=None, mappings=[]):
+    '''
+    Bulk delete submissions, entities and schemas uniquely
+    linked to the supplied mappings or mappingset
+
+    Arguments:
+
+    delete_opts: {
+        # dict of artefacts to be deleted
+
+        'entities': True | False,
+        'schemas': True | False,
+        'submissions': True | False
+    },
+
+    # the uuid of the mappingset to delete it's artefacts.
+    # No need to provide mappings if mappingset exists.
+    mappingset: 'uuid',
+
+    mappings:  [
+        # a list of mapping uuids to delete related artefacts,
+
+        'uuid-1',
+        'uuid-2'
+    ]
+
+    returned result: {
+        # a dict of deleted artefacts
+
+        'entities': 34 (int)
+        # Number of deleted entities
+
+        'submissions': 34 (int)
+        # Number of deleted submissions
+
+        'schemas': {
+
+            # schemas used in the context of the supplied mappings
+            # with details on delete operations perform on them or not.
+            'Schema-1': {
+                # id of the schema
+                'id': uuid,
+
+                # name of the schema definition (this can be different from the schema.name)
+                'name': string,
+
+                # Flag indicating if the schema is uniquely used in the mappings' context.
+                # Delete operations will not be performed if False
+                'is_unique': True | False,
+
+                # Flag if delete operation was successful on this schema and cascading objects.
+                # Objects with {'is_unique':False} will not have this property
+                'is_deleted': True | False,
+
+                # Reason for a delete failure, only available if {'is_deleted': False}
+                'reason': string
+            },
+            'Schema-2': {
+                ...
+            },
+            ...
+        }
+
+    }
+    '''
+
+    if mappingset:
+        mappings = models.Mapping.objects.filter(mappingset=mappingset).values_list('id', flat=True)
+    result = {}
+    entities_opt = delete_opts.get('entities')
+    schemas_opt = delete_opts.get('schemas')
+    submissions_opt = delete_opts.get('submissions')
+    if entities_opt is True:
+        entities = models.Entity.objects.filter(mapping__id__in=mappings)
+        entity_count = entities.count()
+        entities.delete()
+        result['entities'] = entity_count
+
+    if schemas_opt is True:
+        schema_deletables = get_unique_schemas_used(mappings)
+        for key, value in schema_deletables.items():
+            if value['is_unique'] is True:
+                schema_to_be_deleted = models.Schema.objects.get(pk=value['id'])
+                try:
+                    schema_to_be_deleted.delete()
+                    schema_deletables[key]['is_deleted'] = True
+                except Exception as e:  # pragma: no cover
+                    schema_deletables[key]['is_deleted'] = False
+                    schema_deletables[key]['reason'] = str(e)
+        result['schemas'] = schema_deletables
+
+    if submissions_opt is True and mappingset:
+        submissions = models.Submission.objects.filter(mappingset=mappingset)
+        submission_count = submissions.count()
+        submissions.delete()
+        result['submissions'] = submission_count
+
     return result

@@ -50,6 +50,19 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         utils.kernel_artefacts_to_ui_artefacts(request)
         return self.list(request)
 
+    def destroy(self, request, pk=None, *args, **kwargs):
+        pipeline = self.get_object_or_404(pk=pk)
+        data = request.data
+        if pipeline.mappingset:
+            return utils.delete_operation(
+                f'mappingsets/{pipeline.mappingset}/',
+                data,
+                pipeline
+            )
+        else:
+            pipeline.delete()
+            return Response({'not_published': True})
+
 
 class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Contract.objects.all()
@@ -76,24 +89,6 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @action(methods=['post'], detail=True, url_path='kernel-objects')
-    def delete_kernel_objects(self, request, *args, **kwargs):
-        kernel_object = request.query_params.get('object')
-        url = ''
-        if kernel_object == 'entity-types':
-            url = '/schemas/mapping-schema-delete'
-        elif kernel_object == 'entities':
-            url = '/entities/mapping-entity-delete'
-
-        # return Response(utils.kernel_data_request(
-        #     url,
-        #     method='post',
-        #     data=[self.mapping]
-        # ))
-        print('URL', url)
-        return Response(url)
-
-
     @action(methods=['get'], detail=True, url_path='publish-preflight')
     def publish_preflight(self, request, pk=None, *args, **kwargs):
         '''
@@ -105,6 +100,19 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
         data = utils.publish_preflight(contract)
         return Response(data=data)
+
+    def destroy(self, request, pk=None, *args, **kwargs):
+        contract = self.get_object_or_404(pk=pk)
+        data = request.data
+        if contract.mapping:
+            return utils.delete_operation(
+                f'mappings/{contract.mapping}/',
+                data,
+                contract
+            )
+        else:
+            contract.delete()
+            return Response({'not_published': True})
 
 
 @api_view(['GET'])

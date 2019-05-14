@@ -22,7 +22,6 @@
 // module in one file for easy redux management
 
 import { replaceItemInList, removeItemFromList } from '../utils'
-import ApiClient from '../utils/api'
 import {
   PIPELINES_URL,
   CONTRACTS_URL,
@@ -41,11 +40,12 @@ export const types = {
   PIPELINE_SELECT: 'pipeline.select',
   CONTRACT_SELECT: 'contract.select',
   SECTION_SELECT: 'section.select',
-  CONTRACT_CHANGED: 'contract_changed',
+  CONTRACT_CHANGED: 'contract.changed',
 
   PIPELINE_ADD: 'pipeline.add',
   PIPELINE_UPDATE: 'pipeline.update',
   PIPELINE_DELETE: 'pipeline.delete',
+  PIPELINE_CHANGED: 'pipeline.changed',
 
   CONTRACT_ADD: 'contract.add',
   CONTRACT_UPDATE: 'contract.update',
@@ -61,8 +61,7 @@ const ACTIONS_INITIAL_STATE = {
   publishError: null,
   publishState: null,
   publishSuccess: false,
-  contractDeleteInfo: null,
-  pipelineDeleteInfo: null
+  deleteStatus: null
 }
 
 export const INITIAL_STATE = {
@@ -107,6 +106,11 @@ export const contractChanged = (contract) => ({
   payload: contract
 })
 
+export const pipelineChanged = (pipeline) => ({
+  type: types.PIPELINE_CHANGED,
+  payload: pipeline
+})
+
 export const getPipelineById = (pid) => {
   return {
     types: ['', types.PIPELINE_BY_ID, types.PIPELINE_NOT_FOUND],
@@ -138,7 +142,7 @@ export const updatePipeline = (pipeline) => {
 
 export const deletePipeline = (id, opts) => ({
   types: ['', types.PIPELINE_DELETE, types.REQUEST_ERROR],
-  promise: client => client.del(
+  promise: client => client.delete(
     `${PIPELINES_URL}${id}/`,
     { 'Content-Type': 'application/json' },
     { data: opts }
@@ -161,55 +165,12 @@ export const updateContract = (contract) => ({
     { data: contract })
 })
 
-const apiclient = new ApiClient()
-const deleteEntities = (id) => (
-  apiclient.post(
-    `${CONTRACTS_URL}${id}/kernel-objects/?object=entities`,
-    { 'Content-Type': 'application/json' }
-  ).then(res => {
-    dispatch({
-      type: types.CONTRACT_DELETE_ENTITIES,
-      payload: res
-    })
-  })
-)
-
-export const deleteContract = (id, opts) => (dispatch) => {
-  console.log(apiclient)
-  if (opts.entities) {
-    apiclient.post(
-      `${CONTRACTS_URL}${id}/kernel-objects/?object=entities`,
-      { 'Content-Type': 'application/json' }
-    ).then(res => {
-      dispatch({
-        type: types.CONTRACT_DELETE_ENTITIES,
-        payload: res
-      })
-      if (opts.entity_types) {
-        apiclient.post(
-          `${CONTRACTS_URL}${id}/kernel-objects/?object=entity-types`,
-          { 'Content-Type': 'application/json' }
-        ).then(res => {
-          dispatch({
-            type: types.CONTRACT_DELETE_ENTITIES,
-            payload: res
-          })
-          dispatch(deleteUiContract(id))
-        })
-      } else {
-        dispatch(deleteUiContract(id))
-      }
-    })
-  } else {
-    dispatch(deleteUiContract(id))
-  }
-}
-
-export const deleteUiContract = (id) => ({
+export const deleteContract = (id, opts) => ({
   types: ['', types.CONTRACT_DELETE, types.REQUEST_ERROR],
-  promise: client => client.post(
-    `${CONTRACTS_URL}${id}/x`,
-    { 'Content-Type': 'application/json' }
+  promise: client => client.delete(
+    `${CONTRACTS_URL}${id}/`,
+    { 'Content-Type': 'application/json' },
+    { data: opts }
   )
 })
 
@@ -351,6 +312,14 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     // CHANGES
 
+    case types.PIPELINE_CHANGED: {
+      const currentPipeline = parsePipeline(action.payload)
+      return {
+        ...nextState,
+        currentPipeline
+      }
+    }
+
     case types.PIPELINE_ADD: {
       const newPipeline = parsePipeline(action.payload)
 
@@ -378,10 +347,10 @@ const reducer = (state = INITIAL_STATE, action) => {
     case types.PIPELINE_DELETE: {
       return {
         ...nextState,
-        pipelineList: removeItemFromList(state.pipelineList, currentPipeline),
+        pipelineList: removeItemFromList(state.pipelineList, state.currentPipeline),
         currentPipeline: null,
         currentContract: null,
-        pipelineDeleteInfo: action.payload
+        deleteStatus: action.payload
       }
     }
 
@@ -410,14 +379,15 @@ const reducer = (state = INITIAL_STATE, action) => {
     }
 
     case types.CONTRACT_DELETE: {
-      const currentContract = state.currentPipeline.contracts[0]
       const uPipeline = { ...state.currentPipeline }
       uPipeline.contracts = removeItemFromList(state.currentPipeline.contracts, state.currentContract)
+      const currentContract = uPipeline.contracts[0]
       return { ...state,
         pipelineList: replaceItemInList(state.pipelineList, uPipeline),
         currentPipeline: uPipeline,
         currentContract: currentContract,
-        contractDeleteInfo: action.payload
+        deleteStatus: action.payload,
+        currentSection: currentContract ? CONTRACT_SECTION_ENTITY_TYPES : PIPELINE_SECTION_INPUT
       }
     }
 

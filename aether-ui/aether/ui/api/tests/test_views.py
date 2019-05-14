@@ -23,8 +23,11 @@ import uuid
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TransactionTestCase, override_settings
+from requests.exceptions import HTTPError
+from rest_framework.response import Response
 
 from ..models import Project, Pipeline, Contract
+from ..utils import wrap_kernel_headers
 
 
 @override_settings(MULTITENANCY=False)
@@ -131,3 +134,342 @@ class ViewsTest(TransactionTestCase):
             response = self.client.get(url_pp)
             self.assertEqual(response.status_code, 200)
             mock_publish.assert_called_once()
+
+    def test__published_contract__delete(self):
+        INPUT_SAMPLE = {
+            'name': 'John',
+        }
+
+        ENTITY_SAMPLE = {
+            'name': 'Person',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'id',
+                    'type': 'string',
+                },
+                {
+                    'name': 'name',
+                    'type': ['null', 'string'],
+                },
+            ],
+        }
+
+        MAPPING_RULES = [
+            {
+                'source': '#!uuid',
+                'destination': 'Person.id'
+            },
+        ]
+        pipeline = Pipeline.objects.create(
+            name='Delete pipeline',
+            project=Project.objects.create(name='Delete project'),
+            input=INPUT_SAMPLE,
+            schema=ENTITY_SAMPLE,
+        )
+        contract = Contract.objects.create(
+            name='Delete contract',
+            pipeline=pipeline,
+            entity_types=[ENTITY_SAMPLE, ],
+            mapping_rules=MAPPING_RULES,
+            mapping=uuid.uuid4(),
+        )
+
+        self.assertEqual(Contract.objects.count(), 1)
+        url = reverse('contract-detail', kwargs={'pk': contract.id})
+
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            return_value={'schemas': {'is_deleted': True}}
+        ) as mock_kernel:
+            response = self.client.delete(
+                url,
+                data={'schema': True},
+                content_type='application/json',
+            )
+            mock_kernel.assert_called_once_with(
+                url=f'mappings/{contract.mapping}/',
+                method='delete',
+                data={'schema': True},
+                headers=wrap_kernel_headers(contract),
+            )
+        self.assertEqual(response.status_code, 200)
+        response_json = response.json()
+        self.assertIn('schemas', response_json)
+        self.assertEqual(Contract.objects.count(), 0)
+
+        contract = Contract.objects.create(
+            name='Delete contract',
+            pipeline=pipeline,
+            entity_types=[ENTITY_SAMPLE, ],
+            mapping_rules=MAPPING_RULES,
+        )
+
+        self.assertEqual(Contract.objects.count(), 1)
+        url = reverse('contract-detail', kwargs={'pk': contract.id})
+
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            return_value={'schemas': {'is_deleted': True}}
+        ) as mock_kernel:
+            response = self.client.delete(
+                url,
+                content_type='application/json',
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Contract.objects.count(), 0)
+        self.assertTrue(response.json()['not_published'])
+
+        contract = Contract.objects.create(
+            name='Delete contract',
+            pipeline=pipeline,
+            entity_types=[ENTITY_SAMPLE, ],
+            mapping_rules=MAPPING_RULES,
+            mapping=uuid.uuid4(),
+        )
+        res = Response()
+        res.status_code = 404
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            side_effect=HTTPError('url', 404, response=res)
+        ) as exp_mock_kernel:
+            url = reverse('contract-detail', kwargs={'pk': contract.id})
+            response = self.client.delete(
+                url,
+                data={'schema': True},
+                content_type='application/json',
+            )
+            exp_mock_kernel.assert_called_once_with(
+                url=f'mappings/{contract.mapping}/',
+                method='delete',
+                data={'schema': True},
+                headers=wrap_kernel_headers(contract),
+            )
+            self.assertEqual(response.status_code, 204)
+            self.assertEqual(Contract.objects.count(), 0)
+
+        contract = Contract.objects.create(
+            name='Delete contract',
+            pipeline=pipeline,
+            entity_types=[ENTITY_SAMPLE, ],
+            mapping_rules=MAPPING_RULES,
+            mapping=uuid.uuid4(),
+        )
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            side_effect=Exception('Error in deleteing contract')
+        ) as exp_mock_kernel:
+            url = reverse('contract-detail', kwargs={'pk': contract.id})
+            response = self.client.delete(
+                url,
+                data={'schema': True},
+                content_type='application/json',
+            )
+            exp_mock_kernel.assert_called_once_with(
+                url=f'mappings/{contract.mapping}/',
+                method='delete',
+                data={'schema': True},
+                headers=wrap_kernel_headers(contract),
+            )
+            self.assertEqual(response.status_code, 500)
+            self.assertEqual(Contract.objects.count(), 1)
+
+        res.status_code = 401
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            side_effect=HTTPError('url', 401, response=res)
+        ) as exp_mock_kernel:
+            url = reverse('contract-detail', kwargs={'pk': contract.id})
+            response = self.client.delete(
+                url,
+                data={'schema': True},
+                content_type='application/json',
+            )
+            exp_mock_kernel.assert_called_once_with(
+                url=f'mappings/{contract.mapping}/',
+                method='delete',
+                data={'schema': True},
+                headers=wrap_kernel_headers(contract),
+            )
+            self.assertEqual(response.status_code, 401)
+            self.assertEqual(Contract.objects.count(), 1)
+
+    def test__published_pipeline__delete(self):
+        INPUT_SAMPLE = {
+            'name': 'John',
+        }
+
+        ENTITY_SAMPLE = {
+            'name': 'Person',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'id',
+                    'type': 'string',
+                },
+                {
+                    'name': 'name',
+                    'type': ['null', 'string'],
+                },
+            ],
+        }
+
+        MAPPING_RULES = [
+            {
+                'source': '#!uuid',
+                'destination': 'Person.id'
+            },
+        ]
+        pipeline = Pipeline.objects.create(
+            name='Delete pipeline',
+            project=Project.objects.create(name='Delete project'),
+            input=INPUT_SAMPLE,
+            schema=ENTITY_SAMPLE,
+            mappingset=uuid.uuid4(),
+        )
+        Contract.objects.create(
+            name='Delete contract',
+            pipeline=pipeline,
+            entity_types=[ENTITY_SAMPLE, ],
+            mapping_rules=MAPPING_RULES,
+            mapping=uuid.uuid4(),
+        )
+
+        self.assertEqual(Pipeline.objects.count(), 1)
+        url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
+
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            return_value={'schemas': {'is_deleted': True}}
+        ) as mock_kernel:
+            response = self.client.delete(
+                url,
+                content_type='application/json',
+            )
+            mock_kernel.assert_called_once_with(
+                url=f'mappingsets/{pipeline.mappingset}/',
+                method='delete',
+                data={},
+                headers=wrap_kernel_headers(pipeline),
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Pipeline.objects.count(), 0)
+        self.assertEqual(Contract.objects.count(), 0)
+
+        pipeline = Pipeline.objects.create(
+            name='Delete pipeline',
+            project=Project.objects.create(name='Delete project'),
+            input=INPUT_SAMPLE,
+            schema=ENTITY_SAMPLE,
+        )
+        Contract.objects.create(
+            name='Delete contract',
+            pipeline=pipeline,
+            entity_types=[ENTITY_SAMPLE, ],
+            mapping_rules=MAPPING_RULES,
+            mapping=uuid.uuid4(),
+        )
+
+        self.assertEqual(Pipeline.objects.count(), 1)
+        url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
+
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            return_value={'schemas': {'is_deleted': True}}
+        ) as mock_kernel:
+            response = self.client.delete(
+                url,
+                content_type='application/json',
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Pipeline.objects.count(), 0)
+        self.assertEqual(Contract.objects.count(), 0)
+        self.assertTrue(response.json()['not_published'])
+
+        pipeline = Pipeline.objects.create(
+            name='Delete pipeline',
+            project=Project.objects.create(name='Delete project'),
+            input=INPUT_SAMPLE,
+            schema=ENTITY_SAMPLE,
+            mappingset=uuid.uuid4(),
+        )
+        Contract.objects.create(
+            name='Delete contract',
+            pipeline=pipeline,
+            entity_types=[ENTITY_SAMPLE, ],
+            mapping_rules=MAPPING_RULES,
+            mapping=uuid.uuid4(),
+        )
+        res = Response()
+        res.status_code = 404
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            side_effect=HTTPError('url', 404, response=res)
+        ) as exp_mock_kernel:
+            url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
+            response = self.client.delete(
+                url,
+                content_type='application/json',
+            )
+            exp_mock_kernel.assert_called_once_with(
+                url=f'mappingsets/{pipeline.mappingset}/',
+                method='delete',
+                data={},
+                headers=wrap_kernel_headers(pipeline),
+            )
+            self.assertEqual(response.status_code, 204)
+            self.assertEqual(Contract.objects.count(), 0)
+            self.assertEqual(Pipeline.objects.count(), 0)
+
+        pipeline = Pipeline.objects.create(
+            name='Delete pipeline',
+            project=Project.objects.create(name='Delete project'),
+            input=INPUT_SAMPLE,
+            schema=ENTITY_SAMPLE,
+            mappingset=uuid.uuid4(),
+        )
+        Contract.objects.create(
+            name='Delete contract',
+            pipeline=pipeline,
+            entity_types=[ENTITY_SAMPLE, ],
+            mapping_rules=MAPPING_RULES,
+            mapping=uuid.uuid4(),
+        )
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            side_effect=Exception('Error in deleteing pipeline')
+        ) as exp_mock_kernel:
+            url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
+            response = self.client.delete(
+                url,
+                content_type='application/json',
+            )
+            exp_mock_kernel.assert_called_once_with(
+                url=f'mappingsets/{pipeline.mappingset}/',
+                method='delete',
+                data={},
+                headers=wrap_kernel_headers(pipeline),
+            )
+            self.assertEqual(response.status_code, 500)
+            self.assertEqual(Contract.objects.count(), 1)
+            self.assertEqual(Pipeline.objects.count(), 1)
+
+        res.status_code = 401
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            side_effect=HTTPError('url', 401, response=res)
+        ) as exp_mock_kernel:
+            url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
+            response = self.client.delete(
+                url,
+                content_type='application/json',
+            )
+            exp_mock_kernel.assert_called_once_with(
+                url=f'mappingsets/{pipeline.mappingset}/',
+                method='delete',
+                data={},
+                headers=wrap_kernel_headers(pipeline),
+            )
+            self.assertEqual(response.status_code, 401)
+            self.assertEqual(Contract.objects.count(), 1)
+            self.assertEqual(Pipeline.objects.count(), 1)

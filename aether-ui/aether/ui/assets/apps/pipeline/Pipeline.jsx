@@ -45,6 +45,7 @@ import {
   CONTRACT_SECTION_MAPPING,
   CONTRACT_SECTION_SETTINGS
 } from '../utils/constants'
+import DeleteStatus from './components/DeleteStatus'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -54,7 +55,7 @@ class Pipeline extends Component {
 
     this.state = {
       deleteOptions: {
-        entityTypes: false,
+        schemas: false,
         entities: false
       },
       fullscreen: false,
@@ -62,6 +63,7 @@ class Pipeline extends Component {
       newContract: null,
       showCancelModal: false,
       showDeleteModal: false,
+      showDeleteProgress: false,
       showSettings: (view === CONTRACT_SECTION_SETTINGS),
       showOutput: false,
       onContractSavedCallback: null,
@@ -70,6 +72,7 @@ class Pipeline extends Component {
 
     this.addNewContract = this.addNewContract.bind(this)
     this.deleteContract = this.deleteContract.bind(this)
+    this.hideModalProgress = this.hideModalProgress.bind(this)
     this.linksCallBack = this.linksCallBack.bind(this)
     this.onCancelContract = this.onCancelContract.bind(this)
     this.onContracts = this.onContracts.bind(this)
@@ -243,6 +246,7 @@ class Pipeline extends Component {
         </div>
         { this.renderCancelationModal() }
         { this.renderDeletionModal() }
+        { this.renderDeleteProgressModal() }
       </div>
     )
   }
@@ -275,12 +279,10 @@ class Pipeline extends Component {
   }
 
   deleteContract () {
-    this.props.deleteContract(this.props.contract.id, {
-      entity_types: this.state.deleteOptions.entityTypes,
-      entities: this.state.deleteOptions.entities
-    })
+    this.props.deleteContract(this.props.contract.id, this.state.deleteOptions)
     this.setState({
-      showDeleteModal: false
+      showDeleteModal: false,
+      showDeleteProgress: true
     })
   }
 
@@ -367,12 +369,12 @@ class Pipeline extends Component {
           />
         </label>
         <div className='check-default ml-4'>
-          <input type='checkbox' id='check2' checked={this.state.deleteOptions.entityTypes}
+          <input type='checkbox' id='check2' checked={this.state.deleteOptions.schemas}
             onChange={(e) => {
               this.setState({
                 deleteOptions: {
                   ...this.state.deleteOptions,
-                  entityTypes: e.target.checked,
+                  schemas: e.target.checked,
                   entities: e.target.checked
                 }
               })
@@ -393,7 +395,7 @@ class Pipeline extends Component {
                   deleteOptions: {
                     ...this.state.deleteOptions,
                     entities: e.target.checked,
-                    entityTypes: e.target.checked
+                    schemas: e.target.checked
                   }
                 })
               } else {
@@ -422,6 +424,24 @@ class Pipeline extends Component {
         </div>
       </Modal>
     )
+  }
+
+  renderDeleteProgressModal () {
+    if (!this.state.showDeleteProgress) {
+      return null
+    }
+    return (
+      <DeleteStatus
+        header='Deleting contract '
+        deleteOptions={this.state.deleteOptions}
+        toggle={this.hideModalProgress}
+        showModal={this.state.showDeleteProgress}
+      />
+    )
+  }
+
+  hideModalProgress () {
+    this.setState({ showDeleteProgress: false })
   }
 
   onCancelContract () {
@@ -595,7 +615,8 @@ const mapStateToProps = ({ pipelines }) => ({
   section: pipelines.currentSection,
   pipeline: pipelines.currentPipeline,
   contract: pipelines.currentContract,
-  error: pipelines.error
+  error: pipelines.error,
+  deleteStatus: pipelines.deleteStatus
 })
 const mapDispatchToProps = {
   clearSelection,

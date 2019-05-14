@@ -35,6 +35,8 @@ from . import (
 
 @override_settings(MULTITENANCY=False)
 class UtilsTests(TestCase):
+    mapping = None
+
     def setUp(self):
         username = 'test'
         email = 'test@example.com'
@@ -149,6 +151,7 @@ class UtilsTests(TestCase):
         mapping = self.client.get(url).json()
         if mapping['name'] == 'mapping-1':
             mapping_1 = mapping
+            self.mapping = mapping['id']
         else:
             mapping_2 = mapping
 
@@ -158,6 +161,7 @@ class UtilsTests(TestCase):
             mapping_2 = mapping
         else:
             mapping_1 = mapping
+            self.mapping = mapping['id']
 
         self.assertEqual(mapping_2['name'], 'mapping-2')
         self.assertEqual(mapping_1['name'], 'mapping-1')
@@ -176,3 +180,76 @@ class UtilsTests(TestCase):
         self.assertEqual(len(result), 2)
         self.assertTrue(result['Person']['is_unique'])
         self.assertTrue(result['Location']['is_unique'])
+
+    def test_bulk_delete_by_mappings_mapping(self):
+        url = reverse('mapping-detail', kwargs={'pk': self.project_artefacts['mappings'][0]})
+        mapping = self.client.get(url).json()
+        if mapping['name'] == 'mapping-2':
+            mapping_2 = mapping
+        else:
+            url = reverse('mapping-detail', kwargs={'pk': self.project_artefacts['mappings'][1]})
+            mapping_2 = self.client.get(url).json()
+
+        self.assertEqual(mapping_2['name'], 'mapping-2')
+        opts = {
+            'entities': True,
+            'schemas': True,
+        }
+        result = utils.bulk_delete_by_mappings(opts, None, [mapping_2['id']])
+        self.assertFalse(result['schemas']['Person']['is_unique'])
+        self.assertTrue(result['schemas']['Location']['is_unique'])
+        self.assertTrue(result['schemas']['Location']['is_deleted'])
+        self.assertEqual(result['entities'], 0)
+        self.assertNotIn('submissions', result)
+
+    def test_bulk_delete_by_mappings_mappingset(self):
+        url = reverse('mapping-detail', kwargs={'pk': self.project_artefacts['mappings'][0]})
+        mapping = self.client.get(url).json()
+        mapping_object = models.Mapping.objects.get(pk=mapping['id'])
+        mappingset = mapping_object.mappingset.id
+        opts = {
+            'entities': True,
+            'schemas': True,
+            'submissions': True
+        }
+        result = utils.bulk_delete_by_mappings(opts, mappingset)
+        self.assertTrue(result['schemas']['Person']['is_unique'])
+        self.assertTrue(result['schemas']['Location']['is_unique'])
+        self.assertTrue(result['schemas']['Location']['is_deleted'])
+        self.assertTrue(result['schemas']['Person']['is_deleted'])
+        self.assertEqual(result['entities'], 0)
+        self.assertEqual(result['submissions'], 0)
+
+        opts = {
+            'entities': False,
+            'schemas': False,
+            'submissions': False
+        }
+        result = utils.bulk_delete_by_mappings(opts, mappingset)
+        self.assertEqual(result, {})
+
+    def test_bulk_delete_by_mappings_with_submissions(self):
+        mapping_object = models.Mapping.objects.get(pk=self.project_artefacts['mappings'][0])
+        mappingset = mapping_object.mappingset.id
+
+        url = reverse('submission-list')
+        data = {
+            'payload': EXAMPLE_SOURCE_DATA_WITH_LOCATION,
+            'project': str(self.project.id),
+            'mappingset': mappingset
+        }
+        self.client.post(
+            url,
+            data=data,
+            content_type='application/json',
+        )
+        opts = {
+            'entities': True,
+            'submissions': True
+        }
+        entitiy_count = models.Entity.objects.filter(
+            mapping__id__in=self.project_artefacts['mappings']
+        ).count()
+        result = utils.bulk_delete_by_mappings(opts, mappingset)
+        self.assertEqual(result['entities'], entitiy_count)
+        self.assertEqual(result['submissions'], 1)

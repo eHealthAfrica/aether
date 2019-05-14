@@ -725,47 +725,6 @@ class ViewsTest(TestCase):
         response = self.client.post(url, data, content_type='application/json')
         self.assertEqual(response.status_code, 500)
 
-    def test_mapping_entity_delete(self):
-        entity_count = models.Entity.objects.filter(mapping=self.mapping).count()
-        self.assertEqual(entity_count, 3)
-        url = reverse('entity-mapping-entity-delete')
-        data = [str(self.mapping.id)]
-        response = self.client.post(url, data, content_type='application/json')
-        result = response.json()
-        self.assertEqual(next(iter(result)), 'deleted')
-        self.assertEqual(result['deleted'], entity_count)
-        self.assertEqual(
-            models.Entity.objects.filter(mapping=self.mapping).count(),
-            0
-        )
-
-    def test_mapping_schema_delete(self):
-        schema_count = models.Schema.objects.count()
-        self.assertEqual(schema_count, 1)
-        url = reverse('schema-mapping-schema-delete')
-        data = [str(self.mapping.id)]
-        response = self.client.post(url, data, content_type='application/json')
-        result = response.json()
-        self.assertTrue(result[self.schema.name]['is_deleted'])
-        self.assertEqual(
-            models.Schema.objects.count(),
-            0
-        )
-
-    def test_mappingset_submission_delete(self):
-        count = models.Submission.objects.filter(mappingset=self.mappingset).count()
-        self.assertEqual(count, 1)
-        url = reverse('submission-mappingset-submission-delete')
-        data = [str(self.mappingset.id)]
-        response = self.client.post(url, data, content_type='application/json')
-        result = response.json()
-        self.assertEqual(next(iter(result)), 'deleted')
-        self.assertEqual(result['deleted'], count)
-        self.assertEqual(
-            models.Submission.objects.filter(mappingset=self.mappingset).count(),
-            0
-        )
-
     def test_entity__submit_mutiple__success(self):
         response = self.client.post(reverse('entity-list'),
                                     json.dumps([]),
@@ -777,3 +736,33 @@ class ViewsTest(TestCase):
         url = reverse('api_schema', kwargs={'version': 'v1'})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_mapping_delete(self):
+        url = reverse('mapping-detail', kwargs={'pk': self.mapping.pk})
+        data = {
+            'entities': True,
+            'schemas': True
+        }
+        response = self.client.delete(
+            url,
+            data=data,
+            content_type='application/json'
+        ).json()
+        self.assertEqual(response['entities'], 3)
+        self.assertTrue(response['schemas'][self.schema.name]['is_deleted'])
+
+    def test_mappingset_delete(self):
+        url = reverse('mappingset-detail', kwargs={'pk': self.mappingset.pk})
+        data = {
+            'entities': True,
+            'schemas': True,
+            'submissions': True
+        }
+        response = self.client.delete(
+            url,
+            data=data,
+            content_type='application/json'
+        ).json()
+        self.assertEqual(response['entities'], 3)
+        self.assertEqual(response['submissions'], 1)
+        self.assertTrue(response['schemas'][self.schema.name]['is_deleted'])

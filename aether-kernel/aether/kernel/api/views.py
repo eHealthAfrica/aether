@@ -313,12 +313,38 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     filter_class = filters.MappingSetFilter
     mt_field = 'project'
 
+    def destroy(self, request, pk=None):
+        mappingset = self.get_object_or_404(pk=pk)
+        opts = request.data
+        try:
+            result = utils.bulk_delete_by_mappings(opts, pk)
+            mappingset.delete()
+            return Response(result)
+        except Exception as e:
+            return Response(
+                str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
     mt_field = 'mappingset__project'
+
+    def destroy(self, request, pk=None):
+        mapping = self.get_object_or_404(pk=pk)
+        opts = request.data
+        try:
+            result = utils.bulk_delete_by_mappings(opts, None, [pk])
+            mapping.delete()
+            return Response(result)
+        except Exception as e:
+            return Response(
+                str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
@@ -353,24 +379,6 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
                 data=self.serializer_class(instance, context={'request': request}).data,
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-    @action(detail=False, methods=['post'], url_path='mappingset-submission-delete')
-    def mappingset_submission_delete(self, request, *args, **kwargs):
-        '''
-        Bulk delete submissions linked to the supplied mappingsets
-
-        expected body:  [
-            # a list of uuids of the parent mappingsets
-
-            'uuid-1',
-            'uuid-2'
-        ]
-        '''
-        mappingsets = request.data
-        submissions = models.Submission.objects.filter(mappingset__id__in=mappingsets)
-        submission_count = len(submissions)
-        submissions.delete()
-        return Response({'deleted': submission_count})
 
 
 class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
@@ -409,60 +417,6 @@ class SchemaViewSet(viewsets.ModelViewSet):
             'docs': docs,
             'name': schema.schema_name,
         })
-
-    @action(detail=False, methods=['post'], url_path='mapping-schema-delete')
-    def mapping_schema_delete(self, request, *args, **kwargs):
-        '''
-        Bulk delete schemas uniquely linked to the supplied mappings
-        Note: It is ideal to delete the mappings consuming these schemas also
-
-        expected body:  [
-            # a list of uuids of the parent mappings,
-
-            'uuid-1',
-            'uuid-2'
-        ]
-
-        returned result: {
-            # a dict of schemas used in the context of the supplied mappings
-            # with details on delete operations perform on them or not.
-
-            'Schema-1': {
-                # id of the schema
-                'id': uuid,
-
-                # name of the schema definition (this can be different from the schema.name)
-                'name': string,
-
-                # Flag indicating if the schema is uniquely used in the mappings' context.
-                # Delete operations will not be performed if False
-                'is_unique': True | False,
-
-                # Flag if delete operation was successful on this schema and cascading objects.
-                # Objects with {'is_unique':False} will not have this property
-                'is_deleted': True | False,
-
-                # Reason for a delete failure, only available if {'is_deleted': False}
-                'reason': string
-            },
-            'Schema-2': {
-                ...
-            },
-            ...
-        }
-        '''
-        mappings = request.data
-        schema_deletables = utils.get_unique_schemas_used(mappings)
-        for key, value in schema_deletables.items():
-            if value['is_unique'] is True:
-                schema_to_be_deleted = models.Schema.objects.get(pk=value['id'])
-                try:
-                    schema_to_be_deleted.delete()
-                    schema_deletables[key]['is_deleted'] = True
-                except Exception as e:
-                    schema_deletables[key]['is_deleted'] = False
-                    schema_deletables[key]['reason'] = str(e)
-        return Response(schema_deletables)
 
 
 class SchemaDecoratorViewSet(MtViewSetMixin, viewsets.ModelViewSet):
@@ -561,24 +515,6 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
             instance.resolved = {}
 
         return Response(self.serializer_class(instance, context={'request': request}).data)
-
-    @action(detail=False, methods=['post'], url_path='mapping-entity-delete')
-    def mapping_entity_delete(self, request, *args, **kwargs):
-        '''
-        Bulk delete entities linked to the supplied mappings
-
-        expected body:  [
-            # a list of uuids of the parent mappings
-
-            'uuid-1',
-            'uuid-2'
-        ]
-        '''
-        mappings = request.data
-        entities = models.Entity.objects.filter(mapping__id__in=mappings)
-        entity_count = len(entities)
-        entities.delete()
-        return Response({'deleted': entity_count})
 
 
 class SubmissionStatsMixin(MtViewSetMixin):
