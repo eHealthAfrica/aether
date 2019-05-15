@@ -415,7 +415,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
     transport_rule = models.TextField(null=True, blank=True, verbose_name=_('transport rule'))
     masked_fields = models.TextField(null=True, blank=True, verbose_name=_('masked fields'))
     is_encrypted = models.BooleanField(default=False, verbose_name=_('encrypted?'))
-    topic = JSONField(null=True, blank=True, verbose_name=_('topic name'))
+    topic = JSONField(null=True, blank=True, verbose_name=_('topic'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
