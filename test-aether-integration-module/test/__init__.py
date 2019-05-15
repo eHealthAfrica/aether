@@ -32,7 +32,7 @@ from .consumer import get_consumer, read
 FORMS_TO_SUBMIT = 10
 SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
 SEED_TYPE = 'CurrentStock'
-KAFKA_SEED_TYPE = 'None.CurrentStock'
+KAFKA_SEED_TYPE = 'None.CurrentStock'  # Client needs update to handle realm
 
 PRODUCER_CREDS = [
     os.environ['PRODUCER_ADMIN_USER'],

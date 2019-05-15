@@ -36,7 +36,6 @@ import spavro.schema
 import sys
 import traceback
 
-# from aether.client import Client
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient
 from flask import Flask, Response, request, jsonify
@@ -63,27 +62,6 @@ class KafkaStatus(enum.Enum):
     SUBMISSION_PENDING = 1
     SUBMISSION_FAILURE = 2
     SUBMISSION_SUCCESS = 3
-
-
-class KernelHandler(object):
-    # Context for Kernel, which nulls kernel for reconnection if an error occurs
-    # Errors of type ignored_exceptions are logged but don't null kernel
-    def __init__(self, handler, ignored_exceptions=None):
-        self.handler = handler
-        self.log = self.handler.logger
-        self.ignored_exceptions = ignored_exceptions
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, traceback):
-        if exc_type:
-            if self.ignored_exceptions and exc_type in self.ignored_exceptions:
-                return True
-            self.handler.kernel = None
-            self.log.info("Kernel Connection Failed: %s" % exc_type)
-            return False
-        return True
 
 
 class ProducerManager(object):
@@ -140,7 +118,6 @@ class ProducerManager(object):
     def run(self):
         self.threads = []
         self.threads.append(gevent.spawn(self.keep_alive_loop))
-        # self.threads.append(gevent.spawn(self.connect_aether))
         self.threads.append(gevent.spawn(self.check_schemas))
         # Also going into this greenlet pool:
         # Each TopicManager.update_kafka() from TopicManager.init
@@ -183,54 +160,6 @@ class ProducerManager(object):
         db.init()
         self.logger.info("OffsetDB initialized")
 
-    # Maintain Aether Connection
-    def connect_aether(self):
-        self.kernel = None
-        while not self.killed:
-            errored = False
-            try:
-                if not self.kernel:
-                    self.logger.info('Connecting to Aether...')
-                    with KernelHandler(self):
-                        res = requests.head("%s/healthcheck" % self.settings['kernel_url'])
-                        if res.status_code != 404:
-                            self.logger.info('Kernel available without credentials.')
-                        continue
-                    # self.logger.info('Connecting to Aether...')
-                    # with KernelHandler(self):
-                    #     res = requests.head("%s/healthcheck" % self.settings['kernel_url'])
-                    #     if res.status_code != 404:
-                    #         self.logger.info('Kernel available without credentials.')
-                    #     try:
-                    #         self.kernel = Client(
-                    #             self.settings['kernel_url'],
-                    #             self.settings['kernel_username'],
-                    #             self.settings['kernel_password'],
-                    #         )
-                    #         self.logger.info('Connected to Aether.')
-                    #         continue
-                    #     except UnboundLocalError:
-                    #         # This is an unclear error from AetherClient
-                    #         raise ConnectionError("Bad Credentials passed to Aether")
-                self.safe_sleep(self.settings['start_delay'])
-
-            except ConnectionError as ce:
-                errored = True
-                self.logger.debug(ce)
-            except MaxRetryError as mre:
-                errored = True
-                self.logger.debug(mre)
-            except Exception as err:
-                errored = True
-                self.logger.debug(err)
-
-            if errored:
-                self.logger.info('No Aether connection...')
-                self.safe_sleep(self.settings['start_delay'])
-            errored = False
-
-        self.logger.debug('No longer attempting to connect to Aether')
-
     # Main Schema Loop
     # Spawns TopicManagers for new schemas, updates schemas for workers on change.
     def check_schemas(self):
@@ -238,21 +167,15 @@ class ProducerManager(object):
         # Creates TopicManagers for found schemas.
         # Updates TopicManager.schema on schema change
         while not self.killed:
-            # if not self.kernel:
-            #     sleep(1)
-            # else:
             schemas = []
             try:
                 schemas = self.get_schemas()
                 self.kernel = datetime.now().isoformat()
             except Exception as err:
                 self.kernel = None
-                self.logger.error(f'no kernel connection: {err}')
+                self.logger.error(f'no database connection: {err}')
                 sleep(1)
                 continue
-            # with KernelHandler(self):
-            #     schemas = [
-            #         schema for schema in self.kernel.schemas.paginated('list')]
             for schema in schemas:
                 _name = schema['schema_name']
                 realm = schema['realm']
