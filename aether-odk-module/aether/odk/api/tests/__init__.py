@@ -326,7 +326,7 @@ class CustomTestCase(TransactionTestCase):
             project_id=project_id,
         )
 
-        self.assertEqual(str(project), '{} - test'.format(project_id))
+        self.assertEqual(str(project), f'{project_id} - test')
 
         if surveyor:
             if type(surveyor) is list:
