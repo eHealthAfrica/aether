@@ -22,6 +22,8 @@ from time import sleep
 from urllib.parse import urlparse
 
 import bravado_core
+from .exceptions import AetherAPIException
+from . import basic_auth
 from . import oidc
 from . import patches
 from .logger import LOG
@@ -40,20 +42,11 @@ from bravado.client import (
     construct_request
 )
 from bravado.config import bravado_config_from_config_dict
-from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 
 
-# An Exception Class to wrap all handled API exceptions
-class AetherAPIException(Exception):
-    def __init__(self, *args, **kwargs):
-        msg = {k: v for k, v in kwargs.items()}
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        super(AetherAPIException, self).__init__(msg)
-
-
 class Client(SwaggerClient):
+    AUTH_METHODS = ['oauth', 'basic']
 
     def __init__(
         self,
@@ -63,27 +56,29 @@ class Client(SwaggerClient):
         offline_token=None,
         log_level='ERROR',
         config=None,
-        domain=None,
         realm=None,
-        keycloak_url=None
+        keycloak_url=None,
+        auth_type='oauth'
     ):
+        if auth_type not in Client.AUTH_METHODS:
+            raise ValueError('allowed auth_types are {Client.AUTH_METHODS}')
         log_level = logging.getLevelName(log_level)
         LOG.setLevel(log_level)
-        # Our Swagger spec is apparently somewhat problematic, so we default to no validation.
+        # Our Swagger spec is apparently somewhat problematic
+        # we default to no validation.
         config = config or {
             'validate_swagger_spec': False,
             'validate_requests': False,
             'validate_responses': False
         }
         url_info = urlparse(url)
-        proto = url_info.scheme
-        domain = domain or url_info.netloc
-        server = f'{proto}://{domain}'
+        server = f'{url_info.scheme}://{url_info.netloc}'
         spec_url = '%s/v1/schema/?format=openapi' % url
 
-        if not realm:
-            http_client = RequestsClient()
-            http_client.set_basic_auth(domain, user, pw)
+        if auth_type == 'basic':
+            LOG.debug(f'Using basic auth on {server}')
+            auth = basic_auth.BasicRealmAuthenticator(server, realm, user, pw)
+            http_client = basic_auth.BasicRealmClient(auth)
             loader = Loader(http_client, request_headers=None)
             try:
                 LOG.debug(f'Loading schema from: {spec_url}')

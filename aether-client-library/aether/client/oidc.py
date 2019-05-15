@@ -34,7 +34,7 @@ import typing
 from urllib.parse import urlparse
 
 from .logger import LOG
-
+from .exceptions import AetherAPIException
 # don't force https for oauth requests
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
@@ -245,5 +245,9 @@ def get_initial_token(user=None, pw=None, token_url=None, offline_token=None):
     else:
         raise ValueError('Either pw grant or offline_token must be used')
     res = requests.post(token_url, data=data)
+    try:
+        res.raise_for_status()
+    except requests.exceptions.HTTPError:
+        raise AetherAPIException('Could not get initial token for OIDC auth.')
     LOG.info(f'Got refresh token via {grant}. Status:{res.status_code}')
     return res.json()
