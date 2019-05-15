@@ -168,12 +168,16 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         queryset=models.Project.objects.all(),
         required=False,
     )
+
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
         mt_field='project',
+        required=False,
     )
 
     def create(self, validated_data):
+        if validated_data.get('mappingset') is None:
+            raise serializers.ValidationError('Mappingset must be provided on initial submission')
         instance = super(SubmissionSerializer, self).create(validated_data)
         try:
             run_entity_extraction(instance)
@@ -203,7 +207,7 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
-        mt_field='mappingset__project',
+        mt_field='project',
     )
 
     class Meta:

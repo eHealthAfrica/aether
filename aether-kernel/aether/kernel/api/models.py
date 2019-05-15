@@ -246,7 +246,8 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     mappingset = models.ForeignKey(
         to=MappingSet,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name=_('mapping set'),
     )
 
@@ -254,8 +255,6 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
     project = models.ForeignKey(
         to=Project,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         verbose_name=_('project'),
     )
 
@@ -265,18 +264,15 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     @property
     def name(self):  # overrides base model field
-        return f'{self.mappingset.project.name}-{self.mappingset.name}'
+        name = self.mappingset.name if self.mappingset else self.id
+        return f'{self.project.name}-{name}'
 
     def save(self, *args, **kwargs):
-        self.project = self.mappingset.project
+        self.project = self.mappingset.project if self.mappingset else self.project
         super(Submission, self).save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.id}'
-
-    def get_mt_instance(self):
-        # because project can be null we need to override the method
-        return self.mappingset.project
 
     class Meta:
         default_related_name = 'submissions'
