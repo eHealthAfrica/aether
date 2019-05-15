@@ -58,8 +58,9 @@ class Client(SwaggerClient):
     def __init__(
         self,
         url,
-        user,
-        pw,
+        user=None,
+        pw=None,
+        offline_token=None,
         log_level='ERROR',
         config=None,
         domain=None,
@@ -78,7 +79,6 @@ class Client(SwaggerClient):
         proto = url_info.scheme
         domain = domain or url_info.netloc
         server = f'{proto}://{domain}'
-        # domain = domain or url.split('://')[1].split(':')[0]  # TODO Use Regex
         spec_url = '%s/v1/schema/?format=openapi' % url
 
         if not realm:
@@ -99,7 +99,8 @@ class Client(SwaggerClient):
                 raise bgwe
         else:
             LOG.debug(f'getting OIDC session on realm {realm}')
-            auth = oidc.OauthAuthenticator(user, pw, server, realm, keycloak_url)
+            auth = oidc.OauthAuthenticator(
+                server, realm, user, pw, keycloak_url, offline_token)
             spec_dict = auth.get_spec(spec_url)
             http_client = oidc.OauthClient(auth)
 
