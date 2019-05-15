@@ -414,3 +414,11 @@ class ModelsTests(TransactionTestCase):
 
         self.assertEqual(schemadecorator.topic, {'name': 'schema decorator'})
         self.assertEqual(schemadecorator.name, 'new schema decorator name')
+
+        schemadecorator.topic = {'name': 'new topic', 'other_stuff': {}}
+        schemadecorator.save()
+
+        schemadecorator = models.SchemaDecorator.objects.get(pk=schemadecorator.id)
+
+        self.assertEqual(schemadecorator.topic, {'name': 'new topic', 'other_stuff': {}})
+        self.assertEqual(schemadecorator.name, 'new schema decorator name')
