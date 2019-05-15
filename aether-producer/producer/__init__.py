@@ -93,6 +93,21 @@ class ProducerManager(object):
     # Spawns a TopicManager for each schema type in Kernel
     # TopicManager registers own eventloop greenlet (update_kafka) with ProducerManager
 
+    SCHEMAS_STR = '''
+            SELECT
+                ps.id as schemadecorator_id,
+                ps.name as schemadecorator_name,
+                ps.modified as modified,
+                s.name as schema_name,
+                s.id as schema_id,
+                s.definition as schema_definition,
+                s.revision as schema_revision,
+                mt.realm as realm
+            FROM kernel_schemadecorator ps
+            inner join kernel_schema s on ps.schema_id = s.id
+            inner join multitenancy_mtinstance mt on ps.project_id = mt.instance_id
+            ORDER BY s.modified ASC'''
+
     def __init__(self, settings):
         self.settings = settings
         # Start Signal Handlers
@@ -221,16 +236,19 @@ class ProducerManager(object):
                 sleep(1)
             else:
                 schemas = []
-                with KernelHandler(self):
-                    schemas = [
-                        schema for schema in self.kernel.schemas.paginated('list')]
+                schemas = self.get_schemas()
+                # with KernelHandler(self):
+                #     schemas = [
+                #         schema for schema in self.kernel.schemas.paginated('list')]
                 for schema in schemas:
-                    schema_name = schema['name']
+                    _name = schema['schema_name']
+                    _realm = schema['realm']
+                    schema_name = f'{_realm}.{_name}'
                     if schema_name not in self.topic_managers.keys():
                         self.logger.info(
                             "New topic connected: %s" % schema_name)
                         self.topic_managers[schema_name] = TopicManager(
-                            self, schema)
+                            self, schema, realm)
                     else:
                         topic_manager = self.topic_managers[schema_name]
                         if topic_manager.schema_changed(schema):
@@ -243,6 +261,31 @@ class ProducerManager(object):
                 # Time between checks for schema change
                 self.safe_sleep(self.settings['sleep_time'])
         self.logger.debug('No longer checking schemas')
+
+    def get_schemas(self):
+        name = 'schemas_query'
+        query = sql.SQL(ProducerManager.SCHEMAS_STR)
+        try:
+            # needs to be quick(ish)
+            promise = POSTGRES.request_connection(1, name)
+            conn = promise.get()
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            cursor.execute(query)
+            for row in cursor:
+                yield {key: row[key] for key in row.keys()}
+
+        except psycopg2.OperationalError as pgerr:
+            self.logger.critical(
+                'Could not access db to get topic size: %s' % pgerr)
+            return -1
+        finally:
+            try:
+                POSTGRES.release(name, conn)
+            except UnboundLocalError:
+                self.logger.error(
+                    f'{name} could not release a'
+                    ' connection it never received.'
+                )
 
     # Flask Functions
 
@@ -390,8 +433,10 @@ class TopicManager(object):
         FROM kernel_entity e
         inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
         inner join kernel_schema s on sd.schema_id = s.id
+        inner join multitenancy_mtinstance mt on sd.project_id = mt.instance_id
         WHERE e.modified > {modified}
         AND s.name = {schema_name}
+        AND mt.realm = {realm}
         LIMIT 1; '''
 
     # Count how many unique (controlled by kernel) messages should currently be in this topic
@@ -401,7 +446,9 @@ class TopicManager(object):
             FROM kernel_entity e
             inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
             inner join kernel_schema s on sd.schema_id = s.id
-            WHERE s.name = {schema_name};
+            inner join multitenancy_mtinstance mt on sd.project_id = mt.instance_id
+            WHERE s.name = {schema_name}
+            AND mt.realm = {realm};
     '''
 
     # Changes pull query
@@ -420,16 +467,19 @@ class TopicManager(object):
             FROM kernel_entity e
             inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
             inner join kernel_schema s on sd.schema_id = s.id
+            inner join multitenancy_mtinstance mt on sd.project_id = mt.instance_id
             WHERE e.modified > {modified}
+            AND mt.realm = {realm}
             AND s.name = {schema_name}
             ORDER BY e.modified ASC
             LIMIT {limit};
         '''
 
-    def __init__(self, server_handler, schema):
+    def __init__(self, server_handler, schema, realm):
         self.context = server_handler
         self.logger = self.context.logger
-        self.name = schema['name']
+        self.name = schema['schema_name']
+        self.realm = realm
         self.offset = ""
         self.operating_status = TopicStatus.NORMAL
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
@@ -448,10 +498,11 @@ class TopicManager(object):
         self.kafka_failure_wait_time = self.context.settings.get(
             'kafka_failure_wait_time', 10)
         try:
-            self.topic_name = self.context.settings \
+            topic_base = self.context.settings \
                 .get('topic_settings', {}) \
                 .get('name_modifier', "%s") \
                 % self.name
+            self.topic_name = f'{self.realm}.{topic_base}'
         except Exception:  # Bad Name
             self.logger.critical(("invalid name_modifier using topic name for topic: %s."
                                   " Update configuration for"
@@ -542,6 +593,7 @@ class TopicManager(object):
         query = sql.SQL(TopicManager.NEW_STR).format(
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
+            realm=sql.Literal(self.realm)
         )
         try:
             promise = POSTGRES.request_connection(1, self.name)  # Medium priority
@@ -588,6 +640,7 @@ class TopicManager(object):
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
             limit=sql.Literal(self.limit),
+            realm=sql.Literal(self.realm)
         )
         query_time = datetime.now()
 
@@ -611,6 +664,7 @@ class TopicManager(object):
     def get_topic_size(self):
         query = sql.SQL(TopicManager.COUNT_STR).format(
             schema_name=sql.Literal(self.name),
+            realm=sql.Literal(self.realm)
         )
         try:
             promise = POSTGRES.request_connection(0, self.name)  # needs to be quick
@@ -639,7 +693,7 @@ class TopicManager(object):
         # be compared for differences. literal_eval fixes this. As such, this is used
         # by the schema_changed() method.
         # schema_obj is a nested OrderedDict, which needs to be stringified
-        return ast.literal_eval(json.dumps(schema_obj['definition']))
+        return ast.literal_eval(json.dumps(schema_obj['schema_definition']))
 
     def schema_changed(self, schema_candidate):
         # for use by ProducerManager.check_schemas()
