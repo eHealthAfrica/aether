@@ -59,6 +59,7 @@ GRANT SELECT ON kernel_entity TO {role_id};
 GRANT SELECT ON kernel_mapping TO {role_id};
 GRANT SELECT ON kernel_schemadecorator TO {role_id};
 GRANT SELECT ON kernel_schema TO {role_id};
+GRANT SELECT ON multitenancy_mtinstance TO {role_id};
 '''
 
 
