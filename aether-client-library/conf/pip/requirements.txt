@@ -1,13 +1,14 @@
 ################################################################################
 #                                                                              #
 #                           Requirements for testing                           #
-#    (If you need production dependencies, add them to the `setup.py` file)    #
 #                                                                              #
 ################################################################################
 
 bravado
+requests
+requests_oauthlib
+
+# Test libraries
 flake8
 pytest
 pytest-runner
-requests
-requests_oauthlib
