@@ -84,6 +84,7 @@ class OauthAuthenticator(Authenticator):
 
     def get_spec(self, spec_url):
         res = self.session.get(spec_url)
+        self.csrf = res.cookies.get('csrftoken')
         spec = res.json()
         spec['host'] = f'{spec["host"]}/{self.realm}/kernel'
         sec_def = spec['securityDefinitions']
@@ -97,7 +98,8 @@ class OauthAuthenticator(Authenticator):
         return spec
 
     def apply(self, req):
-        # we don't need to do anything here
+        # add CSRFToken
+        req.headers['X-CSRFToken'] = self.csrf
         return req
 
 
