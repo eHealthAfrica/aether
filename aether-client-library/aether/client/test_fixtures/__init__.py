@@ -42,7 +42,14 @@ def simple_entity(value_size=10):
 
 @pytest.fixture(scope='session')
 def client():
-    return Client(URL, USER, PW, log_level='DEBUG', auth_type='basic')
+    return Client(
+        URL,
+        USER,
+        PW,
+        log_level='DEBUG',
+        auth_type='basic',
+        realm='test'
+    )
 
 
 @pytest.fixture(scope='session')
