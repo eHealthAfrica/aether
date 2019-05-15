@@ -45,12 +45,9 @@ from gevent.pywsgi import WSGIServer
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import DictCursor
-import requests
-from requests.exceptions import ConnectionError
 from spavro.datafile import DataFileWriter, DataFileReader
 from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
-from urllib3.exceptions import MaxRetryError
 
 from producer import db
 from producer.db import Offset
