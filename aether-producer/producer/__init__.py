@@ -140,7 +140,7 @@ class ProducerManager(object):
     def run(self):
         self.threads = []
         self.threads.append(gevent.spawn(self.keep_alive_loop))
-        self.threads.append(gevent.spawn(self.connect_aether))
+        # self.threads.append(gevent.spawn(self.connect_aether))
         self.threads.append(gevent.spawn(self.check_schemas))
         # Also going into this greenlet pool:
         # Each TopicManager.update_kafka() from TopicManager.init
@@ -195,17 +195,23 @@ class ProducerManager(object):
                         res = requests.head("%s/healthcheck" % self.settings['kernel_url'])
                         if res.status_code != 404:
                             self.logger.info('Kernel available without credentials.')
-                        try:
-                            self.kernel = Client(
-                                self.settings['kernel_url'],
-                                self.settings['kernel_username'],
-                                self.settings['kernel_password'],
-                            )
-                            self.logger.info('Connected to Aether.')
-                            continue
-                        except UnboundLocalError:
-                            # This is an unclear error from AetherClient
-                            raise ConnectionError("Bad Credentials passed to Aether")
+                        continue
+                    # self.logger.info('Connecting to Aether...')
+                    # with KernelHandler(self):
+                    #     res = requests.head("%s/healthcheck" % self.settings['kernel_url'])
+                    #     if res.status_code != 404:
+                    #         self.logger.info('Kernel available without credentials.')
+                    #     try:
+                    #         self.kernel = Client(
+                    #             self.settings['kernel_url'],
+                    #             self.settings['kernel_username'],
+                    #             self.settings['kernel_password'],
+                    #         )
+                    #         self.logger.info('Connected to Aether.')
+                    #         continue
+                    #     except UnboundLocalError:
+                    #         # This is an unclear error from AetherClient
+                    #         raise ConnectionError("Bad Credentials passed to Aether")
                 self.safe_sleep(self.settings['start_delay'])
 
             except ConnectionError as ce:
@@ -232,34 +238,41 @@ class ProducerManager(object):
         # Creates TopicManagers for found schemas.
         # Updates TopicManager.schema on schema change
         while not self.killed:
-            if not self.kernel:
-                sleep(1)
-            else:
-                schemas = []
+            # if not self.kernel:
+            #     sleep(1)
+            # else:
+            schemas = []
+            try:
                 schemas = self.get_schemas()
-                # with KernelHandler(self):
-                #     schemas = [
-                #         schema for schema in self.kernel.schemas.paginated('list')]
-                for schema in schemas:
-                    _name = schema['schema_name']
-                    _realm = schema['realm']
-                    schema_name = f'{_realm}.{_name}'
-                    if schema_name not in self.topic_managers.keys():
-                        self.logger.info(
-                            "New topic connected: %s" % schema_name)
-                        self.topic_managers[schema_name] = TopicManager(
-                            self, schema, realm)
+                self.kernel = datetime.now().isoformat()
+            except Exception as err:
+                self.kernel = None
+                self.logger.error(f'no kernel connection: {err}')
+                sleep(1)
+                continue
+            # with KernelHandler(self):
+            #     schemas = [
+            #         schema for schema in self.kernel.schemas.paginated('list')]
+            for schema in schemas:
+                _name = schema['schema_name']
+                realm = schema['realm']
+                schema_name = f'{realm}.{_name}'
+                if schema_name not in self.topic_managers.keys():
+                    self.logger.info(
+                        "New topic connected: %s" % schema_name)
+                    self.topic_managers[schema_name] = TopicManager(
+                        self, schema, realm)
+                else:
+                    topic_manager = self.topic_managers[schema_name]
+                    if topic_manager.schema_changed(schema):
+                        topic_manager.update_schema(schema)
+                        self.logger.debug(
+                            "Schema %s updated" % schema_name)
                     else:
-                        topic_manager = self.topic_managers[schema_name]
-                        if topic_manager.schema_changed(schema):
-                            topic_manager.update_schema(schema)
-                            self.logger.debug(
-                                "Schema %s updated" % schema_name)
-                        else:
-                            self.logger.debug(
-                                "Schema %s unchanged" % schema_name)
-                # Time between checks for schema change
-                self.safe_sleep(self.settings['sleep_time'])
+                        self.logger.debug(
+                            "Schema %s unchanged" % schema_name)
+            # Time between checks for schema change
+            self.safe_sleep(self.settings['sleep_time'])
         self.logger.debug('No longer checking schemas')
 
     def get_schemas(self):
