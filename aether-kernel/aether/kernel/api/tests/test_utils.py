@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import uuid
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -51,11 +52,14 @@ class UtilsTests(TestCase):
 
         url = reverse('project-artefacts', kwargs={'pk': self.project.pk})
 
+        mappingset_id = uuid.uuid4()
+
         data = {
             'mappingsets': [{
                 'name': 'Test Mappingset',
                 'input': EXAMPLE_SOURCE_DATA_WITH_LOCATION,
                 'schema': {},
+                'id': mappingset_id,
             }],
             'schemas': [
                 {
@@ -79,6 +83,7 @@ class UtilsTests(TestCase):
                     },
                     'is_active': True,
                     'is_ready_only': False,
+                    'mappingset': mappingset_id,
                 },
                 {
                     'name': 'mapping-2',
@@ -87,6 +92,7 @@ class UtilsTests(TestCase):
                     },
                     'is_active': True,
                     'is_ready_only': False,
+                    'mappingset': mappingset_id,
                 }
             ],
         }

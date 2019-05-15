@@ -130,7 +130,6 @@ def upsert_project_artefacts(
         # by default use the given name, otherwise the generated one
         mapping_schema_decorators[raw_schema.get('name', schema_decorator.name)] = str(schema_decorator.pk)
 
-    mappingset = None
     # 3. create/update the mapping sets
     for raw_mappingset in mappingsets:
         ignore_fields = ['name']
@@ -185,12 +184,7 @@ def upsert_project_artefacts(
             }
 
         # check for the mapping set
-        mappingset_id = raw_mapping.get('mappingset')
-        if not mappingset_id:
-            if mappingset:
-                mappingset_id = mappingset.id
-            else:
-                mappingset_id = raw_mapping.get('id')
+        mappingset_id = raw_mapping.get('mappingset', raw_mapping.get('id'))
         try:
             mappingset = MappingSet.objects.get(pk=mappingset_id)
         except ObjectDoesNotExist:
