@@ -405,4 +405,4 @@ class ModelsTests(TransactionTestCase):
             project=project,
             schema=schema,
         )
-        self.assertEqual(schemadecorator.topic_name, {'name': 'schema decorator'})
+        self.assertEqual(schemadecorator.topic, {'name': 'schema decorator'})

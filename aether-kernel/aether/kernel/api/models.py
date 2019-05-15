@@ -405,7 +405,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
     :ivar text      transport_rule:    The transport rule.
     :ivar text      masked_fields:     The list of fields that must be masked before transport.
     :ivar bool      is_encrypted:      Is the transport encrypted?
-    :ivar JSON      topic_name:        The kafka topic reference
+    :ivar JSON      topic:             The kafka topic reference
     :ivar Schema    schema:            Schema.
     :ivar Project   project:           Project.
 
@@ -415,7 +415,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
     transport_rule = models.TextField(null=True, blank=True, verbose_name=_('transport rule'))
     masked_fields = models.TextField(null=True, blank=True, verbose_name=_('masked fields'))
     is_encrypted = models.BooleanField(default=False, verbose_name=_('encrypted?'))
-    topic_name = JSONField(null=True, blank=True, verbose_name=_('topic name'))
+    topic = JSONField(null=True, blank=True, verbose_name=_('topic name'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
@@ -425,12 +425,12 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
         return None
 
     @property
-    def topic_name_prettified(self):
-        return json_prettified(self.topic_name)
+    def topic_prettified(self):
+        return json_prettified(self.topic)
 
     def save(self, *args, **kwargs):
-        if self.topic_name is None:
-            self.topic_name = {'name': self.name}
+        if self.topic is None:
+            self.topic = {'name': self.name}
         super(SchemaDecorator, self).save(*args, **kwargs)
 
     class Meta:

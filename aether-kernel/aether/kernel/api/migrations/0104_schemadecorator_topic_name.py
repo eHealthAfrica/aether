@@ -17,8 +17,8 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='schemadecorator',
-            name='topic_name',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='topic name'),
+            name='topic',
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='topic'),
         ),
         migrations.RunPython(
             code=migrate__update_schemadecorator,

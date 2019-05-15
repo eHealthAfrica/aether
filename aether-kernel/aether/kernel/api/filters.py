@@ -165,7 +165,7 @@ class SchemaDecoratorFilter(filters.FilterSet):
             return queryset.filter(mappings__name=value)
 
     class Meta:
-        exclude = ('topic_name',)
+        exclude = ('topic',)
         model = models.SchemaDecorator
 
 
