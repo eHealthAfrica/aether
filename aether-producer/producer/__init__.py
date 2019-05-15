@@ -36,7 +36,7 @@ import spavro.schema
 import sys
 import traceback
 
-from aether.client import Client
+# from aether.client import Client
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient
 from flask import Flask, Response, request, jsonify

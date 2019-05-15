@@ -11,7 +11,7 @@
 #                                                                              #
 ################################################################################
 
-aether.client
+# aether.client
 confluent_kafka
 flask
 gevent
