@@ -6,7 +6,7 @@ from django.db import migrations
 def migrate__update_schemadecorator(apps, schema_editor):
     SchemaDecorator = apps.get_model('kernel', 'SchemaDecorator')
     for sd in SchemaDecorator.objects.all():
-        sd.save() # defalut topic_name to { name: [schemadecorator.name] }
+        sd.save() # default topic_name to { name: [schemadecorator.name] }
 
 class Migration(migrations.Migration):
 
