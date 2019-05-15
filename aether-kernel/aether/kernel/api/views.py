@@ -32,7 +32,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from aether.common.multitenancy.views import MtViewSetMixin
+from django_eha_sdk.multitenancy.views import MtViewSetMixin
 
 from .avro_tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH
@@ -324,7 +324,7 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
-    mt_field = 'mappingset__project'
+    mt_field = 'project'
 
     @action(detail=True, methods=['patch'])
     def extract(self, request, pk, *args, **kwargs):
@@ -358,7 +358,7 @@ class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
-    mt_field = 'submission__mappingset__project'
+    mt_field = 'submission__project'
 
 
 class SchemaViewSet(viewsets.ModelViewSet):
@@ -434,6 +434,11 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
     # Exporter required fields
     schema_field = 'schemadecorator__schema__definition'
     schema_order = '-schemadecorator__schema__created'
+
+    def get_serializer(self, *args, **kwargs):
+        if 'data' in kwargs:
+            kwargs['many'] = isinstance(kwargs.get('data'), list)
+        return super(EntityViewSet, self).get_serializer(*args, **kwargs)
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -554,6 +559,11 @@ SchemaView = get_schema_view(
 
 class AetherSchemaView(SchemaView):
     versioning_class = versioning.URLPathVersioning
+
+    def get(self, *args, **kwargs):
+        # this SchemaView doesn't know about realms, so we'll strip that out
+        kwargs.pop('realm', None)
+        return super().get(*args, **kwargs)
 
 
 @api_view(['POST'])

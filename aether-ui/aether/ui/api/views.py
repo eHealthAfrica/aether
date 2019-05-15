@@ -20,10 +20,9 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
-from aether.common.kernel.utils import get_kernel_server_url
-from aether.common.multitenancy.views import MtViewSetMixin
+from django_eha_sdk.multitenancy.views import MtViewSetMixin
 
-from . import models, serializers, utils
+from . import models, serializers, utils, kernel_utils
 
 
 class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
@@ -92,4 +91,4 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def get_kernel_url(request, *args, **kwargs):
-    return Response(get_kernel_server_url())
+    return Response(kernel_utils.get_kernel_url())

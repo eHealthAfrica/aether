@@ -25,9 +25,11 @@ from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
-from aether.common.kernel import utils as kernel_utils
-
-from .kernel_utils import propagate_kernel_artefacts
+from .kernel_utils import (
+    check_kernel_connection,
+    propagate_kernel_artefacts,
+    submit_to_kernel,
+)
 from .models import DeviceDB, Schema
 from ..couchdb import utils, api
 from .. import errors
@@ -179,7 +181,7 @@ def import_synced_docs(docs, db_name):
 
 def post_to_aether(document, aether_id=None):
     # first of all check if the connection is possible
-    if not kernel_utils.test_connection():
+    if not check_kernel_connection():
         raise RuntimeError(_('Cannot connect to Aether Kernel server'))
 
     try:
@@ -198,6 +200,6 @@ def post_to_aether(document, aether_id=None):
             _('Cannot submit document with schema "{}"').format(schema_name)
         )
 
-    return kernel_utils.submit_to_kernel(submission=document,
-                                         mappingset_id=str(schema.kernel_id),
-                                         submission_id=aether_id)
+    return submit_to_kernel(payload=document,
+                            mappingset_id=str(schema.kernel_id),
+                            submission_id=aether_id)

@@ -27,11 +27,10 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
-from aether.common.kernel import utils
-from aether.common.multitenancy import utils as mt_utils
-from aether.common.utils import get_all_docs, request
+from django_eha_sdk.multitenancy import utils as mt_utils
+from django_eha_sdk.utils import get_all_docs, request
 
-from . import models
+from . import models, kernel_utils
 
 
 MSG_CONTRACT_VALIDATION_ERROR = _('It was not possible to validate the contract: {}')
@@ -94,9 +93,10 @@ def kernel_artefacts_to_ui_artefacts(request):
     taking also the linked mappings+schemas and transform them into contracts.
     '''
 
-    KERNEL_URL = utils.get_kernel_server_url()
+    KERNEL_URL = kernel_utils.get_kernel_url()
+
     # restrict by current realm (if enabled)
-    headers = mt_utils.add_current_realm_in_headers(request, utils.get_auth_header())
+    headers = mt_utils.add_current_realm_in_headers(request, kernel_utils.get_kernel_auth_header())
 
     projects = get_all_docs(f'{KERNEL_URL}/projects/', headers=headers)
     for kernel_project in projects:
@@ -214,7 +214,7 @@ def validate_contract(contract):
         return [], []
 
     # check kernel connection
-    if not utils.test_connection():
+    if not kernel_utils.check_kernel_connection():
         return (
             [{'description': MSG_CONTRACT_VALIDATION_KERNEL_ERROR}],
             [],
@@ -266,9 +266,9 @@ def validate_contract(contract):
 
     resp = request(
         method='post',
-        url=f'{utils.get_kernel_server_url()}/validate-mappings/',
+        url=f'{kernel_utils.get_kernel_url()}/validate-mappings/',
         json=json.loads(json.dumps(payload)),
-        headers=utils.get_auth_header(),
+        headers=kernel_utils.get_kernel_auth_header(),
     )
     if resp.status_code == status.HTTP_200_OK:
         data = resp.json()
@@ -647,9 +647,9 @@ def kernel_data_request(url='', method='get', data=None, headers=None):
 
     res = request(
         method=method,
-        url=f'{utils.get_kernel_server_url()}/{url}',
+        url=f'{kernel_utils.get_kernel_url()}/{url}',
         json=data or {},
-        headers=headers or utils.get_auth_header(),
+        headers=headers or kernel_utils.get_kernel_auth_header(),
     )
 
     res.raise_for_status()
@@ -660,4 +660,4 @@ def kernel_data_request(url='', method='get', data=None, headers=None):
 
 
 def wrap_kernel_headers(instance):
-    return mt_utils.add_instance_realm_in_headers(instance, utils.get_auth_header())
+    return mt_utils.add_instance_realm_in_headers(instance, kernel_utils.get_kernel_auth_header())

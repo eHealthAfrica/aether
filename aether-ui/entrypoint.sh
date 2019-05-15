@@ -113,7 +113,7 @@ function setup {
     ./manage.py migrate --noinput
 
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
+    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=${ADMIN_TOKEN:-}
 
     # cleaning
     STATIC_UI=/code/aether/ui/static
@@ -133,24 +133,33 @@ function setup {
 }
 
 function test_lint {
-    flake8 ./aether --config=./conf/extras/flake8.cfg
+    flake8
 }
 
 function test_coverage {
-    RCFILE=/code/conf/extras/coverage.rc
-    PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
-    PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
-
     rm -R /code/.coverage* 2>/dev/null || true
-    coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
-    coverage combine --rcfile="$RCFILE" --append
-    coverage report  --rcfile="$RCFILE"
+
+    coverage run \
+        --concurrency=multiprocessing \
+        --parallel-mode \
+        manage.py test \
+        --parallel ${TEST_PARALLEL:-} \
+        --noinput \
+        "${@:1}"
+    coverage combine --append
+    coverage report
     coverage erase
 
     cat /code/conf/extras/good_job.txt
 }
 
 BACKUPS_FOLDER=/backups
+
+export APP_MODULE=aether.ui
+export DJANGO_SETTINGS_MODULE="${APP_MODULE}.settings"
+
+export EXTERNAL_APPS=aether-kernel
+export WEBPACK_REQUIRED=true
 
 case "$1" in
     bash )
@@ -207,7 +216,6 @@ case "$1" in
     start )
         # ensure that DEBUG mode is disabled
         export DEBUG=
-        export DJANGO_SETTINGS_MODULE="aether.ui.settings"
 
         setup
         ./conf/uwsgi/start.sh

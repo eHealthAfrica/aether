@@ -20,12 +20,12 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from aether.common.drf.serializers import (
+from django_eha_sdk.drf.serializers import (
     FilteredHyperlinkedRelatedField,
     HyperlinkedIdentityField,
     HyperlinkedRelatedField,
 )
-from aether.common.multitenancy.serializers import (
+from django_eha_sdk.multitenancy.serializers import (
     MtPrimaryKeyRelatedField,
     MtModelSerializer,
 )
@@ -168,12 +168,16 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         queryset=models.Project.objects.all(),
         required=False,
     )
+
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
         mt_field='project',
+        required=False,
     )
 
     def create(self, validated_data):
+        if validated_data.get('mappingset') is None:
+            raise serializers.ValidationError('Mappingset must be provided on initial submission')
         instance = super(SubmissionSerializer, self).create(validated_data)
         try:
             run_entity_extraction(instance)
@@ -203,7 +207,7 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
-        mt_field='mappingset__project',
+        mt_field='project',
     )
 
     class Meta:
@@ -264,6 +268,27 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, serializers.ModelSerializer)
     class Meta:
         model = models.SchemaDecorator
         fields = '__all__'
+
+
+class EntityListSerializer(serializers.ListSerializer):
+
+    def create(self, validated_data):
+        # remove helper field
+        [i.pop('merge') for i in validated_data]
+        entities = [models.Entity(**e) for e in validated_data]
+        errors = []
+        for e in entities:
+            try:
+                # validate entities
+                e.clean()
+            except Exception as err:
+                # either the generated or passed ID.
+                errors.append((e.id, err))
+        if errors:
+            # reject ALL if ANY invalid entities are included
+            raise(serializers.ValidationError(errors))
+        # bulk database operation
+        return models.Entity.objects.bulk_create(entities)
 
 
 class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
@@ -353,6 +378,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = models.Entity
         fields = '__all__'
+        list_serializer_class = EntityListSerializer
 
 
 class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):

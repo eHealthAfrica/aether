@@ -15,20 +15,9 @@
 
 # Main libraries
 
-# Aether common library with extras
-aether.common[cas,server,test]
-
-
-# Django specific
-drf-dynamic-fields
+# Django-eHa-SDK library with extras
+django_eha_sdk[cas,server,scheduler,test]
 
 
 # OAuth
 oauth2client
-
-
-# Task scheduler
-django-rq
-redis
-rq
-rq-scheduler

@@ -49,4 +49,5 @@ services:
     restart: on-failure
     networks:
       - aether
-    command: start
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
