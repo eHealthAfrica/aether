@@ -37,5 +37,9 @@ class SchemaForm(forms.ModelForm):
     definition = JSONField()
 
 
+class SchemaDecoratorForm(forms.ModelForm):
+    topic_name = JSONField()
+
+
 class EntityForm(forms.ModelForm):
     payload = JSONField()

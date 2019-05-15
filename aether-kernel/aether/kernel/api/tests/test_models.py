@@ -391,3 +391,18 @@ class ModelsTests(TransactionTestCase):
         self.assertTrue(models.Schema.objects.filter(pk=schema.pk).exists())
         schema.refresh_from_db()
         self.assertIsNone(schema.family)
+
+    def test_schema_decorator_topic_name(self):
+        project = models.Project.objects.create(
+            name='project',
+        )
+        schema = models.Schema.objects.create(
+            name='schema',
+            definition=EXAMPLE_SCHEMA,
+        )
+        schemadecorator = models.SchemaDecorator.objects.create(
+            name='schema decorator',
+            project=project,
+            schema=schema,
+        )
+        self.assertEqual(schemadecorator.topic_name, {'name': 'schema decorator'})
