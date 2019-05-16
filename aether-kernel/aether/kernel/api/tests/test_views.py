@@ -748,7 +748,7 @@ class ViewsTest(TestCase):
             data=data,
             content_type='application/json'
         ).json()
-        self.assertEqual(response['entities'], 3)
+        self.assertEqual(response['entities']['total'], 3)
         self.assertTrue(response['schemas'][self.schema.name]['is_deleted'])
 
     def test_mappingset_delete(self):
@@ -763,6 +763,6 @@ class ViewsTest(TestCase):
             data=data,
             content_type='application/json'
         ).json()
-        self.assertEqual(response['entities'], 3)
+        self.assertEqual(response['entities']['total'], 3)
         self.assertEqual(response['submissions'], 1)
         self.assertTrue(response['schemas'][self.schema.name]['is_deleted'])

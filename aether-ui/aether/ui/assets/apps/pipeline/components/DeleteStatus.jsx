@@ -63,12 +63,23 @@ class DeleteStatus extends Component {
         {
           this.props.deleteOptions.entities && this.props.deleteStatus &&
           this.props.deleteStatus.hasOwnProperty('entities') && (
-            <label className='form-label'>
-              <FormattedMessage
-                id='delete.modal.entities.status.done'
-                defaultMessage={`Deleted ${this.props.deleteStatus.entities} entities`}
-              />
-            </label>
+            <div>
+              <label className='form-label'>
+                <FormattedMessage
+                  id='delete.modal.entities.status.done'
+                  defaultMessage={`Deleted ${this.props.deleteStatus.entities.total} entities:`}
+                />
+              </label>
+              {
+                this.props.deleteStatus.entities.schemas.map(schema => (
+                  <div>
+                    <label key={schema.name}>
+                      { `${schema.name} : ${schema.count}` }
+                    </label>
+                  </div>
+                ))
+              }
+            </div>
           )
         }
 

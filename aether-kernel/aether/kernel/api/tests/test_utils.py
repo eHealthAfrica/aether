@@ -205,7 +205,7 @@ class UtilsTests(TestCase):
         self.assertFalse(result['schemas']['Person']['is_unique'])
         self.assertTrue(result['schemas']['Location']['is_unique'])
         self.assertTrue(result['schemas']['Location']['is_deleted'])
-        self.assertEqual(result['entities'], 0)
+        self.assertEqual(result['entities']['total'], 0)
         self.assertNotIn('submissions', result)
 
     def test_bulk_delete_by_mappings_mappingset(self):
@@ -223,7 +223,7 @@ class UtilsTests(TestCase):
         self.assertTrue(result['schemas']['Location']['is_unique'])
         self.assertTrue(result['schemas']['Location']['is_deleted'])
         self.assertTrue(result['schemas']['Person']['is_deleted'])
-        self.assertEqual(result['entities'], 0)
+        self.assertEqual(result['entities']['total'], 0)
         self.assertEqual(result['submissions'], 0)
 
         opts = {
@@ -253,9 +253,14 @@ class UtilsTests(TestCase):
             'entities': True,
             'submissions': True
         }
-        entitiy_count = models.Entity.objects.filter(
+        entity_count = models.Entity.objects.filter(
             mapping__id__in=self.project_artefacts['mappings']
         ).count()
         result = utils.bulk_delete_by_mappings(opts, mappingset)
-        self.assertEqual(result['entities'], entitiy_count)
+        self.assertEqual(result['entities']['total'], entity_count)
+        self.assertTrue(result['entities']['schemas'])
+        self.assertEqual(result['entities']['schemas'][0]['name'], 'Person')
+        self.assertEqual(result['entities']['schemas'][0]['count'], 6)
+        self.assertEqual(result['entities']['schemas'][1]['name'], 'Location')
+        self.assertEqual(result['entities']['schemas'][1]['count'], 1)
         self.assertEqual(result['submissions'], 1)

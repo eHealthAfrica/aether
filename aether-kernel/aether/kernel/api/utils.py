@@ -17,6 +17,8 @@
 # under the License.
 
 from django.db import transaction
+from django.db.models import Count
+from django.contrib.postgres.fields.jsonb import KeyTextTransform
 
 from .constants import MergeOptions as MERGE_OPTIONS
 from . import models
@@ -150,9 +152,12 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset=None, mappings=[]):
     submissions_opt = delete_opts.get('submissions')
     if entities_opt is True:
         entities = models.Entity.objects.filter(mapping__id__in=mappings)
+        by_schemas = models.Schema.objects.filter(schemadecorators__entities__in=entities)\
+            .values('definition__name').annotate(count=Count('schemadecorators__entities'))
+        by_schemas_list = list(by_schemas.values('count', name=KeyTextTransform('name', 'definition')))
         entity_count = entities.count()
         entities.delete()
-        result['entities'] = entity_count
+        result['entities'] = {'total': entity_count, 'schemas': by_schemas_list}
 
     if schemas_opt is True:
         schema_deletables = get_unique_schemas_used(mappings)
