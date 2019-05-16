@@ -172,6 +172,15 @@ export class IdentityMapping extends Component {
     const buttons = (
       <div>
         <button
+          id='settings.identity.modal.cancel'
+          className='btn btn-w'
+          onClick={() => { this.props.onModalToggle(false) }}>
+          <FormattedMessage
+            id='settings.identity.button.cancel'
+            defaultMessage='Cancel'
+          />
+        </button>
+        <button
           data-qa='contract.identity.button.confirm'
           className='btn btn-w btn-primary'
           id='settings.identity.modal.yes'
@@ -179,16 +188,6 @@ export class IdentityMapping extends Component {
           <FormattedMessage
             id='settings.identity.button.confirm'
             defaultMessage='Yes'
-          />
-        </button>
-
-        <button
-          id='settings.identity.modal.cancel'
-          className='btn btn-w'
-          onClick={() => { this.props.onModalToggle(false) }}>
-          <FormattedMessage
-            id='settings.identity.button.cancel'
-            defaultMessage='Cancel'
           />
         </button>
       </div>

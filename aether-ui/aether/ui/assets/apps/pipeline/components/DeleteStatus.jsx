@@ -35,7 +35,7 @@ class DeleteStatus extends Component {
       <div className='modal-actions'>
         { this.props.deleteStatus &&
           <button
-            className='btn btn-w'
+            className='btn btn-primary btn-w'
             onClick={() => { this.props.toggle() }}>
             <FormattedMessage
               id='delete.progress.modal.ok'
@@ -65,20 +65,16 @@ class DeleteStatus extends Component {
           this.props.deleteStatus.hasOwnProperty('entities') && (
             <div>
               <label className='form-label'>
+                <span className='badge badge-b'>{this.props.deleteStatus.entities.total}</span>
                 <FormattedMessage
                   id='delete.modal.entities.status'
-                  defaultMessage='Entities:'
+                  defaultMessage='Entities deleted'
                 />
               </label>
-              <i className='fa fa-check mr-2' />
-              <FormattedMessage
-                id='delete.modal.entities.status.done'
-                defaultMessage={`Deleted ${this.props.deleteStatus.entities.total} entities`}
-              />
               {
                 this.props.deleteStatus.entities.schemas.map(schema => (
                   <div>
-                    <i className='fa fa-circle mr-2' />
+                    <i className='fa fa-check mr-2' />
                     <label key={schema.name}>
                       { `${schema.name} : ${schema.count}` }
                     </label>
@@ -94,21 +90,25 @@ class DeleteStatus extends Component {
           this.props.deleteStatus.schemas && (
             <div>
               <label className='form-label mt-4'>
+                <span className='badge badge-b'>{Object.keys(this.props.deleteStatus.schemas).length}</span>
                 <FormattedMessage
                   id='delete.modal.entity.types.status'
-                  defaultMessage='Entity types:'
+                  defaultMessage='Entity types deleted'
                 />
               </label>
-              {
-                Object.keys(this.props.deleteStatus.schemas).map(schema => (
-                  <div key={schema}>
-                    <i className='fa fa-check mr-2' />
-                    <label>
-                      { `${schema} : ${this.props.deleteStatus.schemas[schema].is_deleted ? 'Deleted' : 'Not deleted, used by other mappings'}` }
-                    </label>
-                  </div>
-                ))
-              }
+              <ul className='ml-5'>
+                {
+                  Object.keys(this.props.deleteStatus.schemas).map(schema => (
+                    <li key={schema}>
+                      <i className='fa fa-check mr-2' />
+                      <label>
+                        { `${schema} : ${this.props.deleteStatus.schemas[schema].is_deleted ? 'Deleted' : 'Not deleted, used by other mappings'}` }
+                      </label>
+                    </li>
+                  ))
+                }
+              </ul>
+
               {
                 Object.keys(this.props.deleteStatus.schemas).length === 0 &&
                 <label>
@@ -127,16 +127,12 @@ class DeleteStatus extends Component {
           this.props.deleteStatus.hasOwnProperty('submissions') && (
             <div>
               <label className='form-label mt-4'>
+                <span className='badge badge-b'>{this.props.deleteStatus.submissions}</span>
                 <FormattedMessage
                   id='delete.modal.sumbissions.status'
-                  defaultMessage='Submissions:'
+                  defaultMessage='Submissions deleted'
                 />
               </label>
-              <i className='fa fa-check mr-2' />
-              <FormattedMessage
-                id='delete.modal.submissions.status.done'
-                defaultMessage={`Deleted ${this.props.deleteStatus.submissions} submissions`}
-              />
             </div>
           )
         }
