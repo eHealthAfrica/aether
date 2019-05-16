@@ -13,8 +13,8 @@
 ################################################################################
 
 attrs==19.1.0
-boto3==1.9.146
-botocore==1.12.146
+boto3==1.9.149
+botocore==1.12.149
 cachetools==3.1.0
 certifi==2019.3.9
 chardet==3.0.4
@@ -27,7 +27,7 @@ django-autofixture==0.12.1
 django-cas-ng==3.6.0
 django-cors-headers==3.0.1
 django-debug-toolbar==1.11
-django-eha-sdk==1.0.2
+django-eha-sdk==1.0.3
 django-filter==2.1.0
 django-minio-storage==0.2.2
 django-model-utils==3.1.2
@@ -42,10 +42,10 @@ entrypoints==0.3
 et-xmlfile==1.0.1
 flake8==3.7.7
 flake8-quotes==2.0.1
-google-api-core==1.10.0
+google-api-core==1.11.0
 google-auth==1.6.3
-google-cloud-core==0.29.1
-google-cloud-storage==1.15.0
+google-cloud-core==1.0.0
+google-cloud-storage==1.15.1
 google-resumable-media==0.3.2
 googleapis-common-protos==1.5.10
 idna==2.8
@@ -77,7 +77,7 @@ python-json-logger==0.1.11
 pytz==2019.1
 requests==2.21.0
 rsa==4.0
-ruamel.yaml==0.15.94
+ruamel.yaml==0.15.95
 s3transfer==0.2.0
 sentry-sdk==0.7.14
 six==1.12.0
