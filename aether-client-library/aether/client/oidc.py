@@ -85,6 +85,7 @@ class OauthAuthenticator(Authenticator):
     def get_spec(self, spec_url):
         res = self.session.get(spec_url)
         self.csrf = res.cookies.get('csrftoken')
+        LOG.debug(f'Set CSRFToken: {self.csrf}')
         spec = res.json()
         spec['host'] = f'{spec["host"]}/{self.realm}/kernel'
         sec_def = spec['securityDefinitions']
