@@ -84,7 +84,7 @@ class DeleteStatus extends Component {
                     </label>
                   </div>
                 ))
-              } 
+              }
             </div>
           )
         }
