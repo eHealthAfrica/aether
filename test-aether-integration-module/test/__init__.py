@@ -32,7 +32,6 @@ from .consumer import get_consumer, read
 FORMS_TO_SUBMIT = 10
 SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
 SEED_TYPE = 'CurrentStock'
-KAFKA_SEED_TYPE = 'None.CurrentStock'  # Client needs update to handle realm
 
 PRODUCER_CREDS = [
     os.environ['PRODUCER_ADMIN_USER'],
@@ -67,7 +66,10 @@ def wait_for_producer_status():
             kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
-            person = status.get('topics', {}).get(KAFKA_SEED_TYPE, {})
+            kafka_seed = [
+                k for k in status.get('topics', {}).keys()
+                if SEED_TYPE in k][0]
+            person = status.get('topics', {}).get(kafka_seed, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
                 sleep(5)
@@ -109,8 +111,9 @@ def generate_entities(client, mappingset):  # noqa: F811
 
 
 @pytest.fixture(scope='function')
-def read_people():
-    consumer = get_consumer(KAFKA_SEED_TYPE)
+def read_people(producer_topics):
+    kafka_seed = [k for k in producer_topics if SEED_TYPE in k][0]
+    consumer = get_consumer(kafka_seed)
     messages = read(consumer, start='FIRST', verbose=False, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
