@@ -1,23 +1,33 @@
 FROM python:3.6-slim-stretch
 
 ################################################################################
-## install app
+## setup container
 ################################################################################
 
-WORKDIR /code
-COPY ./ /code
-
-RUN useradd -ms /bin/false aether && \
-    chown -R aether: /code && \
-    apt-get update -qq && \
+RUN apt-get update -qq && \
     apt-get -qq \
         --yes \
         --allow-downgrades \
         --allow-remove-essential \
         --allow-change-held-packages \
-        install gcc && \
-    pip install -q --upgrade pip && \
+        install gcc
+
+################################################################################
+## install app
+## copy files one by one and split commands to use docker cache
+################################################################################
+
+################################################################################
+## install app
+################################################################################
+
+WORKDIR /code
+
+COPY ./conf/pip /code/conf/pip
+RUN pip install -q --upgrade pip && \
     pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
+
+COPY ./ /code
 
 ################################################################################
 ## copy application version and create git revision
@@ -33,5 +43,9 @@ RUN mkdir -p /var/tmp && \
 ################################################################################
 ## last setup steps
 ################################################################################
+
+# create user to run container (avoid root user)
+RUN useradd -ms /bin/false aether
+RUN chown -R aether: /code
 
 ENTRYPOINT ["/code/entrypoint.sh"]

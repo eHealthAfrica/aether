@@ -11,15 +11,15 @@
 #                                                                              #
 ################################################################################
 
-aether.client
 confluent_kafka
 flask
 gevent
 psycogreen
 psycopg2-binary
+requests
 spavro
 sqlalchemy
-urllib3>=1.25  # due to security warning
+urllib3  # due to security warning
 
 
 # Test libraries
