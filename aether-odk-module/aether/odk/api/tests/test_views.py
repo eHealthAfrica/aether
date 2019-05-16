@@ -33,6 +33,7 @@ class ViewsTests(CustomTestCase):
         self.formIdXml = '<formID>%s</formID>' % self.xform.form_id
         self.url_get_form = self.xform.download_url
         self.url_get_media = self.xform.manifest_url
+        self.url_get_media_content = self.xform.media_files.first().download_url
         self.url_list = reverse('xform-list-xml')
 
     def test__form_get__none(self):
@@ -61,6 +62,9 @@ class ViewsTests(CustomTestCase):
         response = self.client.get(self.url_get_media, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+        response = self.client.get(self.url_get_media_content, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test__form_get__as_surveyor(self):
         self.xform.surveyors.add(self.user)
 
@@ -73,6 +77,11 @@ class ViewsTests(CustomTestCase):
 
         response = self.client.get(self.url_get_media, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(self.url_get_media_content, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="sample.txt"')
+        self.assertEqual(response.content, b'abc')
 
         # change xform version
         self.xform.version = self.xform.version + '99'
@@ -181,22 +190,22 @@ class ViewsTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 4)
 
-        url = '/xforms.json?project_id={}'.format(project_ids[0])
+        url = f'/xforms.json?project_id={project_ids[0]}'
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 2)
 
-        url = '/xforms.json?project_id={}'.format(project_ids[1])
+        url = f'/xforms.json?project_id={project_ids[1]}'
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 1)
 
-        url = '/xforms.json?project_id={}'.format(project_ids[2])
+        url = f'/xforms.json?project_id={project_ids[2]}'
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 1)
 
-        url = '/xforms.json?project_id={}'.format(project_ids[3])
+        url = f'/xforms.json?project_id={project_ids[3]}'
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 0)
@@ -243,7 +252,7 @@ class ViewsTests(CustomTestCase):
         self.assertEqual(response.json()['count'], 4)
 
         project_id = project_ids[0]
-        url = '/surveyors.json?project_id={}'.format(project_id)
+        url = f'/surveyors.json?project_id={project_id}'
         self.helper_create_xform(project_id=project_id)
         self.helper_create_xform(project_id=project_id, surveyor=a)
         response = self.client.get(url, **self.headers_user)
@@ -251,20 +260,20 @@ class ViewsTests(CustomTestCase):
         self.assertEqual(response.json()['count'], 1)
 
         project_id = project_ids[1]
-        url = '/surveyors.json?project_id={}'.format(project_id)
+        url = f'/surveyors.json?project_id={project_id}'
         self.helper_create_xform(project_id=project_id, surveyor=[b, c, d])
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 3)
 
         project_id = project_ids[2]
-        url = '/surveyors.json?project_id={}'.format(project_id)
+        url = f'/surveyors.json?project_id={project_id}'
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 0)
 
         project_id = project_ids[3]
-        url = '/surveyors.json?project_id={}'.format(project_id)
+        url = f'/surveyors.json?project_id={project_id}'
         self.helper_create_xform(project_id=project_id)
         self.helper_create_xform(project_id=project_id, surveyor=b)
         self.helper_create_xform(project_id=project_id, surveyor=b)
