@@ -71,16 +71,18 @@ class DeleteStatus extends Component {
                   defaultMessage='Entities deleted'
                 />
               </label>
-              {
-                this.props.deleteStatus.entities.schemas.map(schema => (
-                  <div key={schema.name}>
-                    <i className='fa fa-check mr-2' />
-                    <label>
-                      { `${schema.name} : ${schema.count}` }
-                    </label>
-                  </div>
-                ))
-              }
+              <div className='ml-5'>
+                {
+                  this.props.deleteStatus.entities.schemas.map(schema => (
+                    <div key={schema.name}>
+                      <i className='fa fa-check mr-2' />
+                      <label>
+                        { `${schema.name} : ${schema.count}` }
+                      </label>
+                    </div>
+                  ))
+                }
+              </div>
             </div>
           )
         }
@@ -96,18 +98,18 @@ class DeleteStatus extends Component {
                   defaultMessage='Entity types deleted'
                 />
               </label>
-              <ul className='ml-5'>
+              <div className='ml-5'>
                 {
                   Object.keys(this.props.deleteStatus.schemas).map(schema => (
-                    <li key={schema}>
+                    <div key={schema}>
                       <i className='fa fa-check mr-2' />
                       <label>
                         { `${schema} : ${this.props.deleteStatus.schemas[schema].is_deleted ? 'Deleted' : 'Not deleted, used by other mappings'}` }
                       </label>
-                    </li>
+                    </div>
                   ))
                 }
-              </ul>
+              </div>
 
               {
                 Object.keys(this.props.deleteStatus.schemas).length === 0 &&
