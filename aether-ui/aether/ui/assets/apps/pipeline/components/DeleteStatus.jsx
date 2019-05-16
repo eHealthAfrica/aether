@@ -74,7 +74,7 @@ class DeleteStatus extends Component {
               <FormattedMessage
                 id='delete.modal.entities.status.done'
                 defaultMessage={`Deleted ${this.props.deleteStatus.entities} entities`}
-              />            
+              />
             </div>
           )
         }
