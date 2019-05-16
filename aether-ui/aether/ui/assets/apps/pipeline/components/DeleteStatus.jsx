@@ -78,6 +78,7 @@ class DeleteStatus extends Component {
               {
                 this.props.deleteStatus.entities.schemas.map(schema => (
                   <div>
+                    <i className='fa fa-circle mr-2' />
                     <label key={schema.name}>
                       { `${schema.name} : ${schema.count}` }
                     </label>
