@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -170,7 +170,7 @@ class Pipeline extends Component {
         { this.props.error && <ModalError error={this.props.error} /> }
         <NavBar showBreadcrumb cb={this.linksCallBack}>
           <div className='breadcrumb-links'>
-            <Link onClick={this.linksCallBack}>
+            <Link to='/' onClick={this.linksCallBack}>
               <FormattedMessage
                 id='pipeline.navbar.pipelines'
                 defaultMessage='Pipelines'

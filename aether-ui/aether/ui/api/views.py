@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -91,4 +91,4 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def get_kernel_url(request, *args, **kwargs):
-    return Response(kernel_utils.get_kernel_url())
+    return Response(kernel_utils.get_kernel_url(request))

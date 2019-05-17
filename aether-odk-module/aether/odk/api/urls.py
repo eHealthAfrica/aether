@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -19,7 +19,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from . import views
+from . import views, views_collect
 
 router = DefaultRouter()
 
@@ -30,8 +30,19 @@ router.register('surveyors', views.SurveyorViewSet)
 
 
 urlpatterns = router.urls + [
-    path('formList', view=views.xform_list, name='xform-list-xml'),
-    path('forms/<slug:pk>/form.xml', view=views.xform_get_download, name='xform-get-download'),
-    path('forms/<slug:pk>/manifest.xml', view=views.xform_get_manifest, name='xform-get-manifest'),
-    path('submission', view=views.xform_submission, name='xform-submission'),
+    path(route='formList',
+         view=views_collect.xform_list,
+         name='xform-list-xml'),
+    path(route='forms/<slug:pk>/form.xml',
+         view=views_collect.xform_get_download,
+         name='xform-get-download'),
+    path(route='forms/<slug:pk>/manifest.xml',
+         view=views_collect.xform_get_manifest,
+         name='xform-get-manifest'),
+    path(route='media-file/<slug:pk>',
+         view=views_collect.media_file_get_content,
+         name='media-file-get-content'),
+    path(route='submission',
+         view=views_collect.xform_submission,
+         name='xform-submission'),
 ]
