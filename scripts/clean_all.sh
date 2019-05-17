@@ -87,15 +87,8 @@ do
     esac
 done
 
-# libraries
-docker-compose -f ./aether-client-library/docker-compose.yml kill
-docker-compose -f ./aether-client-library/docker-compose.yml down
-
-docker-compose -f ./aether-common-library/docker-compose.yml kill
-docker-compose -f ./aether-common-library/docker-compose.yml down
-
-# core apps
-for dc_file in $(find docker-compose*.yml 2> /dev/null)
+# libraries+core apps
+for dc_file in $(find docker-compose*.yml */docker-compose*.yml 2> /dev/null)
 do
     docker-compose -f $dc_file kill
     docker-compose -f $dc_file down

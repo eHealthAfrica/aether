@@ -39,7 +39,7 @@ class NavBar extends Component {
 
     return (
       <div data-qa='navbar' className='navbar top-nav'>
-        <Link className='top-nav-logo' title='aether' onClick={this.props.cb}>
+        <Link className='top-nav-logo' title='aether' to='#'>
           <div className='logo-container'>
             <div className='flipper'>
               <div className='front' />
