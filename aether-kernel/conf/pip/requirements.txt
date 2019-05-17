@@ -13,8 +13,8 @@
 ################################################################################
 
 attrs==19.1.0
-boto3==1.9.149
-botocore==1.12.149
+boto3==1.9.150
+botocore==1.12.150
 cachetools==3.1.0
 certifi==2019.3.9
 chardet==3.0.4
@@ -75,9 +75,9 @@ python-cas==1.4.0
 python-dateutil==2.8.0
 python-json-logger==0.1.11
 pytz==2019.1
-requests==2.21.0
+requests==2.22.0
 rsa==4.0
-ruamel.yaml==0.15.95
+ruamel.yaml==0.15.96
 s3transfer==0.2.0
 sentry-sdk==0.7.14
 six==1.12.0
