@@ -91,4 +91,4 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def get_kernel_url(request, *args, **kwargs):
-    return Response(kernel_utils.get_kernel_url())
+    return Response(kernel_utils.get_kernel_url(request))
