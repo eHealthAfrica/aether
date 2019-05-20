@@ -170,7 +170,7 @@ class Pipeline extends Component {
         { this.props.error && <ModalError error={this.props.error} /> }
         <NavBar showBreadcrumb cb={this.linksCallBack}>
           <div className='breadcrumb-links'>
-            <Link to='/' onClick={this.linksCallBack}>
+            <Link onClick={this.linksCallBack}>
               <FormattedMessage
                 id='pipeline.navbar.pipelines'
                 defaultMessage='Pipelines'
