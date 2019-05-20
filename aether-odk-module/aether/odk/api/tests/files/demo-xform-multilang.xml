@@ -65,16 +65,16 @@
           <text id="/Something_that_is_not_None/option/b:label">
             <value>Option B</value>
           </text>
-          <text id="/Something_that_is_not_None/option_a:label">
+          <text id="/Something_that_is_not_None/option-a:label">
             <value>Option A</value>
           </text>
-          <text id="/Something_that_is_not_None/option_a/choice_a:label">
+          <text id="/Something_that_is_not_None/option-a/choice.a:label">
             <value>Choice A</value>
           </text>
-          <text id="/Something_that_is_not_None/option_b:label">
+          <text id="/Something_that_is_not_None/option-b:label">
             <value>Option B</value>
           </text>
-          <text id="/Something_that_is_not_None/option_b/choice_b:label">
+          <text id="/Something_that_is_not_None/option-b/choice.b:label">
             <value>Choice B</value>
           </text>
           <text id="/Something_that_is_not_None/lang:label">
@@ -211,16 +211,16 @@
           <text id="/Something_that_is_not_None/option/b:label">
             <value>Opción B</value>
           </text>
-          <text id="/Something_that_is_not_None/option_a:label">
+          <text id="/Something_that_is_not_None/option-a:label">
             <value>Opción A</value>
           </text>
-          <text id="/Something_that_is_not_None/option_a/choice_a:label">
+          <text id="/Something_that_is_not_None/option-a/choice.a:label">
             <value>Elección A</value>
           </text>
-          <text id="/Something_that_is_not_None/option_b:label">
+          <text id="/Something_that_is_not_None/option-b:label">
             <value>Opción B</value>
           </text>
-          <text id="/Something_that_is_not_None/option_b/choice_b:label">
+          <text id="/Something_that_is_not_None/option-b/choice.b:label">
             <value>Elección B</value>
           </text>
           <text id="/Something_that_is_not_None/lang:label">
@@ -319,12 +319,12 @@
           <date/>
           <datetime/>
           <option/>
-          <option_a>
-            <choice_a/>
-          </option_a>
-          <option_b>
-            <choice_b/>
-          </option_b>
+          <option-a>
+            <choice.a/>
+          </option-a>
+          <option-b>
+            <choice.b/>
+          </option-b>
           <lang>EN</lang>
           <iterate jr:template="">
             <index/>
@@ -443,10 +443,10 @@
       <bind nodeset="/Something_that_is_not_None/date" required="false()" type="date"/>
       <bind nodeset="/Something_that_is_not_None/datetime" required="false()" type="dateTime"/>
       <bind jr:requiredMsg="Choice" nodeset="/Something_that_is_not_None/option" required="true()" type="select1"/>
-      <bind nodeset="/Something_that_is_not_None/option_a" relevant=" /Something_that_is_not_None/option ='a'"/>
-      <bind nodeset="/Something_that_is_not_None/option_a/choice_a" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/option_b" relevant=" /Something_that_is_not_None/option ='b'"/>
-      <bind nodeset="/Something_that_is_not_None/option_b/choice_b" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/option-a" relevant=" /Something_that_is_not_None/option ='a'"/>
+      <bind nodeset="/Something_that_is_not_None/option-a/choice.a" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/option-b" relevant=" /Something_that_is_not_None/option ='b'"/>
+      <bind nodeset="/Something_that_is_not_None/option-b/choice.b" type="string"/>
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
       <bind nodeset="/Something_that_is_not_None/iterate/index" type="int"/>
       <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
@@ -520,16 +520,16 @@
         <value>b</value>
       </item>
     </select1>
-    <group ref="/Something_that_is_not_None/option_a">
-      <label ref="jr:itext('/Something_that_is_not_None/option_a:label')"/>
-      <input ref="/Something_that_is_not_None/option_a/choice_a">
-        <label ref="jr:itext('/Something_that_is_not_None/option_a/choice_a:label')"/>
+    <group ref="/Something_that_is_not_None/option-a">
+      <label ref="jr:itext('/Something_that_is_not_None/option-a:label')"/>
+      <input ref="/Something_that_is_not_None/option-a/choice.a">
+        <label ref="jr:itext('/Something_that_is_not_None/option-a/choice.a:label')"/>
       </input>
     </group>
-    <group ref="/Something_that_is_not_None/option_b">
-      <label ref="jr:itext('/Something_that_is_not_None/option_b:label')"/>
-      <input ref="/Something_that_is_not_None/option_b/choice_b">
-        <label ref="jr:itext('/Something_that_is_not_None/option_b/choice_b:label')"/>
+    <group ref="/Something_that_is_not_None/option-b">
+      <label ref="jr:itext('/Something_that_is_not_None/option-b:label')"/>
+      <input ref="/Something_that_is_not_None/option-b/choice.b">
+        <label ref="jr:itext('/Something_that_is_not_None/option-b/choice.b:label')"/>
       </input>
     </group>
     <select ref="/Something_that_is_not_None/lang">

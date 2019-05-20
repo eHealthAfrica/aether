@@ -19,10 +19,10 @@
   "date": "2017-07-14T00:00:00",
   "datetime": "2017-07-14T16:38:47.151000+02:00",
   "option": "a",
-  "option_a": {
-    "choice_a": "A"
+  "option__a": {
+    "choice__a": "A"
   },
-  "option_b": null,
+  "option__b": null,
   "image": null,
   "lang": "EN,FR",
   "iterate": [

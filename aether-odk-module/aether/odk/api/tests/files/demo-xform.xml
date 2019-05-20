@@ -62,12 +62,12 @@
           <date/>
           <datetime/>
           <option/>
-          <option_a>
-            <choice_a/>
-          </option_a>
-          <option_b>
-            <choice_b/>
-          </option_b>
+          <option-a>
+            <choice.a/>
+          </option-a>
+          <option-b>
+            <choice.b/>
+          </option-b>
           <lang>EN</lang>
           <iterate jr:template="">
             <index/>
@@ -186,10 +186,10 @@
       <bind nodeset="/Something_that_is_not_None/date" required="false()" type="date"/>
       <bind nodeset="/Something_that_is_not_None/datetime" required="false()" type="dateTime"/>
       <bind jr:requiredMsg="Choice" nodeset="/Something_that_is_not_None/option" required="true()" type="select1"/>
-      <bind nodeset="/Something_that_is_not_None/option_a" relevant=" /Something_that_is_not_None/option ='a'"/>
-      <bind nodeset="/Something_that_is_not_None/option_a/choice_a" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/option_b" relevant=" /Something_that_is_not_None/option ='b'"/>
-      <bind nodeset="/Something_that_is_not_None/option_b/choice_b" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/option-a" relevant=" /Something_that_is_not_None/option ='a'"/>
+      <bind nodeset="/Something_that_is_not_None/option-a/choice.a" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/option-b" relevant=" /Something_that_is_not_None/option ='b'"/>
+      <bind nodeset="/Something_that_is_not_None/option-b/choice.b" type="string"/>
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
       <bind nodeset="/Something_that_is_not_None/iterate/index" type="int"/>
       <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
@@ -263,15 +263,15 @@
         <value>b</value>
       </item>
     </select1>
-    <group ref="/Something_that_is_not_None/option_a">
+    <group ref="/Something_that_is_not_None/option-a">
       <label>Option A</label>
-      <input ref="/Something_that_is_not_None/option_a/choice_a">
+      <input ref="/Something_that_is_not_None/option-a/choice.a">
         <label>Choice A</label>
       </input>
     </group>
-    <group ref="/Something_that_is_not_None/option_b">
+    <group ref="/Something_that_is_not_None/option-b">
       <label>Option B</label>
-      <input ref="/Something_that_is_not_None/option_b/choice_b">
+      <input ref="/Something_that_is_not_None/option-b/choice.b">
         <label>Choice B</label>
       </input>
     </group>
