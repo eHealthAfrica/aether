@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -39,7 +39,7 @@ class NavBar extends Component {
 
     return (
       <div data-qa='navbar' className='navbar top-nav'>
-        <Link className='top-nav-logo' title='aether' onClick={this.props.cb}>
+        <Link className='top-nav-logo' title='aether' to='#'>
           <div className='logo-container'>
             <div className='flipper'>
               <div className='front' />
