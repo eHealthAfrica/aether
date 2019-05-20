@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -87,15 +87,8 @@ do
     esac
 done
 
-# libraries
-docker-compose -f ./aether-client-library/docker-compose.yml kill
-docker-compose -f ./aether-client-library/docker-compose.yml down
-
-docker-compose -f ./aether-common-library/docker-compose.yml kill
-docker-compose -f ./aether-common-library/docker-compose.yml down
-
-# core apps
-for dc_file in $(find docker-compose*.yml 2> /dev/null)
+# libraries+core apps
+for dc_file in $(find docker-compose*.yml */docker-compose*.yml 2> /dev/null)
 do
     docker-compose -f $dc_file kill
     docker-compose -f $dc_file down
