@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -38,6 +38,7 @@ function test_flake8 {
 
 function test_python {
     # Python3 Tests
+    export PYTHONDONTWRITEBYTECODE=1
     python3 setup.py -q test "${@:1}"
 
     cat /code/conf/extras/good_job.txt

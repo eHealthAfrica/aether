@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-for dc_file in $(find docker-compose*.yml 2> /dev/null)
+for dc_file in $(find docker-compose*.yml */docker-compose*.yml 2> /dev/null)
 do
     docker-compose -f $dc_file kill
 done

@@ -28,8 +28,8 @@
     "popper.js": "~1.15.0",
     "react": "~16.8.0",
     "react-dom": "~16.8.0",
-    "react-intl": "~2.8.0",
     "react-onclickoutside":"6.8.0",
+    "react-intl": "~2.9.0",
     "react-redux": "~7.0.0",
     "react-router-dom": "~5.0.0",
     "redux": "~4.0.0",
@@ -47,11 +47,11 @@
     "enzyme": "~3.9.0",
     "enzyme-adapter-react-16": "~1.13.0",
     "enzyme-react-intl": "~2.0.0",
-    "express": "~4.16.0",
+    "express": "~4.17.0",
     "jest": "~24.8.0",
     "mini-css-extract-plugin": "~0.6.0",
     "nock": "~10.0.0",
-    "node-fetch": "~2.5.0",
+    "node-fetch": "~2.6.0",
     "node-sass": "~4.12.0",
     "react-hot-loader": "~4.8.0",
     "redux-devtools-extension": "~2.13.0",
@@ -62,8 +62,8 @@
     "webpack": "~4.31.0",
     "webpack-bundle-tracker": "~0.4.2-beta",
     "webpack-cli": "~3.3.0",
-    "webpack-dev-middleware": "~3.6.0",
-    "webpack-hot-middleware": "~2.24.0"
+    "webpack-dev-middleware": "~3.7.0",
+    "webpack-hot-middleware": "~2.25.0"
   },
   "babel": {
     "presets": [

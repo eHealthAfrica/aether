@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.

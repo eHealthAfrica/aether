@@ -29,8 +29,8 @@ def check_kernel_connection():
     return check_external_app(EXTERNAL_APP_KERNEL)
 
 
-def get_kernel_url():
-    return get_external_app_url(EXTERNAL_APP_KERNEL)
+def get_kernel_url(request=None):
+    return get_external_app_url(EXTERNAL_APP_KERNEL, request)
 
 
 def get_kernel_auth_header():

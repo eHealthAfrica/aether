@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -314,7 +314,7 @@ class CustomTestCase(TransactionTestCase):
             project_id=project_id,
         )
 
-        self.assertEqual(str(project), '{} - test'.format(project_id))
+        self.assertEqual(str(project), f'{project_id} - test')
 
         if surveyor:
             if type(surveyor) is list:

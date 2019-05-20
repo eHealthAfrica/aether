@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -46,11 +46,13 @@ def test_4_check_producer_status(wait_for_producer_status):
 
 
 def test_5_check_producer_topics(producer_topics):
-    assert(SEED_TYPE in producer_topics.keys())
-    assert(int(producer_topics[SEED_TYPE]['count']) is SEED_ENTITIES)
+    kafka_seed = [k for k in producer_topics if SEED_TYPE in k][0]
+    assert(kafka_seed in producer_topics.keys())
+    assert(int(producer_topics[kafka_seed]['count']) is SEED_ENTITIES)
 
 
-def test_6_check_stream_entities(read_people, entities):
+def test_6_check_stream_entities(read_people, entities, producer_topics):
+    kafka_seed = [k for k in producer_topics if SEED_TYPE in k][0]
     kernel_messages = [msg.payload.get('id') for msg in entities.get(SEED_TYPE)]
     kafka_messages = [msg['id'] for msg in read_people]
     failed = []
@@ -59,22 +61,23 @@ def test_6_check_stream_entities(read_people, entities):
             failed.append(_id)
     assert(len(failed) == 0)
     assert(len(kernel_messages) == len(kafka_messages))
-    assert(producer_topic_count(SEED_TYPE) == len(kafka_messages))
+    assert(producer_topic_count(kafka_seed) == len(kafka_messages))
 
 
-def test_7_control_topic():
-    producer_control_topic(SEED_TYPE, 'pause')
+def test_7_control_topic(producer_topics):
+    kafka_seed = [k for k in producer_topics if SEED_TYPE in k][0]
+    producer_control_topic(kafka_seed, 'pause')
     sleep(.5)
-    op = topic_status(SEED_TYPE)['operating_status']
+    op = topic_status(kafka_seed)['operating_status']
     assert(op == 'TopicStatus.PAUSED')
-    producer_control_topic(SEED_TYPE, 'resume')
+    producer_control_topic(kafka_seed, 'resume')
     sleep(.5)
-    op = topic_status(SEED_TYPE)['operating_status']
+    op = topic_status(kafka_seed)['operating_status']
     assert(op == 'TopicStatus.NORMAL')
-    producer_control_topic(SEED_TYPE, 'rebuild')
+    producer_control_topic(kafka_seed, 'rebuild')
     sleep(.5)
     for x in range(120):
-        op = topic_status(SEED_TYPE)['operating_status']
+        op = topic_status(kafka_seed)['operating_status']
         if op != 'TopicStatus.REBUILDING':
             return
         sleep(1)
