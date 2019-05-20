@@ -73,6 +73,9 @@ BEGIN
   END IF;
 END
 $$ LANGUAGE plpgsql;
+
+GRANT SELECT ON multitenancy_mtinstance TO {role_id};
+
 '''
 
 
