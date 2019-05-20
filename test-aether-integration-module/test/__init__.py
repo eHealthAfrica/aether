@@ -22,8 +22,16 @@ from time import sleep
 import pytest
 import requests
 
-# Register Test Project and provide access to artifacts through client test fixtures
-from aether.client.test_fixtures import client, project, schemas, schemadecorators, mapping, mappingset  # noqa
+# Register Test Project and provide access to artifacts
+# through client test fixtures
+from aether.client.test_fixtures import (  # noqa
+    client,
+    project,
+    schemas,
+    schemadecorators,
+    mapping,
+    mappingset
+)
 from aether.client import fixtures  # noqa
 
 from .consumer import get_consumer, read
