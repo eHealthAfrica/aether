@@ -59,6 +59,23 @@ GRANT SELECT ON kernel_entity TO {role_id};
 GRANT SELECT ON kernel_mapping TO {role_id};
 GRANT SELECT ON kernel_schemadecorator TO {role_id};
 GRANT SELECT ON kernel_schema TO {role_id};
+GRANT SELECT ON kernel_project TO {role_id};
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'multitenancy_mtinstance')
+  THEN
+      DROP VIEW IF EXISTS multitenancy_mtinstance;
+      CREATE VIEW multitenancy_mtinstance AS
+            SELECT '-'    AS realm,
+                    p.id  AS instance_id
+            FROM kernel_project AS p;
+  END IF;
+END
+$$ LANGUAGE plpgsql;
+
+GRANT SELECT ON multitenancy_mtinstance TO {role_id};
+
 '''
 
 

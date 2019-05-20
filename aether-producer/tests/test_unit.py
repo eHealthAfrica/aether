@@ -18,28 +18,4 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from . import *
-
-
-@pytest.mark.unit
-def test_kernel_handler_expected_exception():
-    kernel_value = 1
-    obj = ObjectWithKernel(kernel_value)
-    with KernelHandler(obj, [AttributeError]):
-        new_variable = obj.missing  # noqa
-    assert(obj.kernel == kernel_value)
-
-
-@pytest.mark.unit
-def test_kernel_handler_unexpected_exception():
-    kernel_value = 1
-    obj = ObjectWithKernel(kernel_value)
-    try:
-        with KernelHandler(obj):
-            new_variable = obj.missing  # noqa
-            assert(False), "Error should have been thrown"
-    except AttributeError:
-        pass
-    else:
-        assert(False), "Should have thrown an AttributeError"
-    assert(obj.kernel is None)
+# Unit Tests were outdated, returning in true MT version
