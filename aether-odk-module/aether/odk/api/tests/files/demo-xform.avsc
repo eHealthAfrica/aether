@@ -268,7 +268,8 @@
             "type": "record",
             "fields": [
               {
-                "name": "item",
+                "name": "it__em",
+                "aliases": ["it.em"],
                 "namespace": "MyTestForm_Test10.iterate_one",
                 "doc": "Item",
                 "type": [ "null", "string" ]

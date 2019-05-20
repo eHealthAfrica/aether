@@ -52,7 +52,7 @@
         <value>Three</value>
     </iterate>
     <iterate_one>
-        <item>one</item>
+        <it.em>one</it.em>
     </iterate_one>
     <iterate_none/>
 

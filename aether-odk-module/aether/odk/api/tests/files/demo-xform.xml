@@ -74,7 +74,7 @@
             <value/>
           </iterate>
           <iterate_one jr:template="">
-            <item/>
+            <it.em/>
           </iterate_one>
           <iterate_none jr:template="">
             <nothing/>
@@ -193,7 +193,7 @@
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
       <bind nodeset="/Something_that_is_not_None/iterate/index" type="int"/>
       <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/iterate_one/item" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/iterate_one/it.em" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate_none/nothing" type="string"/>
       <bind nodeset="/Something_that_is_not_None/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/dup_group/value" type="string"/>
@@ -305,7 +305,7 @@
     <group ref="/Something_that_is_not_None/iterate_one">
       <label>Indicate one</label>
       <repeat nodeset="/Something_that_is_not_None/iterate_one">
-        <input ref="/Something_that_is_not_None/iterate_one/item">
+        <input ref="/Something_that_is_not_None/iterate_one/it.em">
           <label>Item</label>
         </input>
       </repeat>
