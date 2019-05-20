@@ -50,7 +50,7 @@ def test_5_check_producer_topics(producer_topics):
     assert(int(producer_topics[KAFKA_SEED_TYPE]['count']) is SEED_ENTITIES)
 
 
-def test_6_check_stream_entities(read_people, entities):
+def test_6_check_stream_entities(read_people, entities, producer_topics):
     kernel_messages = [msg.payload.get('id') for msg in entities.get(SEED_TYPE)]
     kafka_messages = [msg['id'] for msg in read_people]
     failed = []
@@ -63,6 +63,21 @@ def test_6_check_stream_entities(read_people, entities):
 
 
 def test_7_control_topic():
+    producer_control_topic(KAFKA_SEED_TYPE, 'pause')
+    sleep(.5)
+    op = topic_status(KAFKA_SEED_TYPE)['operating_status']
+    assert(op == 'TopicStatus.PAUSED')
+    producer_control_topic(KAFKA_SEED_TYPE, 'resume')
+    sleep(.5)
+    op = topic_status(KAFKA_SEED_TYPE)['operating_status']
+    assert(op == 'TopicStatus.NORMAL')
+    producer_control_topic(KAFKA_SEED_TYPE, 'rebuild')
+    sleep(.5)
+    for x in range(120):
+        op = topic_status(KAFKA_SEED_TYPE)['operating_status']
+
+
+def test_7_control_topic(producer_topics):
     producer_control_topic(KAFKA_SEED_TYPE, 'pause')
     sleep(.5)
     op = topic_status(KAFKA_SEED_TYPE)['operating_status']
