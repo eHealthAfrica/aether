@@ -211,6 +211,7 @@ services:
       POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
       POSTGRES_HOST: db-test
       SERVER_PORT: 9005
+      LOG_LEVEL: DEBUG
       OFFSET_DB_HOST: db-test
       OFFSET_DB_USER: postgres
       OFFSET_DB_PORT: 5432
