@@ -50,12 +50,13 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         utils.kernel_artefacts_to_ui_artefacts(request)
         return self.list(request)
 
-    def destroy(self, request, pk=None, *args, **kwargs):
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
         pipeline = self.get_object_or_404(pk=pk)
         data = request.data
         if pipeline.mappingset:
             return utils.delete_operation(
-                f'mappingsets/{pipeline.mappingset}/',
+                f'mappingsets/{pipeline.mappingset}/delete-artefacts/',
                 data,
                 pipeline
             )
@@ -101,12 +102,13 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         data = utils.publish_preflight(contract)
         return Response(data=data)
 
-    def destroy(self, request, pk=None, *args, **kwargs):
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
         contract = self.get_object_or_404(pk=pk)
         data = request.data
         if contract.mapping:
             return utils.delete_operation(
-                f'mappings/{contract.mapping}/',
+                f'mappings/{contract.mapping}/delete-artefacts/',
                 data,
                 contract
             )

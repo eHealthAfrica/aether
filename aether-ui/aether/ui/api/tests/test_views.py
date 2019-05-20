@@ -176,20 +176,20 @@ class ViewsTest(TransactionTestCase):
         )
 
         self.assertEqual(Contract.objects.count(), 1)
-        url = reverse('contract-detail', kwargs={'pk': contract.id})
+        url = reverse('contract-delete-artefacts', kwargs={'pk': contract.id})
 
         with mock.patch(
             'aether.ui.api.utils.kernel_data_request',
             return_value={'schemas': {'is_deleted': True}}
         ) as mock_kernel:
-            response = self.client.delete(
+            response = self.client.post(
                 url,
                 data={'schema': True},
                 content_type='application/json',
             )
             mock_kernel.assert_called_once_with(
-                url=f'mappings/{contract.mapping}/',
-                method='delete',
+                url=f'mappings/{contract.mapping}/delete-artefacts/',
+                method='post',
                 data={'schema': True},
                 headers=wrap_kernel_headers(contract),
             )
@@ -206,13 +206,13 @@ class ViewsTest(TransactionTestCase):
         )
 
         self.assertEqual(Contract.objects.count(), 1)
-        url = reverse('contract-detail', kwargs={'pk': contract.id})
+        url = reverse('contract-delete-artefacts', kwargs={'pk': contract.id})
 
         with mock.patch(
             'aether.ui.api.utils.kernel_data_request',
             return_value={'schemas': {'is_deleted': True}}
         ) as mock_kernel:
-            response = self.client.delete(
+            response = self.client.post(
                 url,
                 content_type='application/json',
             )
@@ -233,15 +233,15 @@ class ViewsTest(TransactionTestCase):
             'aether.ui.api.utils.kernel_data_request',
             side_effect=HTTPError('url', 404, response=res)
         ) as exp_mock_kernel:
-            url = reverse('contract-detail', kwargs={'pk': contract.id})
-            response = self.client.delete(
+            url = reverse('contract-delete-artefacts', kwargs={'pk': contract.id})
+            response = self.client.post(
                 url,
                 data={'schema': True},
                 content_type='application/json',
             )
             exp_mock_kernel.assert_called_once_with(
-                url=f'mappings/{contract.mapping}/',
-                method='delete',
+                url=f'mappings/{contract.mapping}/delete-artefacts/',
+                method='post',
                 data={'schema': True},
                 headers=wrap_kernel_headers(contract),
             )
@@ -259,15 +259,15 @@ class ViewsTest(TransactionTestCase):
             'aether.ui.api.utils.kernel_data_request',
             side_effect=Exception('Error in deleteing contract')
         ) as exp_mock_kernel:
-            url = reverse('contract-detail', kwargs={'pk': contract.id})
-            response = self.client.delete(
+            url = reverse('contract-delete-artefacts', kwargs={'pk': contract.id})
+            response = self.client.post(
                 url,
                 data={'schema': True},
                 content_type='application/json',
             )
             exp_mock_kernel.assert_called_once_with(
-                url=f'mappings/{contract.mapping}/',
-                method='delete',
+                url=f'mappings/{contract.mapping}/delete-artefacts/',
+                method='post',
                 data={'schema': True},
                 headers=wrap_kernel_headers(contract),
             )
@@ -279,15 +279,15 @@ class ViewsTest(TransactionTestCase):
             'aether.ui.api.utils.kernel_data_request',
             side_effect=HTTPError('url', 401, response=res)
         ) as exp_mock_kernel:
-            url = reverse('contract-detail', kwargs={'pk': contract.id})
-            response = self.client.delete(
+            url = reverse('contract-delete-artefacts', kwargs={'pk': contract.id})
+            response = self.client.post(
                 url,
                 data={'schema': True},
                 content_type='application/json',
             )
             exp_mock_kernel.assert_called_once_with(
-                url=f'mappings/{contract.mapping}/',
-                method='delete',
+                url=f'mappings/{contract.mapping}/delete-artefacts/',
+                method='post',
                 data={'schema': True},
                 headers=wrap_kernel_headers(contract),
             )
@@ -336,19 +336,19 @@ class ViewsTest(TransactionTestCase):
         )
 
         self.assertEqual(Pipeline.objects.count(), 1)
-        url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
+        url = reverse('pipeline-delete-artefacts', kwargs={'pk': pipeline.id})
 
         with mock.patch(
             'aether.ui.api.utils.kernel_data_request',
             return_value={'schemas': {'is_deleted': True}}
         ) as mock_kernel:
-            response = self.client.delete(
+            response = self.client.post(
                 url,
                 content_type='application/json',
             )
             mock_kernel.assert_called_once_with(
-                url=f'mappingsets/{pipeline.mappingset}/',
-                method='delete',
+                url=f'mappingsets/{pipeline.mappingset}/delete-artefacts/',
+                method='post',
                 data={},
                 headers=wrap_kernel_headers(pipeline),
             )
@@ -371,13 +371,13 @@ class ViewsTest(TransactionTestCase):
         )
 
         self.assertEqual(Pipeline.objects.count(), 1)
-        url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
+        url = reverse('pipeline-delete-artefacts', kwargs={'pk': pipeline.id})
 
         with mock.patch(
             'aether.ui.api.utils.kernel_data_request',
             return_value={'schemas': {'is_deleted': True}}
         ) as mock_kernel:
-            response = self.client.delete(
+            response = self.client.post(
                 url,
                 content_type='application/json',
             )
@@ -406,14 +406,14 @@ class ViewsTest(TransactionTestCase):
             'aether.ui.api.utils.kernel_data_request',
             side_effect=HTTPError('url', 404, response=res)
         ) as exp_mock_kernel:
-            url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
-            response = self.client.delete(
+            url = reverse('pipeline-delete-artefacts', kwargs={'pk': pipeline.id})
+            response = self.client.post(
                 url,
                 content_type='application/json',
             )
             exp_mock_kernel.assert_called_once_with(
-                url=f'mappingsets/{pipeline.mappingset}/',
-                method='delete',
+                url=f'mappingsets/{pipeline.mappingset}/delete-artefacts/',
+                method='post',
                 data={},
                 headers=wrap_kernel_headers(pipeline),
             )
@@ -439,14 +439,14 @@ class ViewsTest(TransactionTestCase):
             'aether.ui.api.utils.kernel_data_request',
             side_effect=Exception('Error in deleteing pipeline')
         ) as exp_mock_kernel:
-            url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
-            response = self.client.delete(
+            url = reverse('pipeline-delete-artefacts', kwargs={'pk': pipeline.id})
+            response = self.client.post(
                 url,
                 content_type='application/json',
             )
             exp_mock_kernel.assert_called_once_with(
-                url=f'mappingsets/{pipeline.mappingset}/',
-                method='delete',
+                url=f'mappingsets/{pipeline.mappingset}/delete-artefacts/',
+                method='post',
                 data={},
                 headers=wrap_kernel_headers(pipeline),
             )
@@ -459,14 +459,14 @@ class ViewsTest(TransactionTestCase):
             'aether.ui.api.utils.kernel_data_request',
             side_effect=HTTPError('url', 401, response=res)
         ) as exp_mock_kernel:
-            url = reverse('pipeline-detail', kwargs={'pk': pipeline.id})
-            response = self.client.delete(
+            url = reverse('pipeline-delete-artefacts', kwargs={'pk': pipeline.id})
+            response = self.client.post(
                 url,
                 content_type='application/json',
             )
             exp_mock_kernel.assert_called_once_with(
-                url=f'mappingsets/{pipeline.mappingset}/',
-                method='delete',
+                url=f'mappingsets/{pipeline.mappingset}/delete-artefacts/',
+                method='post',
                 data={},
                 headers=wrap_kernel_headers(pipeline),
             )

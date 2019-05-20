@@ -714,8 +714,8 @@ class ViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(self.submission.entities.count(), 0)
 
-    def test_mapping_schema_unique_usage_view(self):
-        url = reverse('mapping-schema-check')
+    def test_schema_unique_usage(self):
+        url = reverse('schema-unique-usage')
         data = [str(self.mapping.id)]
         response = self.client.post(url, data, content_type='application/json')
         result = response.json()
@@ -738,12 +738,12 @@ class ViewsTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_mapping_delete(self):
-        url = reverse('mapping-detail', kwargs={'pk': self.mapping.pk})
+        url = reverse('mapping-delete-artefacts', kwargs={'pk': self.mapping.pk})
         data = {
             'entities': True,
             'schemas': True
         }
-        response = self.client.delete(
+        response = self.client.post(
             url,
             data=data,
             content_type='application/json'
@@ -752,13 +752,13 @@ class ViewsTest(TestCase):
         self.assertTrue(response['schemas'][self.schema.name]['is_deleted'])
 
     def test_mappingset_delete(self):
-        url = reverse('mappingset-detail', kwargs={'pk': self.mappingset.pk})
+        url = reverse('mappingset-delete-artefacts', kwargs={'pk': self.mappingset.pk})
         data = {
             'entities': True,
             'schemas': True,
             'submissions': True
         }
-        response = self.client.delete(
+        response = self.client.post(
             url,
             data=data,
             content_type='application/json'

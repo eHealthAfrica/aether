@@ -142,8 +142,8 @@ export const updatePipeline = (pipeline) => {
 
 export const deletePipeline = (id, opts) => ({
   types: ['', types.PIPELINE_DELETE, types.REQUEST_ERROR],
-  promise: client => client.delete(
-    `${PIPELINES_URL}${id}/`,
+  promise: client => client.post(
+    `${PIPELINES_URL}${id}/delete-artefacts/`,
     { 'Content-Type': 'application/json' },
     { data: opts }
   )
@@ -167,8 +167,8 @@ export const updateContract = (contract) => ({
 
 export const deleteContract = (id, opts) => ({
   types: ['', types.CONTRACT_DELETE, types.REQUEST_ERROR],
-  promise: client => client.delete(
-    `${CONTRACTS_URL}${id}/`,
+  promise: client => client.post(
+    `${CONTRACTS_URL}${id}/delete-artefacts/`,
     { 'Content-Type': 'application/json' },
     { data: opts }
   )

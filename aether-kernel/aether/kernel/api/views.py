@@ -313,7 +313,8 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     filter_class = filters.MappingSetFilter
     mt_field = 'project'
 
-    def destroy(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None):
         mappingset = self.get_object_or_404(pk=pk)
         opts = request.data
         try:
@@ -333,7 +334,8 @@ class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     filter_class = filters.MappingFilter
     mt_field = 'mappingset__project'
 
-    def destroy(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None):
         mapping = self.get_object_or_404(pk=pk)
         opts = request.data
         try:
@@ -417,6 +419,40 @@ class SchemaViewSet(viewsets.ModelViewSet):
             'docs': docs,
             'name': schema.schema_name,
         })
+
+    @action(detail=False, methods=['post'], url_path='unique-usage')
+    def unique_usage(self, request, *args, **kwargs):
+        '''
+        Given a list of mapping ids, this view checks if a schema used in
+        any of the supplied mappings is used outside the context of the mappings
+        supplied
+
+        Reached through POST '/schemas/unique-usage/'
+
+        expected payload: [
+            'mapping-1-uuid',
+            'mapping-2-uuid',
+            ...
+        ]
+
+        returned result: {
+            # object with properties keys as schemas used in the context of supplied mappings
+            # with values True|False
+            # True if the schema is used only the the context and nowhere else
+            # False if the schema is used by some other mapping
+            # e.g
+
+            Person : true
+
+            # indicating the schema 'Person' is used by one or more
+            # of the supplied mappings only
+        }
+        '''
+        mappings = request.data
+        try:
+            return Response(utils.get_unique_schemas_used(mappings))
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class SchemaDecoratorViewSet(MtViewSetMixin, viewsets.ModelViewSet):
@@ -636,40 +672,5 @@ def validate_mappings_view(request, *args, **kwargs):
             'entities': [entity.payload for entity in entities],
             'mapping_errors': errors,
         })
-    except Exception as e:
-        return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['POST'])
-@renderer_classes([JSONRenderer])
-@permission_classes([permissions.IsAuthenticated])
-def mapping_schema_unique_usage_view(request, *args, **kwargs):
-    '''
-    Given a list of mapping ids, this view checks if a schema used in
-    any of the supplied mappings is used outside the context of the mappings
-    supplied
-
-    expected payload: [
-        'mapping-1-uuid',
-        'mapping-2-uuid',
-        ...
-    ]
-
-    returned result: {
-        # object with properties keys as schemas used in the context of supplied mappings
-        # with values True|False
-        # True if the schema is used only the the context and nowhere else
-        # False if the schema is used by some other mapping
-        # e.g
-
-        Person : true
-
-        # indicating the schema 'Person' is used by one or more
-        # of the supplied mappings only
-    }
-    '''
-    mappings = request.data
-    try:
-        return Response(utils.get_unique_schemas_used(mappings))
     except Exception as e:
         return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)

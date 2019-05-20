@@ -668,7 +668,7 @@ def delete_operation(url, data, object):
     try:
         response = kernel_data_request(
             url=url,
-            method='delete',
+            method='post',
             data=data,
             headers=wrap_kernel_headers(object),
         )
