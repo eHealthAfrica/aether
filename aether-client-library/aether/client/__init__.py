@@ -57,11 +57,14 @@ class Client(SwaggerClient):
         log_level='ERROR',
         config=None,
         realm=None,
+        # if using a gateway from a non-standard location
         keycloak_url=None,
-        auth_type='oauth'
+        auth_type='oauth',
+        # used to specify gateway endpoint ({realm}/{endpoint_name})
+        endpoint_name='kernel'
     ):
         if auth_type not in Client.AUTH_METHODS:
-            raise ValueError('allowed auth_types are {Client.AUTH_METHODS}')
+            raise ValueError(f'allowed auth_types are {Client.AUTH_METHODS}')
         log_level = logging.getLevelName(log_level)
         LOG.setLevel(log_level)
         # Our Swagger spec is apparently somewhat problematic
@@ -95,7 +98,8 @@ class Client(SwaggerClient):
         else:
             LOG.debug(f'getting OIDC session on realm {realm}')
             auth = oidc.OauthAuthenticator(
-                server, realm, user, pw, keycloak_url, offline_token)
+                server, realm, user, pw,
+                keycloak_url, offline_token, endpoint_name)
             spec_dict = auth.get_spec(spec_url)
             http_client = oidc.OauthClient(auth)
 

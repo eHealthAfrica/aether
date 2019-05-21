@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -16,22 +16,21 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from bravado.requests_client import Authenticator, RequestsClient
-import requests
+import os
+import typing
+from urllib.parse import urlparse
 
+from bravado.requests_client import Authenticator, RequestsClient
 from oauthlib.oauth2 import (
     TokenExpiredError,
     is_secure_transport,
     InsecureTransportError
 )
-
+import requests
 from requests_oauthlib import (
     OAuth2Session,
     TokenUpdated
 )
-import os
-import typing
-from urllib.parse import urlparse
 
 from .logger import LOG
 from .exceptions import AetherAPIException
@@ -71,9 +70,11 @@ class OauthAuthenticator(Authenticator):
         user=None,
         pw=None,
         keycloak_url=None,
-        offline_token=None
+        offline_token=None,
+        endpoint_name='kernel'
     ):
         self.realm = realm
+        self.endpoint_name = endpoint_name
         self.host = urlparse(server).netloc
         self.session = get_session(
             server, realm, user, pw, keycloak_url, offline_token)
@@ -87,7 +88,7 @@ class OauthAuthenticator(Authenticator):
         self.csrf = res.cookies.get('csrftoken')
         LOG.debug(f'Set CSRFToken: {self.csrf}')
         spec = res.json()
-        spec['host'] = f'{spec["host"]}/{self.realm}/kernel'
+        spec['host'] = f'{spec["host"]}/{self.realm}/{self.endpoint_name}'
         sec_def = spec['securityDefinitions']
         sec_def['Authorization'] = {
             'type': 'apiKey',
