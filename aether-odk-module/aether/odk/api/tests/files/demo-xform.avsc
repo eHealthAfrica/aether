@@ -167,20 +167,23 @@
       "type": [ "null", "string" ]
     },
     {
-      "name": "option_a",
+      "name": "option__a",
+      "aliases": ["option-a"],
       "namespace": "MyTestForm_Test10",
       "doc": "Option A",
       "type": [
         "null",
         {
-          "name": "option_a",
+          "name": "option__a",
+          "aliases": ["option-a"],
           "namespace": "MyTestForm_Test10",
           "doc": "Option A",
           "type": "record",
           "fields": [
             {
-              "name": "choice_a",
-              "namespace": "MyTestForm_Test10.option_a",
+              "name": "choice__a",
+              "aliases": ["choice.a"],
+              "namespace": "MyTestForm_Test10.option-a",
               "doc": "Choice A",
               "type": [ "null", "string" ]
             }
@@ -189,20 +192,23 @@
       ]
     },
     {
-      "name": "option_b",
+      "name": "option__b",
+      "aliases": ["option-b"],
       "namespace": "MyTestForm_Test10",
       "doc": "Option B",
       "type": [
         "null",
         {
-          "name": "option_b",
+          "name": "option__b",
+          "aliases": ["option-b"],
           "namespace": "MyTestForm_Test10",
           "doc": "Option B",
           "type": "record",
           "fields": [
             {
-              "name": "choice_b",
-              "namespace": "MyTestForm_Test10.option_b",
+              "name": "choice__b",
+              "aliases": ["choice.b"],
+              "namespace": "MyTestForm_Test10.option-b",
               "doc": "Choice B",
               "type": [ "null", "string" ]
             }
@@ -262,7 +268,8 @@
             "type": "record",
             "fields": [
               {
-                "name": "item",
+                "name": "it__em",
+                "aliases": ["it.em"],
                 "namespace": "MyTestForm_Test10.iterate_one",
                 "doc": "Item",
                 "type": [ "null", "string" ]
