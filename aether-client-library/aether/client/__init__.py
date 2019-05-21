@@ -17,10 +17,16 @@
 # under the License.
 
 import logging
+from oauthlib import oauth2
 from time import sleep
+from urllib.parse import urlparse
 
 import bravado_core
+from .exceptions import AetherAPIException
+from . import basic_auth
+from . import oidc
 from . import patches
+from .logger import LOG
 
 # monkey patch so that bulk insertion works
 bravado_core.marshal.marshal_model = patches.marshal_model  # noqa
@@ -36,48 +42,66 @@ from bravado.client import (
     construct_request
 )
 from bravado.config import bravado_config_from_config_dict
-from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
-
-LOG = logging.getLogger(__name__)
-
-
-# An Exception Class to wrap all handled API exceptions
-class AetherAPIException(Exception):
-    def __init__(self, *args, **kwargs):
-        msg = {k: v for k, v in kwargs.items()}
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        super(AetherAPIException, self).__init__(msg)
 
 
 class Client(SwaggerClient):
+    AUTH_METHODS = ['oauth', 'basic']
 
-    def __init__(self, url, user, pw, log_level=logging.ERROR, config=None, domain=None):
+    def __init__(
+        self,
+        url,
+        user=None,
+        pw=None,
+        offline_token=None,
+        log_level='ERROR',
+        config=None,
+        realm=None,
+        # if using a gateway from a non-standard location
+        keycloak_url=None,
+        auth_type='oauth',
+        # used to specify gateway endpoint ({realm}/{endpoint_name})
+        endpoint_name='kernel'
+    ):
+        if auth_type not in Client.AUTH_METHODS:
+            raise ValueError(f'allowed auth_types are {Client.AUTH_METHODS}')
+        log_level = logging.getLevelName(log_level)
         LOG.setLevel(log_level)
-        # Our Swagger spec is apparently somewhat problematic, so we default to no validation.
+        # Our Swagger spec is apparently somewhat problematic
+        # we default to no validation.
         config = config or {
             'validate_swagger_spec': False,
             'validate_requests': False,
             'validate_responses': False
         }
-        domain = domain or url.split('://')[1].split(':')[0]  # TODO Use Regex
+        url_info = urlparse(url)
+        server = f'{url_info.scheme}://{url_info.netloc}'
         spec_url = '%s/v1/schema/?format=openapi' % url
 
-        http_client = RequestsClient()
-        http_client.set_basic_auth(domain, user, pw)
-        loader = Loader(http_client, request_headers=None)
-        try:
-            spec_dict = loader.load_spec(spec_url)
-        except bravado.exception.HTTPForbidden as forb:
-            LOG.error('Could not authenticate with provided credentials')
-            raise forb
-        except (
-            bravado.exception.HTTPBadGateway,
-            bravado.exception.BravadoConnectionError
-        ) as bgwe:
-            LOG.error('Server Unavailable')
-            raise bgwe
+        if auth_type == 'basic':
+            LOG.debug(f'Using basic auth on {server}')
+            auth = basic_auth.BasicRealmAuthenticator(server, realm, user, pw)
+            http_client = basic_auth.BasicRealmClient(auth)
+            loader = Loader(http_client, request_headers=None)
+            try:
+                LOG.debug(f'Loading schema from: {spec_url}')
+                spec_dict = loader.load_spec(spec_url)
+            except bravado.exception.HTTPForbidden as forb:
+                LOG.error('Could not authenticate with provided credentials')
+                raise forb
+            except (
+                bravado.exception.HTTPBadGateway,
+                bravado.exception.BravadoConnectionError
+            ) as bgwe:
+                LOG.error('Server Unavailable')
+                raise bgwe
+        else:
+            LOG.debug(f'getting OIDC session on realm {realm}')
+            auth = oidc.OauthAuthenticator(
+                server, realm, user, pw,
+                keycloak_url, offline_token, endpoint_name)
+            spec_dict = auth.get_spec(spec_url)
+            http_client = oidc.OauthClient(auth)
 
         # We take this from the from_url class method of SwaggerClient
         # Apply bravado config defaults
@@ -148,7 +172,8 @@ class AetherDecorator(ResourceDecorator):
             bravado.exception.HTTPBadRequest,
             bravado.exception.HTTPBadGateway,
             bravado.exception.HTTPNotFound,
-            bravado.exception.HTTPForbidden
+            bravado.exception.HTTPForbidden,
+            oauth2.rfc6749.errors.InvalidGrantError
         ]
         # Errors in connection worthy of a retry
         self.retry_exceptions = [
