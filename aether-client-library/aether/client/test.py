@@ -84,7 +84,7 @@ def test_7_delete_project(client, project):
 
 def test_8_check_bad_url():
     try:
-        c = Client("http://localhost/bad-url", "user", "pw")
+        c = Client("http://localhost/bad-url", "user", "pw", auth_type="basic")
         c.get('projects')
     except bravado.exception.BravadoConnectionError:
         assert(True)
@@ -94,7 +94,7 @@ def test_8_check_bad_url():
 
 def test_9_check_bad_credentials():
     try:
-        c = Client(URL, "user", "pw")
+        c = Client(URL, "user", "pw", realm="dev", auth_type="basic")
         c.get('projects')
     except bravado.exception.HTTPForbidden:
         assert(True)

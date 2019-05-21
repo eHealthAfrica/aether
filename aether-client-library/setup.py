@@ -41,6 +41,7 @@ setup(
     install_requires=[
         'bravado',
         'requests',
+        'requests_oauthlib'
     ],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],

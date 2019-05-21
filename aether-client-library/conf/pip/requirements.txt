@@ -6,7 +6,7 @@
 
 bravado
 requests
-
+requests_oauthlib
 
 # Test libraries
 flake8

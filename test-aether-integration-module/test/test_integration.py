@@ -46,13 +46,11 @@ def test_4_check_producer_status(wait_for_producer_status):
 
 
 def test_5_check_producer_topics(producer_topics):
-    kafka_seed = [k for k in producer_topics if SEED_TYPE in k][0]
-    assert(kafka_seed in producer_topics.keys())
-    assert(int(producer_topics[kafka_seed]['count']) is SEED_ENTITIES)
+    assert(KAFKA_SEED_TYPE in producer_topics.keys())
+    assert(int(producer_topics[KAFKA_SEED_TYPE]['count']) is SEED_ENTITIES)
 
 
-def test_6_check_stream_entities(read_people, entities, producer_topics):
-    kafka_seed = [k for k in producer_topics if SEED_TYPE in k][0]
+def test_6_check_stream_entities(read_people, entities):
     kernel_messages = [msg.payload.get('id') for msg in entities.get(SEED_TYPE)]
     kafka_messages = [msg['id'] for msg in read_people]
     failed = []
@@ -61,23 +59,22 @@ def test_6_check_stream_entities(read_people, entities, producer_topics):
             failed.append(_id)
     assert(len(failed) == 0)
     assert(len(kernel_messages) == len(kafka_messages))
-    assert(producer_topic_count(kafka_seed) == len(kafka_messages))
+    assert(producer_topic_count(KAFKA_SEED_TYPE) == len(kafka_messages))
 
 
-def test_7_control_topic(producer_topics):
-    kafka_seed = [k for k in producer_topics if SEED_TYPE in k][0]
-    producer_control_topic(kafka_seed, 'pause')
+def test_7_control_topic():
+    producer_control_topic(KAFKA_SEED_TYPE, 'pause')
     sleep(.5)
-    op = topic_status(kafka_seed)['operating_status']
+    op = topic_status(KAFKA_SEED_TYPE)['operating_status']
     assert(op == 'TopicStatus.PAUSED')
-    producer_control_topic(kafka_seed, 'resume')
+    producer_control_topic(KAFKA_SEED_TYPE, 'resume')
     sleep(.5)
-    op = topic_status(kafka_seed)['operating_status']
+    op = topic_status(KAFKA_SEED_TYPE)['operating_status']
     assert(op == 'TopicStatus.NORMAL')
-    producer_control_topic(kafka_seed, 'rebuild')
+    producer_control_topic(KAFKA_SEED_TYPE, 'rebuild')
     sleep(.5)
     for x in range(120):
-        op = topic_status(kafka_seed)['operating_status']
+        op = topic_status(KAFKA_SEED_TYPE)['operating_status']
         if op != 'TopicStatus.REBUILDING':
             return
         sleep(1)
