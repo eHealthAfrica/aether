@@ -108,11 +108,11 @@ class DeleteStatus extends Component {
                         {
                           this.props.deleteStatus.schemas[schema].is_deleted
                             ? <FormattedMessage
-                              id='delete.modal.entity.types.delete'
+                              id='delete.modal.entity.types.status.deleted'
                               defaultMessage='Deleted'
                             />
                             : <FormattedMessage
-                              id='delete.modal.entity.types.not-delete'
+                              id='delete.modal.entity.types.status.not.deleted'
                               defaultMessage='Not deleted, used by other mappings'
                             />
                         }

@@ -75,7 +75,7 @@ class DeleteModal extends Component {
               </span>
               <FormattedMessage
                 id='delete.modal.all.submissions-2'
-                defaultMessage={`this ${this.props.objectType} (Submissions)`}
+                defaultMessage='this pipeline (Submissions)'
               />
             </label>
           </div>
