@@ -53,16 +53,22 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='delete-artefacts')
     def delete_artefacts(self, request, pk=None, *args, **kwargs):
         pipeline = self.get_object_or_404(pk=pk)
-        data = request.data
+        artefacts_result = {'not_published': True}
         if pipeline.mappingset:
-            return utils.delete_operation(
-                f'mappingsets/{pipeline.mappingset}/delete-artefacts/',
-                data,
-                pipeline
-            )
+            try:
+                artefacts_result = utils.delete_operation(
+                    f'mappingsets/{pipeline.mappingset}/delete-artefacts/',
+                    request.data,
+                    pipeline,
+                )
+                if not artefacts_result:
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+            except Exception as e:
+                return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             pipeline.delete()
-            return Response({'not_published': True})
+
+        return Response(artefacts_result)
 
 
 class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
@@ -105,16 +111,22 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='delete-artefacts')
     def delete_artefacts(self, request, pk=None, *args, **kwargs):
         contract = self.get_object_or_404(pk=pk)
-        data = request.data
+        artefacts_result = {'not_published': True}
         if contract.mapping:
-            return utils.delete_operation(
-                f'mappings/{contract.mapping}/delete-artefacts/',
-                data,
-                contract
-            )
+            try:
+                artefacts_result = utils.delete_operation(
+                    f'mappings/{contract.mapping}/delete-artefacts/',
+                    request.data,
+                    contract
+                )
+                if not artefacts_result:
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+            except Exception as e:
+                return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             contract.delete()
-            return Response({'not_published': True})
+
+        return Response(artefacts_result)
 
 
 @api_view(['GET'])

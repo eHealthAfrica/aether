@@ -291,7 +291,7 @@ class ViewsTest(TransactionTestCase):
                 data={'schema': True},
                 headers=wrap_kernel_headers(contract),
             )
-            self.assertEqual(response.status_code, 401)
+            self.assertEqual(response.status_code, 500)
             self.assertEqual(Contract.objects.count(), 1)
 
     def test__published_pipeline__delete(self):
@@ -470,6 +470,6 @@ class ViewsTest(TransactionTestCase):
                 data={},
                 headers=wrap_kernel_headers(pipeline),
             )
-            self.assertEqual(response.status_code, 401)
+            self.assertEqual(response.status_code, 500)
             self.assertEqual(Contract.objects.count(), 1)
             self.assertEqual(Pipeline.objects.count(), 1)

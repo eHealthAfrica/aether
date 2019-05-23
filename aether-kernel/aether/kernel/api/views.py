@@ -19,6 +19,7 @@
 from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
+from django_eha_sdk.multitenancy.utils import filter_by_realm
 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -448,7 +449,11 @@ class SchemaViewSet(viewsets.ModelViewSet):
             # of the supplied mappings only
         }
         '''
-        mappings = request.data
+        mappings = filter_by_realm(
+            self.request,
+            models.Mapping.objects.filter(pk__in=request.data or []),
+            'mappingset__project'
+        ).values_list('id', flat=True)
         try:
             return Response(utils.get_unique_schemas_used(mappings))
         except Exception as e:

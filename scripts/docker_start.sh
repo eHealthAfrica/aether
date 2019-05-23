@@ -125,7 +125,7 @@ case $app in
     ui)
         PRE_CONTAINERS=(ui-assets db nginx minio keycloak)
         SETUP_CONTAINERS=(kernel ui)
-        POST_CONTAINERS=(ui)
+        POST_CONTAINERS=()
     ;;
 
     sync|couchdb-sync)

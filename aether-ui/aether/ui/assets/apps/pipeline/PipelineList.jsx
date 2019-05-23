@@ -22,11 +22,12 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { ModalError, NavBar, Modal } from '../components'
+import { ModalError, NavBar } from '../components'
 
 import PipelineNew from './components/PipelineNew'
 import PipelineCard from './components/PipelineCard'
 import DeleteStatus from './components/DeleteStatus'
+import DeleteModal from './components/DeleteModal'
 
 import { getPipelines, deletePipeline, pipelineChanged } from './redux'
 
@@ -40,11 +41,7 @@ class PipelineList extends Component {
     this.state = {
       showDeleteModal: false,
       showDeleteProgress: false,
-      deleteOptions: {
-        schemas: false,
-        entities: false,
-        submissions: false
-      }
+      deleteOptions: {}
     }
 
     this.deletePipeline = this.deletePipeline.bind(this)
@@ -57,14 +54,15 @@ class PipelineList extends Component {
     this.props.pipelineChanged(pipeline)
   }
 
-  deletePipeline () {
+  deletePipeline (deleteOptions) {
     this.setState({
+      deleteOptions,
       showDeleteModal: false,
       showDeleteProgress: true
     })
     this.props.deletePipeline(
       this.props.pipeline.id,
-      this.state.deleteOptions
+      deleteOptions
     )
   }
 
@@ -73,140 +71,14 @@ class PipelineList extends Component {
       return null
     }
 
-    const header = (
-      <span>
-        <FormattedMessage
-          id='pipeline.delete.modal.header'
-          defaultMessage='Delete pipeline '
-        />
-        <span className='bold'>{this.props.pipeline.name}?</span>
-      </span>
-    )
-
-    const buttons = (
-      <div>
-        <button
-          data-qa='pipelineList.delete.cancel'
-          className='btn btn-w'
-          onClick={() => { this.setState({ showDeleteModal: false }) }}>
-          <FormattedMessage
-            id='pipelineList.delete.cancel'
-            defaultMessage='Cancel'
-          />
-        </button>
-
-        <button className='btn btn-w btn-primary' onClick={this.deletePipeline}>
-          <FormattedMessage
-            id='pipelineList.delete.button'
-            defaultMessage='Delete'
-          />
-        </button>
-      </div>
-    )
-
     return (
-      <Modal header={header} buttons={buttons}>
-        <label className='title-medium'>
-          <FormattedMessage
-            id='pipelineList.delete.modal.message-1'
-            defaultMessage='This will also delete:'
-          />
-        </label>
-        <div className='check-readonly ml-4'>
-          <input type='checkbox' checked readOnly />
-          <label>
-            <FormattedMessage
-              id='pipelineList.delete.modal.all.contracts'
-              defaultMessage='Contracts contained in this pipeline'
-            />
-          </label>
-        </div>
-        <label className='title-medium mt-4'>
-          <FormattedMessage
-            id='pipelineList.delete.modal.message-2'
-            defaultMessage='Would you also like to delete any of the following?'
-          />
-        </label>
-        <div className='check-default ml-4'>
-          <input type='checkbox' id='check1' checked={this.state.deleteOptions.submissions}
-            onChange={(e) => {
-              this.setState({
-                deleteOptions: { ...this.state.deleteOptions, submissions: e.target.checked }
-              })
-            }}
-          />
-          <label for='check1'>
-            <FormattedMessage
-              id='pipelineList.delete.modal.all.submissions-0'
-              defaultMessage='Data'
-            />
-            <span className='bold'>
-              <FormattedMessage
-                id='pipelineList.delete.modal.all.submissions-1'
-                defaultMessage='&nbsp;submitted to&nbsp;'
-              />
-            </span>
-            <FormattedMessage
-              id='pipelineList.delete.modal.all.submissions-2'
-              defaultMessage='this pipeline (Submissions)'
-            />
-          </label>
-        </div>
-        <div className='check-default ml-4'>
-          <input type='checkbox' id='check2' checked={this.state.deleteOptions.schemas}
-            onChange={(e) => {
-              this.setState({
-                deleteOptions: {
-                  ...this.state.deleteOptions,
-                  schemas: e.target.checked,
-                  entities: e.target.checked
-                }
-              })
-            }}
-          />
-          <label for='check2'>
-            <FormattedMessage
-              id='pipelineList.delete.modal.all.entity-types-0'
-              defaultMessage='Entity Types (Schemas)'
-            />
-          </label>
-        </div>
-        <div className='check-default ml-4 check-indent'>
-          <input type='checkbox' id='check3' checked={this.state.deleteOptions.entities}
-            onChange={(e) => {
-              if (!e.target.checked) {
-                this.setState({
-                  deleteOptions: {
-                    ...this.state.deleteOptions,
-                    entities: e.target.checked,
-                    schemas: e.target.checked
-                  }
-                })
-              } else {
-                this.setState({
-                  deleteOptions: { ...this.state.deleteOptions, entities: e.target.checked }
-                })
-              }
-            }}
-          />
-          <label for='check3'>
-            <FormattedMessage
-              id='pipelineList.delete.modal.all.data-0'
-              defaultMessage='Data'
-            />
-            <span className='bold'>
-              <FormattedMessage
-                id='pipelineList.delete.modal.all.data-1'
-                defaultMessage='&nbsp;created by&nbsp;'
-              />
-            </span>
-            <FormattedMessage
-              id='pipelineList.delete.modal.all.data-2'
-              defaultMessage='this pipeline (Entities)'
-            />
-          </label>
-        </div>
-      </Modal>
+      <DeleteModal
+        header='Delete pipeline '
+        onClose={() => this.setState({ showDeleteModal: false })}
+        onDelete={(e) => this.deletePipeline(e)}
+        objectType='pipeline'
+        obj={this.props.pipeline}
+      />
     )
   }
 

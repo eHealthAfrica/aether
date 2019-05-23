@@ -26,7 +26,6 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
-from rest_framework.response import Response
 
 from django_eha_sdk.multitenancy import utils as mt_utils
 from django_eha_sdk.utils import get_all_docs, request
@@ -664,21 +663,18 @@ def wrap_kernel_headers(instance):
     return mt_utils.add_instance_realm_in_headers(instance, kernel_utils.get_kernel_auth_header())
 
 
-def delete_operation(url, data, object):
+def delete_operation(url, data, obj):
     try:
         response = kernel_data_request(
             url=url,
             method='post',
             data=data,
-            headers=wrap_kernel_headers(object),
+            headers=wrap_kernel_headers(obj),
         )
-        object.delete()
-        return Response(response)
+        obj.delete()
+        return response
     except HTTPError as e:
         if e.response.status_code == status.HTTP_404_NOT_FOUND:
-            object.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return e.response
-    except Exception as e:
-        return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            obj.delete()
+            return None
+        raise e

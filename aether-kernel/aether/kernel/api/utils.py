@@ -69,15 +69,12 @@ def get_unique_schemas_used(mappings_ids):
             'id': schema.id,
             'name': schema.definition['name'],
         }
-        if other_linked_mappings:
-            result[schema.name]['is_unique'] = False
-        else:
-            result[schema.name]['is_unique'] = True
+        result[schema.name]['is_unique'] = not other_linked_mappings
     return result
 
 
 @transaction.atomic
-def bulk_delete_by_mappings(delete_opts={}, mappingset=None, mappings=[]):
+def bulk_delete_by_mappings(delete_opts={}, mappingset_id=None, mapping_ids=[]):
     '''
     Bulk delete submissions, entities and schemas uniquely
     linked to the supplied mappings or mappingset
@@ -94,9 +91,9 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset=None, mappings=[]):
 
     # the uuid of the mappingset to delete it's artefacts.
     # No need to provide mappings if mappingset exists.
-    mappingset: 'uuid',
+    mappingset_id: 'uuid',
 
-    mappings:  [
+    mapping_ids:  [
         # a list of mapping uuids to delete related artefacts,
 
         'uuid-1',
@@ -143,23 +140,24 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset=None, mappings=[]):
     }
     '''
 
-    if mappingset:
-        mappings = models.Mapping.objects.filter(mappingset=mappingset).values_list('id', flat=True)
+    if mappingset_id:
+        mapping_ids = models.Mapping.objects.filter(mappingset=mappingset_id).values_list('id', flat=True)
     result = {}
     entities_opt = delete_opts.get('entities')
     schemas_opt = delete_opts.get('schemas')
     submissions_opt = delete_opts.get('submissions')
     if entities_opt is True:
-        entities = models.Entity.objects.filter(mapping__id__in=mappings)
-        by_schemas = models.Schema.objects.filter(schemadecorators__entities__in=entities)\
-            .values('definition__name').annotate(count=Count('schemadecorators__entities'))
-        by_schemas_list = list(by_schemas.values('count', 'name'))
+        entities = models.Entity.objects.filter(mapping__id__in=mapping_ids)
+        by_schemas_list = list(
+            models.Schema.objects.filter(schemadecorators__entities__in=entities)
+            .values('name').annotate(count=Count('schemadecorators__entities')).values('count', 'name')
+        )
         entity_count = entities.count()
         entities.delete()
         result['entities'] = {'total': entity_count, 'schemas': by_schemas_list}
 
     if schemas_opt is True:
-        schema_deletables = get_unique_schemas_used(mappings)
+        schema_deletables = get_unique_schemas_used(mapping_ids)
         for key, value in schema_deletables.items():
             if value['is_unique'] is True:
                 schema_to_be_deleted = models.Schema.objects.get(pk=value['id'])
@@ -171,8 +169,8 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset=None, mappings=[]):
                     schema_deletables[key]['reason'] = str(e)
         result['schemas'] = schema_deletables
 
-    if submissions_opt is True and mappingset:
-        submissions = models.Submission.objects.filter(mappingset=mappingset)
+    if submissions_opt is True and mappingset_id:
+        submissions = models.Submission.objects.filter(mappingset=mappingset_id)
         submission_count = submissions.count()
         submissions.delete()
         result['submissions'] = submission_count

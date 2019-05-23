@@ -77,7 +77,7 @@ class DeleteStatus extends Component {
                     <div key={schema.name}>
                       <i className='fa fa-check mr-2' />
                       <label>
-                        { `${schema.name} : ${schema.count}` }
+                        {schema.name} : {schema.count}
                       </label>
                     </div>
                   ))
@@ -104,7 +104,18 @@ class DeleteStatus extends Component {
                     <div key={schema}>
                       <i className='fa fa-check mr-2' />
                       <label>
-                        { `${schema} : ${this.props.deleteStatus.schemas[schema].is_deleted ? 'Deleted' : 'Not deleted, used by other mappings'}` }
+                        { schema } :
+                        {
+                          this.props.deleteStatus.schemas[schema].is_deleted
+                            ? <FormattedMessage
+                              id='delete.modal.entity.types.delete'
+                              defaultMessage='Deleted'
+                            />
+                            : <FormattedMessage
+                              id='delete.modal.entity.types.not-delete'
+                              defaultMessage='Not deleted, used by other mappings'
+                            />
+                        }
                       </label>
                     </div>
                   ))

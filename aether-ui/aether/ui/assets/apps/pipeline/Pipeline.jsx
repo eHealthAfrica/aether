@@ -30,6 +30,7 @@ import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
 import Settings from './sections/Settings'
+import DeleteModal from './components/DeleteModal'
 
 import {
   clearSelection,
@@ -54,10 +55,7 @@ class Pipeline extends Component {
     const view = props.section || props.match.params.section || PIPELINE_SECTION_INPUT
 
     this.state = {
-      deleteOptions: {
-        schemas: false,
-        entities: false
-      },
+      deleteOptions: {},
       fullscreen: false,
       isNew: props.location.state && props.location.state.isNewContract,
       newContract: null,
@@ -278,9 +276,10 @@ class Pipeline extends Component {
     })
   }
 
-  deleteContract () {
-    this.props.deleteContract(this.props.contract.id, this.state.deleteOptions)
+  deleteContract (deleteOptions) {
+    this.props.deleteContract(this.props.contract.id, deleteOptions)
     this.setState({
+      deleteOptions,
       showDeleteModal: false,
       showDeleteProgress: true
     })
@@ -329,100 +328,14 @@ class Pipeline extends Component {
       return null
     }
 
-    const header = (
-      <span>
-        <FormattedMessage
-          id='contract.delete.modal.header'
-          defaultMessage='Delete contract '
-        />
-        <span className='bold'>{this.props.contract.name}?</span>
-      </span>
-    )
-
-    const buttons = (
-      <div>
-        <button
-          data-qa='pipeline.delete.contract.cancel'
-          className='btn btn-w'
-          onClick={() => { this.setState({ showDeleteModal: false }) }}>
-          <FormattedMessage
-            id='pipeline.delete.contract.cancel'
-            defaultMessage='Cancel'
-          />
-        </button>
-
-        <button className='btn btn-w btn-primary' onClick={this.deleteContract}>
-          <FormattedMessage
-            id='pipeline.delete.contract.delete'
-            defaultMessage='Delete'
-          />
-        </button>
-      </div>
-    )
-
     return (
-      <Modal header={header} buttons={buttons}>
-        <label className='title-medium mt-4'>
-          <FormattedMessage
-            id='pipeline.delete.modal.message-2'
-            defaultMessage='Would you also like to delete any of the following?'
-          />
-        </label>
-        <div className='check-default ml-4'>
-          <input type='checkbox' id='check2' checked={this.state.deleteOptions.schemas}
-            onChange={(e) => {
-              this.setState({
-                deleteOptions: {
-                  ...this.state.deleteOptions,
-                  schemas: e.target.checked,
-                  entities: e.target.checked
-                }
-              })
-            }}
-          />
-          <label for='check2'>
-            <FormattedMessage
-              id='pipeline.delete.modal.all.entity-types-0'
-              defaultMessage='Entity Types (Schemas)'
-            />
-          </label>
-        </div>
-        <div className='check-default ml-4 check-indent'>
-          <input type='checkbox' id='check3' checked={this.state.deleteOptions.entities}
-            onChange={(e) => {
-              if (!e.target.checked) {
-                this.setState({
-                  deleteOptions: {
-                    ...this.state.deleteOptions,
-                    entities: e.target.checked,
-                    schemas: e.target.checked
-                  }
-                })
-              } else {
-                this.setState({
-                  deleteOptions: { ...this.state.deleteOptions, entities: e.target.checked }
-                })
-              }
-            }}
-          />
-          <label for='check3'>
-            <FormattedMessage
-              id='pipeline.delete.modal.all.data-0'
-              defaultMessage='Data'
-            />
-            <span className='bold'>
-              <FormattedMessage
-                id='pipeline.delete.modal.all.data-1'
-                defaultMessage='&nbsp;created by&nbsp;'
-              />
-            </span>
-            <FormattedMessage
-              id='pipeline.delete.modal.all.data-2'
-              defaultMessage='this contract (Entities)'
-            />
-          </label>
-        </div>
-      </Modal>
+      <DeleteModal
+        header='Delete contract '
+        onClose={() => this.setState({ showDeleteModal: false })}
+        onDelete={(e) => this.deleteContract(e)}
+        objectType='contract'
+        obj={this.props.contract}
+      />
     )
   }
 
