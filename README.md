@@ -510,7 +510,6 @@ The list of the main containers:
 | **odk**           | Aether ODK module (imports data from ODK Collect)                       |
 | **ui**            | Aether Kernel UI (advanced mapping functionality)                       |
 | **couchdb-sync**  | Aether CouchDB Sync module (imports data from Aether Mobile app)        |
-| couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
 
 
 All of the containers definition for development can be found in the
