@@ -65,16 +65,16 @@
           <text id="/Something_that_is_not_None/option/b:label">
             <value>Option B</value>
           </text>
-          <text id="/Something_that_is_not_None/option_a:label">
+          <text id="/Something_that_is_not_None/option-a:label">
             <value>Option A</value>
           </text>
-          <text id="/Something_that_is_not_None/option_a/choice_a:label">
+          <text id="/Something_that_is_not_None/option-a/choice.a:label">
             <value>Choice A</value>
           </text>
-          <text id="/Something_that_is_not_None/option_b:label">
+          <text id="/Something_that_is_not_None/option-b:label">
             <value>Option B</value>
           </text>
-          <text id="/Something_that_is_not_None/option_b/choice_b:label">
+          <text id="/Something_that_is_not_None/option-b/choice.b:label">
             <value>Choice B</value>
           </text>
           <text id="/Something_that_is_not_None/lang:label">
@@ -101,7 +101,7 @@
           <text id="/Something_that_is_not_None/iterate_one:label">
             <value>Indicate one</value>
           </text>
-          <text id="/Something_that_is_not_None/iterate_one/item:label">
+          <text id="/Something_that_is_not_None/iterate_one/it.em:label">
             <value>Item</value>
           </text>
           <text id="/Something_that_is_not_None/iterate_none:label">
@@ -211,16 +211,16 @@
           <text id="/Something_that_is_not_None/option/b:label">
             <value>Opción B</value>
           </text>
-          <text id="/Something_that_is_not_None/option_a:label">
+          <text id="/Something_that_is_not_None/option-a:label">
             <value>Opción A</value>
           </text>
-          <text id="/Something_that_is_not_None/option_a/choice_a:label">
+          <text id="/Something_that_is_not_None/option-a/choice.a:label">
             <value>Elección A</value>
           </text>
-          <text id="/Something_that_is_not_None/option_b:label">
+          <text id="/Something_that_is_not_None/option-b:label">
             <value>Opción B</value>
           </text>
-          <text id="/Something_that_is_not_None/option_b/choice_b:label">
+          <text id="/Something_that_is_not_None/option-b/choice.b:label">
             <value>Elección B</value>
           </text>
           <text id="/Something_that_is_not_None/lang:label">
@@ -247,7 +247,7 @@
           <text id="/Something_that_is_not_None/iterate_one:label">
             <value>Indique uno</value>
           </text>
-          <text id="/Something_that_is_not_None/iterate_one/item:label">
+          <text id="/Something_that_is_not_None/iterate_one/it.em:label">
             <value>Ítem</value>
           </text>
           <text id="/Something_that_is_not_None/iterate_none:label">
@@ -319,19 +319,19 @@
           <date/>
           <datetime/>
           <option/>
-          <option_a>
-            <choice_a/>
-          </option_a>
-          <option_b>
-            <choice_b/>
-          </option_b>
+          <option-a>
+            <choice.a/>
+          </option-a>
+          <option-b>
+            <choice.b/>
+          </option-b>
           <lang>EN</lang>
           <iterate jr:template="">
             <index/>
             <value/>
           </iterate>
           <iterate_one jr:template="">
-            <item/>
+            <it.em/>
           </iterate_one>
           <iterate_none jr:template="">
             <nothing/>
@@ -443,14 +443,14 @@
       <bind nodeset="/Something_that_is_not_None/date" required="false()" type="date"/>
       <bind nodeset="/Something_that_is_not_None/datetime" required="false()" type="dateTime"/>
       <bind jr:requiredMsg="Choice" nodeset="/Something_that_is_not_None/option" required="true()" type="select1"/>
-      <bind nodeset="/Something_that_is_not_None/option_a" relevant=" /Something_that_is_not_None/option ='a'"/>
-      <bind nodeset="/Something_that_is_not_None/option_a/choice_a" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/option_b" relevant=" /Something_that_is_not_None/option ='b'"/>
-      <bind nodeset="/Something_that_is_not_None/option_b/choice_b" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/option-a" relevant=" /Something_that_is_not_None/option ='a'"/>
+      <bind nodeset="/Something_that_is_not_None/option-a/choice.a" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/option-b" relevant=" /Something_that_is_not_None/option ='b'"/>
+      <bind nodeset="/Something_that_is_not_None/option-b/choice.b" type="string"/>
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
       <bind nodeset="/Something_that_is_not_None/iterate/index" type="int"/>
       <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/iterate_one/item" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/iterate_one/it.em" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate_none/nothing" type="string"/>
       <bind nodeset="/Something_that_is_not_None/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/dup_group/value" type="string"/>
@@ -520,16 +520,16 @@
         <value>b</value>
       </item>
     </select1>
-    <group ref="/Something_that_is_not_None/option_a">
-      <label ref="jr:itext('/Something_that_is_not_None/option_a:label')"/>
-      <input ref="/Something_that_is_not_None/option_a/choice_a">
-        <label ref="jr:itext('/Something_that_is_not_None/option_a/choice_a:label')"/>
+    <group ref="/Something_that_is_not_None/option-a">
+      <label ref="jr:itext('/Something_that_is_not_None/option-a:label')"/>
+      <input ref="/Something_that_is_not_None/option-a/choice.a">
+        <label ref="jr:itext('/Something_that_is_not_None/option-a/choice.a:label')"/>
       </input>
     </group>
-    <group ref="/Something_that_is_not_None/option_b">
-      <label ref="jr:itext('/Something_that_is_not_None/option_b:label')"/>
-      <input ref="/Something_that_is_not_None/option_b/choice_b">
-        <label ref="jr:itext('/Something_that_is_not_None/option_b/choice_b:label')"/>
+    <group ref="/Something_that_is_not_None/option-b">
+      <label ref="jr:itext('/Something_that_is_not_None/option-b:label')"/>
+      <input ref="/Something_that_is_not_None/option-b/choice.b">
+        <label ref="jr:itext('/Something_that_is_not_None/option-b/choice.b:label')"/>
       </input>
     </group>
     <select ref="/Something_that_is_not_None/lang">
@@ -562,8 +562,8 @@
     <group ref="/Something_that_is_not_None/iterate_one">
       <label ref="jr:itext('/Something_that_is_not_None/iterate_one:label')"/>
       <repeat nodeset="/Something_that_is_not_None/iterate_one">
-        <input ref="/Something_that_is_not_None/iterate_one/item">
-          <label ref="jr:itext('/Something_that_is_not_None/iterate_one/item:label')"/>
+        <input ref="/Something_that_is_not_None/iterate_one/it.em">
+          <label ref="jr:itext('/Something_that_is_not_None/iterate_one/it.em:label')"/>
         </input>
       </repeat>
     </group>

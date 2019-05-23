@@ -22,8 +22,16 @@ from time import sleep
 import pytest
 import requests
 
-# Register Test Project and provide access to artifacts through client test fixtures
-from aether.client.test_fixtures import client, project, schemas, schemadecorators, mapping, mappingset  # noqa
+# Register Test Project and provide access to artifacts
+# through client test fixtures
+from aether.client.test_fixtures import (  # noqa
+    client,
+    project,
+    schemas,
+    schemadecorators,
+    mapping,
+    mappingset
+)
 from aether.client import fixtures  # noqa
 
 from .consumer import get_consumer, read
@@ -31,7 +39,11 @@ from .consumer import get_consumer, read
 
 FORMS_TO_SUBMIT = 10
 SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
+
+
 SEED_TYPE = 'CurrentStock'
+REALM = os.environ['TEST_REALM']
+KAFKA_SEED_TYPE = f'{REALM}.{SEED_TYPE}'
 
 PRODUCER_CREDS = [
     os.environ['PRODUCER_ADMIN_USER'],
@@ -66,10 +78,7 @@ def wait_for_producer_status():
             kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
-            kafka_seed = [
-                k for k in status.get('topics', {}).keys()
-                if SEED_TYPE in k][0]
-            person = status.get('topics', {}).get(kafka_seed, {})
+            person = status.get('topics', {}).get(KAFKA_SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
                 sleep(5)
@@ -111,9 +120,8 @@ def generate_entities(client, mappingset):  # noqa: F811
 
 
 @pytest.fixture(scope='function')
-def read_people(producer_topics):
-    kafka_seed = [k for k in producer_topics if SEED_TYPE in k][0]
-    consumer = get_consumer(kafka_seed)
+def read_people():
+    consumer = get_consumer(KAFKA_SEED_TYPE)
     messages = read(consumer, start='FIRST', verbose=False, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
