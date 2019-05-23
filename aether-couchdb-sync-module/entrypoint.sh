@@ -43,8 +43,8 @@ function show_help {
     test_coverage : run tests with coverage output
     test_py       : alias of test_coverage
 
-    start         : start webserver behind nginx along with rq worker and scheduler
-    start_dev     : start webserver for development along with rq worker and scheduler
+    start         : start uWSGI server along with rq worker and scheduler
+    start_dev     : start Django server for development along with rq worker and scheduler
 
     health        : checks the system healthy
     health_rq     : checks the RQ healthy

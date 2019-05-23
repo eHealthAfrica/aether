@@ -32,7 +32,7 @@ function show_help {
     test_js       : run js tests with enzyme and jest
 
     build         : create distributed assets
-    start_dev     : start webpack server (only in DEV mode)
+    start_dev     : start webpack server for development
     """
 }
 
