@@ -33,11 +33,16 @@ class DeleteModal extends Component {
   }
 
   render () {
+    const messages = {
+      header: this.props.header || 'Delete ',
+      objectType: this.props.objectType || 'pipeline'
+    }
     const header = (
       <span>
         <FormattedMessage
           id='delete.modal.header'
-          defaultMessage={this.props.header}
+          defaultMessage='{header}'
+          values={messages}
         />
         <span className='bold'>{this.props.obj.name}?</span>
       </span>
@@ -146,7 +151,8 @@ class DeleteModal extends Component {
             </span>
             <FormattedMessage
               id='delete.modal.all.data-2'
-              defaultMessage={`this ${this.props.objectType} (Entities)`}
+              defaultMessage='this {objectType} (Entities)'
+              values={messages}
             />
           </label>
         </div>

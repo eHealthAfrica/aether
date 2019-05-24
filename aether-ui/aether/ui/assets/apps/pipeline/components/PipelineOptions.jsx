@@ -20,6 +20,7 @@
 
 import React, { Component } from 'react'
 import onClickOutside from 'react-onclickoutside'
+import { FormattedMessage } from 'react-intl'
 
 class PipelineOptions extends Component {
   constructor (props) {
@@ -56,8 +57,18 @@ class PipelineOptions extends Component {
         {
           this.state.show && <ul
             className='options'>
-            <li onClick={() => this.props.rename()}>Rename Pipeline</li>
-            <li onClick={() => this.props.delete()}>Delete Pipeline</li>
+            <li onClick={() => this.props.rename()}>
+              <FormattedMessage
+                id='pipeline.option.rename'
+                defaultMessage='Rename Pipeline'
+              />
+            </li>
+            <li onClick={() => this.props.delete()}>
+              <FormattedMessage
+                id='pipeline.option.rename'
+                defaultMessage='Delete Pipeline'
+              />
+            </li>
           </ul>
         }
       </div>
