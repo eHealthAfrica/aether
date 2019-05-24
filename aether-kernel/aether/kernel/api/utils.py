@@ -150,7 +150,8 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset_id=None, mapping_ids=[]):
         entities = models.Entity.objects.filter(mapping__id__in=mapping_ids)
         by_schemas_list = list(
             models.Schema.objects.filter(schemadecorators__entities__in=entities)
-            .values('name').annotate(count=Count('schemadecorators__entities')).values('count', 'name')
+            .annotate(count=Count('schemadecorators__entities'))
+            .values('count', 'name')
         )
         entity_count = entities.count()
         entities.delete()
