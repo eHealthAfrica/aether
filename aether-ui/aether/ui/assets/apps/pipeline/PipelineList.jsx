@@ -73,7 +73,6 @@ class PipelineList extends Component {
 
     return (
       <DeleteModal
-        header='Delete pipeline '
         onClose={() => this.setState({ showDeleteModal: false })}
         onDelete={(e) => this.deletePipeline(e)}
         objectType='pipeline'

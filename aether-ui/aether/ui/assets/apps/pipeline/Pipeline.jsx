@@ -330,7 +330,6 @@ class Pipeline extends Component {
 
     return (
       <DeleteModal
-        header='Delete contract '
         onClose={() => this.setState({ showDeleteModal: false })}
         onDelete={(e) => this.deleteContract(e)}
         objectType='contract'

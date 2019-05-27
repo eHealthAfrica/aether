@@ -41,7 +41,7 @@ class DeleteModal extends Component {
       <span>
         <FormattedMessage
           id='delete.modal.header'
-          defaultMessage='{header}'
+          defaultMessage='{header} {objectType} '
           values={messages}
         />
         <span className='bold'>{this.props.obj.name}?</span>
@@ -89,18 +89,11 @@ class DeleteModal extends Component {
             />
             <label for='check1'>
               <FormattedMessage
-                id='delete.modal.all.submissions-0'
-                defaultMessage='Data'
-              />
-              <span className='bold mx-2'>
-                <FormattedMessage
-                  id='delete.modal.all.submissions-1'
-                  defaultMessage='submitted to'
-                />
-              </span>
-              <FormattedMessage
                 id='delete.modal.all.submissions-2'
-                defaultMessage='this pipeline (Submissions)'
+                defaultMessage='Data {emphasis} this pipeline (Submissions)'
+                values={{
+                  emphasis: <b>sbumitted to</b>
+                }}
               />
             </label>
           </div>
@@ -141,18 +134,11 @@ class DeleteModal extends Component {
           <label for='check3'>
             <FormattedMessage
               id='delete.modal.all.data-0'
-              defaultMessage='Data'
-            />
-            <span className='bold mx-2'>
-              <FormattedMessage
-                id='delete.modal.all.data-1'
-                defaultMessage='created by'
-              />
-            </span>
-            <FormattedMessage
-              id='delete.modal.all.data-2'
-              defaultMessage='this {objectType} (Entities)'
-              values={messages}
+              defaultMessage='Data {emphasis} this {objectType} (Entities)'
+              values={{
+                ...messages,
+                emphasis: <b>created by</b>
+              }}
             />
           </label>
         </div>
