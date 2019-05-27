@@ -19,8 +19,27 @@
  */
 
 import React, { Component } from 'react'
-import { FormattedMessage } from 'react-intl'
+import { FormattedMessage, FormattedHTMLMessage, injectIntl, defineMessages } from 'react-intl'
 import { Modal } from '../../components'
+
+const MESSAGES = defineMessages({
+  delete: {
+    id: 'modal.delete.text',
+    defaultMessage: 'Delete {obj} <b>{objName}</b>'
+  },
+  submissions: {
+    id: 'modal.delete.submissions.text',
+    defaultMessage: 'Data <b>submitted to</b> this pipeline (Submissions)'
+  },
+  entities: {
+    id: 'modal.delete.entities.text',
+    defaultMessage: 'Data <b>created by</b> this {obj} (Entities)'
+  },
+  objectType: {
+    id: 'modal.delete.object.type',
+    defaultMessage: '{objType}'
+  }
+})
 
 class DeleteModal extends Component {
   constructor (props) {
@@ -33,18 +52,19 @@ class DeleteModal extends Component {
   }
 
   render () {
-    const messages = {
-      header: this.props.header || 'Delete ',
-      objectType: this.props.objectType || 'pipeline'
-    }
+    const { formatMessage } = this.props.intl
     const header = (
       <span>
-        <FormattedMessage
-          id='delete.modal.header'
-          defaultMessage='{header} {objectType} '
-          values={messages}
+        <FormattedHTMLMessage
+          {...
+          { ...MESSAGES.delete,
+            values: {
+              obj: formatMessage(MESSAGES.objectType, { objType: this.props.objectType }),
+              objName: this.props.obj.name
+            }
+          }
+          }
         />
-        <span className='bold'>{this.props.obj.name}?</span>
       </span>
     )
 
@@ -88,12 +108,10 @@ class DeleteModal extends Component {
               }}
             />
             <label for='check1'>
-              <FormattedMessage
-                id='delete.modal.all.submissions-2'
-                defaultMessage='Data {emphasis} this pipeline (Submissions)'
-                values={{
-                  emphasis: <b>sbumitted to</b>
-                }}
+              <FormattedHTMLMessage
+                {...
+                { ...MESSAGES.submissions }
+                }
               />
             </label>
           </div>
@@ -132,13 +150,14 @@ class DeleteModal extends Component {
             }}
           />
           <label for='check3'>
-            <FormattedMessage
-              id='delete.modal.all.data-0'
-              defaultMessage='Data {emphasis} this {objectType} (Entities)'
-              values={{
-                ...messages,
-                emphasis: <b>created by</b>
-              }}
+            <FormattedHTMLMessage
+              {...
+              { ...MESSAGES.entities,
+                values: {
+                  obj: formatMessage(MESSAGES.objectType, { objType: this.props.objectType })
+                }
+              }
+              }
             />
           </label>
         </div>
@@ -147,4 +166,4 @@ class DeleteModal extends Component {
   }
 }
 
-export default DeleteModal
+export default injectIntl(DeleteModal)
