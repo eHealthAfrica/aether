@@ -27,7 +27,7 @@ python-dateutil
 
 
 # AVRO + JSON libraries
-jsonpath_ng
+eha_jsonpath
 jsonschema
 spavro
 
