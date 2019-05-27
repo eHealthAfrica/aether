@@ -62,8 +62,7 @@ clean=no
 force=no
 kill=no
 
-while [[ $# -gt 0 ]]
-do
+while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help)
             # shows help
@@ -113,19 +112,16 @@ case $app in
     kernel)
         PRE_CONTAINERS=(db nginx minio keycloak)
         SETUP_CONTAINERS=(kernel)
-        POST_CONTAINERS=()
     ;;
 
     odk)
         PRE_CONTAINERS=(db nginx minio keycloak)
         SETUP_CONTAINERS=(kernel odk)
-        POST_CONTAINERS=()
     ;;
 
     ui)
         PRE_CONTAINERS=(ui-assets db nginx minio keycloak)
         SETUP_CONTAINERS=(kernel ui)
-        POST_CONTAINERS=()
     ;;
 
     sync|couchdb-sync)
@@ -133,7 +129,6 @@ case $app in
 
         PRE_CONTAINERS=(db couchdb redis nginx minio keycloak)
         SETUP_CONTAINERS=(kernel couchdb-sync)
-        POST_CONTAINERS=(couchdb-sync-rq)
     ;;
 
     *)
@@ -141,7 +136,6 @@ case $app in
 
         PRE_CONTAINERS=(ui-assets db couchdb redis nginx minio keycloak)
         SETUP_CONTAINERS=(kernel odk ui couchdb-sync)
-        POST_CONTAINERS=(couchdb-sync-rq)
     ;;
 esac
 
@@ -152,8 +146,7 @@ docker-compose ps
 echo "----------------------------------------------------------------------"
 echo ""
 
-if [[ $kill = "yes" ]]
-then
+if [[ $kill = "yes" ]]; then
     echo "----------------------------------------------------------------------"
     echo "---- Killing containers                                           ----"
     echo "----------------------------------------------------------------------"
@@ -162,8 +155,7 @@ then
     echo ""
 fi
 
-if [[ $clean = "yes" ]]
-then
+if [[ $clean = "yes" ]]; then
     echo "----------------------------------------------------------------------"
     echo "---- Cleaning containers and volumes                              ----"
     echo "----------------------------------------------------------------------"
@@ -174,8 +166,7 @@ fi
 
 create_docker_assets
 
-if [[ $build = "yes" ]]
-then
+if [[ $build = "yes" ]]; then
     echo "----------------------------------------------------------------------"
     echo "---- Building containers                                          ----"
     echo "----------------------------------------------------------------------"
@@ -183,8 +174,7 @@ then
     build_libraries_and_distribute
     build_ui_assets
 
-    for container in "${SETUP_CONTAINERS[@]}"
-    do
+    for container in "${SETUP_CONTAINERS[@]}"; do
         build_container $container
     done
     echo ""
@@ -194,19 +184,12 @@ echo "----------------------------------------------------------------------"
 echo "---- Starting containers                                          ----"
 echo "----------------------------------------------------------------------"
 
-for container in "${PRE_CONTAINERS[@]}"
-do
+for container in "${PRE_CONTAINERS[@]}"; do
     start_container $container
 done
 
-for container in "${SETUP_CONTAINERS[@]}"
-do
+for container in "${SETUP_CONTAINERS[@]}"; do
     docker-compose run $container setup
-    start_container $container
-done
-
-for container in "${POST_CONTAINERS[@]}"
-do
     start_container $container
 done
 
