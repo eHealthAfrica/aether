@@ -35,9 +35,13 @@ const MESSAGES = defineMessages({
     id: 'modal.delete.entities.text',
     defaultMessage: 'Data <b>created by</b> this {obj} (Entities)'
   },
-  objectType: {
-    id: 'modal.delete.object.type',
-    defaultMessage: '{objType}'
+  pipeline: {
+    id: 'modal.delete.object.type.pipeline',
+    defaultMessage: 'pipeline'
+  },
+  contract: {
+    id: 'modal.delete.object.type.contract',
+    defaultMessage: 'contract'
   }
 })
 
@@ -53,13 +57,14 @@ class DeleteModal extends Component {
 
   render () {
     const { formatMessage } = this.props.intl
+    const objType = formatMessage(MESSAGES[this.props.objectType || 'pipeline'])
     const header = (
       <span>
         <FormattedHTMLMessage
           {...
           { ...MESSAGES.delete,
             values: {
-              obj: formatMessage(MESSAGES.objectType, { objType: this.props.objectType }),
+              obj: objType,
               objName: this.props.obj.name
             }
           }
@@ -154,7 +159,7 @@ class DeleteModal extends Component {
               {...
               { ...MESSAGES.entities,
                 values: {
-                  obj: formatMessage(MESSAGES.objectType, { objType: this.props.objectType })
+                  obj: objType
                 }
               }
               }

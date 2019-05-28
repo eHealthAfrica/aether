@@ -21,7 +21,7 @@
 import React, { Component } from 'react'
 import { Modal } from '../../components'
 import { connect } from 'react-redux'
-import { FormattedMessage } from 'react-intl'
+import { FormattedMessage, injectIntl } from 'react-intl'
 
 class DeleteStatus extends Component {
   constructor (props) {
@@ -179,4 +179,4 @@ const mapStateToProps = ({ pipelines }) => ({
   deleteStatus: pipelines.deleteStatus
 })
 
-export default connect(mapStateToProps, {})(DeleteStatus)
+export default connect(mapStateToProps, {})(injectIntl(DeleteStatus))

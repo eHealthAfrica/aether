@@ -349,7 +349,7 @@ class Settings extends Component {
                 </span>
               </button>
             }
-            { !contract.is_read_only &&
+            { !contract.is_read_only && contract.created &&
               <button
                 className='btn btn-d btn-red btn-big'
                 onClick={() => this.props.onDelete()}>

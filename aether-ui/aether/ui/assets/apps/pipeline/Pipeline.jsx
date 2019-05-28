@@ -31,6 +31,7 @@ import Mapping from './sections/Mapping'
 import Output from './sections/Output'
 import Settings from './sections/Settings'
 import DeleteModal from './components/DeleteModal'
+import DeleteStatus from './components/DeleteStatus'
 
 import {
   clearSelection,
@@ -46,7 +47,6 @@ import {
   CONTRACT_SECTION_MAPPING,
   CONTRACT_SECTION_SETTINGS
 } from '../utils/constants'
-import DeleteStatus from './components/DeleteStatus'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -344,7 +344,9 @@ class Pipeline extends Component {
     }
     return (
       <DeleteStatus
-        header='Deleting contract '
+        header={
+          <FormattedMessage id='contract.delete.status.header' defaultMessage='Deleting contract ' />
+        }
         deleteOptions={this.state.deleteOptions}
         toggle={this.hideModalProgress}
         showModal={this.state.showDeleteProgress}

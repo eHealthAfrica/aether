@@ -87,7 +87,9 @@ class PipelineList extends Component {
     }
     return (
       <DeleteStatus
-        header='Deleting pipeline '
+        header={
+          <FormattedMessage id='pipeline.list.delete.status.header' defaultMessage='Deleting pipeline ' />
+        }
         deleteOptions={this.state.deleteOptions}
         toggle={this.hideModalProgress}
         showModal={this.state.showDeleteProgress}
