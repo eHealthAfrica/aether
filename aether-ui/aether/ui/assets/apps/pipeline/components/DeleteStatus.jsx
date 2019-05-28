@@ -42,14 +42,7 @@ class DeleteStatus extends Component {
       return null
     }
 
-    const header = (
-      <span>
-        <FormattedMessage
-          id='delete.progress.modal.header'
-          defaultMessage={this.props.header}
-        />
-      </span>
-    )
+    const header = this.props.header
 
     const buttons = (
       <div className='modal-actions'>
