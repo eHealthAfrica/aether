@@ -112,7 +112,7 @@ class DeleteModal extends Component {
                 })
               }}
             />
-            <label for='check1'>
+            <label htmlFor='check1'>
               <FormattedHTMLMessage
                 {...
                 { ...MESSAGES.submissions }
@@ -131,7 +131,7 @@ class DeleteModal extends Component {
               })
             }}
           />
-          <label for='check2'>
+          <label htmlFor='check2'>
             <FormattedMessage
               id='delete.modal.all.entity-types-0'
               defaultMessage='Entity Types (Schemas)'
@@ -154,7 +154,7 @@ class DeleteModal extends Component {
               }
             }}
           />
-          <label for='check3'>
+          <label htmlFor='check3'>
             <FormattedHTMLMessage
               {...
               { ...MESSAGES.entities,

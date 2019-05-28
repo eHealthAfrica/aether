@@ -46,7 +46,6 @@ class PipelineCard extends Component {
           </span>
           <div className='pipeline-actions'>
             <PipelineOptions
-              rename={this.props.rename}
               delete={this.props.delete}
             />
             <ContractAddButton pipeline={pipeline} history={this.props.history} />

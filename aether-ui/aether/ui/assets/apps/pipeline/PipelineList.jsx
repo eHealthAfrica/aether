@@ -123,7 +123,6 @@ class PipelineList extends Component {
                 key={pipeline.id}
                 pipeline={pipeline}
                 history={this.props.history}
-                rename={() => {}}
                 delete={() => this.onDelete(pipeline)}
               />
             )) }
