@@ -21,7 +21,7 @@
 // Combines types, actions and reducers for a specific
 // module in one file for easy redux management
 
-import { replaceItemInList } from '../utils'
+import { replaceItemInList, removeItemFromList } from '../utils'
 import {
   PIPELINES_URL,
   CONTRACTS_URL,
@@ -40,13 +40,16 @@ export const types = {
   PIPELINE_SELECT: 'pipeline.select',
   CONTRACT_SELECT: 'contract.select',
   SECTION_SELECT: 'section.select',
-  CONTRACT_CHANGED: 'contract_changed',
+  CONTRACT_CHANGED: 'contract.changed',
 
   PIPELINE_ADD: 'pipeline.add',
   PIPELINE_UPDATE: 'pipeline.update',
+  PIPELINE_DELETE: 'pipeline.delete',
+  PIPELINE_CHANGED: 'pipeline.changed',
 
   CONTRACT_ADD: 'contract.add',
   CONTRACT_UPDATE: 'contract.update',
+  CONTRACT_DELETE: 'contract.delete',
 
   CONTRACT_PUBLISH_PREFLIGHT: 'contract.publish.preflight',
   CONTRACT_PUBLISH_SUCCESS: 'contract.publish.success',
@@ -57,7 +60,8 @@ const ACTIONS_INITIAL_STATE = {
   error: null,
   publishError: null,
   publishState: null,
-  publishSuccess: false
+  publishSuccess: false,
+  deleteStatus: null
 }
 
 export const INITIAL_STATE = {
@@ -102,6 +106,11 @@ export const contractChanged = (contract) => ({
   payload: contract
 })
 
+export const pipelineChanged = (pipeline) => ({
+  type: types.PIPELINE_CHANGED,
+  payload: pipeline
+})
+
 export const getPipelineById = (pid) => {
   return {
     types: ['', types.PIPELINE_BY_ID, types.PIPELINE_NOT_FOUND],
@@ -131,6 +140,15 @@ export const updatePipeline = (pipeline) => {
   }
 }
 
+export const deletePipeline = (id, opts) => ({
+  types: ['', types.PIPELINE_DELETE, types.REQUEST_ERROR],
+  promise: client => client.post(
+    `${PIPELINES_URL}${id}/delete-artefacts/`,
+    { 'Content-Type': 'application/json' },
+    { data: opts }
+  )
+})
+
 export const addContract = (contract) => ({
   types: ['', types.CONTRACT_ADD, types.REQUEST_ERROR],
   promise: client => client.post(
@@ -145,6 +163,15 @@ export const updateContract = (contract) => ({
     `${CONTRACTS_URL}${contract.id}/`,
     { 'Content-Type': 'application/json' },
     { data: contract })
+})
+
+export const deleteContract = (id, opts) => ({
+  types: ['', types.CONTRACT_DELETE, types.REQUEST_ERROR],
+  promise: client => client.post(
+    `${CONTRACTS_URL}${id}/delete-artefacts/`,
+    { 'Content-Type': 'application/json' },
+    { data: opts }
+  )
 })
 
 export const publishPreflightContract = (cid) => ({
@@ -285,6 +312,14 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     // CHANGES
 
+    case types.PIPELINE_CHANGED: {
+      const currentPipeline = parsePipeline(action.payload)
+      return {
+        ...nextState,
+        currentPipeline
+      }
+    }
+
     case types.PIPELINE_ADD: {
       const newPipeline = parsePipeline(action.payload)
 
@@ -306,6 +341,16 @@ const reducer = (state = INITIAL_STATE, action) => {
         pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
         currentPipeline,
         currentContract
+      }
+    }
+
+    case types.PIPELINE_DELETE: {
+      return {
+        ...nextState,
+        pipelineList: removeItemFromList(state.pipelineList, state.currentPipeline),
+        currentPipeline: null,
+        currentContract: null,
+        deleteStatus: action.payload
       }
     }
 
@@ -332,6 +377,20 @@ const reducer = (state = INITIAL_STATE, action) => {
         currentContract: currentContract
       }
     }
+
+    case types.CONTRACT_DELETE: {
+      const uPipeline = { ...state.currentPipeline }
+      uPipeline.contracts = removeItemFromList(state.currentPipeline.contracts, state.currentContract)
+      const currentContract = uPipeline.contracts[0]
+      return { ...state,
+        pipelineList: replaceItemInList(state.pipelineList, uPipeline),
+        currentPipeline: uPipeline,
+        currentContract: currentContract,
+        deleteStatus: action.payload,
+        currentSection: currentContract ? CONTRACT_SECTION_ENTITY_TYPES : PIPELINE_SECTION_INPUT
+      }
+    }
+
     case types.CONTRACT_CHANGED: {
       const currentContract = parseContract(action.payload)
       let currentPipeline = state.currentPipeline

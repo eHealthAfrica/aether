@@ -174,6 +174,31 @@ EXAMPLE_SOURCE_DATA = {
     },
 }
 
+EXAMPLE_SOURCE_DATA_WITH_LOCATION = {
+    'data': {
+        'village': 'somevillageID',
+        'people': [
+            {
+                'name': 'PersonA',
+                'dob': '2000-01-01',
+            },
+            {
+                'name': 'PersonB',
+                'dob': '2001-01-01',
+            },
+            {
+                'name': ['FirstC', 'MiddleC', 'LastC'],
+                'dob': '2002-01-01',
+            },
+        ],
+        'location': {
+            'name': 'a',
+            'lat': 10,
+            'lng': 20
+        }
+    },
+}
+
 EXAMPLE_NESTED_SOURCE_DATA = {
     'data': {
         'village': 'somevillageID',
@@ -342,6 +367,17 @@ EXAMPLE_ENTITY_DEFINITION = {
 }
 
 EXAMPLE_FIELD_MAPPINGS = [
+    ['#!uuid', 'Person.id'],
+    ['data.village', 'Person.villageID'],
+    ['data.people[*].name', 'Person.name'],
+    ['data.people[*].dob', 'Person.dob'],
+]
+
+EXAMPLE_FIELD_MAPPINGS_LOCATION = [
+    ['#!uuid', 'Location.id'],
+    ['data.location.name', 'Location.name'],
+    ['data.location.lat', 'Location.lat'],
+    ['data.location.lng', 'Location.lng'],
     ['#!uuid', 'Person.id'],
     ['data.village', 'Person.villageID'],
     ['data.people[*].name', 'Person.name'],
