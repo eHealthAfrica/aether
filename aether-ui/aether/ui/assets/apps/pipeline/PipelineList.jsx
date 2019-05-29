@@ -26,8 +26,10 @@ import { ModalError, NavBar } from '../components'
 
 import PipelineNew from './components/PipelineNew'
 import PipelineCard from './components/PipelineCard'
+import DeleteStatus from './components/DeleteStatus'
+import DeleteModal from './components/DeleteModal'
 
-import { getPipelines } from './redux'
+import { getPipelines, deletePipeline, pipelineChanged } from './redux'
 
 class PipelineList extends Component {
   constructor (props) {
@@ -35,6 +37,68 @@ class PipelineList extends Component {
 
     // fetch pipelines list
     props.getPipelines()
+
+    this.state = {
+      showDeleteModal: false,
+      showDeleteProgress: false,
+      deleteOptions: {}
+    }
+
+    this.deletePipeline = this.deletePipeline.bind(this)
+    this.onDelete = this.onDelete.bind(this)
+    this.hideModalProgress = this.hideModalProgress.bind(this)
+  }
+
+  onDelete (pipeline) {
+    this.setState({ showDeleteModal: true })
+    this.props.pipelineChanged(pipeline)
+  }
+
+  deletePipeline (deleteOptions) {
+    this.setState({
+      deleteOptions,
+      showDeleteModal: false,
+      showDeleteProgress: true
+    })
+    this.props.deletePipeline(
+      this.props.pipeline.id,
+      deleteOptions
+    )
+  }
+
+  renderDeletionModal () {
+    if (!this.state.showDeleteModal) {
+      return null
+    }
+
+    return (
+      <DeleteModal
+        onClose={() => this.setState({ showDeleteModal: false })}
+        onDelete={(e) => this.deletePipeline(e)}
+        objectType='pipeline'
+        obj={this.props.pipeline}
+      />
+    )
+  }
+
+  renderDeleteProgressModal () {
+    if (!this.state.showDeleteProgress) {
+      return null
+    }
+    return (
+      <DeleteStatus
+        header={
+          <FormattedMessage id='pipeline.list.delete.status.header' defaultMessage='Deleting pipeline ' />
+        }
+        deleteOptions={this.state.deleteOptions}
+        toggle={this.hideModalProgress}
+        showModal={this.state.showDeleteProgress}
+      />
+    )
+  }
+
+  hideModalProgress () {
+    this.setState({ showDeleteProgress: false })
   }
 
   render () {
@@ -59,10 +123,13 @@ class PipelineList extends Component {
                 key={pipeline.id}
                 pipeline={pipeline}
                 history={this.props.history}
+                delete={() => this.onDelete(pipeline)}
               />
             )) }
           </div>
         </div>
+        { this.renderDeletionModal() }
+        { this.renderDeleteProgressModal() }
       </div>
     )
   }
@@ -70,8 +137,9 @@ class PipelineList extends Component {
 
 const mapStateToProps = ({ pipelines }) => ({
   list: pipelines.pipelineList || [],
-  error: pipelines.error
+  error: pipelines.error,
+  pipeline: pipelines.currentPipeline
 })
-const mapDispatchToProps = { getPipelines }
+const mapDispatchToProps = { getPipelines, deletePipeline, pipelineChanged }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PipelineList)

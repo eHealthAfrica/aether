@@ -21,6 +21,7 @@
 .modal {
   background-color: rgba($text-color, .7);
   color: $text-color;
+  overflow-y: auto;
 
   &.show {
     display: block;
@@ -41,8 +42,6 @@
     @include card;
     margin: 10vh auto;
     padding: 0;
-    max-height: 80vh;
-    overflow-y: auto;
   }
 
   .modal-content {

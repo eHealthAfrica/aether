@@ -152,6 +152,17 @@
   padding: .2em .5em;
 }
 
+.btn-square {
+  padding: .4em;
+
+  i {
+    display: block;
+    width: 1.5em;
+    height: 1.5em;
+    line-height: 1.5em;
+  }
+}
+
 .btn-icon {
   display: flex;
   position: relative;
@@ -167,6 +178,7 @@
     height: 1.8rem;
     padding: .4em;
     border-radius: 50%;
+    font-size: $font-size-s;
   }
 
   span {
