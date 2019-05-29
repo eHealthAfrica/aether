@@ -25,12 +25,19 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from rest_framework import status
 
-from aether.common.kernel import utils as common_kernel_utils
+from aether.common.kernel.utils import (
+    test_connection as check_kernel_connection,
+    get_auth_header as get_kernel_auth_header,
+    get_kernel_server_url as get_kernel_url,
+    get_attachments_url,
+    get_submissions_url,
+)
 
 from . import CustomTestCase, MockResponse
+
 from ..kernel_utils import propagate_kernel_artefacts, KernelPropagationError
 from ..surveyors_utils import is_surveyor
-from ..views import XML_SUBMISSION_PARAM
+from ..views_collect import XML_SUBMISSION_PARAM
 
 
 @override_settings(MULTITENANCY=False)
@@ -41,7 +48,7 @@ class SubmissionTests(CustomTestCase):
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
-    @mock.patch('aether.common.kernel.utils.test_connection', return_value=False)
+    @mock.patch('aether.odk.api.views_collect.check_kernel_connection', return_value=False)
     def test__submission__424__connection(self, *args):
         # Test submission with authorization error on kernel server side
         response = self.client.head(self.url, **self.headers_user)
@@ -71,13 +78,14 @@ class SubmissionTests(CustomTestCase):
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.content)
 
-    def test__submission__424__propagation(self):
+    @mock.patch('aether.odk.api.views_collect.check_kernel_connection', return_value=True)
+    @mock.patch('aether.odk.api.views_collect.propagate_kernel_artefacts',
+                side_effect=KernelPropagationError)
+    def test__submission__424__propagation(self, *args):
         # with xform and right xml but not kernel propagation
         self.helper_create_xform(surveyor=self.user, xml_data=self.samples['xform']['raw-xml'])
-        with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
-                        side_effect=KernelPropagationError):
-            with open(self.samples['submission']['file-ok'], 'rb') as f:
-                response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY, response.content)
 
 
@@ -104,12 +112,12 @@ class PostSubmissionTests(CustomTestCase):
         self.assertTrue(propagate_kernel_artefacts(self.xform))
 
         # check Kernel testing server
-        self.assertTrue(common_kernel_utils.test_connection())
-        self.KERNEL_HEADERS = common_kernel_utils.get_auth_header()
-        self.KERNEL_URL = common_kernel_utils.get_kernel_server_url()
+        self.assertTrue(check_kernel_connection())
+        self.KERNEL_HEADERS = get_kernel_auth_header()
+        self.KERNEL_URL = get_kernel_url()
         self.MAPPINGSET_URL = f'{self.KERNEL_URL}/mappingsets/{str(self.xform.kernel_id)}/'
-        self.SUBMISSIONS_URL = common_kernel_utils.get_submissions_url()
-        self.ATTACHMENTS_URL = common_kernel_utils.get_attachments_url()
+        self.SUBMISSIONS_URL = get_submissions_url()
+        self.ATTACHMENTS_URL = get_attachments_url()
         # cleaning the house
         self.PROJECT_URL = f'{self.KERNEL_URL}/projects/{str(self.xform.project.project_id)}/'
         self.SCHEMA_URL = f'{self.KERNEL_URL}/schemas/{str(self.xform.kernel_id)}/'
@@ -172,7 +180,7 @@ class PostSubmissionTests(CustomTestCase):
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
             self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.content)
 
-    @mock.patch('aether.odk.api.views.exec_request', side_effect=Exception)
+    @mock.patch('aether.odk.api.views_collect.exec_request', side_effect=Exception)
     def test__submission__post__with_error_on_check_previous_submission(self, mock_req):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
@@ -186,26 +194,44 @@ class PostSubmissionTests(CustomTestCase):
         )
 
     def test__submission__post__not_201(self, *args):
-        with mock.patch('aether.odk.api.views.submit_to_kernel',
-                        return_value=MockResponse(status_code=204)) as mock_submit:
+        def my_side_effect(*args, **kwargs):
+            if kwargs['method'] != 'post':
+                # real method
+                return requests.request(*args, **kwargs)
+            else:
+                # there is going to be an unexpected response during submission post
+                return MockResponse(status_code=204)
+
+        with mock.patch('aether.odk.api.views_collect.exec_request',
+                        side_effect=my_side_effect) as mock_req:
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.content)
-            mock_submit.assert_called_once_with(
-                mappingset_id=str(self.xform.kernel_id),
-                submission=mock.ANY,
-            )
+            mock_req.assert_has_calls([
+                mock.call(
+                    method='get',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    params={'payload__meta__instanceID': mock.ANY},
+                ),
+                mock.call(
+                    method='post',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    json={'payload': mock.ANY, 'mappingset': str(self.xform.kernel_id)},
+                ),
+            ])
 
     def test__submission__post__with_unexpected_error(self):
         def my_side_effect(*args, **kwargs):
-            if kwargs['method'] != 'post':
+            if kwargs['url'] != self.ATTACHMENTS_URL:
                 # real method
                 return requests.request(*args, **kwargs)
             else:
                 # there is going to be an unexpected error during attachment post
                 raise Exception
 
-        with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
+        with mock.patch('aether.odk.api.views_collect.exec_request', side_effect=my_side_effect) as mock_req:
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
@@ -215,6 +241,12 @@ class PostSubmissionTests(CustomTestCase):
                     url=self.SUBMISSIONS_URL,
                     headers=self.KERNEL_HEADERS,
                     params={'payload__meta__instanceID': mock.ANY},
+                ),
+                mock.call(
+                    method='post',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    json={'payload': mock.ANY, 'mappingset': str(self.xform.kernel_id)},
                 ),
                 mock.call(
                     method='post',
@@ -234,13 +266,13 @@ class PostSubmissionTests(CustomTestCase):
 
     def test__submission__post__with_kernel_error(self):
         def my_side_effect(*args, **kwargs):
-            if kwargs['method'] != 'post':
+            if kwargs['url'] != self.ATTACHMENTS_URL:
                 # real method
                 return requests.request(*args, **kwargs)
             else:
                 return MockResponse(status_code=500)
 
-        with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
+        with mock.patch('aether.odk.api.views_collect.exec_request', side_effect=my_side_effect) as mock_req:
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
             self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR, response.content)
@@ -250,6 +282,12 @@ class PostSubmissionTests(CustomTestCase):
                     url=self.SUBMISSIONS_URL,
                     headers=self.KERNEL_HEADERS,
                     params={'payload__meta__instanceID': mock.ANY},
+                ),
+                mock.call(
+                    method='post',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    json={'payload': mock.ANY, 'mappingset': str(self.xform.kernel_id)},
                 ),
                 mock.call(
                     method='post',
@@ -348,7 +386,7 @@ class PostSubmissionTests(CustomTestCase):
 
     def test__submission__post__with_attachments__with_kernel_error(self):
         def my_side_effect(*args, **kwargs):
-            if kwargs['method'] != 'post':
+            if kwargs['url'] != self.ATTACHMENTS_URL:
                 # real method
                 return requests.request(*args, **kwargs)
             else:
@@ -357,7 +395,7 @@ class PostSubmissionTests(CustomTestCase):
                 else:
                     return MockResponse(status_code=404)
 
-        with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
+        with mock.patch('aether.odk.api.views_collect.exec_request', side_effect=my_side_effect) as mock_req:
             # there is going to be an error during second attachment post
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(
@@ -375,6 +413,13 @@ class PostSubmissionTests(CustomTestCase):
                     url=self.SUBMISSIONS_URL,
                     headers=self.KERNEL_HEADERS,
                     params={'payload__meta__instanceID': mock.ANY},
+                ),
+                # submission
+                mock.call(
+                    method='post',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    json={'payload': mock.ANY, 'mappingset': str(self.xform.kernel_id)},
                 ),
                 # 1st attachment
                 mock.call(
@@ -403,7 +448,7 @@ class PostSubmissionTests(CustomTestCase):
 
     def test__submission__post__with_attachments__with_unexpected_error(self):
         def my_side_effect(*args, **kwargs):
-            if kwargs['method'] != 'post':
+            if kwargs['url'] != self.ATTACHMENTS_URL:
                 # real method
                 return requests.request(*args, **kwargs)
             else:
@@ -412,7 +457,7 @@ class PostSubmissionTests(CustomTestCase):
                 else:
                     raise Exception
 
-        with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
+        with mock.patch('aether.odk.api.views_collect.exec_request', side_effect=my_side_effect) as mock_req:
             # there is going to be an error during second attachment post
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(
@@ -430,6 +475,13 @@ class PostSubmissionTests(CustomTestCase):
                     url=self.SUBMISSIONS_URL,
                     headers=self.KERNEL_HEADERS,
                     params={'payload__meta__instanceID': mock.ANY},
+                ),
+                # submission
+                mock.call(
+                    method='post',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    json={'payload': mock.ANY, 'mappingset': str(self.xform.kernel_id)},
                 ),
                 # 1st attachment
                 mock.call(
