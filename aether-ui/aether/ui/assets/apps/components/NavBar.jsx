@@ -20,7 +20,6 @@
 
 import React, { Component } from 'react'
 import { defineMessages, injectIntl } from 'react-intl'
-import { Link } from 'react-router-dom'
 
 import { getLoggedInUser } from '../utils'
 
