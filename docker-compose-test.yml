@@ -85,6 +85,7 @@ services:
       KERNEL_URL: http://kernel-test:9100
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      TEST_REALM: test
     command: test
 
 
@@ -238,6 +239,7 @@ services:
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
+      TEST_REALM: test
     volumes:
       - ./test-aether-integration-module:/code
     command: test

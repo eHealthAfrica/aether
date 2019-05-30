@@ -28,6 +28,7 @@ from aether.client import Client
 URL = os.environ['KERNEL_URL']
 USER = os.environ['KERNEL_USERNAME']
 PW = os.environ['KERNEL_PASSWORD']
+REALM = os.environ['TEST_REALM']
 
 
 def simple_entity(value_size=10):
@@ -42,7 +43,14 @@ def simple_entity(value_size=10):
 
 @pytest.fixture(scope='session')
 def client():
-    return Client(URL, USER, PW)
+    return Client(
+        URL,
+        USER,
+        PW,
+        log_level='DEBUG',
+        auth_type='basic',
+        realm=REALM
+    )
 
 
 @pytest.fixture(scope='session')

@@ -50,6 +50,26 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         utils.kernel_artefacts_to_ui_artefacts(request)
         return self.list(request)
 
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
+        pipeline = self.get_object_or_404(pk=pk)
+        artefacts_result = {'not_published': True}
+        if pipeline.mappingset:
+            try:
+                artefacts_result = utils.delete_operation(
+                    f'mappingsets/{pipeline.mappingset}/delete-artefacts/',
+                    request.data,
+                    pipeline,
+                )
+                if not artefacts_result:
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+            except Exception as e:
+                return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            pipeline.delete()
+
+        return Response(artefacts_result)
+
 
 class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Contract.objects.all()
@@ -87,6 +107,26 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
         data = utils.publish_preflight(contract)
         return Response(data=data)
+
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
+        contract = self.get_object_or_404(pk=pk)
+        artefacts_result = {'not_published': True}
+        if contract.mapping:
+            try:
+                artefacts_result = utils.delete_operation(
+                    f'mappings/{contract.mapping}/delete-artefacts/',
+                    request.data,
+                    contract
+                )
+                if not artefacts_result:
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+            except Exception as e:
+                return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            contract.delete()
+
+        return Response(artefacts_result)
 
 
 @api_view(['GET'])

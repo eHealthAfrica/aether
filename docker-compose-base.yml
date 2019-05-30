@@ -250,7 +250,7 @@ services:
     build: ./aether-couchdb-sync-module
     stdin_open: true
     tty: true
-    environment: &sync-environment
+    environment:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
@@ -294,7 +294,7 @@ services:
       REDIS_PORT: 6379
 
       WEB_SERVER_PORT: 8106
-    volumes: &sync-volumes
+    volumes:
       - ./aether-couchdb-sync-module:/code
 
       # static folder
@@ -304,12 +304,6 @@ services:
     ports:
       - 8106:8106
     command: start_dev
-
-  couchdb-sync-rq-base:
-    image: aether-couchdb-sync
-    environment: *sync-environment
-    volumes: *sync-volumes
-    command: start_rq
 
 
   # ---------------------------------
