@@ -43,6 +43,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
+from django_eha_sdk.multitenancy.utils import add_instance_realm_in_headers
 from django_eha_sdk.utils import request as exec_request
 
 from .models import XForm, MediaFile
@@ -144,7 +145,7 @@ def xform_list(request, *args, **kwargs):
     if formID:
         xforms = xforms.filter(form_id=formID)
 
-    host = request.build_absolute_uri(request.get_full_path()).replace(reverse('xform-list-xml'), '')
+    host = request.build_absolute_uri(request.path).replace(reverse('xform-list-xml'), '')
 
     return Response(
         data={
@@ -242,7 +243,7 @@ def xform_get_manifest(request, pk, *args, **kwargs):
         logger.warning(MSG_XFORM_VERSION_WARNING.format(
             requested_version=version, current_version=xform.version))
 
-    host = request.build_absolute_uri(request.get_full_path()) \
+    host = request.build_absolute_uri(request.path) \
                   .replace(reverse('xform-get-manifest', kwargs={'pk': pk}), '')
 
     return Response(
@@ -450,7 +451,7 @@ def xform_submission(request, *args, **kwargs):
 
     data = parse_submission(data, xform.xml_data)
     submissions_url = get_submissions_url()
-    auth_header = get_kernel_auth_header()
+    auth_header = add_instance_realm_in_headers(xform, get_kernel_auth_header())
 
     try:
         submission_id = None
