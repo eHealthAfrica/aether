@@ -42,8 +42,10 @@
   align-items: baseline;
   flex: 1 1 auto;
 
-  .breadcrumb-links {
-    transition: opacity .4s .4s;
+  .breadcrumb-links a {
+    display: inline-block;
+    padding-right: .2em;
+    transition: opacity .4s .4s, max-width .4s .4s;
   }
 
   a {
@@ -102,14 +104,15 @@
 
   .top-nav:hover {
 
-    .breadcrumb-links,
+    .breadcrumb-links a,
     .top-nav-logo,
     .status-publish {
       opacity: 1;
+      max-width: 100px;
     }
   }
 
-  .top-nav-logo span {
+  .top-nav-logo {
     display: none;
   }
 
@@ -120,8 +123,9 @@
     width: 24px;
   }
 
-  .breadcrumb-links {
+  .breadcrumb-links a {
     opacity: 0;
+    max-width: 0;
   }
 
   .top-nav-user {
@@ -131,7 +135,8 @@
 
 .pipeline--input {
 
-  .breadcrumb-links {
+  .breadcrumb-links a {
     opacity: 1;
+    max-width: 100px;
   }
 }

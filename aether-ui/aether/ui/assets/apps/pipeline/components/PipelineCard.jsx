@@ -25,6 +25,7 @@ import { FormattedMessage } from 'react-intl'
 import PipelineInfoButton from './PipelineInfoButton'
 import ContractAddButton from './ContractAddButton'
 import ContractCard from './ContractCard'
+import PipelineOptions from './PipelineOptions'
 
 import { selectPipeline } from '../redux'
 
@@ -39,6 +40,18 @@ class PipelineCard extends Component {
 
     return (
       <div className='pipeline-preview'>
+        <div className='preview-heading'>
+          <span className='pipeline-name'>
+            // { pipeline.name }
+          </span>
+          <div className='pipeline-actions'>
+            <PipelineOptions
+              delete={this.props.delete}
+            />
+            <ContractAddButton pipeline={pipeline} history={this.props.history} />
+          </div>
+        </div>
+
         <div
           className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`}
           onClick={this.onPipelineSelect.bind(this, pipeline)}>
@@ -52,8 +65,8 @@ class PipelineCard extends Component {
           }
 
           <div className='input-heading'>
-            <span className='badge badge-c badge-big'>
-              <i className='fas fa-file fa-sm' />
+            <span className='badge badge-circle badge-c'>
+              <i className='fas fa-file' />
             </span>
             <span className='input-name'>
               { pipeline.name } { pipeline.mappingset && <PipelineInfoButton pipeline={pipeline} /> }
@@ -71,9 +84,8 @@ class PipelineCard extends Component {
               />
             ))
           }
-
-          <ContractAddButton pipeline={pipeline} history={this.props.history} />
         </div>
+
       </div>
     )
   }

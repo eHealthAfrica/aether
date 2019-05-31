@@ -156,7 +156,7 @@ class ContractPublishButton extends Component {
         { publishState && errors.length === 0 &&
           <button
             type='button'
-            className='btn btn-w'
+            className='btn btn-primary btn-w'
             onClick={(event) => {
               event.stopPropagation()
               this.props.publishContract(contract.id)
