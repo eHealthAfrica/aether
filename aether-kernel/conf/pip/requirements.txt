@@ -13,8 +13,8 @@
 ################################################################################
 
 attrs==19.1.0
-boto3==1.9.156
-botocore==1.12.156
+boto3==1.9.159
+botocore==1.12.159
 cachetools==3.1.1
 certifi==2019.3.9
 chardet==3.0.4
@@ -25,7 +25,7 @@ decorator==4.4.0
 Django==2.2.1
 django-autofixture==0.12.1
 django-cas-ng==3.6.0
-django-cors-headers==3.0.1
+django-cors-headers==3.0.2
 django-debug-toolbar==1.11
 django-eha-sdk==1.0.4
 django-filter==2.1.0
@@ -43,9 +43,9 @@ entrypoints==0.3
 et-xmlfile==1.0.1
 flake8==3.7.7
 flake8-quotes==2.0.1
-google-api-core==1.11.0
+google-api-core==1.11.1
 google-auth==1.6.3
-google-cloud-core==1.0.0
+google-cloud-core==1.0.1
 google-cloud-storage==1.16.0
 google-resumable-media==0.3.2
 googleapis-common-protos==1.6.0
@@ -64,13 +64,13 @@ minio==4.0.17
 openpyxl==2.6.2
 ply==3.11
 prometheus-client==0.6.0
-protobuf==3.7.1
+protobuf==3.8.0
 psycopg2-binary==2.8.2
 pyasn1==0.4.5
 pyasn1-modules==0.2.5
 pycodestyle==2.5.0
 pyflakes==2.1.1
-Pygments==2.4.1
+Pygments==2.4.2
 pyrsistent==0.15.2
 python-cas==1.4.0
 python-dateutil==2.8.0
