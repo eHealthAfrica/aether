@@ -13,9 +13,9 @@
 ################################################################################
 
 attrs==19.1.0
-boto3==1.9.150
-botocore==1.12.150
-cachetools==3.1.0
+boto3==1.9.156
+botocore==1.12.156
+cachetools==3.1.1
 certifi==2019.3.9
 chardet==3.0.4
 coreapi==2.3.3
@@ -38,6 +38,7 @@ djangorestframework==3.9.4
 docutils==0.14
 drf-dynamic-fields==0.3.1
 drf-yasg==1.15.0
+eha-jsonpath==0.5.0
 entrypoints==0.3
 et-xmlfile==1.0.1
 flake8==3.7.7
@@ -45,9 +46,9 @@ flake8-quotes==2.0.1
 google-api-core==1.11.0
 google-auth==1.6.3
 google-cloud-core==1.0.0
-google-cloud-storage==1.15.1
+google-cloud-storage==1.16.0
 google-resumable-media==0.3.2
-googleapis-common-protos==1.5.10
+googleapis-common-protos==1.6.0
 idna==2.8
 inflection==0.3.1
 itypes==1.1.0
@@ -59,7 +60,7 @@ jsonschema==3.0.1
 lxml==4.3.3
 MarkupSafe==1.1.1
 mccabe==0.6.1
-minio==4.0.16
+minio==4.0.17
 openpyxl==2.6.2
 ply==3.11
 prometheus-client==0.6.0
@@ -69,7 +70,7 @@ pyasn1==0.4.5
 pyasn1-modules==0.2.5
 pycodestyle==2.5.0
 pyflakes==2.1.1
-Pygments==2.4.0
+Pygments==2.4.1
 pyrsistent==0.15.2
 python-cas==1.4.0
 python-dateutil==2.8.0
@@ -79,11 +80,11 @@ requests==2.22.0
 rsa==4.0
 ruamel.yaml==0.15.96
 s3transfer==0.2.0
-sentry-sdk==0.7.14
+sentry-sdk==0.8.0
 six==1.12.0
 spavro==1.1.22
 sqlparse==0.3.0
 tblib==1.4.0
 uritemplate==3.0.0
-urllib3==1.25.2
+urllib3==1.25.3
 uWSGI==2.0.18
