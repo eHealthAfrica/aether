@@ -39,7 +39,7 @@ $DC_FILE run client build
 PCK_FILE=aether.client-${APP_VERSION}-py2.py3-none-any.whl
 
 # distribute within the containers
-FOLDERS=( test-aether-integration-module aether-producer )
+FOLDERS=( test-aether-integration-module )
 for FOLDER in "${FOLDERS[@]}"
 do
     DEST=./${FOLDER}/conf/pip/dependencies/
