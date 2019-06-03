@@ -707,14 +707,12 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'namespace': 'Nested_Repeats_Test_0',
                     'doc': 'xForm ID',
                     'type': ['null', 'string'],
-                    'default': 'nested_repeats_test',
                 },
                 {
                     'name': '_version',
                     'namespace': 'Nested_Repeats_Test_0',
                     'doc': 'xForm version',
                     'type': ['null', 'string'],
-                    'default': '0',
                 },
                 {
                     'name': 'Repeat_1',
@@ -798,14 +796,12 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'namespace': 'WrongNames_0',
                     'doc': 'xForm ID',
                     'type': ['null', 'string'],
-                    'default': 'wrong-names',
                 },
                 {
                     'name': '_version',
                     'namespace': 'WrongNames_0',
                     'doc': 'xForm version',
                     'type': ['null', 'string'],
-                    'default': '0',
                 },
                 {
                     'name': 'h:full-name',
@@ -874,14 +870,12 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'namespace': 'DupNames_0',
                     'doc': 'xForm ID',
                     'type': ['null', 'string'],
-                    'default': 'dup-names',
                 },
                 {
                     'name': '_version',
                     'namespace': 'DupNames_0',
                     'doc': 'xForm version',
                     'type': ['null', 'string'],
-                    'default': '0',
                 },
                 {
                     'name': 'dup_property',
