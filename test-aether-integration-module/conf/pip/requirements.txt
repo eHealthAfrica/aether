@@ -7,9 +7,6 @@
 aet.consumer
 aether.client
 
-kafka
-requests
-
 flake8
 pytest
 pytest-runner
