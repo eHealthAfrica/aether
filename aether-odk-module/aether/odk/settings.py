@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
+
 # Common settings
 # ------------------------------------------------------------------------------
 
@@ -35,3 +37,5 @@ MULTITENANCY_MODEL = 'odk.Project'
 MIGRATION_MODULES['odk'] = 'aether.odk.api.migrations'
 
 SURVEYOR_GROUP_NAME = 'surveyor'
+
+ODK_COLLECT_ENDPOINT = os.environ.get('ODK_COLLECT_ENDPOINT', '')
