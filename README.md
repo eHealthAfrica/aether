@@ -290,7 +290,7 @@ The default values for the export feature:
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 - `ODK_COLLECT_ENDPOINT`: the endpoint for all ODK collect urls.
-  If it's `collect/` the submission url would be `http://my-server/collect/sumbission`
+  If it's `collect/` the submission url would be `http://my-server/collect/submission`
   If it's blank ` ` the forms list url would be `http://my-server/formList`
 
 #### Aether UI
