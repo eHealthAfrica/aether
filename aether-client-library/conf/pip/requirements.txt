@@ -5,6 +5,7 @@
 ################################################################################
 
 bravado
+bravado-core<=5.12.1  # breaks the the custom patches.py file
 requests
 requests_oauthlib
 

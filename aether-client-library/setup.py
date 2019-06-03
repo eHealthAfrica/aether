@@ -40,6 +40,7 @@ setup(
 
     install_requires=[
         'bravado',
+        'bravado-core<=5.12.1',
         'requests',
         'requests_oauthlib'
     ],
