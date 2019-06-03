@@ -22,7 +22,7 @@ coreapi==2.3.3
 coreschema==0.0.4
 coverage==4.5.3
 decorator==4.4.0
-Django==2.2.1
+Django==2.2.2
 django-autofixture==0.12.1
 django-cas-ng==3.6.0
 django-cors-headers==3.0.2
@@ -80,7 +80,7 @@ requests==2.22.0
 rsa==4.0
 ruamel.yaml==0.15.96
 s3transfer==0.2.0
-sentry-sdk==0.8.0
+sentry-sdk==0.9.0
 six==1.12.0
 spavro==1.1.22
 sqlparse==0.3.0
