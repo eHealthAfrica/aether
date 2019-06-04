@@ -444,14 +444,27 @@ class TopicManager(object):
             # so the configuration can be updated.
             sys.exit(1)
         self.update_schema(schema)
+        self.get_producer()
+        # Spawn worker and give to pool.
+        self.context.threads.append(gevent.spawn(self.update_kafka))
+
+    def get_producer(self):
         kafka_settings = self.context.settings.get('kafka_settings')
         # apply setting from root config to be able to use env variables
         kafka_settings["bootstrap.servers"] = self.context.settings.get(
             "kafka_url")
         self.kafka_settings = kafka_settings
+        # check for SASL
+        if self.context.settings.get('kafka_security') == 'SASL_PLAINTEXT':
+            # Let Producer use Kafka SU to produce
+            self.kafka_settings['security.protocol'] = 'SASL_PLAINTEXT',
+            self.kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256',
+            self.kafka_settings['sasl.username'] = \
+                self.context.settings.get('KAFKA_SU_USER')
+            self.kafka_settings['sasl.password'] = \
+                self.context.settings.get('KAFKA_SU_PW')
+
         self.producer = Producer(**self.kafka_settings)
-        # Spawn worker and give to pool.
-        self.context.threads.append(gevent.spawn(self.update_kafka))
 
     # API Calls to Control Topic
 
