@@ -1,13 +1,14 @@
 ################################################################################
-#                                                                              #
-#                              Frozen requirements                             #
-#                                                                              #
-#                               DO NOT CHANGE !!!                              #
-#                                                                              #
-# To update this first update 'primary-requirements.txt' then run              #
-#                                                                              #
-# docker-compose -f docker-compose-connect.yml run \                           #
-#                --no-deps producer pip_freeze                                 #
-#                                                                              #
+#
+#                              Frozen requirements
+#
+#                               DO NOT CHANGE !!!
+#
+# To check the outdated dependencies run
+#     docker-compose -f docker-compose-connect.yml run --rm --no-deps producer eval pip list --outdated
+#
+# To update this first update 'primary-requirements.txt' then run
+#     docker-compose -f docker-compose-connect.yml run --rm --no-deps producer pip_freeze
+#
 ################################################################################
 

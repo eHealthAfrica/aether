@@ -54,17 +54,17 @@ and [Enzyme](http://airbnb.io/enzyme/).
 
 ```bash
 # all tests
-docker-compose run ui-assets test
+docker-compose run --rm ui-assets test
 
 # by type
-docker-compose run ui-assets test_lint
-docker-compose run ui-assets test_js
+docker-compose run --rm ui-assets test_lint
+docker-compose run --rm ui-assets test_js
 
 # more detailed
-docker-compose run ui-assets eval npm run test-lint-sass
-docker-compose run ui-assets eval npm run test-lint-js
+docker-compose run --rm ui-assets eval npm run test-lint-sass
+docker-compose run --rm ui-assets eval npm run test-lint-js
 # in case you need to check `console.log` messages
-docker-compose run ui-assets eval npm run test-js-verbose
+docker-compose run --rm ui-assets eval npm run test-js-verbose
 ```
 
 

@@ -8,7 +8,7 @@
 - [Setup](#Setup)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
-  - [Common Library](#common-library)
+  - [Aether Django SDK Library](#aether-django-sdk-library)
   - [Environment Variables](#environment-variables)
     - [Generic](#generic)
     - [File Storage System](#file-storage-system)
@@ -85,17 +85,11 @@ for local development. Never deploy these to publicly accessible servers.
 
 *[Return to TOC](#table-of-contents)*
 
-### Common library
+### Aether Django SDK library
 
-This library contains the shared features among different containers.
+This library contains the shared features among different aether django containers.
 
-To create a new version and distribute it:
-
-```bash
-./scripts/build_common_and_distribute.sh
-```
-
-See more in [README](/aether-common-library/README.md).
+See more in its [repository](https://github.com/ehealthafrica/aether-django-sdk-library).
 
 *[Return to TOC](#table-of-contents)*
 
@@ -226,7 +220,7 @@ MULTITENANCY=
 ```
 
 The technical implementation is explained in
-[Multi-tenancy README](/aether-common-library/aether/common/multitenancy/README.md).
+[Multi-tenancy README](/aether-sdk-library/aether/sdk/multitenancy/README.md).
 
 **Notes:**
 
@@ -527,7 +521,7 @@ script offers a range of commands to start services or run commands.
 The full list of commands can be seen in the script.
 
 The pattern to run a command is always
-``docker-compose run <container-name> <entrypoint-command> <...args>``
+``docker-compose run --rm <container-name> <entrypoint-command> <...args>``
 
 *[Return to TOC](#table-of-contents)*
 
@@ -561,14 +555,14 @@ To execute tests in just one container:
 or
 
 ```bash
-docker-compose run <container-name> test
+docker-compose run --rm <container-name> test
 ```
 
 or
 
 ```bash
-docker-compose run <container-name> test_lint
-docker-compose run <container-name> test_coverage
+docker-compose run --rm <container-name> test_lint
+docker-compose run --rm <container-name> test_coverage
 ```
 
 The e2e tests are run against different containers, the config file used
@@ -598,7 +592,7 @@ to indicate the number of concurrent jobs.
 #### Check outdated dependencies
 
 ```bash
-docker-compose run --no-deps <container-name> eval pip list --outdated
+docker-compose run --rm --no-deps <container-name> eval pip list --outdated
 ```
 
 #### Update requirements file
@@ -607,15 +601,10 @@ docker-compose run --no-deps <container-name> eval pip list --outdated
 ./scripts/upgrade_container.sh [--build] [<container-name>]
 ```
 
-This also rebuilds `aether.common` module and distributes it within the containers.
-Do not forget to include new containers in the file.
-
 or
 
 ```bash
-docker-compose run --no-deps <container-name> pip_freeze
+docker-compose run --rm --no-deps <container-name> pip_freeze
 ```
-
-In this case `aether.common` is not rebuilt.
 
 *[Return to TOC](#table-of-contents)*

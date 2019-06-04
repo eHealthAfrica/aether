@@ -1,20 +1,21 @@
 ################################################################################
-#                                                                              #
-#                              Frozen requirements                             #
-#                                                                              #
-#                               DO NOT CHANGE !!!                              #
-#                                                                              #
-# To check the outdated dependencies run                                       #
-#     docker-compose run --no-deps kernel eval pip list --outdated             #
-#                                                                              #
-# To update this first update "primary-requirements.txt" then run              #
-#     docker-compose run --no-deps kernel pip_freeze                           #
-#                                                                              #
+#
+#                              Frozen requirements
+#
+#                               DO NOT CHANGE !!!
+#
+# To check the outdated dependencies run
+#     docker-compose run --rm --no-deps kernel eval pip list --outdated
+#
+# To update this first update "primary-requirements.txt" then run
+#     docker-compose run --rm --no-deps kernel pip_freeze
+#
 ################################################################################
 
+aether.sdk==1.1.0
 attrs==19.1.0
-boto3==1.9.159
-botocore==1.12.159
+boto3==1.9.161
+botocore==1.12.161
 cachetools==3.1.1
 certifi==2019.3.9
 chardet==3.0.4
@@ -27,7 +28,6 @@ django-autofixture==0.12.1
 django-cas-ng==3.6.0
 django-cors-headers==3.0.2
 django-debug-toolbar==1.11
-django-eha-sdk==1.0.4
 django-filter==2.1.0
 django-minio-storage==0.2.2
 django-model-utils==3.1.2
@@ -46,7 +46,7 @@ flake8-quotes==2.0.1
 google-api-core==1.11.1
 google-auth==1.6.3
 google-cloud-core==1.0.1
-google-cloud-storage==1.16.0
+google-cloud-storage==1.16.1
 google-resumable-media==0.3.2
 googleapis-common-protos==1.6.0
 idna==2.8
@@ -79,7 +79,7 @@ pytz==2019.1
 requests==2.22.0
 rsa==4.0
 ruamel.yaml==0.15.96
-s3transfer==0.2.0
+s3transfer==0.2.1
 sentry-sdk==0.9.0
 six==1.12.0
 spavro==1.1.22

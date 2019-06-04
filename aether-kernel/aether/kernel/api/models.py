@@ -30,8 +30,8 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
-from django_eha_sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
-from django_eha_sdk.utils import json_prettified
+from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
+from aether.sdk.utils import json_prettified
 
 from .constants import NAMESPACE
 from .validators import (
@@ -111,7 +111,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
     Project
 
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
-    .. note:: Extends from :class:`django_eha_sdk.multitenancy.models.MultitenancyBaseAbstract`
+    .. note:: Extends from :class:`aether.sdk.multitenancy.models.MultitenancyBaseAbstract`
 
     :ivar text      salad_schema:    Salad schema (optional).
         Semantic Annotations for Linked Avro Data (SALAD)

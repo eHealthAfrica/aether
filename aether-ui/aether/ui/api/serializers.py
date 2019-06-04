@@ -21,11 +21,11 @@ from drf_dynamic_fields import DynamicFieldsMixin
 
 from rest_framework import serializers
 
-from django_eha_sdk.drf.serializers import (
+from aether.sdk.drf.serializers import (
     HyperlinkedIdentityField,
     HyperlinkedRelatedField,
 )
-from django_eha_sdk.multitenancy.serializers import (
+from aether.sdk.multitenancy.serializers import (
     MtPrimaryKeyRelatedField,
     MtModelSerializer,
 )
