@@ -16,7 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.urls import path
+from django.conf import settings
+from django.urls import include, path
+
 from rest_framework.routers import DefaultRouter
 
 from . import views, views_collect
@@ -29,7 +31,7 @@ router.register('media-files', views.MediaFileViewSet)
 router.register('surveyors', views.SurveyorViewSet)
 
 
-urlpatterns = router.urls + [
+collect_urls = [
     path(route='formList',
          view=views_collect.xform_list,
          name='xform-list-xml'),
@@ -45,4 +47,9 @@ urlpatterns = router.urls + [
     path(route='submission',
          view=views_collect.xform_submission,
          name='xform-submission'),
+]
+
+
+urlpatterns = router.urls + [
+    path(settings.ODK_COLLECT_ENDPOINT, include(collect_urls))
 ]
