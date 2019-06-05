@@ -15,6 +15,7 @@
     - [File Storage System](#file-storage-system)
     - [Multi-tenancy](#multi-tenancy)
     - [uWSGI](#uwsgi)
+    - [Aether generic](#aether-generic)
     - [Aether Kernel](#aether-kernel)
     - [Aether ODK Module](#aether-odk-module)
     - [Aether UI](#aether-ui)
@@ -103,13 +104,6 @@ of the most common ones with non default values. For more info take a look at th
 
 Also check the aether sdk section about [environment variables](https://github.com/eHealthAfrica/aether-django-sdk-library#environment-variables).
 
-#### Aether specific
-
-- `ADMIN_USERNAME`: `admin` The setup scripts create an initial admin user for the app.
-- `ADMIN_PASSWORD`: `secresecret`.
-- `ADMIN_TOKEN`: `admin_user_auth_token` Used to connect from other modules.
-- `WEB_SERVER_PORT` Web server port for the app.
-
 #### Generic
 
 > https://github.com/eHealthAfrica/aether-django-sdk-library#generic
@@ -167,7 +161,7 @@ variables that set up the different authentication options.
 
 Used on Kernel and ODK Module
 
-- `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/1.11/ref/settings/#default-file-storage).
+- `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/2.2/ref/settings/#default-file-storage).
   Available options: `minio`, `s3`, `gcs`.
   More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
   Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development
@@ -280,6 +274,15 @@ https://uwsgi-docs.readthedocs.io/
 
 *[Return to TOC](#table-of-contents)*
 
+#### Aether generic
+
+- `ADMIN_USERNAME`: `admin` The setup scripts create an initial admin user for the app.
+- `ADMIN_PASSWORD`: `secresecret`.
+- `ADMIN_TOKEN`: `admin_user_auth_token` Used to connect from other modules.
+- `WEB_SERVER_PORT` Web server port for the app.
+
+*[Return to TOC](#table-of-contents)*
+
 #### Aether Kernel
 
 The default values for the export feature:
@@ -299,6 +302,8 @@ The default values for the export feature:
 - `EXPORT_HEADER_SHORTEN`: `no`. Indicates if the header includes the full
   jsonpath/label or only the column one. Values: ``yes``, any other ``no``.
 
+*[Return to TOC](#table-of-contents)*
+
 #### Aether ODK Module
 
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
@@ -309,12 +314,16 @@ The default values for the export feature:
   If it's `collect/` the submission url would be `http://my-server/collect/submission`
   If it's blank ` ` the forms list url would be `http://my-server/formList`
 
+*[Return to TOC](#table-of-contents)*
+
 #### Aether UI
 
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
 - `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+
+*[Return to TOC](#table-of-contents)*
 
 #### Aether CouchDB Sync Module
 
@@ -325,6 +334,8 @@ The default values for the export feature:
 - `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+
+*[Return to TOC](#table-of-contents)*
 
 ## Usage
 
