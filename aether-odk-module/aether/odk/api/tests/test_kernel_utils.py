@@ -21,7 +21,7 @@ from unittest import mock
 import requests
 
 from django.test import override_settings
-from django_eha_sdk.unittest import MockResponse
+from aether.sdk.unittest import MockResponse
 
 from . import CustomTestCase
 from ..kernel_utils import (

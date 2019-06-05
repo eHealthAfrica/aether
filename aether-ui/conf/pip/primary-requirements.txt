@@ -1,22 +1,22 @@
 ################################################################################
-#                                                                              #
-#                             Primary requirements                             #
-#                                                                              #
-#                                 CHANGE ME !!!                                #
-#                                                                              #
-# To check the outdated dependencies run                                       #
-#     docker-compose run --no-deps ui eval pip list --outdated                 #
-#                                                                              #
-# Update me and then run                                                       #
-#     docker-compose run --no-deps ui pip_freeze                               #
-#                                                                              #
+#
+#                             Primary requirements
+#
+#                                 CHANGE ME !!!
+#
+# To check the outdated dependencies run
+#     docker-compose run --rm --no-deps ui eval pip list --outdated
+#
+# Update me and then run
+#     docker-compose run --rm --no-deps ui pip_freeze
+#
 ################################################################################
 
 
 # Main libraries
 
-# Django-eHa-SDK library with extras
-django_eha_sdk[cas,server,webpack,test]
+# Aether Django SDK library with extras
+aether.sdk[cas,server,webpack,test]
 
 
 # Django specific

@@ -27,8 +27,8 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
-from django_eha_sdk.multitenancy import utils as mt_utils
-from django_eha_sdk.utils import get_all_docs, request
+from aether.sdk.multitenancy import utils as mt_utils
+from aether.sdk.utils import get_all_docs, request
 
 from . import models, kernel_utils
 

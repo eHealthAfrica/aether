@@ -45,7 +45,7 @@ function wait_for_kernel {
 }
 
 function wait_for_db {
-    until $DC_TEST run kernel-test eval pg_isready -q; do
+    until $DC_TEST run --rm kernel-test eval pg_isready -q; do
         >&2 echo_message "Waiting for db-test..."
         sleep 2
     done
@@ -59,8 +59,8 @@ BUILD_OPTIONS="${BUILD_OPTIONS:-}"
 if [[ $1 == "ui" ]]
 then
     build_container ui-assets
-    $DC_TEST run ui-assets-test test
-    $DC_TEST run ui-assets-test build
+    $DC_TEST run --rm ui-assets-test test
+    $DC_TEST run --rm ui-assets-test build
     echo_message "Tested and built ui assets"
 fi
 
@@ -95,7 +95,7 @@ then
     if [[ $1 = "producer" || $1 == "integration" ]]
     then
         echo_message "Creating readonlyuser on Kernel DB"
-        $DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
+        $DC_TEST run --rm kernel-test eval python /code/sql/create_readonly_user.py
 
         if [[ $1 = "integration" ]]
         then
@@ -112,7 +112,7 @@ echo_message "Preparing $1 container"
 build_container $1
 echo_message "$1 ready!"
 wait_for_db
-$DC_TEST run "$1"-test test
+$DC_TEST run --rm "$1"-test test
 echo_message "$1 tests passed!"
 
 

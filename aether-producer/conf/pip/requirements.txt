@@ -1,14 +1,16 @@
 ################################################################################
-#                                                                              #
-#                              Frozen requirements                             #
-#                                                                              #
-#                               DO NOT CHANGE !!!                              #
-#                                                                              #
-# To update this first update 'primary-requirements.txt' then run              #
-#                                                                              #
-# docker-compose -f docker-compose-connect.yml run \                           #
-#                --no-deps producer pip_freeze                                 #
-#                                                                              #
+#
+#                              Frozen requirements
+#
+#                               DO NOT CHANGE !!!
+#
+# To check the outdated dependencies run
+#     docker-compose -f docker-compose-connect.yml run --rm --no-deps producer eval pip list --outdated
+#
+# To update this first update 'primary-requirements.txt' then run
+#
+#     docker-compose -f docker-compose-connect.yml run --rm --no-deps producer pip_freeze
+#
 ################################################################################
 
 atomicwrites==1.3.0
@@ -37,7 +39,7 @@ py==1.8.0
 pycodestyle==2.5.0
 pyflakes==2.1.1
 pyparsing==2.4.0
-pytest==4.6.1
+pytest==4.6.2
 requests==2.22.0
 six==1.12.0
 spavro==1.1.22
