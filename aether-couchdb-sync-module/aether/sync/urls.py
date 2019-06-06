@@ -18,7 +18,7 @@
 
 from django.urls import include, path
 
-from django_eha_sdk.conf.urls import generate_urlpatterns
+from aether.sdk.conf.urls import generate_urlpatterns
 
 from .api.views import signin, load_file
 from .views import check_rq

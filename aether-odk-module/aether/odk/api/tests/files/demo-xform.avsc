@@ -7,15 +7,13 @@
       "name": "_id",
       "namespace": "MyTestForm_Test10",
       "doc": "xForm ID",
-      "type": [ "null", "string" ],
-      "default": "my-test-form"
+      "type": [ "null", "string" ]
     },
     {
       "name": "_version",
       "namespace": "MyTestForm_Test10",
       "doc": "xForm version",
-      "type": [ "null", "string" ],
-      "default": "Test-1.0"
+      "type": [ "null", "string" ]
     },
     {
       "name": "starttime",

@@ -22,8 +22,8 @@ import logging
 # Common settings
 # ------------------------------------------------------------------------------
 
-from aether.common.settings import *  # noqa
-from aether.common.settings import LOGGING_LEVEL, MIGRATION_MODULES
+from aether.sdk.conf.settings_aether import *  # noqa
+from aether.sdk.conf.settings_aether import LOGGING_LEVEL, MIGRATION_MODULES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)

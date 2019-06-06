@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django_eha_sdk.health.utils import (
+from aether.sdk.health.utils import (
     check_external_app,
     get_external_app_url,
     get_external_app_token,
