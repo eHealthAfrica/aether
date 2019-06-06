@@ -19,6 +19,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+from requests.exceptions import HTTPError
 
 from django_eha_sdk.multitenancy.views import MtViewSetMixin
 
@@ -69,6 +70,33 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             pipeline.delete()
 
         return Response(artefacts_result)
+
+    @action(detail=True, methods=['put'], url_path='rename')
+    def rename(self, request, pk=None, *args, **kwargs):
+        pipeline = self.get_object_or_404(pk=pk)
+        new_name = request.data.get('name', pipeline.name)
+        pipeline.name = new_name
+        pipeline.save()
+        if pipeline.mappingset:
+            try:
+                kernel_pipeline = utils.kernel_data_request(
+                    f'mappingsets/{pipeline.mappingset}/',
+                )
+                kernel_pipeline['name'] = new_name
+                utils.kernel_data_request(
+                    f'mappingsets/{pipeline.mappingset}/',
+                    'put',
+                    kernel_pipeline,
+                )
+            except HTTPError as e:
+                if e.response.status_code == status.HTTP_404_NOT_FOUND:
+                    pipeline.mappingset = None
+                    pipeline.save()
+
+        return Response(
+            data=self.serializer_class(pipeline, context={'request': request}).data,
+            status=status.HTTP_200_OK,
+        )
 
 
 class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
