@@ -455,15 +455,16 @@ class TopicManager(object):
             "kafka_url")
         self.kafka_settings = kafka_settings
         # check for SASL
-        if self.context.settings.get('kafka_security') == 'SASL_PLAINTEXT':
+        if self.context.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
             # Let Producer use Kafka SU to produce
-            self.kafka_settings['security.protocol'] = 'SASL_PLAINTEXT',
-            self.kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256',
+            self.kafka_settings['security.protocol'] = 'sasl_plaintext'
+            self.kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
             self.kafka_settings['sasl.username'] = \
                 self.context.settings.get('KAFKA_SU_USER')
             self.kafka_settings['sasl.password'] = \
                 self.context.settings.get('KAFKA_SU_PW')
 
+        self.context.app.logger.critical(self.kafka_settings)
         self.producer = Producer(**self.kafka_settings)
 
     # API Calls to Control Topic
@@ -736,6 +737,7 @@ class TopicManager(object):
                     writer.flush()
                     raw_bytes = bytes_writer.getvalue()
 
+                self.producer.poll(0)
                 self.producer.produce(
                     self.topic_name,
                     raw_bytes,
