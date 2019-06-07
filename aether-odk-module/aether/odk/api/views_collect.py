@@ -43,8 +43,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from django_eha_sdk.multitenancy.utils import add_instance_realm_in_headers
-from django_eha_sdk.utils import request as exec_request
+from aether.sdk.multitenancy.utils import add_instance_realm_in_headers
+from aether.sdk.utils import request as exec_request
 
 from .models import XForm, MediaFile
 from .kernel_utils import (

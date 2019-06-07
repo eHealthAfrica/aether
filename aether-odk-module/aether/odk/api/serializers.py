@@ -22,16 +22,16 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from django_eha_sdk.drf.serializers import (
+from aether.sdk.drf.serializers import (
     HyperlinkedIdentityField,
     HyperlinkedRelatedField,
 )
-from django_eha_sdk.multitenancy.serializers import (
+from aether.sdk.multitenancy.serializers import (
     MtModelSerializer,
     MtPrimaryKeyRelatedField,
     MtUserRelatedField,
 )
-from django_eha_sdk.multitenancy.utils import add_user_to_realm
+from aether.sdk.multitenancy.utils import add_user_to_realm
 
 from .models import Project, XForm, MediaFile
 from .xform_utils import parse_xform_file, validate_xform

@@ -34,7 +34,7 @@ $DC_FILE build \
     --no-cache --force-rm --pull \
     --build-arg VERSION=$APP_VERSION \
     client
-$DC_FILE run client build
+$DC_FILE run --rm client build
 
 PCK_FILE=aether.client-${APP_VERSION}-py2.py3-none-any.whl
 

@@ -25,10 +25,10 @@ import bravado_core
 from .exceptions import AetherAPIException
 from . import basic_auth
 from . import oidc
-from . import patches
 from .logger import LOG
 
 # monkey patch so that bulk insertion works
+from . import patches
 bravado_core.marshal.marshal_model = patches.marshal_model  # noqa
 bravado_core.marshal.marshal_object = patches.marshal_object  # noqa
 bravado_core.unmarshal.unmarshal_model = patches.unmarshal_model  # noqa

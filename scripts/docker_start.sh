@@ -189,7 +189,7 @@ for container in "${PRE_CONTAINERS[@]}"; do
 done
 
 for container in "${SETUP_CONTAINERS[@]}"; do
-    docker-compose run $container setup
+    docker-compose run --rm $container setup
     start_container $container
 done
 
