@@ -1,10 +1,15 @@
 import React, { Component } from 'react'
-import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
+import { defineMessages, injectIntl, FormattedMessage, FormattedHTMLMessage } from 'react-intl'
+import { Modal } from '../../components'
 
 const MESSAGES = defineMessages({
   namePlaceholder: {
     defaultMessage: 'Name of pipeline',
-    id: 'pipeline.rename.placeholder'
+    id: 'rename.modal.name.placeholder'
+  },
+  header: {
+    defaultMessage: 'Rename pipeline <b>{name}</b>',
+    id: 'rename.modal.header'
   }
 })
 
@@ -17,11 +22,7 @@ class PipelineRename extends Component {
   }
 
   render () {
-    return this.props.view !== 'form' ? (
-      <span className='pipeline-name'>
-        // { this.props.name }
-      </span>
-    ) : this.renderForm()
+    return this.props.view !== 'form' ? null : this.renderForm()
   }
 
   renderForm () {
@@ -32,43 +33,64 @@ class PipelineRename extends Component {
       this.props.onSave(this.state.name)
     }
 
-    return (
-      <form className='pipeline-form' onSubmit={onSubmit}>
-        <div className='form-group'>
-          <input
-            type='text'
-            required
-            name='name'
-            className='text-input'
-            placeholder={formatMessage(MESSAGES.namePlaceholder)}
-            value={this.state.name}
-            onChange={event => { this.setState({ name: event.target.value }) }}
+    const buttons = (
+      <div>
+        <button
+          data-qa='rename.modal.button.cancel'
+          className='btn btn-w'
+          onClick={this.props.onCancel}>
+          <FormattedMessage
+            id='rename.modal.button.cancel'
+            defaultMessage='Cancel'
           />
-        </div>
-
-        <button
-          type='button'
-          className='btn btn-c btn-big btn-transparent'
-          onClick={() => this.props.onCancel()}>
-          <span className='details-title'>
-            <FormattedMessage
-              id='pipeline.rename.button.cancel'
-              defaultMessage='Cancel'
-            />
-          </span>
         </button>
 
-        <button
-          type='submit'
-          className='btn btn-c btn-big'>
-          <span className='details-title'>
-            <FormattedMessage
-              id='pipeline.rename.button.ok'
-              defaultMessage='Save'
-            />
-          </span>
+        <button className='btn btn-w btn-primary' onClick={onSubmit}>
+          <FormattedMessage
+            id='rename.modal.button.save'
+            defaultMessage='Save'
+          />
         </button>
-      </form>
+      </div>
+    )
+
+    return (
+      <Modal
+        buttons={buttons}
+        header={
+          <FormattedHTMLMessage
+            {
+            ...{
+              ...MESSAGES.header,
+              values: {
+                name: this.props.name
+              }
+            }
+            }
+          />
+        }
+      >
+        <form>
+          <div className='form-group'>
+            <label>
+              <FormattedMessage
+                id='rename.modal.name.label'
+                defaultMessage='Pipeline name'
+              />
+            </label>
+            <br />
+            <input
+              type='text'
+              required
+              name='name'
+              className='text-input'
+              placeholder={formatMessage(MESSAGES.namePlaceholder)}
+              value={this.state.name}
+              onChange={event => { this.setState({ name: event.target.value }) }}
+            />
+          </div>
+        </form>
+      </Modal>
     )
   }
 }

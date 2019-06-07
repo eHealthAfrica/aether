@@ -74,19 +74,15 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['put'], url_path='rename')
     def rename(self, request, pk=None, *args, **kwargs):
         pipeline = self.get_object_or_404(pk=pk)
-        new_name = request.data.get('name', pipeline.name)
-        pipeline.name = new_name
+        pipeline.name = request.data.get('name', pipeline.name)
         pipeline.save()
         if pipeline.mappingset:
             try:
-                kernel_pipeline = utils.kernel_data_request(
-                    f'mappingsets/{pipeline.mappingset}/',
-                )
-                kernel_pipeline['name'] = new_name
                 utils.kernel_data_request(
-                    f'mappingsets/{pipeline.mappingset}/',
-                    'put',
-                    kernel_pipeline,
+                    url=f'mappingsets/{pipeline.mappingset}/',
+                    method='patch',
+                    data=request.data,
+                    headers=utils.wrap_kernel_headers(pipeline),
                 )
             except HTTPError as e:
                 if e.response.status_code == status.HTTP_404_NOT_FOUND:

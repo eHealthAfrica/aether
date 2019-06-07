@@ -64,6 +64,9 @@ class PipelineCard extends Component {
     return (
       <div className='pipeline-preview'>
         <div className='preview-heading'>
+          <span className='pipeline-name'>
+            // { pipeline.name }
+          </span>
           <PipelineRename
             name={pipeline.name}
             view={this.state.renameView}

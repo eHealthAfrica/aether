@@ -511,6 +511,7 @@ class ViewsTest(TransactionTestCase):
 
         self.assertEqual(pipeline.name, 'unpublished pipeline')
         self.assertEqual(published_pipeline.name, 'published pipeline')
+
         url = reverse('pipeline-rename', kwargs={'pk': pipeline.id})
         response = self.client.put(
             url,
@@ -521,7 +522,7 @@ class ViewsTest(TransactionTestCase):
 
         with mock.patch(
             'aether.ui.api.utils.kernel_data_request'
-        ):
+        ) as exp_mock_kernel:
             url = reverse('pipeline-rename', kwargs={'pk': published_pipeline.id})
             response = self.client.put(
                 url,
@@ -529,6 +530,12 @@ class ViewsTest(TransactionTestCase):
                 data={'name': 'published pipeline renamed'}
             )
             self.assertEqual(response.json()['name'], 'published pipeline renamed')
+            exp_mock_kernel.assert_called_once_with(
+                url=f'mappingsets/{published_pipeline.mappingset}/',
+                method='patch',
+                data={'name': 'published pipeline renamed'},
+                headers=wrap_kernel_headers(published_pipeline),
+            )
 
         res = Response()
         res.status_code = 500
