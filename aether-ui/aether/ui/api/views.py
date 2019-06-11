@@ -20,7 +20,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
-from django_eha_sdk.multitenancy.views import MtViewSetMixin
+from aether.sdk.multitenancy.views import MtViewSetMixin
 
 from . import models, serializers, utils, kernel_utils
 

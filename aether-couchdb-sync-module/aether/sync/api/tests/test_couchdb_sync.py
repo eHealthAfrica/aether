@@ -20,7 +20,7 @@ import uuid
 from unittest import mock
 import requests
 
-from django_eha_sdk.utils import get_all_docs
+from aether.sdk.utils import get_all_docs
 
 from ...couchdb import api as couchdb
 from ..couchdb_helpers import create_db

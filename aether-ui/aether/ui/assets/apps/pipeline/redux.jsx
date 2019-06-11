@@ -408,17 +408,20 @@ const reducer = (state = INITIAL_STATE, action) => {
       }
     }
     case types.CONTRACT_PUBLISH_SUCCESS: {
+      const statePipeline = state.pipelineList.find(p => p.id === action.payload.pipeline) || state.currentPipeline
       const currentContract = parseContract(action.payload)
       const currentPipeline = {
-        ...state.currentPipeline,
-        contracts: replaceItemInList(state.currentPipeline.contracts, currentContract)
+        ...statePipeline,
+        contracts: replaceItemInList(statePipeline.contracts, currentContract)
       }
+      const pipelineList = replaceItemInList(state.pipelineList, currentPipeline)
 
       return {
         ...nextState,
         publishSuccess: (action.type === types.CONTRACT_PUBLISH_SUCCESS),
         currentPipeline,
-        currentContract
+        currentContract,
+        pipelineList
       }
     }
 

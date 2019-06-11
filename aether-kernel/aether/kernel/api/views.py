@@ -19,7 +19,7 @@
 from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
-from django_eha_sdk.multitenancy.utils import filter_by_realm
+from aether.sdk.multitenancy.utils import filter_by_realm
 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -33,7 +33,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from django_eha_sdk.multitenancy.views import MtViewSetMixin
+from aether.sdk.multitenancy.views import MtViewSetMixin
 
 from .avro_tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH

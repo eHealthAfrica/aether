@@ -16,7 +16,6 @@ WORKDIR /code
 
 COPY ./conf/pip /code/conf/pip
 RUN pip install -q --upgrade pip && \
-    pip install -q -f /code/conf/pip/dependencies aether.common && \
     pip install -q -r /code/conf/pip/requirements.txt
 
 COPY ./ /code

@@ -28,8 +28,8 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from django_eha_sdk.multitenancy.models import MtInstance
-from django_eha_sdk.multitenancy import utils
+from aether.sdk.multitenancy.models import MtInstance
+from aether.sdk.multitenancy import utils
 
 from .. import models, serializers
 
