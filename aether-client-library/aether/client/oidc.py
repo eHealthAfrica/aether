@@ -202,7 +202,7 @@ def get_session(
         scope = 'profile openid email'
     else:
         scope = 'email offline_access profile'
-    base_url = keycloak_url or f'{server}/keycloak/auth'
+    base_url = keycloak_url or f'{server}/auth'
     token_url = f'{base_url}/realms/{realm}/protocol/openid-connect/token'
     LOG.debug(f'token url: {token_url}')
     initial_token = get_initial_token(user, pw, token_url, offline_token)
@@ -244,7 +244,6 @@ def get_initial_token(user=None, pw=None, token_url=None, offline_token=None):
             'refresh_token': offline_token,
             'grant_type': grant,
             'scope': 'profile openid email'
-
         }
     else:
         raise ValueError('Either pw grant or offline_token must be used')
