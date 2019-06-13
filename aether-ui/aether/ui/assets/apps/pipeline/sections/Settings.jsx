@@ -106,7 +106,7 @@ export class IdentityMapping extends Component {
                 type='text'
                 required
                 name='name'
-                className='input-d contract-name'
+                className='input-d input-large'
                 value={this.state.entityTypeName}
                 onChange={(e) => { this.setState({ entityTypeName: e.target.value }) }}
               />
@@ -291,7 +291,7 @@ class Settings extends Component {
               type='text'
               required
               name='name'
-              className='input-d contract-name'
+              className='input-d input-large'
               value={this.state.contractName}
               onChange={(e) => { this.setState({ contractName: e.target.value }) }}
               disabled={contract.is_read_only}

@@ -72,18 +72,17 @@ class PipelineRename extends Component {
       >
         <form>
           <div className='form-group'>
-            <label>
+            <label className='form-label'>
               <FormattedMessage
                 id='rename.modal.name.label'
                 defaultMessage='Pipeline name'
               />
             </label>
-            <br />
             <input
               type='text'
               required
               name='name'
-              className='text-input'
+              className='text-input input-large'
               placeholder={formatMessage(MESSAGES.namePlaceholder)}
               value={this.state.name}
               onChange={event => { this.setState({ name: event.target.value }) }}
