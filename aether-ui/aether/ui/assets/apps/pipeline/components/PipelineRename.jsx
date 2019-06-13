@@ -22,7 +22,7 @@ class PipelineRename extends Component {
   }
 
   render () {
-    return this.props.view !== 'form' ? null : this.renderForm()
+    return this.props.show && this.renderForm()
   }
 
   renderForm () {

@@ -34,7 +34,7 @@ class PipelineCard extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      renameView: 'text'
+      isRenaming: false
     }
 
     this.onRename = this.onRename.bind(this)
@@ -47,14 +47,14 @@ class PipelineCard extends Component {
 
   onRename () {
     this.setState({
-      renameView: 'form'
+      isRenaming: true
     })
   }
 
   renameSave (newName) {
     this.props.renamePipeline(this.props.pipeline.id, newName)
     this.setState({
-      renameView: 'text'
+      isRenaming: false
     })
   }
 
@@ -69,21 +69,17 @@ class PipelineCard extends Component {
           </span>
           <PipelineRename
             name={pipeline.name}
-            view={this.state.renameView}
-            onCancel={() => this.setState({ renameView: 'text' })}
+            show={this.state.isRenaming}
+            onCancel={() => this.setState({ isRenaming: false })}
             onSave={this.renameSave}
           />
-          {
-            this.state.renameView !== 'form' && (
-              <div className='pipeline-actions'>
-                <PipelineOptions
-                  delete={this.props.delete}
-                  rename={this.onRename}
-                />
-                <ContractAddButton pipeline={pipeline} history={this.props.history} />
-              </div>
-            )
-          }
+          <div className='pipeline-actions'>
+            <PipelineOptions
+              delete={this.props.delete}
+              rename={this.onRename}
+            />
+            <ContractAddButton pipeline={pipeline} history={this.props.history} />
+          </div>
         </div>
 
         <div
