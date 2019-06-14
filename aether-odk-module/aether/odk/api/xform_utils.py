@@ -282,6 +282,7 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
             'name': current_name,
             'namespace': namespace,
             'doc': current_doc,
+            '@xformType': current_type,
         }
 
         # get AVRO valid name
