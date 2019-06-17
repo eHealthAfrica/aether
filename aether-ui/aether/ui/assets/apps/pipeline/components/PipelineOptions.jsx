@@ -59,8 +59,14 @@ class PipelineOptions extends Component {
             className='options'>
             <li onClick={() => this.props.delete()}>
               <FormattedMessage
-                id='pipeline.option.rename'
+                id='pipeline.option.delete'
                 defaultMessage='Delete Pipeline'
+              />
+            </li>
+            <li onClick={() => this.props.rename()}>
+              <FormattedMessage
+                id='pipeline.option.rename'
+                defaultMessage='Rename Pipeline'
               />
             </li>
           </ul>
