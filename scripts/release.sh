@@ -32,9 +32,8 @@ function prepare_dependencies {
     docker volume  create ${DB_VOLUME}    || true
 
     build_app ui-assets
-    docker-compose run ui-assets build
+    docker-compose run --rm ui-assets build
 
-    ./scripts/build_common_and_distribute.sh
     ./scripts/build_client_and_distribute.sh
 }
 

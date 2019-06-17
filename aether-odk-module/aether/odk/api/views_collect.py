@@ -24,6 +24,7 @@ https://docs.opendatakit.org/
 
 import logging
 import json
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -43,8 +44,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from django_eha_sdk.multitenancy.utils import add_instance_realm_in_headers
-from django_eha_sdk.utils import request as exec_request
+from aether.sdk.multitenancy.utils import add_instance_realm_in_headers
+from aether.sdk.utils import request as exec_request
 
 from .models import XForm, MediaFile
 from .kernel_utils import (
@@ -146,7 +147,11 @@ def xform_list(request, *args, **kwargs):
         xforms = xforms.filter(form_id=formID)
 
     host = request.build_absolute_uri(request.path).replace(reverse('xform-list-xml'), '')
-
+    # If the request is not HTTPS, the host must include port 8443
+    # or ODK Collect will not be able to get the resource
+    url_info = urlparse(host)
+    if url_info.scheme != 'https' and not url_info.port:
+        host = f'http://{url_info.netloc}:8443{url_info.path}'
     return Response(
         data={
             'xforms': [xf for xf in xforms if is_surveyor(request, xf)],
@@ -245,7 +250,11 @@ def xform_get_manifest(request, pk, *args, **kwargs):
 
     host = request.build_absolute_uri(request.path) \
                   .replace(reverse('xform-get-manifest', kwargs={'pk': pk}), '')
-
+    # If the request is not HTTPS, the host must include port 8443
+    # or ODK Collect will not be able to get the resource
+    url_info = urlparse(host)
+    if url_info.scheme != 'https' and not url_info.port:
+        host = f'http://{url_info.netloc}:8443{url_info.path}'
     return Response(
         data={
             'host': host,

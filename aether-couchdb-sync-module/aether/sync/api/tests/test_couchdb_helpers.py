@@ -18,7 +18,7 @@
 
 from unittest import mock
 from django.test import TestCase
-from django_eha_sdk.unittest import MockResponse
+from aether.sdk.unittest import MockResponse
 
 from .. import couchdb_helpers
 

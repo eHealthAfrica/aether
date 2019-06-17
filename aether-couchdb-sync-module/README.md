@@ -91,7 +91,7 @@ You probably wanna write a CouchDB view for this, and then script deleting all t
 The import task can be run manually in development with:
 
 ```bash
-docker-compose run couchdb-sync manage rqenqueue "aether.sync.tasks.import_synced_devices_task"
+docker-compose run --rm couchdb-sync manage rqenqueue "aether.sync.tasks.import_synced_devices_task"
 ```
 
 ## Testing sync locally

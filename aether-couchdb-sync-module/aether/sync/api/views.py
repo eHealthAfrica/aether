@@ -39,12 +39,12 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from django_eha_sdk.multitenancy.utils import (
+from aether.sdk.multitenancy.utils import (
     add_user_to_realm,
     get_auth_group,
     remove_user_from_realm,
 )
-from django_eha_sdk.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
+from aether.sdk.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
 
 from .couchdb_file import load_backup_file
 from .couchdb_helpers import create_db, create_or_update_user

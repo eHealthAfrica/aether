@@ -72,7 +72,6 @@ do
 done
 
 create_docker_assets
-build_libraries_and_distribute
 
 for container in "${containers[@]}"
 do

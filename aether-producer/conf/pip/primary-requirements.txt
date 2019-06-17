@@ -1,14 +1,15 @@
 ################################################################################
-#                                                                              #
-#                             Primary requirements                             #
-#                                                                              #
-#                                 CHANGE ME !!!                                #
-#                                                                              #
-# Update me and then run                                                       #
-#                                                                              #
-# docker-compose -f docker-compose-connect.yml run \                           #
-#                --no-deps producer pip_freeze                                 #
-#                                                                              #
+#
+#                             Primary requirements
+#
+#                                 CHANGE ME !!!
+#
+# To check the outdated dependencies run
+#     docker-compose -f docker-compose-connect.yml run --rm --no-deps producer eval pip list --outdated
+#
+# Update me and then run
+#     docker-compose -f docker-compose-connect.yml run --rm --no-deps producer pip_freeze
+#
 ################################################################################
 
 flask

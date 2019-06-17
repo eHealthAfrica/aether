@@ -33,7 +33,11 @@ function echo_message {
 
 function build_container {
     echo_message "Building $1 container"
-    $DC_TEST build $BUILD_OPTIONS "$1"-test
+
+    $DC_TEST build $BUILD_OPTIONS \
+        --build-arg GIT_REVISION=$APP_REVISION \
+        --build-arg VERSION=$APP_VERSION \
+        "$1"-test
 }
 
 function wait_for_kernel {
@@ -45,41 +49,40 @@ function wait_for_kernel {
 }
 
 function wait_for_db {
-    until $DC_TEST run kernel-test eval pg_isready -q; do
+    until $DC_TEST run --rm kernel-test eval pg_isready -q; do
         >&2 echo_message "Waiting for db-test..."
         sleep 2
     done
 }
 
+# TEST environment
 DC_TEST="docker-compose -f docker-compose-test.yml"
 BUILD_OPTIONS="${BUILD_OPTIONS:-}"
+APP_VERSION=$(date "+%Y%m%d%H%M%S")
+APP_REVISION=`git rev-parse --abbrev-ref HEAD`
 
 ./scripts/kill_all.sh
 
-if [[ $1 == "ui" ]]
-then
+if [[ $1 == "ui" ]]; then
     build_container ui-assets
-    $DC_TEST run ui-assets-test test
-    $DC_TEST run ui-assets-test build
+    $DC_TEST run --rm ui-assets-test test
+    $DC_TEST run --rm ui-assets-test build
     echo_message "Tested and built ui assets"
 fi
 
 
 echo_message "Starting databases + Minio Storage server"
 $DC_TEST up -d db-test minio-test
-if [[ $1 = "couchdb-sync" ]]
-then
+if [[ $1 = "couchdb-sync" ]]; then
     $DC_TEST up -d couchdb-test redis-test
 fi
-if [[ $1 = "integration" ]]
-then
+if [[ $1 = "integration" ]]; then
     echo_message "Starting Zookeeper and Kafka"
     $DC_TEST up -d zookeeper-test kafka-test
 fi
 
 
-if [[ $1 != "kernel" ]]
-then
+if [[ $1 != "kernel" ]]; then
     # rename kernel test database in each case
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")
 
@@ -92,10 +95,9 @@ then
     echo_message "kernel ready!"
 
     # Producer and Integration need readonlyuser to be present
-    if [[ $1 = "producer" || $1 == "integration" ]]
-    then
+    if [[ $1 = "producer" || $1 == "integration" ]]; then
         echo_message "Creating readonlyuser on Kernel DB"
-        $DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
+        $DC_TEST run --rm kernel-test eval python /code/sql/create_readonly_user.py
 
         if [[ $1 = "integration" ]]
         then
@@ -112,7 +114,7 @@ echo_message "Preparing $1 container"
 build_container $1
 echo_message "$1 ready!"
 wait_for_db
-$DC_TEST run "$1"-test test
+$DC_TEST run --rm "$1"-test test
 echo_message "$1 tests passed!"
 
 
