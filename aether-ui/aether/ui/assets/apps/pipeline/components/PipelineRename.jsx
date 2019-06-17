@@ -22,10 +22,6 @@ class PipelineRename extends Component {
   }
 
   render () {
-    return this.props.show && this.renderForm()
-  }
-
-  renderForm () {
     const { formatMessage } = this.props.intl
 
     const onSubmit = (event) => {
