@@ -24,6 +24,7 @@ https://docs.opendatakit.org/
 
 import logging
 import json
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -146,7 +147,9 @@ def xform_list(request, *args, **kwargs):
         xforms = xforms.filter(form_id=formID)
 
     host = request.build_absolute_uri(request.path).replace(reverse('xform-list-xml'), '')
-
+    url_info = urlparse(host)
+    if url_info.scheme != 'https' and not url_info.port:
+        host = f'http://{url_info.netloc}:8443{url_info.path}'
     return Response(
         data={
             'xforms': [xf for xf in xforms if is_surveyor(request, xf)],
@@ -245,7 +248,9 @@ def xform_get_manifest(request, pk, *args, **kwargs):
 
     host = request.build_absolute_uri(request.path) \
                   .replace(reverse('xform-get-manifest', kwargs={'pk': pk}), '')
-
+    url_info = urlparse(host)
+    if url_info.scheme != 'https' and not url_info.port:
+        host = f'http://{url_info.netloc}:8443{url_info.path}'
     return Response(
         data={
             'host': host,
