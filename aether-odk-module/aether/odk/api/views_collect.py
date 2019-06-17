@@ -147,6 +147,8 @@ def xform_list(request, *args, **kwargs):
         xforms = xforms.filter(form_id=formID)
 
     host = request.build_absolute_uri(request.path).replace(reverse('xform-list-xml'), '')
+    # If the request is not HTTPS, the host must include port 8443
+    # or ODK Collect will not be able to get the resource
     url_info = urlparse(host)
     if url_info.scheme != 'https' and not url_info.port:
         host = f'http://{url_info.netloc}:8443{url_info.path}'
@@ -248,6 +250,8 @@ def xform_get_manifest(request, pk, *args, **kwargs):
 
     host = request.build_absolute_uri(request.path) \
                   .replace(reverse('xform-get-manifest', kwargs={'pk': pk}), '')
+    # If the request is not HTTPS, the host must include port 8443
+    # or ODK Collect will not be able to get the resource
     url_info = urlparse(host)
     if url_info.scheme != 'https' and not url_info.port:
         host = f'http://{url_info.netloc}:8443{url_info.path}'
