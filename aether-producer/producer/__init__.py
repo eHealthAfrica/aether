@@ -476,7 +476,6 @@ class TopicManager(object):
             self.kafka_settings['sasl.password'] = \
                 self.context.settings.get('KAFKA_SU_PW')
 
-        self.context.app.logger.critical(self.kafka_settings)
         self.producer = Producer(**self.kafka_settings)
 
     # API Calls to Control Topic
