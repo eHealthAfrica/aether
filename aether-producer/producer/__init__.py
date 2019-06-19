@@ -101,11 +101,22 @@ class ProducerManager(object):
         # Clear objects and start
         self.kernel = None
         self.kafka = KafkaStatus.SUBMISSION_PENDING
-        self.kafka_admin_client = AdminClient(
-            {"bootstrap.servers": self.settings.get("kafka_url")}
-        )
+        self.get_admin_client()
         self.topic_managers = {}
         self.run()
+
+    def get_admin_client(self):
+        kafka_settings = {"bootstrap.servers": self.settings.get("kafka_url")}
+        if self.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
+            # Let Producer use Kafka SU to produce
+            self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
+            kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
+            kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
+            kafka_settings['sasl.username'] = \
+                self.settings.get('KAFKA_SU_USER')
+            kafka_settings['sasl.password'] = \
+                self.settings.get('KAFKA_SU_PW')
+        self.kafka_admin_client = AdminClient(kafka_settings)
 
     def keep_alive_loop(self):
         # Keeps the server up in case all other threads join at the same time.
@@ -444,14 +455,28 @@ class TopicManager(object):
             # so the configuration can be updated.
             sys.exit(1)
         self.update_schema(schema)
+        self.get_producer()
+        # Spawn worker and give to pool.
+        self.context.threads.append(gevent.spawn(self.update_kafka))
+
+    def get_producer(self):
         kafka_settings = self.context.settings.get('kafka_settings')
         # apply setting from root config to be able to use env variables
         kafka_settings["bootstrap.servers"] = self.context.settings.get(
             "kafka_url")
         self.kafka_settings = kafka_settings
+        # check for SASL
+        if self.context.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
+            # Let Producer use Kafka SU to produce
+            self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
+            self.kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
+            self.kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
+            self.kafka_settings['sasl.username'] = \
+                self.context.settings.get('KAFKA_SU_USER')
+            self.kafka_settings['sasl.password'] = \
+                self.context.settings.get('KAFKA_SU_PW')
+
         self.producer = Producer(**self.kafka_settings)
-        # Spawn worker and give to pool.
-        self.context.threads.append(gevent.spawn(self.update_kafka))
 
     # API Calls to Control Topic
 
@@ -723,6 +748,7 @@ class TopicManager(object):
                     writer.flush()
                     raw_bytes = bytes_writer.getvalue()
 
+                self.producer.poll(0)
                 self.producer.produce(
                     self.topic_name,
                     raw_bytes,
