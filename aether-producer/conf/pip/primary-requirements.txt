@@ -12,7 +12,7 @@
 #
 ################################################################################
 
-confluent_kafka
+confluent-kafka
 flask
 gevent
 psycogreen
