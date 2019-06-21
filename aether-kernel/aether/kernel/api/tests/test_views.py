@@ -766,3 +766,11 @@ class ViewsTest(TestCase):
         self.assertEqual(response['entities']['total'], 3)
         self.assertEqual(response['submissions'], 1)
         self.assertTrue(response['schemas'][self.schema.name]['is_deleted'])
+
+    def test_mapping_topics(self):
+        url = reverse('mapping-topics', kwargs={'pk': self.mapping.pk})
+        response = self.client.get(
+            url,
+        ).json()
+        self.assertEqual(len(response), 1)
+        self.assertEqual(response[0], self.schemadecorator.name)

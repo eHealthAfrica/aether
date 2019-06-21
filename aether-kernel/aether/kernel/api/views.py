@@ -349,6 +349,18 @@ class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    @action(detail=True, methods=['get'], url_path='topics')
+    def topics(self, request, pk=None):
+        mapping = self.get_object_or_404(pk=pk)
+        try:
+            topics = mapping.schemadecorators.all().values_list('topic__name', flat=True)
+            return Response(topics)
+        except Exception as e:
+            return Response(
+                str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
     queryset = models.Submission.objects.all()
