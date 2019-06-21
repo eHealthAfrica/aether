@@ -24,14 +24,14 @@
   "kafka_settings": {
     "acks": 1,
     "max.in.flight.requests.per.connection": 1,
-    "linger.ms": 200,
-    "retry.backoff.ms": 25,
+    "retry.backoff.ms": 250,
     "default.topic.config": {
-      "request.timeout.ms": 200,
-      "message.timeout.ms": 1000
+      "linger.ms": 200,
+      "request.timeout.ms": 1000,
+      "message.timeout.ms": 5000
     },
     "message.send.max.retries": 9,
-    "queue.buffering.max.ms": 100,
+    "queue.buffering.max.ms": 5000,
     "socket.timeout.ms": 10000
   },
   "server_port": 5005,

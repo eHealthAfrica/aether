@@ -149,6 +149,15 @@ export const deletePipeline = (id, opts) => ({
   )
 })
 
+export const renamePipeline = (pipelineId, name) => ({
+  types: ['', types.PIPELINE_UPDATE, types.REQUEST_ERROR],
+  promise: client => client.put(
+    `${PIPELINES_URL}${pipelineId}/rename/`,
+    { 'Content-Type': 'application/json' },
+    { data: { name } }
+  )
+})
+
 export const addContract = (contract) => ({
   types: ['', types.CONTRACT_ADD, types.REQUEST_ERROR],
   promise: client => client.post(

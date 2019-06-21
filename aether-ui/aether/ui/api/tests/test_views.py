@@ -473,3 +473,96 @@ class ViewsTest(TransactionTestCase):
             self.assertEqual(response.status_code, 500)
             self.assertEqual(Contract.objects.count(), 1)
             self.assertEqual(Pipeline.objects.count(), 1)
+
+    def test__pipeline__rename(self):
+        INPUT_SAMPLE = {
+            'name': 'John',
+        }
+
+        ENTITY_SAMPLE = {
+            'name': 'Person',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'id',
+                    'type': 'string',
+                },
+                {
+                    'name': 'name',
+                    'type': ['null', 'string'],
+                },
+            ],
+        }
+        project = Project.objects.create(name='rename project')
+        pipeline = Pipeline.objects.create(
+            name='unpublished pipeline',
+            project=project,
+            input=INPUT_SAMPLE,
+            schema=ENTITY_SAMPLE,
+        )
+
+        published_pipeline = Pipeline.objects.create(
+            name='published pipeline',
+            project=project,
+            input=INPUT_SAMPLE,
+            schema=ENTITY_SAMPLE,
+            mappingset=uuid.uuid4(),
+        )
+
+        self.assertEqual(pipeline.name, 'unpublished pipeline')
+        self.assertEqual(published_pipeline.name, 'published pipeline')
+
+        url = reverse('pipeline-rename', kwargs={'pk': pipeline.id})
+        response = self.client.put(
+            url,
+            content_type='application/json',
+            data={'name': 'unpublished pipeline renamed'}
+        )
+        self.assertEqual(response.json()['name'], 'unpublished pipeline renamed')
+
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request'
+        ) as exp_mock_kernel:
+            url = reverse('pipeline-rename', kwargs={'pk': published_pipeline.id})
+            response = self.client.put(
+                url,
+                content_type='application/json',
+                data={'name': 'published pipeline renamed'}
+            )
+            self.assertEqual(response.json()['name'], 'published pipeline renamed')
+            exp_mock_kernel.assert_called_once_with(
+                url=f'mappingsets/{published_pipeline.mappingset}/',
+                method='patch',
+                data={'name': 'published pipeline renamed'},
+                headers=wrap_kernel_headers(published_pipeline),
+            )
+
+        res = Response()
+        res.status_code = 500
+
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            side_effect=HTTPError('url', 500, response=res)
+        ):
+            url = reverse('pipeline-rename', kwargs={'pk': published_pipeline.id})
+            response = self.client.put(
+                url,
+                content_type='application/json',
+                data={'name': 'pipeline renamed'}
+            )
+            self.assertEqual(response.json()['name'], 'pipeline renamed')
+            self.assertNotEqual(response.json()['mappingset'], None)
+
+        res.status_code = 404
+        with mock.patch(
+            'aether.ui.api.utils.kernel_data_request',
+            side_effect=HTTPError('url', 404, response=res)
+        ):
+            url = reverse('pipeline-rename', kwargs={'pk': published_pipeline.id})
+            response = self.client.put(
+                url,
+                content_type='application/json',
+                data={'name': 'pipeline renamed again'}
+            )
+            self.assertEqual(response.json()['name'], 'pipeline renamed again')
+            self.assertEqual(response.json()['mappingset'], None)
