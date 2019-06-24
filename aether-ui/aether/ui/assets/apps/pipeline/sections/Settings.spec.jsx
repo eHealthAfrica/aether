@@ -79,7 +79,7 @@ describe('Pipeline Settings Component', () => {
         />
       </Provider>
     )
-    expect(component.find('[className="input-d contract-name"]')
+    expect(component.find('[className="input-d input-large"]')
       .html()).toContain(`value="${selectedContract.name}"`)
   })
 
@@ -192,7 +192,7 @@ describe('Pipeline Settings Component', () => {
     )
     expect(component.find('Modal').exists()).toBeFalsy()
 
-    const inputContractName = component.find('input[className="input-d contract-name"]')
+    const inputContractName = component.find('input[className="input-d input-large"]')
     inputContractName.simulate('change', { target: { value: 'contract-updated' } })
 
     const settings = component.find('Settings').instance()
@@ -225,7 +225,7 @@ describe('Pipeline Settings Component', () => {
     )
     expect(component.find('Modal').exists()).toBeFalsy()
 
-    const inputContractName = component.find('input[className="input-d contract-name"]')
+    const inputContractName = component.find('input[className="input-d input-large"]')
     inputContractName.simulate('change', { target: { value: 'new-contract-updated' } })
 
     const settings = component.find('Settings').instance()

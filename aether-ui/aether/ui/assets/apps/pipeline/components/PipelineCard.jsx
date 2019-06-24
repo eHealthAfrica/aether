@@ -23,16 +23,38 @@ import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
 import PipelineInfoButton from './PipelineInfoButton'
-import ContractAddButton from './ContractAddButton'
 import ContractCard from './ContractCard'
-import PipelineOptions from './PipelineOptions'
+import PipelineRename from './PipelineRename'
+import PipelineActions from './PipelineActions'
 
-import { selectPipeline } from '../redux'
+import { selectPipeline, renamePipeline } from '../redux'
 
 class PipelineCard extends Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      isRenaming: false
+    }
+
+    this.onRename = this.onRename.bind(this)
+    this.renameSave = this.renameSave.bind(this)
+  }
+
   onPipelineSelect (pipeline) {
     this.props.selectPipeline(pipeline.id)
-    this.props.history.push(`/${pipeline.id}`)
+  }
+
+  onRename () {
+    this.setState({
+      isRenaming: true
+    })
+  }
+
+  renameSave (newName) {
+    this.props.renamePipeline(this.props.pipeline.id, newName)
+    this.setState({
+      isRenaming: false
+    })
   }
 
   render () {
@@ -44,12 +66,20 @@ class PipelineCard extends Component {
           <span className='pipeline-name'>
             // { pipeline.name }
           </span>
-          <div className='pipeline-actions'>
-            <PipelineOptions
-              delete={this.props.delete}
-            />
-            <ContractAddButton pipeline={pipeline} history={this.props.history} />
-          </div>
+          {
+            this.state.isRenaming
+              ? <PipelineRename
+                name={pipeline.name}
+                onCancel={() => this.setState({ isRenaming: false })}
+                onSave={this.renameSave}
+              />
+              : <PipelineActions
+                delete={this.props.delete}
+                rename={this.onRename}
+                pipeline={pipeline}
+                history={this.props.history}
+              />
+          }
         </div>
 
         <div
@@ -92,6 +122,6 @@ class PipelineCard extends Component {
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { selectPipeline }
+const mapDispatchToProps = { selectPipeline, renamePipeline }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PipelineCard)
