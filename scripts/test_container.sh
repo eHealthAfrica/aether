@@ -76,16 +76,10 @@ $DC_TEST up -d db-test minio-test
 if [[ $1 = "couchdb-sync" ]]; then
     $DC_TEST up -d couchdb-test redis-test
 fi
-<<<<<<< HEAD
 if [[ $1 = "producer" || $1 == "integration" ]]
 then
     echo "_____________________________________________ Starting Zookeeper Kafka & Redis"
     $DC_TEST up -d zookeeper-test kafka-test redis-producer-test
-=======
-if [[ $1 = "integration" ]]; then
-    echo_message "Starting Zookeeper and Kafka"
-    $DC_TEST up -d zookeeper-test kafka-test
->>>>>>> develop
 fi
 
 
@@ -102,17 +96,9 @@ if [[ $1 != "kernel" ]]; then
     echo_message "kernel ready!"
 
     # Producer and Integration need readonlyuser to be present
-<<<<<<< HEAD
-    if [[ $1 = "producer" || $1 == "integration" ]]
-    then
-        echo "_____________________________________________ Creating readonlyuser on Kernel DB"
-        $DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
-=======
     if [[ $1 = "producer" || $1 == "integration" ]]; then
         echo_message "Creating readonlyuser on Kernel DB"
         $DC_TEST run --rm kernel-test eval python /code/sql/create_readonly_user.py
-
->>>>>>> develop
         if [[ $1 = "integration" ]]
         then
             build_container producer
