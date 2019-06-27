@@ -65,6 +65,7 @@ services:
       # use a different database when testing the integration with another container
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
       MINIO_STORAGE_ENDPOINT: minio-test:9000
+      MINIO_STORAGE_MEDIA_URL: http://minio-test:9000/test-kernel
       MULTITENANCY: "true"
       PGHOST: db-test
       STATIC_URL: /static/
@@ -110,6 +111,7 @@ services:
       BUCKET_NAME: test-odk
       DB_NAME: test-odk
       MINIO_STORAGE_ENDPOINT: minio-test:9000
+      MINIO_STORAGE_MEDIA_URL: http://minio-test:9000/test-odk
       MULTITENANCY: "true"
       PGHOST: db-test
       STATIC_URL: /static/

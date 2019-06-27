@@ -125,25 +125,33 @@ function setup {
     cp /var/tmp/REVISION ${STATIC_ROOT}/REVISION 2>/dev/null || true
 }
 
-function test_flake8 {
-    flake8 /code/. --config=/code/conf/extras/flake8.cfg
+function test_lint {
+    flake8
 }
 
 function test_coverage {
-    RCFILE=/code/conf/extras/coverage.rc
-    PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
-    PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
-
     rm -R /code/.coverage* 2>/dev/null || true
-    coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
-    coverage combine --rcfile="$RCFILE" --append
-    coverage report  --rcfile="$RCFILE"
+
+    coverage run \
+        --concurrency=multiprocessing \
+        --parallel-mode \
+        manage.py test \
+        --parallel ${TEST_PARALLEL:-} \
+        --noinput \
+        "${@:1}"
+    coverage combine --append
+    coverage report
     coverage erase
 
     cat /code/conf/extras/good_job.txt
 }
 
 BACKUPS_FOLDER=/backups
+
+export APP_MODULE=aether.kernel
+export DJANGO_SETTINGS_MODULE="${APP_MODULE}.settings"
+
+export STORAGE_REQUIRED=true
 
 case "$1" in
     bash )
@@ -179,7 +187,7 @@ case "$1" in
         export MULTITENANCY=true
 
         setup
-        test_flake8
+        test_lint
         test_coverage "${@:2}"
     ;;
 
@@ -187,7 +195,7 @@ case "$1" in
         export TESTING=true
         export MULTITENANCY=true
 
-        test_flake8
+        test_lint
     ;;
 
     test_py | test_coverage )
@@ -200,7 +208,6 @@ case "$1" in
     start )
         # ensure that DEBUG mode is disabled
         export DEBUG=
-        export DJANGO_SETTINGS_MODULE="aether.kernel.settings"
         # Export woraround: in seconds: 20min
         export UWSGI_HARAKIRI=${UWSGI_HARAKIRI:-1200}
 

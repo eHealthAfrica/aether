@@ -20,9 +20,13 @@ import copy
 
 from django.utils.translation import ugettext as _
 
-from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
-from aether.common.multitenancy.utils import add_instance_realm_in_headers
-from aether.common.utils import request
+from django_eha_sdk.health.utils import (
+    check_external_app,
+    get_external_app_url,
+    get_external_app_token,
+)
+from django_eha_sdk.multitenancy.utils import add_instance_realm_in_headers
+from django_eha_sdk.utils import request
 
 # list of messages that can be translated
 MSG_KERNEL_CONNECTION_ERR = _(
@@ -35,10 +39,41 @@ MSG_KERNEL_RESPONSE_ERR = _(
 )
 
 NAMESPACE = 'org.ehealthafrica.aether.odk.xforms'
+EXTERNAL_APP_KERNEL = 'aether-kernel'
+
+
+class KernelSubmissionError(Exception):
+    pass
 
 
 class KernelPropagationError(Exception):
     pass
+
+
+def check_kernel_connection():
+    return check_external_app(EXTERNAL_APP_KERNEL)
+
+
+def get_kernel_url():
+    return get_external_app_url(EXTERNAL_APP_KERNEL)
+
+
+def get_kernel_auth_header():
+    return {'Authorization': f'Token {get_external_app_token(EXTERNAL_APP_KERNEL)}'}
+
+
+def get_submissions_url(submission_id=None):
+    '''
+    Returns Aether Kernel url for submissions
+    '''
+    return __get_type_url('submissions', submission_id)
+
+
+def get_attachments_url(attachment_id=None):
+    '''
+    Returns Aether Kernel url for submission attachments
+    '''
+    return __get_type_url('attachments', attachment_id)
 
 
 def propagate_kernel_project(project, family=None):
@@ -92,12 +127,12 @@ def __upsert_kernel_artefacts(project, artefacts={}):
 
     project_id = str(project.project_id)
 
-    auth_header = get_auth_header()
+    auth_header = get_kernel_auth_header()
     if not auth_header:
         raise KernelPropagationError(MSG_KERNEL_CONNECTION_ERR)
     headers = add_instance_realm_in_headers(project, auth_header)
 
-    kernel_url = get_kernel_server_url()
+    kernel_url = get_kernel_url()
     url = f'{kernel_url}/projects/{project_id}/avro-schemas/'
 
     response = request(method='patch', url=url, json=artefacts, headers=headers)
@@ -128,3 +163,15 @@ def __clean_name(value):
     Removes spaces
     '''
     return ''.join([c if c.isalnum() else ' ' for c in value]).title().replace(' ', '')
+
+
+def __get_type_url(model_type, id=None):
+    '''
+    Returns Aether Kernel url for type "XXX"
+    '''
+
+    kernel_url = get_kernel_url()
+    if not id:
+        return f'{kernel_url}/{model_type}/'
+    else:
+        return f'{kernel_url}/{model_type}/{id}/'

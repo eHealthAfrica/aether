@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import (
-    Any,
+    # Any,
     Dict,
     List,
-    Union
+    # Union
 )
 import psycopg2
 from psycopg2 import sql
@@ -59,6 +59,23 @@ WINDOW_SIZE_SEC = 3
 #             ORDER BY e.modified ASC
 #             LIMIT {limit};
 #         '''
+
+# get all schemas, regardless of tenant, etc
+SCHEMAS_STR = '''
+        SELECT
+            ps.id as schemadecorator_id,
+            ps.name as schemadecorator_name,
+            ps.modified as modified,
+            s.name as schema_name,
+            s.id as schema_id,
+            s.definition as schema_definition,
+            s.revision as schema_revision,
+            mt.realm as realm
+        FROM kernel_schemadecorator ps
+        inner join kernel_schema s on ps.schema_id = s.id
+        inner join multitenancy_mtinstance mt on ps.project_id = mt.instance_id
+        WHERE s.modified > {modified}
+        ORDER BY s.modified ASC'''
 
 # are there any new entities, regardless of tenant, etc
 NEW_STR = '''
@@ -133,6 +150,34 @@ COUNT_STR = '''
 name = 'test'
 
 
+def get_schemas():
+    since = '1970-01-01'
+    query = sql.SQL(SCHEMAS_STR).format(
+        modified=sql.Literal(since)
+    )
+    try:
+        # needs to be quick
+        promise = POSTGRES.request_connection(0, name)
+        conn = promise.get()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        cursor.execute(query)
+        for row in cursor:
+            yield {key: row[key] for key in row.keys()}
+
+    except psycopg2.OperationalError as pgerr:
+        LOG.critical(
+            'Could not access db to get topic size: %s' % pgerr)
+        return -1
+    finally:
+        try:
+            POSTGRES.release(name, conn)
+        except UnboundLocalError:
+            LOG.error(
+                f'{name} could not release a'
+                ' connection it never received.'
+            )
+
+
 def count_entities(decorator_ids: List[str]) -> int:
     query = sql.SQL(COUNT_STR.format(
         schemadecorator_ids=str(tuple(decorator_ids))
@@ -202,6 +247,7 @@ def get_time_window_filter(query_time, window_size: int = 0):
     # sets based on the insert time and now() to provide a buffer.
     TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
     window_size = WINDOW_SIZE_SEC if not window_size else window_size
+
     def fn(row):
         commited = datetime.strptime(row.get('modified')[:26], TIME_FORMAT)
         lag_time = (query_time - commited).total_seconds()

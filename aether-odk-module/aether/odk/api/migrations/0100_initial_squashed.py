@@ -83,7 +83,7 @@ class Migration(migrations.Migration):
                 ('version', models.TextField(blank=True, default='0', verbose_name='xForm version')),
                 ('md5sum', models.CharField(default='', editable=False, max_length=36, verbose_name='xForm md5sum')),
                 ('avro_schema', django.contrib.postgres.fields.jsonb.JSONField(blank=True, editable=False, null=True, verbose_name='AVRO schema')),
-                ('kernel_id', models.UUIDField(default=uuid.uuid4, help_text='This ID is used to create Aether Kernel artefacts (schema, project schema and mapping).', verbose_name='Aether Kernel ID')),
+                ('kernel_id', models.UUIDField(default=uuid.uuid4, help_text='This ID is used to create Aether Kernel artefacts (schema, schema decorator and mapping).', verbose_name='Aether Kernel ID')),
                 ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='xforms', to='odk.Project', verbose_name='project')),
                 ('surveyors', models.ManyToManyField(blank=True, help_text='If you do not specify any surveyors, EVERYONE will be able to access this xForm.', related_name='xforms', to=settings.AUTH_USER_MODEL, verbose_name='surveyors')),
             ],

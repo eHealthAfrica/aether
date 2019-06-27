@@ -30,8 +30,8 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
-from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
-from aether.common.utils import json_prettified
+from django_eha_sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
+from django_eha_sdk.utils import json_prettified
 
 from .constants import NAMESPACE
 from .validators import (
@@ -111,7 +111,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
     Project
 
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
-    .. note:: Extends from :class:`aether.common.multitenancy.models.MultitenancyBaseAbstract`
+    .. note:: Extends from :class:`django_eha_sdk.multitenancy.models.MultitenancyBaseAbstract`
 
     :ivar text      salad_schema:    Salad schema (optional).
         Semantic Annotations for Linked Avro Data (SALAD)
@@ -246,7 +246,8 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     mappingset = models.ForeignKey(
         to=MappingSet,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name=_('mapping set'),
     )
 
@@ -254,8 +255,6 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
     project = models.ForeignKey(
         to=Project,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         verbose_name=_('project'),
     )
 
@@ -265,18 +264,15 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     @property
     def name(self):  # overrides base model field
-        return f'{self.mappingset.project.name}-{self.mappingset.name}'
+        name = self.mappingset.name if self.mappingset else self.id
+        return f'{self.project.name}-{name}'
 
     def save(self, *args, **kwargs):
-        self.project = self.mappingset.project
+        self.project = self.mappingset.project if self.mappingset else self.project
         super(Submission, self).save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.id}'
-
-    def get_mt_instance(self):
-        # because project can be null we need to override the method
-        return self.mappingset.project
 
     class Meta:
         default_related_name = 'submissions'
@@ -409,6 +405,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
     :ivar text      transport_rule:    The transport rule.
     :ivar text      masked_fields:     The list of fields that must be masked before transport.
     :ivar bool      is_encrypted:      Is the transport encrypted?
+    :ivar JSON      topic:             The kafka topic reference
     :ivar Schema    schema:            Schema.
     :ivar Project   project:           Project.
 
@@ -418,6 +415,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
     transport_rule = models.TextField(null=True, blank=True, verbose_name=_('transport rule'))
     masked_fields = models.TextField(null=True, blank=True, verbose_name=_('masked fields'))
     is_encrypted = models.BooleanField(default=False, verbose_name=_('encrypted?'))
+    topic = JSONField(null=True, blank=True, verbose_name=_('topic'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
@@ -425,6 +423,15 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
     @property
     def revision(self):  # overrides base model field
         return None
+
+    @property
+    def topic_prettified(self):
+        return json_prettified(self.topic)
+
+    def save(self, *args, **kwargs):
+        if self.topic is None:
+            self.topic = {'name': self.name}
+        super(SchemaDecorator, self).save(*args, **kwargs)
 
     class Meta:
         default_related_name = 'schemadecorators'

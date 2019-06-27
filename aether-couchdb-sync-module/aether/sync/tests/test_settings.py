@@ -28,5 +28,9 @@ class SettingsTest(TestCase):
         self.assertTrue(settings.TESTING)
         self.assertFalse(settings.DEBUG)
 
+        self.assertFalse(settings.STORAGE_REQUIRED)
+        self.assertTrue(settings.SCHEDULER_REQUIRED)
+        self.assertFalse(settings.WEBPACK_REQUIRED)
+
+        self.assertEqual(settings.APP_MODULE, 'aether.sync')
         self.assertEqual(settings.ROOT_URLCONF, 'aether.sync.urls')
-        self.assertIsNone(settings.DJANGO_STORAGE_BACKEND)

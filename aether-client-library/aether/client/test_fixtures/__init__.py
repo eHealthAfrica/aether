@@ -19,6 +19,9 @@
 from aether.client import fixtures as fix
 import os
 import pytest
+import random
+import string
+from uuid import uuid4
 
 from aether.client import Client
 
@@ -27,9 +30,26 @@ USER = os.environ['KERNEL_USERNAME']
 PW = os.environ['KERNEL_PASSWORD']
 
 
+def simple_entity(value_size=10):
+    return {
+        'id': str(uuid4()),
+        'value': ''.join(
+            random.choices(
+                string.ascii_uppercase + string.digits, k=value_size)
+        )
+    }
+
+
 @pytest.fixture(scope='session')
 def client():
-    return Client(URL, USER, PW)
+    return Client(
+        URL,
+        USER,
+        PW,
+        log_level='DEBUG',
+        auth_type='basic',
+        realm='test'
+    )
 
 
 @pytest.fixture(scope='session')
@@ -70,6 +90,41 @@ def schemadecorators(client, project, schemas):
         )
         sd_objects.append(client.schemadecorators.create(data=sd))
     return sd_objects
+
+
+@pytest.fixture(scope='session')
+def single_entities(client, schemadecorators):
+    sd = [i for i in schemadecorators if i.name == 'Simple'][0]
+    Entity = client.get_model('Entity')
+
+    def _gen(count):
+        entities = []
+        for i in range(count):
+            e = Entity(**{
+                'schemadecorator': sd['id'],
+                'status': 'Publishable',
+                'payload': simple_entity()
+            })
+            entities.append(client.entities.create(data=e))
+        return entities
+    yield _gen
+
+
+@pytest.fixture(scope='session')
+def bulk_entities(client, schemadecorators):
+    sd = [i for i in schemadecorators if i.name == 'Simple'][0]
+
+    def _gen(count):
+        entities = []
+        for i in range(count):
+            e = {
+                'schemadecorator': sd['id'],
+                'status': 'Publishable',
+                'payload': simple_entity()
+            }
+            entities.append(e)
+        return client.entities.create(data=entities)
+    yield _gen
 
 
 @pytest.fixture(scope='session')

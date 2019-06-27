@@ -18,11 +18,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from confluent_kafka import KafkaException
+# from confluent_kafka import KafkaException
 from datetime import datetime
 import pytest
 import requests
-import threading
+# import threading
 from time import sleep
 from typing import (
     List
@@ -32,7 +32,7 @@ import uuid
 from producer.logger import LOG
 from producer.redis_producer import RedisProducer
 from producer.replay_manager import (
-    count_entities, enqueue_entity, get_all_db_updates,
+    count_entities, enqueue_entity, get_all_db_updates, get_schemas
 )
 from producer.resource import (
     Event,
@@ -343,6 +343,10 @@ def test_kernel_entities_get(get_resource_helper):
     # assert(len(list(entities)) == 0)
     start = datetime.now()
     entities = get_all_db_updates(min_lag=0.01)
+    schemas = list(get_schemas())
+    for s in schemas:
+        LOG.debug(str(s))
+    assert(len(schemas) > 0)
     keys = []
     c = 0
     for e in entities:

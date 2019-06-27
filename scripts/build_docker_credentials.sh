@@ -69,7 +69,7 @@ cat << EOF
 # ------------------------------------------------------------------
 # Authentication
 # ==================================================================
-# KEYCLOAK_BEHIND_SCENES=true
+KEYCLOAK_BEHIND_SCENES=
 KEYCLOAK_SERVER_URL=http://aether.local/auth/realms
 KEYCLOAK_ADMIN_USERNAME=admin
 KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
@@ -161,7 +161,8 @@ PRODUCER_ADMIN_PW=$(gen_random_string)
 # ------------------------------------------------------------------
 # Other
 # ==================================================================
-TEST_PARALLEL=8
+# set to 1 to disable parallel execution
+TEST_PARALLEL=
 
 # Docker network
 NETWORK_NAME=aether_dev

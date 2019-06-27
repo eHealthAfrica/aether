@@ -18,12 +18,12 @@
 
 from django_rq import job
 
-from aether.common.kernel.utils import test_connection
+from .api.kernel_utils import check_kernel_connection
 from .api.couchdb_sync import import_synced_devices
 
 
 @job('default', timeout=15 * 60)
 def import_synced_devices_task():
-    if test_connection():
+    if check_kernel_connection():
         return import_synced_devices()
     return {}

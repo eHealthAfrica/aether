@@ -17,7 +17,7 @@
 # under the License.
 
 import json
-import mock
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.test import override_settings
