@@ -160,6 +160,7 @@ def get_kernel(ProducerManagerSettings) -> Iterable[Client]:
         S['kernel_url'],
         S['kernel_username'],
         S['kernel_password'],
+        auth_type='basic'
     )
     yield kernel
 
@@ -229,8 +230,7 @@ def generate_kernel_entities(get_kernel, get_kernel_fixtures):
             cleanup_keys.append(e.id)
             entities.append(entity)
         try:
-            entities = kernel.entities.create(data=entities, many=True)
-            LOG.debug(entities)
+            entities = kernel.entities.create(data=entities)
         except Exception as err:
             LOG.error(err)
 
@@ -240,7 +240,7 @@ def generate_kernel_entities(get_kernel, get_kernel_fixtures):
 
     yield make_entity_instances
     # clean-up kernel
-    
+
     # for _id in cleanup_keys:
     #     try:
     #         kernel.entities.delete(id=_id)

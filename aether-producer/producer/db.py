@@ -42,7 +42,6 @@ from typing import (
     ClassVar,
     Dict,
     NamedTuple,
-    Union,
     TYPE_CHECKING
 )
 

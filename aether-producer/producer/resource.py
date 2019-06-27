@@ -18,7 +18,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from datetime import datetime
 import json
 import redis
 from typing import (

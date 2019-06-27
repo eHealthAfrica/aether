@@ -39,6 +39,7 @@ setup(
 
     setup_requires=['pytest'],
     tests_require=[
+        'aether.client',
         'pytest',
         'requests',
         'sqlalchemy',

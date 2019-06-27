@@ -60,7 +60,6 @@ class KafkaStatus(enum.Enum):
     SUBMISSION_SUCCESS = 3
 
 
-
 class ProducerManager(object):
     # Serves status & healthcheck over HTTP
     # Dispatches Signals
@@ -160,11 +159,6 @@ class ProducerManager(object):
             LOG.debug("Connection problem: %s" % rce)
             return False
         return True
-
-    # Connect to sqlite
-    def init_db(self):
-        db.init()
-        self.logger.info("OffsetDB initialized")
 
     # Main Schema Loop
     # Spawns TopicManagers for new schemas, updates schemas for workers on change.
