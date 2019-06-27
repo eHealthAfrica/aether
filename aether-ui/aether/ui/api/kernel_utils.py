@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django_eha_sdk.health.utils import (
+from aether.sdk.health.utils import (
     check_external_app,
     get_external_app_url,
     get_external_app_token,
@@ -29,8 +29,8 @@ def check_kernel_connection():
     return check_external_app(EXTERNAL_APP_KERNEL)
 
 
-def get_kernel_url():
-    return get_external_app_url(EXTERNAL_APP_KERNEL)
+def get_kernel_url(request=None):
+    return get_external_app_url(EXTERNAL_APP_KERNEL, request)
 
 
 def get_kernel_auth_header():

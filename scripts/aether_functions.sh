@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -46,9 +46,8 @@ function create_docker_assets {
     ./scripts/build_docker_assets.sh
 }
 
-# build Aether client & Aether Common python libraries
+# build Aether client python library
 function build_libraries_and_distribute {
-    ./scripts/build_common_and_distribute.sh
     ./scripts/build_client_and_distribute.sh
 }
 
@@ -57,7 +56,7 @@ function build_ui_assets {
     container=ui-assets
 
     build_container $container
-    docker-compose run $container build
+    docker-compose run --rm $container build
 }
 
 # build the indicated container
@@ -86,13 +85,13 @@ function pip_freeze_container {
     DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml"
 
     echo_message "Upgrading container $container"
-    $DC run --no-deps $container pip_freeze
+    $DC run --rm --no-deps $container pip_freeze
 }
 
 # kernel readonly user (used by Aether Producer)
 function create_readonly_user {
     docker-compose up -d db
-    docker-compose run --no-deps kernel setup
-    docker-compose run --no-deps kernel eval python /code/sql/create_readonly_user.py
+    docker-compose run --rm --no-deps kernel setup
+    docker-compose run --rm --no-deps kernel eval python /code/sql/create_readonly_user.py
     docker-compose kill
 }

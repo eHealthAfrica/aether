@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -29,8 +29,8 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
-from django_eha_sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
-from django_eha_sdk.utils import json_prettified
+from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
+from aether.sdk.utils import json_prettified
 
 from .xform_utils import (
     get_xform_data_from_xml,

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -32,9 +32,8 @@ function prepare_dependencies {
     docker volume  create ${DB_VOLUME}    || true
 
     build_app ui-assets
-    docker-compose run ui-assets build
+    docker-compose run --rm ui-assets build
 
-    ./scripts/build_common_and_distribute.sh
     ./scripts/build_client_and_distribute.sh
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -123,6 +123,16 @@ export const isEmpty = (value) => (
  */
 export const replaceItemInList = (list, obj) => (
   list.map(item => item.id === obj.id ? obj : item)
+)
+
+/**
+ * Removes the given object in the list, identified by the `id`
+ *
+ * @param {Array}   list
+ * @param {Object}  obj
+ */
+export const removeItemFromList = (list, obj) => (
+  list.filter(item => item.id !== obj.id)
 )
 
 /**

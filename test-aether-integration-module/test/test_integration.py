@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -46,8 +46,8 @@ def test_4_check_producer_status(wait_for_producer_status):
 
 
 def test_5_check_producer_topics(producer_topics):
-    assert(SEED_TYPE in producer_topics.keys())
-    assert(int(producer_topics[SEED_TYPE]['count']) is SEED_ENTITIES)
+    assert(KAFKA_SEED_TYPE in producer_topics.keys())
+    assert(int(producer_topics[KAFKA_SEED_TYPE]['count']) is SEED_ENTITIES)
 
 
 def test_6_check_stream_entities(read_people, entities):
@@ -59,22 +59,22 @@ def test_6_check_stream_entities(read_people, entities):
             failed.append(_id)
     assert(len(failed) == 0)
     assert(len(kernel_messages) == len(kafka_messages))
-    assert(producer_topic_count(SEED_TYPE) == len(kafka_messages))
+    assert(producer_topic_count(KAFKA_SEED_TYPE) == len(kafka_messages))
 
 
 def test_7_control_topic():
-    producer_control_topic(SEED_TYPE, 'pause')
+    producer_control_topic(KAFKA_SEED_TYPE, 'pause')
     sleep(.5)
-    op = topic_status(SEED_TYPE)['operating_status']
+    op = topic_status(KAFKA_SEED_TYPE)['operating_status']
     assert(op == 'TopicStatus.PAUSED')
-    producer_control_topic(SEED_TYPE, 'resume')
+    producer_control_topic(KAFKA_SEED_TYPE, 'resume')
     sleep(.5)
-    op = topic_status(SEED_TYPE)['operating_status']
+    op = topic_status(KAFKA_SEED_TYPE)['operating_status']
     assert(op == 'TopicStatus.NORMAL')
-    producer_control_topic(SEED_TYPE, 'rebuild')
+    producer_control_topic(KAFKA_SEED_TYPE, 'rebuild')
     sleep(.5)
     for x in range(120):
-        op = topic_status(SEED_TYPE)['operating_status']
+        op = topic_status(KAFKA_SEED_TYPE)['operating_status']
         if op != 'TopicStatus.REBUILDING':
             return
         sleep(1)

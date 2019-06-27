@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -20,7 +20,6 @@
 
 import React, { Component } from 'react'
 import { defineMessages, injectIntl } from 'react-intl'
-import { Link } from 'react-router-dom'
 
 import { getLoggedInUser } from '../utils'
 
@@ -39,7 +38,7 @@ class NavBar extends Component {
 
     return (
       <div data-qa='navbar' className='navbar top-nav'>
-        <Link className='top-nav-logo' title='aether' onClick={this.props.cb}>
+        <a className='top-nav-logo' title='aether' onClick={this.props.cb}>
           <div className='logo-container'>
             <div className='flipper'>
               <div className='front' />
@@ -47,7 +46,7 @@ class NavBar extends Component {
             </div>
           </div>
           <span data-app-name='app-name'><b>ae</b>ther</span>
-        </Link>
+        </a>
 
         { this.props.showBreadcrumb &&
           <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>

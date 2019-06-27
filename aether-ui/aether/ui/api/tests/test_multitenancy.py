@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -28,8 +28,8 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from django_eha_sdk.multitenancy import utils as mt_utils
-from django_eha_sdk.multitenancy.models import MtInstance
+from aether.sdk.multitenancy import utils as mt_utils
+from aether.sdk.multitenancy.models import MtInstance
 
 from ..kernel_utils import get_kernel_auth_header
 from .. import models, serializers, utils

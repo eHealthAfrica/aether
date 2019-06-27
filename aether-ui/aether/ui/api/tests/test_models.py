@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -20,7 +20,7 @@ from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase, override_settings
-from django_eha_sdk.unittest import MockResponse
+from aether.sdk.unittest import MockResponse
 
 from ..kernel_utils import (
     check_kernel_connection,

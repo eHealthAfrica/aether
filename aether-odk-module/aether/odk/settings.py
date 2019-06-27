@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -16,11 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
+
 # Common settings
 # ------------------------------------------------------------------------------
 
-from aether.common.settings import *  # noqa
-from aether.common.settings import MIGRATION_MODULES
+from aether.sdk.conf.settings_aether import *  # noqa
+from aether.sdk.conf.settings_aether import MIGRATION_MODULES
 
 
 # ODK Configuration
@@ -35,3 +37,5 @@ MULTITENANCY_MODEL = 'odk.Project'
 MIGRATION_MODULES['odk'] = 'aether.odk.api.migrations'
 
 SURVEYOR_GROUP_NAME = 'surveyor'
+
+ODK_COLLECT_ENDPOINT = os.environ.get('ODK_COLLECT_ENDPOINT', '')

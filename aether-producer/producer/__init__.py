@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -35,7 +35,6 @@ import spavro.schema
 import sys
 import traceback
 
-from aether.client import Client
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient
 from flask import Flask, Response, request, jsonify
@@ -45,12 +44,9 @@ from gevent.pywsgi import WSGIServer
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import DictCursor
-import requests
-from requests.exceptions import ConnectionError
 from spavro.datafile import DataFileWriter, DataFileReader
 from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
-from urllib3.exceptions import MaxRetryError
 
 from producer.db import OFFSET_MANAGER
 from producer.db import KERNEL_DB as POSTGRES
@@ -64,25 +60,6 @@ class KafkaStatus(enum.Enum):
     SUBMISSION_SUCCESS = 3
 
 
-class KernelHandler(object):
-    # Context for Kernel, which nulls kernel for reconnection if an error occurs
-    # Errors of type ignored_exceptions are logged but don't null kernel
-    def __init__(self, handler, ignored_exceptions=None):
-        self.handler = handler
-        self.ignored_exceptions = ignored_exceptions
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, traceback):
-        if exc_type:
-            if self.ignored_exceptions and exc_type in self.ignored_exceptions:
-                return True
-            self.handler.kernel = None
-            LOG.info("Kernel Connection Failed: %s" % exc_type)
-            return False
-        return True
-
 
 class ProducerManager(object):
     # Serves status & healthcheck over HTTP
@@ -90,6 +67,21 @@ class ProducerManager(object):
     # Keeps track of schemas
     # Spawns a TopicManager for each schema type in Kernel
     # TopicManager registers own eventloop greenlet (update_kafka) with ProducerManager
+
+    SCHEMAS_STR = '''
+            SELECT
+                ps.id as schemadecorator_id,
+                ps.name as schemadecorator_name,
+                ps.modified as modified,
+                s.name as schema_name,
+                s.id as schema_id,
+                s.definition as schema_definition,
+                s.revision as schema_revision,
+                mt.realm as realm
+            FROM kernel_schemadecorator ps
+            inner join kernel_schema s on ps.schema_id = s.id
+            inner join multitenancy_mtinstance mt on ps.project_id = mt.instance_id
+            ORDER BY s.modified ASC'''
 
     def __init__(self, settings):
         self.settings = settings
@@ -107,11 +99,22 @@ class ProducerManager(object):
         # Clear objects and start
         self.kernel = None
         self.kafka = KafkaStatus.SUBMISSION_PENDING
-        self.kafka_admin_client = AdminClient(
-            {"bootstrap.servers": self.settings.get("kafka_url")}
-        )
+        self.get_admin_client()
         self.topic_managers = {}
         self.run()
+
+    def get_admin_client(self):
+        kafka_settings = {"bootstrap.servers": self.settings.get("kafka_url")}
+        if self.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
+            # Let Producer use Kafka SU to produce
+            self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
+            kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
+            kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
+            kafka_settings['sasl.username'] = \
+                self.settings.get('KAFKA_SU_USER')
+            kafka_settings['sasl.password'] = \
+                self.settings.get('KAFKA_SU_PW')
+        self.kafka_admin_client = AdminClient(kafka_settings)
 
     def keep_alive_loop(self):
         # Keeps the server up in case all other threads join at the same time.
@@ -121,7 +124,6 @@ class ProducerManager(object):
     def run(self):
         self.threads = []
         self.threads.append(gevent.spawn(self.keep_alive_loop))
-        self.threads.append(gevent.spawn(self.connect_aether))
         self.threads.append(gevent.spawn(self.check_schemas))
         # Also going into this greenlet pool:
         # Each TopicManager.update_kafka() from TopicManager.init
@@ -159,47 +161,10 @@ class ProducerManager(object):
             return False
         return True
 
-    # Maintain Aether Connection
-    def connect_aether(self):
-        self.kernel = None
-        while not self.killed:
-            errored = False
-            try:
-                if not self.kernel:
-                    LOG.info('Connecting to Aether...')
-                    with KernelHandler(self):
-                        res = requests.head("%s/healthcheck" % self.settings['kernel_url'])
-                        if res.status_code != 404:
-                            LOG.info('Kernel available without credentials.')
-                        try:
-                            self.kernel = Client(
-                                self.settings['kernel_url'],
-                                self.settings['kernel_username'],
-                                self.settings['kernel_password'],
-                            )
-                            LOG.info('Connected to Aether.')
-                            continue
-                        except UnboundLocalError:
-                            # This is an unclear error from AetherClient
-                            raise ConnectionError("Bad Credentials passed to Aether")
-                self.safe_sleep(self.settings['start_delay'])
-
-            except ConnectionError as ce:
-                errored = True
-                LOG.debug(ce)
-            except MaxRetryError as mre:
-                errored = True
-                LOG.debug(mre)
-            except Exception as err:
-                errored = True
-                LOG.debug(err)
-
-            if errored:
-                LOG.info('No Aether connection...')
-                self.safe_sleep(self.settings['start_delay'])
-            errored = False
-
-        LOG.debug('No longer attempting to connect to Aether')
+    # Connect to sqlite
+    def init_db(self):
+        db.init()
+        self.logger.info("OffsetDB initialized")
 
     # Main Schema Loop
     # Spawns TopicManagers for new schemas, updates schemas for workers on change.
@@ -208,32 +173,61 @@ class ProducerManager(object):
         # Creates TopicManagers for found schemas.
         # Updates TopicManager.schema on schema change
         while not self.killed:
-            if not self.kernel:
+            schemas = []
+            try:
+                schemas = self.get_schemas()
+                self.kernel = datetime.now().isoformat()
+            except Exception as err:
+                self.kernel = None
+                self.logger.error(f'no database connection: {err}')
                 sleep(1)
-            else:
-                schemas = []
-                with KernelHandler(self):
-                    schemas = [
-                        schema for schema in self.kernel.schemas.paginated('list')]
-                for schema in schemas:
-                    schema_name = schema['name']
-                    if schema_name not in self.topic_managers.keys():
-                        LOG.info(
-                            "New topic connected: %s" % schema_name)
-                        self.topic_managers[schema_name] = TopicManager(
-                            self, schema)
+                continue
+            for schema in schemas:
+                _name = schema['schema_name']
+                realm = schema['realm']
+                schema_name = f'{realm}.{_name}'
+                if schema_name not in self.topic_managers.keys():
+                    self.logger.info(
+                        "New topic connected: %s" % schema_name)
+                    self.topic_managers[schema_name] = TopicManager(
+                        self, schema, realm)
+                else:
+                    topic_manager = self.topic_managers[schema_name]
+                    if topic_manager.schema_changed(schema):
+                        topic_manager.update_schema(schema)
+                        self.logger.debug(
+                            "Schema %s updated" % schema_name)
                     else:
-                        topic_manager = self.topic_managers[schema_name]
-                        if topic_manager.schema_changed(schema):
-                            topic_manager.update_schema(schema)
-                            LOG.debug(
-                                "Schema %s updated" % schema_name)
-                        else:
-                            LOG.debug(
-                                "Schema %s unchanged" % schema_name)
-                # Time between checks for schema change
-                self.safe_sleep(self.settings['sleep_time'])
-        LOG.debug('No longer checking schemas')
+                        self.logger.debug(
+                            "Schema %s unchanged" % schema_name)
+            # Time between checks for schema change
+            self.safe_sleep(self.settings['sleep_time'])
+        self.logger.debug('No longer checking schemas')
+
+    def get_schemas(self):
+        name = 'schemas_query'
+        query = sql.SQL(ProducerManager.SCHEMAS_STR)
+        try:
+            # needs to be quick(ish)
+            promise = POSTGRES.request_connection(1, name)
+            conn = promise.get()
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            cursor.execute(query)
+            for row in cursor:
+                yield {key: row[key] for key in row.keys()}
+
+        except psycopg2.OperationalError as pgerr:
+            self.logger.critical(
+                'Could not access db to get topic size: %s' % pgerr)
+            return -1
+        finally:
+            try:
+                POSTGRES.release(name, conn)
+            except UnboundLocalError:
+                self.logger.error(
+                    f'{name} could not release a'
+                    ' connection it never received.'
+                )
 
     # Flask Functions
 
@@ -379,8 +373,10 @@ class TopicManager(object):
         FROM kernel_entity e
         inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
         inner join kernel_schema s on sd.schema_id = s.id
+        inner join multitenancy_mtinstance mt on sd.project_id = mt.instance_id
         WHERE e.modified > {modified}
         AND s.name = {schema_name}
+        AND mt.realm = {realm}
         LIMIT 1; '''
 
     # Count how many unique (controlled by kernel) messages should currently be in this topic
@@ -390,7 +386,9 @@ class TopicManager(object):
             FROM kernel_entity e
             inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
             inner join kernel_schema s on sd.schema_id = s.id
-            WHERE s.name = {schema_name};
+            inner join multitenancy_mtinstance mt on sd.project_id = mt.instance_id
+            WHERE s.name = {schema_name}
+            AND mt.realm = {realm};
     '''
 
     # Changes pull query
@@ -409,15 +407,19 @@ class TopicManager(object):
             FROM kernel_entity e
             inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
             inner join kernel_schema s on sd.schema_id = s.id
+            inner join multitenancy_mtinstance mt on sd.project_id = mt.instance_id
             WHERE e.modified > {modified}
+            AND mt.realm = {realm}
             AND s.name = {schema_name}
             ORDER BY e.modified ASC
             LIMIT {limit};
         '''
 
-    def __init__(self, server_handler, schema):
+    def __init__(self, server_handler, schema, realm):
         self.context = server_handler
-        self.name = schema['name']
+        self.logger = self.context.logger
+        self.name = schema['schema_name']
+        self.realm = realm
         self.offset = ""
         self.operating_status = TopicStatus.NORMAL
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
@@ -436,10 +438,11 @@ class TopicManager(object):
         self.kafka_failure_wait_time = self.context.settings.get(
             'kafka_failure_wait_time', 10)
         try:
-            self.topic_name = self.context.settings \
+            topic_base = self.context.settings \
                 .get('topic_settings', {}) \
                 .get('name_modifier', "%s") \
                 % self.name
+            self.topic_name = f'{self.realm}.{topic_base}'
         except Exception:  # Bad Name
             LOG.critical(('invalid name_modifier using topic name for topic:'
                          f'{self.name} Update configuration for'
@@ -448,14 +451,28 @@ class TopicManager(object):
             # the producer so the configuration can be updated.
             sys.exit(1)
         self.update_schema(schema)
+        self.get_producer()
+        # Spawn worker and give to pool.
+        self.context.threads.append(gevent.spawn(self.update_kafka))
+
+    def get_producer(self):
         kafka_settings = self.context.settings.get('kafka_settings')
         # apply setting from root config to be able to use env variables
         kafka_settings["bootstrap.servers"] = self.context.settings.get(
             "kafka_url")
         self.kafka_settings = kafka_settings
+        # check for SASL
+        if self.context.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
+            # Let Producer use Kafka SU to produce
+            self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
+            self.kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
+            self.kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
+            self.kafka_settings['sasl.username'] = \
+                self.context.settings.get('KAFKA_SU_USER')
+            self.kafka_settings['sasl.password'] = \
+                self.context.settings.get('KAFKA_SU_PW')
+
         self.producer = Producer(**self.kafka_settings)
-        # Spawn worker and give to pool.
-        self.context.threads.append(gevent.spawn(self.update_kafka))
 
     # API Calls to Control Topic
 
@@ -534,6 +551,7 @@ class TopicManager(object):
         query = sql.SQL(TopicManager.NEW_STR).format(
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
+            realm=sql.Literal(self.realm)
         )
         try:
             # Medium priority
@@ -583,6 +601,7 @@ class TopicManager(object):
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
             limit=sql.Literal(self.limit),
+            realm=sql.Literal(self.realm)
         )
         query_time = datetime.now()
 
@@ -614,6 +633,7 @@ class TopicManager(object):
     def get_topic_size(self):
         query = sql.SQL(TopicManager.COUNT_STR).format(
             schema_name=sql.Literal(self.name),
+            realm=sql.Literal(self.realm)
         )
         try:
             # needs to be quick
@@ -648,7 +668,7 @@ class TopicManager(object):
         # be compared for differences. literal_eval fixes this. As such, this is used
         # by the schema_changed() method.
         # schema_obj is a nested OrderedDict, which needs to be stringified
-        return ast.literal_eval(json.dumps(schema_obj['definition']))
+        return ast.literal_eval(json.dumps(schema_obj['schema_definition']))
 
     def schema_changed(self, schema_candidate):
         # for use by ProducerManager.check_schemas()
@@ -756,6 +776,7 @@ class TopicManager(object):
                     writer.flush()
                     raw_bytes = bytes_writer.getvalue()
 
+                self.producer.poll(0)
                 self.producer.produce(
                     self.topic_name,
                     raw_bytes,

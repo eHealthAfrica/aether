@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -71,13 +71,6 @@ div.code {
 
 .contract-form {
   margin: 3rem 2.3rem 1rem;
-
-  .contract-name {
-    font-size: $font-size-l;
-    font-weight: 300;
-    width: 100%;
-    margin-right: 1rem;
-  }
 }
 
 .identity-mapping {
@@ -105,4 +98,12 @@ div.code {
   margin: 2rem 0;
   padding: 2rem 0;
   border-top: 1px dashed rgba($light-grey, .4);
+}
+
+.settings-actions {
+  display: flex;
+
+  .btn-red {
+    margin-left: auto;
+  }
 }

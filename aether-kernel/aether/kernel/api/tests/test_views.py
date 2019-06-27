@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -714,6 +714,17 @@ class ViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(self.submission.entities.count(), 0)
 
+    def test_schema_unique_usage(self):
+        url = reverse('schema-unique-usage')
+        data = [str(self.mapping.id)]
+        response = self.client.post(url, data, content_type='application/json')
+        result = response.json()
+        self.assertEqual(next(iter(result)), self.schema.name)
+
+        data = ['wrong-id']
+        response = self.client.post(url, data, content_type='application/json')
+        self.assertEqual(response.status_code, 500)
+
     def test_entity__submit_mutiple__success(self):
         response = self.client.post(reverse('entity-list'),
                                     json.dumps([]),
@@ -725,3 +736,33 @@ class ViewsTest(TestCase):
         url = reverse('api_schema', kwargs={'version': 'v1'})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_mapping_delete(self):
+        url = reverse('mapping-delete-artefacts', kwargs={'pk': self.mapping.pk})
+        data = {
+            'entities': True,
+            'schemas': True
+        }
+        response = self.client.post(
+            url,
+            data=data,
+            content_type='application/json'
+        ).json()
+        self.assertEqual(response['entities']['total'], 3)
+        self.assertTrue(response['schemas'][self.schema.name]['is_deleted'])
+
+    def test_mappingset_delete(self):
+        url = reverse('mappingset-delete-artefacts', kwargs={'pk': self.mappingset.pk})
+        data = {
+            'entities': True,
+            'schemas': True,
+            'submissions': True
+        }
+        response = self.client.post(
+            url,
+            data=data,
+            content_type='application/json'
+        ).json()
+        self.assertEqual(response['entities']['total'], 3)
+        self.assertEqual(response['submissions'], 1)
+        self.assertTrue(response['schemas'][self.schema.name]['is_deleted'])

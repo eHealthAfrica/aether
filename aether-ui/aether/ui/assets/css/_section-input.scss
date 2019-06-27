@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -52,7 +52,7 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    flex: 1;
     position: relative;
     justify-content: space-between;
     align-items: flex-start;

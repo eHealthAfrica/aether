@@ -1,49 +1,50 @@
 {
-    "start_delay": 5,
-    "sleep_time": 10,
-    "log_level": "ERROR",
-    "window_size_sec": 2,
+  "start_delay": 5,
+  "sleep_time": 10,
+  "log_level": "ERROR",
+  "window_size_sec": 2,
 
-    "postgres_pull_limit": 250,
-    "postgres_host": "db",
-    "postgres_port": 5432,
-    "postgres_dbname": "aether",
-    "postgres_user": "readonlyuser",
-    "postgres_password": "",
+  "postgres_pull_limit": 250,
+  "postgres_host": "db",
+  "postgres_port": 5432,
+  "postgres_dbname": "aether",
+  "postgres_user": "readonlyuser",
+  "postgres_password": "",
 
-    "offset_db_pool_size" : 6,
-    "kernel_db_pool_size" : 6,
+  "offset_db_pool_size": 6,
+  "kernel_db_pool_size": 6,
 
-    "kernel_url": "http://kernel:8100",
-    "kernel_admin_username": "admin",
-    "kernel_admin_password": "",
-
-    "kafka_failure_wait_time": 10,
-    "kafka_url": "kafka:29092",
-    "kafka_settings": {
-        "acks": 1,
-        "max.in.flight.requests.per.connection": 1,
-        "linger.ms": 200,
-        "retry.backoff.ms": 25,
-        "default.topic.config": {
-            "request.timeout.ms": 500,
-            "message.timeout.ms": 1000
-        },
-        "message.send.max.retries": 9,
-        "queue.buffering.max.ms": 100,
-        "socket.blocking.max.ms": 100,
-        "socket.timeout.ms": 10000
+  "kernel_url": "http://kernel:8100",
+  "kernel_admin_username": "admin",
+  "kernel_admin_password": "",
+  "kafka_failure_wait_time": 10,
+  "kafka_url": "kafka:29092",
+  "kafka_settings": {
+    "acks": 1,
+    "max.in.flight.requests.per.connection": 1,
+    "linger.ms": 200,
+    "retry.backoff.ms": 25,
+    "default.topic.config": {
+        "request.timeout.ms": 500,
+        "message.timeout.ms": 1000
     },
+    "message.send.max.retries": 9,
+    "queue.buffering.max.ms": 100,
+    "socket.blocking.max.ms": 100,
+    "socket.timeout.ms": 10000,
+    "message.send.max.retries": 9,
+    "queue.buffering.max.ms": 5000,
+    "socket.timeout.ms": 10000
+  },
+  "server_port": 5005,
+  "server_ip": "",
 
-    "server_port": 5005,
-    "server_ip": "",
+  "flask_settings": {
+    "max_connections": 3,
+    "pretty_json_status": true
+  },
 
-    "flask_settings": {
-        "max_connections": 3,
-        "pretty_json_status": true
-    },
-
-    "topic_settings": {
-        "name_modifier": "%s"
-    }
+  "topic_settings": {
+    "name_modifier": "%s"
+  }
 }

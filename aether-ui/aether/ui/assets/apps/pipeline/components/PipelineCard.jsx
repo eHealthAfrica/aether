@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -23,15 +23,38 @@ import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
 import PipelineInfoButton from './PipelineInfoButton'
-import ContractAddButton from './ContractAddButton'
 import ContractCard from './ContractCard'
+import PipelineRename from './PipelineRename'
+import PipelineActions from './PipelineActions'
 
-import { selectPipeline } from '../redux'
+import { selectPipeline, renamePipeline } from '../redux'
 
 class PipelineCard extends Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      isRenaming: false
+    }
+
+    this.onRename = this.onRename.bind(this)
+    this.renameSave = this.renameSave.bind(this)
+  }
+
   onPipelineSelect (pipeline) {
     this.props.selectPipeline(pipeline.id)
-    this.props.history.push(`/${pipeline.id}`)
+  }
+
+  onRename () {
+    this.setState({
+      isRenaming: true
+    })
+  }
+
+  renameSave (newName) {
+    this.props.renamePipeline(this.props.pipeline.id, newName)
+    this.setState({
+      isRenaming: false
+    })
   }
 
   render () {
@@ -39,6 +62,26 @@ class PipelineCard extends Component {
 
     return (
       <div className='pipeline-preview'>
+        <div className='preview-heading'>
+          <span className='pipeline-name'>
+            // { pipeline.name }
+          </span>
+          {
+            this.state.isRenaming
+              ? <PipelineRename
+                name={pipeline.name}
+                onCancel={() => this.setState({ isRenaming: false })}
+                onSave={this.renameSave}
+              />
+              : <PipelineActions
+                delete={this.props.delete}
+                rename={this.onRename}
+                pipeline={pipeline}
+                history={this.props.history}
+              />
+          }
+        </div>
+
         <div
           className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`}
           onClick={this.onPipelineSelect.bind(this, pipeline)}>
@@ -52,8 +95,8 @@ class PipelineCard extends Component {
           }
 
           <div className='input-heading'>
-            <span className='badge badge-c badge-big'>
-              <i className='fas fa-file fa-sm' />
+            <span className='badge badge-circle badge-c'>
+              <i className='fas fa-file' />
             </span>
             <span className='input-name'>
               { pipeline.name } { pipeline.mappingset && <PipelineInfoButton pipeline={pipeline} /> }
@@ -71,15 +114,14 @@ class PipelineCard extends Component {
               />
             ))
           }
-
-          <ContractAddButton pipeline={pipeline} history={this.props.history} />
         </div>
+
       </div>
     )
   }
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { selectPipeline }
+const mapDispatchToProps = { selectPipeline, renamePipeline }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PipelineCard)

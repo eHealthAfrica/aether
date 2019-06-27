@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -22,8 +22,8 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from django_eha_sdk.multitenancy.serializers import MtModelSerializer, MtPrimaryKeyRelatedField
-from django_eha_sdk.multitenancy.utils import add_user_to_realm
+from aether.sdk.multitenancy.serializers import MtModelSerializer, MtPrimaryKeyRelatedField
+from aether.sdk.multitenancy.utils import add_user_to_realm
 
 from .models import Project, Schema, MobileUser
 

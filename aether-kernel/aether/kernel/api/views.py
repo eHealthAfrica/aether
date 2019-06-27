@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -19,6 +19,7 @@
 from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
+from aether.sdk.multitenancy.utils import filter_by_realm
 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -32,7 +33,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from django_eha_sdk.multitenancy.views import MtViewSetMixin
+from aether.sdk.multitenancy.views import MtViewSetMixin
 
 from .avro_tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH
@@ -49,6 +50,7 @@ from . import (
     models,
     project_artefacts,
     serializers,
+    utils
 )
 
 
@@ -312,12 +314,40 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     filter_class = filters.MappingSetFilter
     mt_field = 'project'
 
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None):
+        mappingset = self.get_object_or_404(pk=pk)
+        opts = request.data
+        try:
+            result = utils.bulk_delete_by_mappings(opts, pk)
+            mappingset.delete()
+            return Response(result)
+        except Exception as e:
+            return Response(
+                str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
     mt_field = 'mappingset__project'
+
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None):
+        mapping = self.get_object_or_404(pk=pk)
+        opts = request.data
+        try:
+            result = utils.bulk_delete_by_mappings(opts, None, [pk])
+            mapping.delete()
+            return Response(result)
+        except Exception as e:
+            return Response(
+                str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
@@ -390,6 +420,44 @@ class SchemaViewSet(viewsets.ModelViewSet):
             'docs': docs,
             'name': schema.schema_name,
         })
+
+    @action(detail=False, methods=['post'], url_path='unique-usage')
+    def unique_usage(self, request, *args, **kwargs):
+        '''
+        Given a list of mapping ids, this view checks if a schema used in
+        any of the supplied mappings is used outside the context of the mappings
+        supplied
+
+        Reached through POST '/schemas/unique-usage/'
+
+        expected payload: [
+            'mapping-1-uuid',
+            'mapping-2-uuid',
+            ...
+        ]
+
+        returned result: {
+            # object with properties keys as schemas used in the context of supplied mappings
+            # with values True|False
+            # True if the schema is used only the the context and nowhere else
+            # False if the schema is used by some other mapping
+            # e.g
+
+            Person : true
+
+            # indicating the schema 'Person' is used by one or more
+            # of the supplied mappings only
+        }
+        '''
+        mappings = filter_by_realm(
+            self.request,
+            models.Mapping.objects.filter(pk__in=request.data or []),
+            'mappingset__project'
+        ).values_list('id', flat=True)
+        try:
+            return Response(utils.get_unique_schemas_used(mappings))
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class SchemaDecoratorViewSet(MtViewSetMixin, viewsets.ModelViewSet):
@@ -491,7 +559,6 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
 
 
 class SubmissionStatsMixin(MtViewSetMixin):
-
     search_fields = ('name',)
     ordering_fields = ('name', 'created',)
     ordering = ('name',)

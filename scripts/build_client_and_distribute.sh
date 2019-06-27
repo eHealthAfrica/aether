@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -34,12 +34,12 @@ $DC_FILE build \
     --no-cache --force-rm --pull \
     --build-arg VERSION=$APP_VERSION \
     client
-$DC_FILE run client build
+$DC_FILE run --rm client build
 
 PCK_FILE=aether.client-${APP_VERSION}-py2.py3-none-any.whl
 
 # distribute within the containers
-FOLDERS=( test-aether-integration-module aether-producer )
+FOLDERS=( test-aether-integration-module )
 for FOLDER in "${FOLDERS[@]}"
 do
     DEST=./${FOLDER}/conf/pip/dependencies/

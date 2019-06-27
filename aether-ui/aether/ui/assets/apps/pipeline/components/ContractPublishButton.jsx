@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -156,7 +156,7 @@ class ContractPublishButton extends Component {
         { publishState && errors.length === 0 &&
           <button
             type='button'
-            className='btn btn-w'
+            className='btn btn-primary btn-w'
             onClick={(event) => {
               event.stopPropagation()
               this.props.publishContract(contract.id)

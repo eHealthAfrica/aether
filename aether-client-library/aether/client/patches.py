@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -18,13 +18,15 @@
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import MODEL_MARKER
-from bravado_core.marshal import (
-    handle_null_value, marshal_schema_object, is_prop_nullable
-)
+
+from bravado_core.marshal import marshal_schema_object
 from bravado_core.unmarshal import unmarshal_object
+
 from bravado_core.schema import collapsed_properties
 from bravado_core.schema import get_spec_for_prop
+from bravado_core.schema import handle_null_value
 from bravado_core.schema import is_dict_like
+from bravado_core.schema import is_prop_nullable
 
 
 # patches : bravado_core.marshal.marshal_model

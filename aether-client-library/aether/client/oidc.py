@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -16,22 +16,21 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from bravado.requests_client import Authenticator, RequestsClient
-import requests
+import os
+import typing
+from urllib.parse import urlparse
 
+from bravado.requests_client import Authenticator, RequestsClient
 from oauthlib.oauth2 import (
     TokenExpiredError,
     is_secure_transport,
     InsecureTransportError
 )
-
+import requests
 from requests_oauthlib import (
     OAuth2Session,
     TokenUpdated
 )
-import os
-import typing
-from urllib.parse import urlparse
 
 from .logger import LOG
 from .exceptions import AetherAPIException
@@ -71,9 +70,11 @@ class OauthAuthenticator(Authenticator):
         user=None,
         pw=None,
         keycloak_url=None,
-        offline_token=None
+        offline_token=None,
+        endpoint_name='kernel'
     ):
         self.realm = realm
+        self.endpoint_name = endpoint_name
         self.host = urlparse(server).netloc
         self.session = get_session(
             server, realm, user, pw, keycloak_url, offline_token)
@@ -84,8 +85,10 @@ class OauthAuthenticator(Authenticator):
 
     def get_spec(self, spec_url):
         res = self.session.get(spec_url)
+        self.csrf = res.cookies.get('csrftoken')
+        LOG.debug(f'Set CSRFToken: {self.csrf}')
         spec = res.json()
-        spec['host'] = f'{spec["host"]}/{self.realm}/kernel'
+        spec['host'] = f'{spec["host"]}/{self.realm}/{self.endpoint_name}'
         sec_def = spec['securityDefinitions']
         sec_def['Authorization'] = {
             'type': 'apiKey',
@@ -97,7 +100,8 @@ class OauthAuthenticator(Authenticator):
         return spec
 
     def apply(self, req):
-        # we don't need to do anything here
+        # add CSRFToken
+        req.headers['X-CSRFToken'] = self.csrf
         return req
 
 
@@ -198,7 +202,7 @@ def get_session(
         scope = 'profile openid email'
     else:
         scope = 'email offline_access profile'
-    base_url = keycloak_url or f'{server}/keycloak/auth'
+    base_url = keycloak_url or f'{server}/auth'
     token_url = f'{base_url}/realms/{realm}/protocol/openid-connect/token'
     LOG.debug(f'token url: {token_url}')
     initial_token = get_initial_token(user, pw, token_url, offline_token)
@@ -240,7 +244,6 @@ def get_initial_token(user=None, pw=None, token_url=None, offline_token=None):
             'refresh_token': offline_token,
             'grant_type': grant,
             'scope': 'profile openid email'
-
         }
     else:
         raise ValueError('Either pw grant or offline_token must be used')

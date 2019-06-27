@@ -253,7 +253,7 @@ services:
     build: ./aether-couchdb-sync-module
     stdin_open: true
     tty: true
-    environment: &sync-environment
+    environment:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
@@ -297,7 +297,7 @@ services:
       REDIS_PORT: 6379
 
       WEB_SERVER_PORT: 8106
-    volumes: &sync-volumes
+    volumes:
       - ./aether-couchdb-sync-module:/code
 
       # static folder
@@ -307,12 +307,6 @@ services:
     ports:
       - 8106:8106
     command: start_dev
-
-  couchdb-sync-rq-base:
-    image: aether-couchdb-sync
-    environment: *sync-environment
-    volumes: *sync-volumes
-    command: start_rq
 
 
   # ---------------------------------
@@ -398,7 +392,7 @@ services:
   # ---------------------------------
 
   zookeeper-base:
-    image: confluentinc/cp-zookeeper:5.1.1
+    image: confluentinc/cp-zookeeper:5.2.1
     environment:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
@@ -406,7 +400,7 @@ services:
       - moby:127.0.0.1
 
   kafka-base:
-    image: confluentinc/cp-kafka:5.1.1
+    image: confluentinc/cp-kafka:5.2.1
     ports:
       - 29092:29092
     environment:

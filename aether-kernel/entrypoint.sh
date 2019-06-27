@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -43,8 +43,8 @@ function show_help {
     test_coverage : run tests with coverage output
     test_py       : alias of test_coverage
 
-    start         : start webserver behind nginx
-    start_dev     : start webserver for development
+    start         : start uWSGI server
+    start_dev     : start Django server for development
 
     health        : checks the system healthy
     """
@@ -55,7 +55,7 @@ function pip_freeze {
     rm -rf /tmp/env
 
     virtualenv -p python3 /tmp/env/
-    /tmp/env/bin/pip install -q -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+    /tmp/env/bin/pip install -q -r ./conf/pip/primary-requirements.txt --upgrade
 
     cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt

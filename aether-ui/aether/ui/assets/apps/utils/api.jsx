@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -20,7 +20,7 @@
 
 import { NotFoundError, HTTPError } from './errors'
 
-const methods = ['get', 'post', 'put', 'patch', 'del']
+const methods = ['get', 'post', 'put', 'patch', 'delete']
 
 export default class ApiClient {
   constructor () {
@@ -64,7 +64,7 @@ export default class ApiClient {
           window.fetch(url, options)
             .then(response => {
               if (response.ok) {
-                // `DEL` method returns a 204 status code without response content
+                // `DELETE` method returns a 204 status code without response content
                 if (response.status === 204) {
                   return resolve() // NO-CONTENT response
                 }

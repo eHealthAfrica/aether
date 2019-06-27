@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -21,7 +21,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
-import { Link } from 'react-router-dom'
 
 import { ModalError, NavBar, Modal } from '../components'
 
@@ -30,12 +29,15 @@ import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
 import Settings from './sections/Settings'
+import DeleteModal from './components/DeleteModal'
+import DeleteStatus from './components/DeleteStatus'
 
 import {
   clearSelection,
   getPipelineById,
   selectContract,
-  selectSection
+  selectSection,
+  deleteContract
 } from './redux'
 
 import {
@@ -52,10 +54,13 @@ class Pipeline extends Component {
     const view = props.section || props.match.params.section || PIPELINE_SECTION_INPUT
 
     this.state = {
+      deleteOptions: {},
       fullscreen: false,
       isNew: props.location.state && props.location.state.isNewContract,
       newContract: null,
       showCancelModal: false,
+      showDeleteModal: false,
+      showDeleteProgress: false,
       showSettings: (view === CONTRACT_SECTION_SETTINGS),
       showOutput: false,
       onContractSavedCallback: null,
@@ -63,10 +68,13 @@ class Pipeline extends Component {
     }
 
     this.addNewContract = this.addNewContract.bind(this)
+    this.deleteContract = this.deleteContract.bind(this)
+    this.hideModalProgress = this.hideModalProgress.bind(this)
     this.linksCallBack = this.linksCallBack.bind(this)
     this.onCancelContract = this.onCancelContract.bind(this)
     this.onContracts = this.onContracts.bind(this)
     this.onContractTabSelected = this.onContractTabSelected.bind(this)
+    this.onDeleteContract = this.onDeleteContract.bind(this)
     this.onInputHandle = this.onInputHandle.bind(this)
     this.onNewContractCreated = this.onNewContractCreated.bind(this)
     this.onSave = this.onSave.bind(this)
@@ -170,22 +178,24 @@ class Pipeline extends Component {
         { this.props.error && <ModalError error={this.props.error} /> }
         <NavBar showBreadcrumb cb={this.linksCallBack}>
           <div className='breadcrumb-links'>
-            <Link onClick={this.linksCallBack}>
+            <a onClick={this.linksCallBack}>
               <FormattedMessage
                 id='pipeline.navbar.pipelines'
                 defaultMessage='Pipelines'
               />
-            </Link>
-            <span> // </span>
-            { pipeline.name }
-            { pipeline.isInputReadOnly &&
-              <span className='tag'>
-                <FormattedMessage
-                  id='pipeline.navbar.read-only'
-                  defaultMessage='read-only'
-                />
-              </span>
-            }
+            </a>
+            <span className='breadcrumb-pipeline-name'>
+              <span>// </span>
+              { pipeline.name }
+              { pipeline.isInputReadOnly &&
+                <span className='tag'>
+                  <FormattedMessage
+                    id='pipeline.navbar.read-only'
+                    defaultMessage='read-only'
+                  />
+                </span>
+              }
+            </span>
           </div>
         </NavBar>
 
@@ -217,6 +227,7 @@ class Pipeline extends Component {
             <Settings
               onClose={this.onSettingsClosed}
               isNew={this.state.isNew}
+              onDelete={this.onDeleteContract}
               onSave={this.onSave}
               onNew={this.onNewContractCreated}
             />
@@ -231,6 +242,8 @@ class Pipeline extends Component {
           { this.props.contract && <div className='pipeline-output'><Output /></div> }
         </div>
         { this.renderCancelationModal() }
+        { this.renderDeletionModal() }
+        { this.renderDeleteProgressModal() }
       </div>
     )
   }
@@ -254,6 +267,21 @@ class Pipeline extends Component {
       this.props.selectSection(this.state.view === CONTRACT_SECTION_SETTINGS
         ? CONTRACT_SECTION_ENTITY_TYPES : this.state.view)
     }
+  }
+
+  onDeleteContract () {
+    this.setState({
+      showDeleteModal: true
+    })
+  }
+
+  deleteContract (deleteOptions) {
+    this.props.deleteContract(this.props.contract.id, deleteOptions)
+    this.setState({
+      deleteOptions,
+      showDeleteModal: false,
+      showDeleteProgress: true
+    })
   }
 
   renderCancelationModal () {
@@ -292,6 +320,41 @@ class Pipeline extends Component {
     return (
       <Modal header={header} buttons={buttons} />
     )
+  }
+
+  renderDeletionModal () {
+    if (!this.state.showDeleteModal) {
+      return null
+    }
+
+    return (
+      <DeleteModal
+        onClose={() => this.setState({ showDeleteModal: false })}
+        onDelete={(e) => this.deleteContract(e)}
+        objectType='contract'
+        obj={this.props.contract}
+      />
+    )
+  }
+
+  renderDeleteProgressModal () {
+    if (!this.state.showDeleteProgress) {
+      return null
+    }
+    return (
+      <DeleteStatus
+        header={
+          <FormattedMessage id='contract.delete.status.header' defaultMessage='Deleting contract ' />
+        }
+        deleteOptions={this.state.deleteOptions}
+        toggle={this.hideModalProgress}
+        showModal={this.state.showDeleteProgress}
+      />
+    )
+  }
+
+  hideModalProgress () {
+    this.setState({ showDeleteProgress: false })
   }
 
   onCancelContract () {
@@ -348,7 +411,7 @@ class Pipeline extends Component {
         <div
           className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
           onClick={() => { this.toggleSettings() }}>
-          <i className='fas fa-ellipsis-h' />
+          <i className='fas fa-wrench' />
         </div>
       </div>
     ))
@@ -465,13 +528,15 @@ const mapStateToProps = ({ pipelines }) => ({
   section: pipelines.currentSection,
   pipeline: pipelines.currentPipeline,
   contract: pipelines.currentContract,
-  error: pipelines.error
+  error: pipelines.error,
+  deleteStatus: pipelines.deleteStatus
 })
 const mapDispatchToProps = {
   clearSelection,
   getPipelineById,
   selectContract,
-  selectSection
+  selectSection,
+  deleteContract
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Pipeline)

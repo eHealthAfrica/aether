@@ -8,12 +8,14 @@
 - [Setup](#Setup)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
-  - [Common Library](#common-library)
+  - [Aether Django SDK Library](#aether-django-sdk-library)
   - [Environment Variables](#environment-variables)
     - [Generic](#generic)
+    - [Application specific](#application-specific)
     - [File Storage System](#file-storage-system)
     - [Multi-tenancy](#multi-tenancy)
     - [uWSGI](#uwsgi)
+    - [Aether generic](#aether-generic)
     - [Aether Kernel](#aether-kernel)
     - [Aether ODK Module](#aether-odk-module)
     - [Aether UI](#aether-ui)
@@ -42,6 +44,7 @@
 
 - git
 - [docker-compose](https://docs.docker.com/compose/)
+- [openssl](https://www.openssl.org/) (credentials script)
 
 *[Return to TOC](#table-of-contents)*
 
@@ -55,7 +58,7 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 
 ##### Generate credentials for local development with docker-compose
 
-**Note:** Make sure you have `openssl` installed in your system.
+**Note:** Make sure you have [openssl](https://www.openssl.org/) installed in your system.
 
 ```bash
 ./scripts/build_docker_credentials.sh > .env
@@ -85,17 +88,11 @@ for local development. Never deploy these to publicly accessible servers.
 
 *[Return to TOC](#table-of-contents)*
 
-### Common library
+### Aether Django SDK library
 
-This library contains the shared features among different containers.
+This library contains the shared features among different aether django containers.
 
-To create a new version and distribute it:
-
-```bash
-./scripts/build_common_and_distribute.sh
-```
-
-See more in [README](/aether-common-library/README.md).
+See more in its [repository](https://github.com/ehealthafrica/aether-django-sdk-library).
 
 *[Return to TOC](#table-of-contents)*
 
@@ -105,44 +102,53 @@ Most of the environment variables are set to default values. This is the short l
 of the most common ones with non default values. For more info take a look at the file
 [docker-compose-base.yml](docker-compose-base.yml).
 
+Also check the aether sdk section about [environment variables](https://github.com/eHealthAfrica/aether-django-sdk-library#environment-variables).
+
 #### Generic
 
-- `ADMIN_USERNAME`: `admin` The setup scripts create an initial admin user for the app.
-- `ADMIN_PASSWORD`: `secresecret`.
-- `ADMIN_TOKEN`: `admin_user_auth_token` Used to connect from other modules.
-- `APP_LINK`: `http://aether.ehealthafrica.org`. The link that appears in the DRF web pages.
-- `APP_NAME`: `aether`. The app name displayed in the web pages.
-- `APP_URL`, `/`. The app url in the server.
-  If host is `http://my-server.org` and the app url is `/my-module`,
-  the app enpoints will be accessible at `http://my-server.org/my-module/...`.
+> https://github.com/eHealthAfrica/aether-django-sdk-library#generic
 
-  ```nginx
-  # one NGINX ini file for all modules
-  server {
-    listen                    80;
-    server_name               localhost;
+- `DB_NAME` Database name (**mandatory**).
+- `DJANGO_SECRET_KEY`: Django secret key for this installation (**mandatory**).
 
-    location /my-module-1 {
-      proxy_pass              http://localhost:8801/my-module-1;
-    }
+- `STATIC_URL` : provides a base url for the static assets to be served from.
 
-    location /my-module-2 {
-      proxy_pass              http://localhost:8802/my-module-2;
-    }
-  }
-  ```
-
-- `DB_NAME` Database name.
-- `DEBUG` Enables debug mode. Is `false` if unset or set to empty string,
-  anything else is considered `true`.
 - `LOGGING_FORMATTER`: `json`. The app messages format.
   Possible values: `verbose` or `json`.
 - `LOGGING_LEVEL`: `info` Logging level for app messages.
   https://docs.python.org/3.7/library/logging.html#levels
+
+- `DEBUG` Enables debug mode. Is `false` if unset or set to empty string,
+  anything else is considered `true`.
 - `TESTING` Indicates if the app executes under test conditions.
   Is `false` if unset or set to empty string, anything else is considered `true`.
-- `STATIC_URL` : provides a base url for the static assets to be served from.
-- `WEB_SERVER_PORT` Web server port for the app.
+
+#### Application specific
+
+> https://github.com/eHealthAfrica/aether-django-sdk-library#app-specific
+
+- `APP_LINK`: `http://aether.ehealthafrica.org`. The link that appears in the DRF web pages.
+- `APP_NAME`: `aether`. The app name displayed in the web pages.
+- `APP_URL`, `/`. The app url in the server.
+
+If host is `http://my-server.org` and the app url is `/my-module`,
+the app enpoints will be accessible at `http://my-server.org/my-module/...`.
+
+```nginx
+# one NGINX ini file for all modules
+server {
+  listen                    80;
+  server_name               localhost;
+
+  location /my-module-1 {
+    proxy_pass              http://localhost:8801/my-module-1;
+  }
+
+  location /my-module-2 {
+    proxy_pass              http://localhost:8802/my-module-2;
+  }
+}
+```
 
 Read [Users & Authentication](#users--authentication) to know the environment
 variables that set up the different authentication options.
@@ -151,9 +157,11 @@ variables that set up the different authentication options.
 
 #### File Storage System
 
-(Used on Kernel and ODK Module)
+> https://github.com/eHealthAfrica/aether-django-sdk-library#file-storage-system
 
-- `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/1.11/ref/settings/#default-file-storage).
+Used on Kernel and ODK Module
+
+- `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/2.2/ref/settings/#default-file-storage).
   Available options: `minio`, `s3`, `gcs`.
   More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
   Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development
@@ -191,6 +199,11 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 
 #### Multi-tenancy
 
+> https://github.com/eHealthAfrica/aether-django-sdk-library#multi-tenancy
+
+The technical implementation is explained in
+[Multi-tenancy README](https://github.com/eHealthAfrica/aether-django-sdk-library/aether/common/multitenancy/README.md).
+
 - `MULTITENANCY`, Enables or disables the feature, is `false` if unset or set
   to empty string, anything else is considered `true`.
 - `DEFAULT_REALM`, `aether` The default realm for artefacts created
@@ -224,9 +237,6 @@ MULTITENANCY=
 ```bash
 ./scripts/docker_start.sh
 ```
-
-The technical implementation is explained in
-[Multi-tenancy README](/aether-common-library/aether/common/multitenancy/README.md).
 
 **Notes:**
 
@@ -264,6 +274,15 @@ https://uwsgi-docs.readthedocs.io/
 
 *[Return to TOC](#table-of-contents)*
 
+#### Aether generic
+
+- `ADMIN_USERNAME`: `admin` The setup scripts create an initial admin user for the app.
+- `ADMIN_PASSWORD`: `secresecret`.
+- `ADMIN_TOKEN`: `admin_user_auth_token` Used to connect from other modules.
+- `WEB_SERVER_PORT` Web server port for the app.
+
+*[Return to TOC](#table-of-contents)*
+
 #### Aether Kernel
 
 The default values for the export feature:
@@ -283,12 +302,19 @@ The default values for the export feature:
 - `EXPORT_HEADER_SHORTEN`: `no`. Indicates if the header includes the full
   jsonpath/label or only the column one. Values: ``yes``, any other ``no``.
 
+*[Return to TOC](#table-of-contents)*
+
 #### Aether ODK Module
 
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
 - `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+- `ODK_COLLECT_ENDPOINT`: the endpoint for all ODK collect urls.
+  If it's `collect/` the submission url would be `http://my-server/collect/submission`
+  If it's blank ` ` the forms list url would be `http://my-server/formList`
+
+*[Return to TOC](#table-of-contents)*
 
 #### Aether UI
 
@@ -296,6 +322,8 @@ The default values for the export feature:
 - `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+
+*[Return to TOC](#table-of-contents)*
 
 #### Aether CouchDB Sync Module
 
@@ -306,6 +334,8 @@ The default values for the export feature:
 - `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+
+*[Return to TOC](#table-of-contents)*
 
 ## Usage
 
@@ -354,6 +384,8 @@ To start any container separately:
 *[Return to TOC](#table-of-contents)*
 
 ### Users & Authentication
+
+> https://github.com/eHealthAfrica/aether-django-sdk-library#users--authentication
 
 Set the `KEYCLOAK_SERVER_URL` and `KEYCLOAK_CLIENT_ID` environment variables if
 you want to use Keycloak as authentication server.
@@ -421,6 +453,8 @@ belongs to an active `aether-kernel` user but not necessarily to an admin user.
 *[Return to TOC](#table-of-contents)*
 
 #### Gateway Authentication
+
+> https://github.com/eHealthAfrica/aether-django-sdk-library#gateway-authentication
 
 Set `GATEWAY_SERVICE_ID` to enable gateway authentication with keycloak.
 This means that the authentication is handled by a third party system
@@ -510,7 +544,6 @@ The list of the main containers:
 | **odk**           | Aether ODK module (imports data from ODK Collect)                       |
 | **ui**            | Aether Kernel UI (advanced mapping functionality)                       |
 | **couchdb-sync**  | Aether CouchDB Sync module (imports data from Aether Mobile app)        |
-| couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
 
 
 All of the containers definition for development can be found in the
@@ -525,7 +558,7 @@ script offers a range of commands to start services or run commands.
 The full list of commands can be seen in the script.
 
 The pattern to run a command is always
-``docker-compose run <container-name> <entrypoint-command> <...args>``
+``docker-compose run --rm <container-name> <entrypoint-command> <...args>``
 
 *[Return to TOC](#table-of-contents)*
 
@@ -559,14 +592,14 @@ To execute tests in just one container:
 or
 
 ```bash
-docker-compose run <container-name> test
+docker-compose run --rm <container-name> test
 ```
 
 or
 
 ```bash
-docker-compose run <container-name> test_lint
-docker-compose run <container-name> test_coverage
+docker-compose run --rm <container-name> test_lint
+docker-compose run --rm <container-name> test_coverage
 ```
 
 The e2e tests are run against different containers, the config file used
@@ -596,7 +629,7 @@ to indicate the number of concurrent jobs.
 #### Check outdated dependencies
 
 ```bash
-docker-compose run --no-deps <container-name> eval pip list --outdated
+docker-compose run --rm --no-deps <container-name> eval pip list --outdated
 ```
 
 #### Update requirements file
@@ -605,15 +638,10 @@ docker-compose run --no-deps <container-name> eval pip list --outdated
 ./scripts/upgrade_container.sh [--build] [<container-name>]
 ```
 
-This also rebuilds `aether.common` module and distributes it within the containers.
-Do not forget to include new containers in the file.
-
 or
 
 ```bash
-docker-compose run --no-deps <container-name> pip_freeze
+docker-compose run --rm --no-deps <container-name> pip_freeze
 ```
-
-In this case `aether.common` is not rebuilt.
 
 *[Return to TOC](#table-of-contents)*

@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -28,7 +28,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import ugettext as _
 
-from jsonpath_ng.ext import parse as jsonpath_ng_ext_parse
+from eha_jsonpath import parse as eha_jsonpath_parse
 
 from . import models
 from .validators import validate_entities
@@ -88,7 +88,7 @@ class CachedParser(object):
         # we never need to call parse directly; use find()
         if path not in CachedParser.cache.keys():
             try:
-                CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
+                CachedParser.cache[path] = eha_jsonpath_parse(path)
             except Exception as err:  # jsonpath-ng raises the base exception type
                 new_err = _('exception parsing path {path} : {error} ').format(
                     path=path, error=err

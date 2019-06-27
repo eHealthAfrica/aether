@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -27,8 +27,8 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
-from django_eha_sdk.multitenancy import utils as mt_utils
-from django_eha_sdk.utils import get_all_docs, request
+from aether.sdk.multitenancy import utils as mt_utils
+from aether.sdk.utils import get_all_docs, request
 
 from . import models, kernel_utils
 
@@ -661,3 +661,20 @@ def kernel_data_request(url='', method='get', data=None, headers=None):
 
 def wrap_kernel_headers(instance):
     return mt_utils.add_instance_realm_in_headers(instance, kernel_utils.get_kernel_auth_header())
+
+
+def delete_operation(url, data, obj):
+    try:
+        response = kernel_data_request(
+            url=url,
+            method='post',
+            data=data,
+            headers=wrap_kernel_headers(obj),
+        )
+        obj.delete()
+        return response
+    except HTTPError as e:
+        if e.response.status_code == status.HTTP_404_NOT_FOUND:
+            obj.delete()
+            return None
+        raise e

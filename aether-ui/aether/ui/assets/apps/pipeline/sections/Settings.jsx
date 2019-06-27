@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -106,7 +106,7 @@ export class IdentityMapping extends Component {
                 type='text'
                 required
                 name='name'
-                className='input-d contract-name'
+                className='input-d input-large'
                 value={this.state.entityTypeName}
                 onChange={(e) => { this.setState({ entityTypeName: e.target.value }) }}
               />
@@ -172,6 +172,15 @@ export class IdentityMapping extends Component {
     const buttons = (
       <div>
         <button
+          id='settings.identity.modal.cancel'
+          className='btn btn-w'
+          onClick={() => { this.props.onModalToggle(false) }}>
+          <FormattedMessage
+            id='settings.identity.button.cancel'
+            defaultMessage='Cancel'
+          />
+        </button>
+        <button
           data-qa='contract.identity.button.confirm'
           className='btn btn-w btn-primary'
           id='settings.identity.modal.yes'
@@ -179,16 +188,6 @@ export class IdentityMapping extends Component {
           <FormattedMessage
             id='settings.identity.button.confirm'
             defaultMessage='Yes'
-          />
-        </button>
-
-        <button
-          id='settings.identity.modal.cancel'
-          className='btn btn-w'
-          onClick={() => { this.props.onModalToggle(false) }}>
-          <FormattedMessage
-            id='settings.identity.button.cancel'
-            defaultMessage='Cancel'
           />
         </button>
       </div>
@@ -292,7 +291,7 @@ class Settings extends Component {
               type='text'
               required
               name='name'
-              className='input-d contract-name'
+              className='input-d input-large'
               value={this.state.contractName}
               onChange={(e) => { this.setState({ contractName: e.target.value }) }}
               disabled={contract.is_read_only}
@@ -324,31 +323,45 @@ class Settings extends Component {
               </div>
             }
           </div>
-
-          <button
-            onClick={() => this.props.onClose()}
-            type='button'
-            className='btn btn-d btn-big'
-            id='pipeline.settings.cancel.button' >
-            <span className='details-title'>
-              <FormattedMessage
-                id='settings.button.cancel'
-                defaultMessage='Cancel'
-              />
-            </span>
-          </button>
-          { !contract.is_read_only &&
+          <div className='settings-actions'>
             <button
-              className='btn btn-d btn-primary btn-big ml-4'
-              onClick={() => this.onSave(contract)}>
+              onClick={() => this.props.onClose()}
+              type='button'
+              className='btn btn-d btn-big'
+              id='pipeline.settings.cancel.button' >
               <span className='details-title'>
                 <FormattedMessage
-                  id='settings.contract.save'
-                  defaultMessage='Save'
+                  id='settings.button.cancel'
+                  defaultMessage='Cancel'
                 />
               </span>
             </button>
-          }
+            { !contract.is_read_only &&
+              <button
+                id='settings-contract-save'
+                className='btn btn-d btn-primary btn-big ml-4'
+                onClick={() => this.onSave(contract)}>
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='settings.contract.save'
+                    defaultMessage='Save'
+                  />
+                </span>
+              </button>
+            }
+            { !contract.is_read_only && contract.created &&
+              <button
+                className='btn btn-d btn-red btn-big'
+                onClick={() => this.props.onDelete()}>
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='settings.contract.delete'
+                    defaultMessage='Delete Contract'
+                  />
+                </span>
+              </button>
+            }
+          </div>
         </div>
       </div>
     )
@@ -356,9 +369,9 @@ class Settings extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  mappingset: pipelines.currentPipeline.mappingset,
-  inputData: pipelines.currentPipeline.input,
-  inputSchema: pipelines.currentPipeline.schema,
+  mappingset: pipelines.currentPipeline && pipelines.currentPipeline.mappingset,
+  inputData: pipelines.currentPipeline && pipelines.currentPipeline.input,
+  inputSchema: pipelines.currentPipeline && pipelines.currentPipeline.schema,
 
   contract: pipelines.currentContract,
   pipeline: pipelines.currentPipeline

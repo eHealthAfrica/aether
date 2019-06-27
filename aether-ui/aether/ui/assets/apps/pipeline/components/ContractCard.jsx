@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -57,7 +57,7 @@ class ContractCard extends Component {
 
           <div className='contract-summaries'>
             <div className='summary-entity-types'>
-              <span className='badge badge-b badge-big'>
+              <span className='badge badge-c badge-big'>
                 { (contract.entity_types || []).length }
               </span>
               <FormattedMessage
@@ -68,7 +68,7 @@ class ContractCard extends Component {
 
             <div className='summary-errors'>
               <span className={
-                `badge badge-b badge-big ${(contract.mapping_errors || []).length ? 'error' : ''}`
+                `badge badge-c badge-big ${(contract.mapping_errors || []).length ? 'error' : ''}`
               }>
                 { (contract.mapping_errors || []).length }
               </span>
@@ -83,7 +83,7 @@ class ContractCard extends Component {
         <div className='contract-publish'>
           <ContractPublishButton
             contract={contract}
-            className='btn btn-w btn-publish' />
+            className='btn btn-d btn-publish' />
         </div>
       </div>
     )

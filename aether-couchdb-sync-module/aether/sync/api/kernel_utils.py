@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -18,13 +18,13 @@
 
 from django.utils.translation import ugettext as _
 
-from django_eha_sdk.health.utils import (
+from aether.sdk.health.utils import (
     check_external_app,
     get_external_app_url,
     get_external_app_token,
 )
-from django_eha_sdk.utils import request
-from django_eha_sdk.multitenancy.utils import add_instance_realm_in_headers
+from aether.sdk.utils import request
+from aether.sdk.multitenancy.utils import add_instance_realm_in_headers
 
 from ..errors import KernelPropagationError
 

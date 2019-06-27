@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -43,9 +43,8 @@ function show_help {
     test_coverage : run tests with coverage output
     test_py       : alias of test_coverage
 
-    start         : start webserver behind nginx
-    start_dev     : start webserver for development
-    start_rq      : start rq worker and scheduler
+    start         : start uWSGI server along with rq worker and scheduler
+    start_dev     : start Django server for development along with rq worker and scheduler
 
     health        : checks the system healthy
     health_rq     : checks the RQ healthy
@@ -58,7 +57,7 @@ function pip_freeze {
     rm -rf /tmp/env
 
     virtualenv -p python3 /tmp/env/
-    /tmp/env/bin/pip install -q -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+    /tmp/env/bin/pip install -q -r ./conf/pip/primary-requirements.txt --upgrade
 
     cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
@@ -130,6 +129,29 @@ function setup {
     cp /var/tmp/VERSION ${STATIC_ROOT}/VERSION   2>/dev/null || true
     # add git revision (if exists)
     cp /var/tmp/REVISION ${STATIC_ROOT}/REVISION 2>/dev/null || true
+}
+
+function start_worker {
+    # Start the rq worker and rq scheduler.
+    # To cleanly shutdown both, this script needs to capture SIGINT
+    # and SIGTERM and forward them to the worker and scheduler.
+    function _term {
+        kill -TERM "$scheduler" 2>/dev/null
+        kill -TERM "$worker" 2>/dev/null
+    }
+    trap _term SIGINT SIGTERM
+
+    ./manage.py rqscheduler &
+    scheduler=$!
+
+    # We assign a random worker name to avoid collisions with old worker
+    # values in redis. RQ uses the hostname and PID as name and those
+    # might be the same as before when restarting the container.
+    ./manage.py rqworker default --name "rq-${RANDOM}" &
+    worker=$!
+
+    wait $scheduler
+    wait $worker
 }
 
 function test_lint {
@@ -220,6 +242,7 @@ case "$1" in
         export DEBUG=
 
         setup
+        start_worker &
         ./conf/uwsgi/start.sh
     ;;
 
@@ -228,30 +251,8 @@ case "$1" in
         export DEBUG=true
 
         setup
+        start_worker &
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
-    ;;
-
-    start_rq )
-        # Start the rq worker and rq scheduler.
-        # To cleanly shutdown both, this script needs to capture SIGINT
-        # and SIGTERM and forward them to the worker and scheduler.
-        function _term {
-            kill -TERM "$scheduler" 2>/dev/null
-            kill -TERM "$worker" 2>/dev/null
-        }
-        trap _term SIGINT SIGTERM
-
-        ./manage.py rqscheduler &
-        scheduler=$!
-
-        # We assign a random worker name to avoid collisions with old worker
-        # values in redis. RQ uses the hostname and PID as name and those
-        # might be the same as before when restarting the container.
-        ./manage.py rqworker default --name "rq-${RANDOM}" &
-        worker=$!
-
-        wait $scheduler
-        wait $worker
     ;;
 
     health )

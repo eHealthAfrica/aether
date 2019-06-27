@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -20,7 +20,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from django_eha_sdk.multitenancy.utils import get_auth_group
+from aether.sdk.multitenancy.utils import get_auth_group
 
 from .models import Project, XForm, MediaFile
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -56,6 +56,7 @@ MSG_VALIDATION_XFORM_MISSING_INSTANCE_ID_ERR = _(
 MSG_XFORM_MISSING_INSTANCE_ERR = _(
     'Missing required instance definition.'
 )
+MSG_INVALID_NAME = _('Invalid name "{name}".')
 
 
 # ------------------------------------------------------------------------------
@@ -103,41 +104,47 @@ def parse_submission(data, xml_definition):
         }
     '''
 
-    def walk(obj, parent_keys=[]):
-        for k, v in obj.items():
+    def walk(source, destination, parent_keys=[]):
+        for k, v in source.items():
             keys = parent_keys + [k]
             xpath = '/' + '/'.join(keys)
             _type = xpath_types.get(xpath)
 
-            if _type == 'repeat' and not isinstance(v, list):
+            # get AVRO valid name
+            k = __clean_odk_name(k)
+
+            if _type == 'repeat' and not isinstance(v, list) and v is not None:
                 # list of one item but not presented as a list
                 # transform it back into a list
-                obj[k] = [v]
+                v = [v]
 
             if isinstance(v, dict):
-                walk(v, keys)
+                destination[k] = {}
+                walk(v, destination[k], keys)
 
             elif isinstance(v, list):
-                for i in v:
-                    # indices are not important
-                    walk(i, keys)
+                destination[k] = []
+                for i in range(len(v)):
+                    destination[k].append({})
+                    walk(v[i], destination[k][i], keys)
 
             elif v is not None:
                 # parse specific type values
                 # the rest of them remains the same (as string)
+                destination[k] = v
 
                 if _type in ('int', 'integer', 'long', 'short'):
-                    obj[k] = int(v)
+                    destination[k] = int(v)
 
                 if _type in ('decimal', 'double', 'float'):
-                    obj[k] = float(v)
+                    destination[k] = float(v)
 
                 if _type in ('date', 'dateTime'):
-                    obj[k] = parser.parse(v).isoformat()
+                    destination[k] = parser.parse(v).isoformat()
 
                 if _type == 'geopoint':
                     latitude, longitude, altitude, accuracy = v.split()
-                    obj[k] = {
+                    destination[k] = {
                         'latitude': float(latitude),
                         'longitude': float(longitude),
                         'altitude': float(altitude),
@@ -147,25 +154,26 @@ def parse_submission(data, xml_definition):
             else:
                 if _type == 'repeat':
                     # null arrays are handled as empty arrays
-                    obj[k] = []
+                    destination[k] = []
                 else:
-                    obj[k] = None
+                    destination[k] = None
 
     xpath_types = {
         xpath: definition.get('type')
         for xpath, definition in __get_xform_instance_skeleton(xml_definition).items()
         if definition.get('type')
     }
-    walk(data)  # modifies inplace
+    submission = {}
+    walk(source=data, destination=submission)
 
     # assumption: there is only one child that represents the form content
     # usually: {'ZZZ': { ... }}
     # remove this first level and return content
-    keys = list(data.keys())
-    if len(keys) == 1 and isinstance(data[keys[0]], dict):  # pragma: no cover
-        data = data[keys[0]]
+    keys = list(submission.keys())
+    if len(keys) == 1 and isinstance(submission[keys[0]], dict):  # pragma: no cover
+        submission = submission[keys[0]]
 
-    return data
+    return submission
 
 
 def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VERSION):
@@ -237,14 +245,12 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                 'namespace': name,
                 'doc': _('xForm ID'),
                 'type': __get_avro_primitive_type('string'),
-                'default': form_id,
             },
             {
                 'name': '_version',
                 'namespace': name,
                 'doc': _('xForm version'),
                 'type': __get_avro_primitive_type('string'),
-                'default': version,
             },
         ],
         # this is going to be removed later,
@@ -266,12 +272,6 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         current_name = xpath.split('/')[-1]
         current_doc = definition.get('label')
 
-        # validate name
-        try:
-            __validate_avro_name(current_name)
-        except SchemaParseException as e:
-            avro_schema['_errors'].append(str(e))
-
         parent_path = '/'.join(xpath.split('/')[:-1])
         parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
 
@@ -283,6 +283,17 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
             'namespace': namespace,
             'doc': current_doc,
         }
+
+        # get AVRO valid name
+        clean_current_name = __clean_odk_name(current_name)
+        if not __validate_avro_name(clean_current_name):
+            avro_schema['_errors'].append(MSG_INVALID_NAME.format(name=current_name))
+
+        elif clean_current_name != current_name:
+            # clean the name and add the "aliases" list with the real one
+            current_field['aliases'] = [current_name]
+            current_name = clean_current_name
+            current_field['name'] = current_name
 
         # nested record
         if current_type == 'group':
@@ -758,8 +769,7 @@ def __validate_avro_schema(avro_schema):  # pragma: no cover
 
 
 def __validate_avro_name(name):
-    if _RE_AVRO_NAME.match(name) is None:
-        raise SchemaParseException(f'Invalid name "{name}".')
+    return _RE_AVRO_NAME.match(name) is not None
 
 
 # ------------------------------------------------------------------------------
@@ -901,3 +911,10 @@ def __clean_dict(data):
                 data[key] = __clean_dict(value)
 
     return data
+
+
+def __clean_odk_name(name):
+    '''
+    ODK allows `-` and `.` chars in names, replace them with `__` in the AVRO name
+    '''
+    return name.replace('-', '__').replace('.', '__')

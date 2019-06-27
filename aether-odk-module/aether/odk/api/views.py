@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -20,7 +20,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from django_eha_sdk.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
+from aether.sdk.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
 
 from .models import Project, XForm, MediaFile
 from .serializers import (

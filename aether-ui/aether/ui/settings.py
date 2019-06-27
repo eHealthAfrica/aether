@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -22,8 +22,8 @@ import logging
 # Common settings
 # ------------------------------------------------------------------------------
 
-from aether.common.settings import *  # noqa
-from aether.common.settings import LOGGING_LEVEL, MIGRATION_MODULES
+from aether.sdk.conf.settings_aether import *  # noqa
+from aether.sdk.conf.settings_aether import LOGGING_LEVEL, MIGRATION_MODULES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)

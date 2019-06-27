@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -21,8 +21,8 @@
 
 import os
 
-from aether.common.settings import *  # noqa
-from aether.common.settings import (
+from aether.sdk.conf.settings_aether import *  # noqa
+from aether.sdk.conf.settings_aether import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
     REST_FRAMEWORK,

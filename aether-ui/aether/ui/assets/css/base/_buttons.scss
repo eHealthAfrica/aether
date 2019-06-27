@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -152,6 +152,17 @@
   padding: .2em .5em;
 }
 
+.btn-square {
+  padding: .4em;
+
+  i {
+    display: block;
+    width: 1.5em;
+    height: 1.5em;
+    line-height: 1.5em;
+  }
+}
+
 .btn-icon {
   display: flex;
   position: relative;
@@ -167,6 +178,7 @@
     height: 1.8rem;
     padding: .4em;
     border-radius: 50%;
+    font-size: $font-size-s;
   }
 
   span {

@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -26,6 +26,7 @@ from ..xform_utils import (
     __get_xform_itexts as get_texts,
     __get_xform_label as get_label,
     __parse_xml_to_dict as parse_xml_to_dict,
+    __validate_avro_name as validate_avro_name,
 
     get_instance_data_from_xml,
 
@@ -295,10 +296,10 @@ class XFormUtilsParsersTests(CustomTestCase):
         self.assertEqual(len(list(data.keys())), 1)
         self.assertEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
-        data = parse_submission(data, self.samples['xform']['raw-xml'])
-        self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')
+        submission = parse_submission(data, self.samples['xform']['raw-xml'])
+        self.assertNotEqual(list(submission.keys())[0], 'Something_that_is_not_None', submission.keys())
 
-        self.assertEqual(data, expected, json.dumps(data, indent=2))
+        self.assertEqual(submission, expected, json.dumps(submission, indent=2))
 
     def test__parse_submission__with_multilanguage(self):
         with open(self.samples['submission']['file-ok'], 'rb') as xml:
@@ -313,10 +314,10 @@ class XFormUtilsParsersTests(CustomTestCase):
         self.assertEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
         # this form definition has more than one language declared
-        data = parse_submission(data, self.samples['xform']['raw-xml-i18n'])
-        self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')
+        submission = parse_submission(data, self.samples['xform']['raw-xml-i18n'])
+        self.assertNotEqual(list(submission.keys())[0], 'Something_that_is_not_None', submission.keys())
 
-        self.assertEqual(data, expected, json.dumps(data, indent=2))
+        self.assertEqual(submission, expected, json.dumps(submission, indent=2))
 
 
 class XFormUtilsAvroTests(CustomTestCase):
@@ -635,6 +636,17 @@ class XFormUtilsAvroTests(CustomTestCase):
         }
         self.assertIsNone(get_label(xform_dict, '/None/a/b/c/any'))
 
+    def test__validate_avro_name(self):
+        self.assertTrue(validate_avro_name('Abc_123Z'))
+        # Must start with alphabetic char
+        self.assertFalse(validate_avro_name('123_abc'))
+        # Not "-" allowed
+        self.assertFalse(validate_avro_name('Abc-123'))
+        # Not "." allowed
+        self.assertFalse(validate_avro_name('a23.abc'))
+        # Not "." allowed
+        self.assertFalse(validate_avro_name('a23:abc'))
+
     def test__parse_xform_to_avro_schema__with_multilanguage(self):
         with open(self.samples['xform']['file-avro'], 'rb') as content:
             xform_avro = json.load(content)
@@ -695,14 +707,12 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'namespace': 'Nested_Repeats_Test_0',
                     'doc': 'xForm ID',
                     'type': ['null', 'string'],
-                    'default': 'nested_repeats_test',
                 },
                 {
                     'name': '_version',
                     'namespace': 'Nested_Repeats_Test_0',
                     'doc': 'xForm version',
                     'type': ['null', 'string'],
-                    'default': '0',
                 },
                 {
                     'name': 'Repeat_1',
@@ -764,10 +774,10 @@ class XFormUtilsAvroTests(CustomTestCase):
                     <model>
                         <instance>
                             <wrong-names id="wrong-names">
-                                <full-name>
-                                    <first-name/>
-                                    <last-name/>
-                                </full-name>
+                                <h:full-name>
+                                    <h:first-name/>
+                                    <h:last-name/>
+                                </h:full-name>
                             </wrong-names>
                         </instance>
                     </model>
@@ -786,33 +796,31 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'namespace': 'WrongNames_0',
                     'doc': 'xForm ID',
                     'type': ['null', 'string'],
-                    'default': 'wrong-names',
                 },
                 {
                     'name': '_version',
                     'namespace': 'WrongNames_0',
                     'doc': 'xForm version',
                     'type': ['null', 'string'],
-                    'default': '0',
                 },
                 {
-                    'name': 'full-name',
+                    'name': 'h:full-name',
                     'namespace': 'WrongNames_0',
                     'type': [
                         'null',
                         {
-                            'name': 'full-name',
+                            'name': 'h:full-name',
                             'namespace': 'WrongNames_0',
                             'type': 'record',
                             'fields': [
                                 {
-                                    'name': 'first-name',
-                                    'namespace': 'WrongNames_0.full-name',
+                                    'name': 'h:first-name',
+                                    'namespace': 'WrongNames_0.h:full-name',
                                     'type': ['null', 'string'],
                                 },
                                 {
-                                    'name': 'last-name',
-                                    'namespace': 'WrongNames_0.full-name',
+                                    'name': 'h:last-name',
+                                    'namespace': 'WrongNames_0.h:full-name',
                                     'type': ['null', 'string'],
                                 },
                             ],
@@ -821,9 +829,9 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
             ],
             '_errors': [
-                'Invalid name "full-name".',
-                'Invalid name "first-name".',
-                'Invalid name "last-name".',
+                'Invalid name "h:full-name".',
+                'Invalid name "h:first-name".',
+                'Invalid name "h:last-name".',
             ],
         }
 
@@ -862,14 +870,12 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'namespace': 'DupNames_0',
                     'doc': 'xForm ID',
                     'type': ['null', 'string'],
-                    'default': 'dup-names',
                 },
                 {
                     'name': '_version',
                     'namespace': 'DupNames_0',
                     'doc': 'xForm version',
                     'type': ['null', 'string'],
-                    'default': '0',
                 },
                 {
                     'name': 'dup_property',

@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -18,7 +18,7 @@
 
 from django.urls import include, path
 
-from django_eha_sdk.conf.urls import generate_urlpatterns
+from aether.sdk.conf.urls import generate_urlpatterns
 
 from .api.views import signin, load_file
 from .views import check_rq

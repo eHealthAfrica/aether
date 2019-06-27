@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -19,8 +19,9 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+from requests.exceptions import HTTPError
 
-from django_eha_sdk.multitenancy.views import MtViewSetMixin
+from aether.sdk.multitenancy.views import MtViewSetMixin
 
 from . import models, serializers, utils, kernel_utils
 
@@ -49,6 +50,49 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
         utils.kernel_artefacts_to_ui_artefacts(request)
         return self.list(request)
+
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
+        pipeline = self.get_object_or_404(pk=pk)
+        artefacts_result = {'not_published': True}
+        if pipeline.mappingset:
+            try:
+                artefacts_result = utils.delete_operation(
+                    f'mappingsets/{pipeline.mappingset}/delete-artefacts/',
+                    request.data,
+                    pipeline,
+                )
+                if not artefacts_result:
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+            except Exception as e:
+                return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            pipeline.delete()
+
+        return Response(artefacts_result)
+
+    @action(detail=True, methods=['put'], url_path='rename')
+    def rename(self, request, pk=None, *args, **kwargs):
+        pipeline = self.get_object_or_404(pk=pk)
+        pipeline.name = request.data.get('name', pipeline.name)
+        pipeline.save()
+        if pipeline.mappingset:
+            try:
+                utils.kernel_data_request(
+                    url=f'mappingsets/{pipeline.mappingset}/',
+                    method='patch',
+                    data=request.data,
+                    headers=utils.wrap_kernel_headers(pipeline),
+                )
+            except HTTPError as e:
+                if e.response.status_code == status.HTTP_404_NOT_FOUND:
+                    pipeline.mappingset = None
+                    pipeline.save()
+
+        return Response(
+            data=self.serializer_class(pipeline, context={'request': request}).data,
+            status=status.HTTP_200_OK,
+        )
 
 
 class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
@@ -88,7 +132,27 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         data = utils.publish_preflight(contract)
         return Response(data=data)
 
+    @action(detail=True, methods=['post'], url_path='delete-artefacts')
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
+        contract = self.get_object_or_404(pk=pk)
+        artefacts_result = {'not_published': True}
+        if contract.mapping:
+            try:
+                artefacts_result = utils.delete_operation(
+                    f'mappings/{contract.mapping}/delete-artefacts/',
+                    request.data,
+                    contract
+                )
+                if not artefacts_result:
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+            except Exception as e:
+                return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            contract.delete()
+
+        return Response(artefacts_result)
+
 
 @api_view(['GET'])
 def get_kernel_url(request, *args, **kwargs):
-    return Response(kernel_utils.get_kernel_url())
+    return Response(kernel_utils.get_kernel_url(request))

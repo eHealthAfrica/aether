@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -28,6 +28,7 @@ from aether.client import Client
 URL = os.environ['KERNEL_URL']
 USER = os.environ['KERNEL_USERNAME']
 PW = os.environ['KERNEL_PASSWORD']
+REALM = os.environ['TEST_REALM']
 
 
 def simple_entity(value_size=10):
@@ -48,7 +49,7 @@ def client():
         PW,
         log_level='DEBUG',
         auth_type='basic',
-        realm='test'
+        realm=REALM
     )
 
 

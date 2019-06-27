@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -20,7 +20,7 @@ import uuid
 from unittest import mock
 import requests
 
-from django_eha_sdk.utils import get_all_docs
+from aether.sdk.utils import get_all_docs
 
 from ...couchdb import api as couchdb
 from ..couchdb_helpers import create_db

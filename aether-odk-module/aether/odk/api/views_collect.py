@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -24,6 +24,7 @@ https://docs.opendatakit.org/
 
 import logging
 import json
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -43,7 +44,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from django_eha_sdk.utils import request as exec_request
+from aether.sdk.multitenancy.utils import add_instance_realm_in_headers
+from aether.sdk.utils import request as exec_request
 
 from .models import XForm, MediaFile
 from .kernel_utils import (
@@ -144,8 +146,12 @@ def xform_list(request, *args, **kwargs):
     if formID:
         xforms = xforms.filter(form_id=formID)
 
-    host = request.build_absolute_uri(request.get_full_path()).replace(reverse('xform-list-xml'), '')
-
+    host = request.build_absolute_uri(request.path).replace(reverse('xform-list-xml'), '')
+    # If the request is not HTTPS, the host must include port 8443
+    # or ODK Collect will not be able to get the resource
+    url_info = urlparse(host)
+    if url_info.scheme != 'https' and not url_info.port:
+        host = f'http://{url_info.netloc}:8443{url_info.path}'
     return Response(
         data={
             'xforms': [xf for xf in xforms if is_surveyor(request, xf)],
@@ -242,9 +248,13 @@ def xform_get_manifest(request, pk, *args, **kwargs):
         logger.warning(MSG_XFORM_VERSION_WARNING.format(
             requested_version=version, current_version=xform.version))
 
-    host = request.build_absolute_uri(request.get_full_path()) \
+    host = request.build_absolute_uri(request.path) \
                   .replace(reverse('xform-get-manifest', kwargs={'pk': pk}), '')
-
+    # If the request is not HTTPS, the host must include port 8443
+    # or ODK Collect will not be able to get the resource
+    url_info = urlparse(host)
+    if url_info.scheme != 'https' and not url_info.port:
+        host = f'http://{url_info.netloc}:8443{url_info.path}'
     return Response(
         data={
             'host': host,
@@ -450,7 +460,7 @@ def xform_submission(request, *args, **kwargs):
 
     data = parse_submission(data, xform.xml_data)
     submissions_url = get_submissions_url()
-    auth_header = get_kernel_auth_header()
+    auth_header = add_instance_realm_in_headers(xform, get_kernel_auth_header())
 
     try:
         submission_id = None

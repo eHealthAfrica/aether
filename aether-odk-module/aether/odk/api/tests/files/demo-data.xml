@@ -30,10 +30,10 @@
     <datetime>2017-07-14T16:38:47.151+02</datetime>
 
     <option>a</option>
-    <option_a>
-        <choice_a>A</choice_a>
-    </option_a>
-    <option_b/>
+    <option-a>
+        <choice.a>A</choice.a>
+    </option-a>
+    <option-b/>
 
     <image/>
 
@@ -52,7 +52,7 @@
         <value>Three</value>
     </iterate>
     <iterate_one>
-        <item>one</item>
+        <it.em>one</it.em>
     </iterate_one>
     <iterate_none/>
 

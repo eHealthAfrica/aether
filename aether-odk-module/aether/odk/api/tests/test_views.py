@@ -1,4 +1,4 @@
-# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -52,6 +52,20 @@ class ViewsTests(CustomTestCase):
 
         response = self.client.get(self.url_get_media, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertIn('8443', content, 'expect port to be set to default')
+
+        server_info = {
+            'SERVER_PORT': '81'
+        }
+        server_info.update(self.headers_user)
+        response = self.client.get(
+            self.url_get_media,
+            **server_info
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertIn('81', content, 'expect explicit port to be kept')
 
     def test__form_get__one_surveyor(self):
         self.xform.surveyors.add(self.helper_create_surveyor())
@@ -115,6 +129,19 @@ class ViewsTests(CustomTestCase):
         self.assertIn(self.formIdXml, content, 'expect form in list')
         self.assertIn('<manifestUrl>', content, 'expect manifest url with media files')
         self.assertNotIn('<descriptionText>', content, 'expect no descriptions without verbose')
+        self.assertIn('8443', content, 'expect port to be set to default')
+
+        server_info = {
+            'SERVER_PORT': '81'
+        }
+        server_info.update(self.headers_user)
+        response = self.client.get(
+            self.url_list,
+            **server_info
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertIn('81', content, 'expect explicit port to be kept')
 
         response = self.client.get(
             self.url_list + '?verbose=true&formID=' + self.xform.form_id,

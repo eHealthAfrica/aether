@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
  *
  * See the NOTICE file distributed with this work for additional information
  * regarding copyright ownership.
@@ -80,13 +80,6 @@ $output-nav-width: 10rem;
     padding: 0;
     margin-left: 2rem;
     display: none;
-
-    i {
-      box-shadow: none;
-      width: 1.6rem;
-      height: 1.6rem;
-      padding: .3em;
-    }
 
     &.active {
       color: $white;
