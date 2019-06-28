@@ -58,6 +58,8 @@ MSG_XFORM_MISSING_INSTANCE_ERR = _(
 )
 MSG_INVALID_NAME = _('Invalid name "{name}".')
 
+SELECT_KEYWORDS = ('select', 'select1', 'odk:rank')
+
 
 # ------------------------------------------------------------------------------
 # Parser methods
@@ -261,6 +263,7 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
     }
 
     xform_schema = __get_xform_instance_skeleton(xml_definition)
+    xform_dict = __parse_xml_to_dict(xml_definition)
     for xpath, definition in xform_schema.items():
         if len(xpath.split('/')) == 2:
             # include the KEY value
@@ -271,6 +274,10 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         current_type = definition.get('type')
         current_name = xpath.split('/')[-1]
         current_doc = definition.get('label')
+        select_options = None
+        if current_type in SELECT_KEYWORDS:
+            select_node = list(__find_by_key_value(xform_dict, '@ref', xpath))[0]
+            select_options = select_node.get('item', select_node.get('itemset', []))
 
         parent_path = '/'.join(xpath.split('/')[:-1])
         parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
@@ -282,7 +289,11 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
             'name': current_name,
             'namespace': namespace,
             'doc': current_doc,
+            '@xformType': current_type,
         }
+
+        if select_options:
+            current_field['@xformOptions'] = select_options
 
         # get AVRO valid name
         clean_current_name = __clean_odk_name(current_name)

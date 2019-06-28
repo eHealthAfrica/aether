@@ -25,6 +25,7 @@ from ..xform_utils import (
     __get_xform_instance as get_instance,
     __get_xform_itexts as get_texts,
     __get_xform_label as get_label,
+    # __get_xform_select_options as get_select_options,
     __parse_xml_to_dict as parse_xml_to_dict,
     __validate_avro_name as validate_avro_name,
 
@@ -903,6 +904,196 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
             ],
             # '_errors': []  # No expected errors
+        }
+
+        schema = parse_xform_to_avro_schema(xml_definition)
+        self.assertEqual(schema, expected, json.dumps(schema, indent=2))
+
+    def test__parse_xform_to_avro_schema_type_decoration(self):
+        self.maxDiff = None
+        xml_definition = '''
+            <h:html
+            xmlns="http://www.w3.org/2002/xforms"
+            xmlns:h="http://www.w3.org/1999/xhtml">
+            <h:head>
+                <h:title>aether-test</h:title>
+                <model>
+                    <instance>
+                        <None id="aether-test">
+                            <surveyor/>
+                            <building_gps/>
+                            <building_type/>
+                        </None>
+                    </instance>
+                    <bind nodeset="/None/surveyor" required="false()" type="select1"/>
+                    <bind nodeset="/None/building_gps" required="false()" type="geopoint"/>
+                    <bind nodeset="/None/building_type" required="false()" type="select"/>
+                </model>
+            </h:head>
+            <h:body>
+                <select1 ref="/None/surveyor">
+                    <label>Which surveyor is entering this data?</label>
+                    <item>
+                        <label>Surveyor 1</label>
+                        <value>surveyor_1</value>
+                    </item>
+                    <item>
+                        <label>Surveyor 2</label>
+                        <value>surveyor_2</value>
+                    </item>
+                    <item>
+                        <label>Surveyor 3</label>
+                        <value>surveyor_3</value>
+                    </item>
+                </select1>
+                <input ref="/None/building_gps">
+                    <label>Take a GPS point for this building</label>
+                </input>
+                <select ref="/None/building_type">
+                    <label>What kind of building is this?</label>
+                    <item>
+                        <label>Residential</label>
+                        <value>residential</value>
+                    </item>
+                    <item>
+                        <label>Non-residential</label>
+                        <value>non_residentia</value>
+                    </item>
+                    <item>
+                        <label>Mixed</label>
+                        <value>mixed</value>
+                    </item>
+                </select>
+            </h:body>
+        </h:html>
+        '''
+
+        expected = {
+            'name': 'AetherTest_0',
+            'doc': 'aether-test (id: aether-test, version: 0)',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': '_id',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'xForm ID',
+                    'type': [
+                        'null',
+                        'string'
+                    ]
+                },
+                {
+                    'name': '_version',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'xForm version',
+                    'type': [
+                        'null',
+                        'string'
+                    ]
+                },
+                {
+                    'name': 'surveyor',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'Which surveyor is entering this data?',
+                    '@xformType': 'select1',
+                    '@xformOptions': [
+                        {
+                            'label': 'Surveyor 1',
+                            'value': 'surveyor_1'
+                        },
+                        {
+                            'label': 'Surveyor 2',
+                            'value': 'surveyor_2'
+                        },
+                        {
+                            'label': 'Surveyor 3',
+                            'value': 'surveyor_3'
+                        }
+                    ],
+                    'type': [
+                        'null',
+                        'string'
+                    ]
+                },
+                {
+                    'name': 'building_gps',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'Take a GPS point for this building',
+                    '@xformType': 'geopoint',
+                    'type': [
+                        'null',
+                        {
+                            'name': 'building_gps',
+                            'namespace': 'AetherTest_0',
+                            'doc': 'Take a GPS point for this building',
+                            '@xformType': 'geopoint',
+                            'type': 'record',
+                            'fields': [
+                                {
+                                    'name': 'latitude',
+                                    'namespace': 'AetherTest_0.building_gps',
+                                    'doc': 'latitude',
+                                    'type': [
+                                        'null',
+                                        'float'
+                                    ]
+                                },
+                                {
+                                    'name': 'longitude',
+                                    'namespace': 'AetherTest_0.building_gps',
+                                    'doc': 'longitude',
+                                    'type': [
+                                        'null',
+                                        'float'
+                                    ]
+                                },
+                                {
+                                    'name': 'altitude',
+                                    'namespace': 'AetherTest_0.building_gps',
+                                    'doc': 'altitude',
+                                    'type': [
+                                        'null',
+                                        'float'
+                                    ]
+                                },
+                                {
+                                    'name': 'accuracy',
+                                    'namespace': 'AetherTest_0.building_gps',
+                                    'doc': 'accuracy',
+                                    'type': [
+                                        'null',
+                                        'float'
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    'name': 'building_type',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'What kind of building is this?',
+                    '@xformType': 'select',
+                    '@xformOptions': [
+                        {
+                            'label': 'Residential',
+                            'value': 'residential'
+                        },
+                        {
+                            'label': 'Non-residential',
+                            'value': 'non_residentia'
+                        },
+                        {
+                            'label': 'Mixed',
+                            'value': 'mixed'
+                        }
+                    ],
+                    'type': [
+                        'null',
+                        'string'
+                    ]
+                }
+            ]
         }
 
         schema = parse_xform_to_avro_schema(xml_definition)
