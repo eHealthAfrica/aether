@@ -718,6 +718,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 {
                     'name': 'Repeat_1',
                     'namespace': 'Nested_Repeats_Test_0',
+                    '@xformType': 'repeat',
                     'type': [
                         'null',
                         {
@@ -725,16 +726,19 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'items': {
                                 'name': 'Repeat_1',
                                 'namespace': 'Nested_Repeats_Test_0',
+                                '@xformType': 'repeat',
                                 'type': 'record',
                                 'fields': [
                                     {
                                         'name': 'name_1',
                                         'namespace': 'Nested_Repeats_Test_0.Repeat_1',
+                                        '@xformType': 'string',
                                         'type': ['null', 'string'],
                                     },
                                     {
                                         'name': 'Repeat_2',
                                         'namespace': 'Nested_Repeats_Test_0.Repeat_1',
+                                        '@xformType': 'repeat',
                                         'type': [
                                             'null',
                                             {
@@ -742,11 +746,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                                                 'items': {
                                                     'name': 'Repeat_2',
                                                     'namespace': 'Nested_Repeats_Test_0.Repeat_1',
+                                                    '@xformType': 'repeat',
                                                     'type': 'record',
                                                     'fields': [
                                                         {
                                                             'name': 'name_2',
                                                             'namespace': 'Nested_Repeats_Test_0.Repeat_1.Repeat_2',
+                                                            '@xformType': 'string',
                                                             'type': ['null', 'string'],
                                                         },
                                                     ],
@@ -807,21 +813,25 @@ class XFormUtilsAvroTests(CustomTestCase):
                 {
                     'name': 'h:full-name',
                     'namespace': 'WrongNames_0',
+                    '@xformType': 'group',
                     'type': [
                         'null',
                         {
                             'name': 'h:full-name',
                             'namespace': 'WrongNames_0',
+                            '@xformType': 'group',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'h:first-name',
                                     'namespace': 'WrongNames_0.h:full-name',
+                                    '@xformType': 'string',
                                     'type': ['null', 'string'],
                                 },
                                 {
                                     'name': 'h:last-name',
                                     'namespace': 'WrongNames_0.h:full-name',
+                                    '@xformType': 'string',
                                     'type': ['null', 'string'],
                                 },
                             ],
@@ -881,21 +891,25 @@ class XFormUtilsAvroTests(CustomTestCase):
                 {
                     'name': 'dup_property',
                     'namespace': 'DupNames_0',
+                    '@xformType': 'string',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': 'group_name',
                     'namespace': 'DupNames_0',
+                    '@xformType': 'group',
                     'type': [
                         'null',
                         {
                             'name': 'group_name',
                             'namespace': 'DupNames_0',
+                            '@xformType': 'group',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'dup_property',
                                     'namespace': 'DupNames_0.group_name',
+                                    '@xformType': 'string',
                                     'type': ['null', 'string'],
                                 },
                             ],

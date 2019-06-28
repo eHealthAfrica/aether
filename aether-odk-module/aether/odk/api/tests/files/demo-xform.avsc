@@ -18,46 +18,54 @@
     {
       "name": "starttime",
       "namespace": "MyTestForm_Test10",
+      "@xformType": "dateTime",
       "type": [ "null", "string" ]
     },
     {
       "name": "endtime",
       "namespace": "MyTestForm_Test10",
+      "@xformType": "dateTime",
       "type": [ "null", "string" ]
     },
     {
       "name": "deviceid",
       "namespace": "MyTestForm_Test10",
+      "@xformType": "string",
       "type": [ "null", "string" ]
     },
     {
       "name": "country",
       "namespace": "MyTestForm_Test10",
       "doc": "Country",
+      "@xformType": "select1",
       "type": [ "null", "string" ]
     },
     {
       "name": "region",
       "namespace": "MyTestForm_Test10",
       "doc": "Region",
+      "@xformType": "select1",
       "type": [ "null", "string" ]
     },
     {
       "name": "name",
       "namespace": "MyTestForm_Test10",
       "doc": "What is your name?",
+      "@xformType": "string",
       "type": [ "null", "string" ]
     },
     {
       "name": "location",
       "namespace": "MyTestForm_Test10",
       "doc": "Collect your GPS coordinates",
+      "@xformType": "geopoint",
       "type": [
         "null",
         {
           "name": "location",
           "namespace": "MyTestForm_Test10",
           "doc": "Collect your GPS coordinates",
+          "@xformType": "geopoint",
           "type": "record",
           "fields": [
             {
@@ -92,12 +100,14 @@
       "name": "location_none",
       "namespace": "MyTestForm_Test10",
       "doc": "Ignore your GPS coordinates",
+      "@xformType": "geopoint",
       "type": [
         "null",
         {
           "name": "location_none",
           "namespace": "MyTestForm_Test10",
           "doc": "Ignore your GPS coordinates",
+          "@xformType": "geopoint",
           "type": "record",
           "fields": [
             {
@@ -132,36 +142,42 @@
       "name": "image",
       "namespace": "MyTestForm_Test10",
       "doc": "Take a picture",
+      "@xformType": "binary",
       "type": [ "null", "string" ]
     },
     {
       "name": "number",
       "namespace": "MyTestForm_Test10",
       "doc": "How many?",
+      "@xformType": "int",
       "type": [ "null", "int" ]
     },
     {
       "name": "number2",
       "namespace": "MyTestForm_Test10",
       "doc": "Percentage",
+      "@xformType": "decimal",
       "type": [ "null", "double" ]
     },
     {
       "name": "date",
       "namespace": "MyTestForm_Test10",
       "doc": "When?",
+      "@xformType": "date",
       "type": [ "null", "string" ]
     },
     {
       "name": "datetime",
       "namespace": "MyTestForm_Test10",
       "doc": "At?",
+      "@xformType": "dateTime",
       "type": [ "null", "string" ]
     },
     {
       "name": "option",
       "namespace": "MyTestForm_Test10",
       "doc": "Choice (A/B)",
+      "@xformType": "select1",
       "type": [ "null", "string" ]
     },
     {
@@ -169,6 +185,7 @@
       "aliases": ["option-a"],
       "namespace": "MyTestForm_Test10",
       "doc": "Option A",
+      "@xformType": "group",
       "type": [
         "null",
         {
@@ -176,6 +193,7 @@
           "aliases": ["option-a"],
           "namespace": "MyTestForm_Test10",
           "doc": "Option A",
+          "@xformType": "group",
           "type": "record",
           "fields": [
             {
@@ -183,6 +201,7 @@
               "aliases": ["choice.a"],
               "namespace": "MyTestForm_Test10.option-a",
               "doc": "Choice A",
+              "@xformType": "string",
               "type": [ "null", "string" ]
             }
           ]
@@ -194,6 +213,7 @@
       "aliases": ["option-b"],
       "namespace": "MyTestForm_Test10",
       "doc": "Option B",
+      "@xformType": "group",
       "type": [
         "null",
         {
@@ -201,6 +221,7 @@
           "aliases": ["option-b"],
           "namespace": "MyTestForm_Test10",
           "doc": "Option B",
+          "@xformType": "group",
           "type": "record",
           "fields": [
             {
@@ -208,6 +229,7 @@
               "aliases": ["choice.b"],
               "namespace": "MyTestForm_Test10.option-b",
               "doc": "Choice B",
+              "@xformType": "string",
               "type": [ "null", "string" ]
             }
           ]
@@ -218,12 +240,14 @@
       "name": "lang",
       "namespace": "MyTestForm_Test10",
       "doc": "Spoken languages",
+      "@xformType": "select",
       "type": [ "null", "string" ]
     },
     {
       "name": "iterate",
       "namespace": "MyTestForm_Test10",
       "doc": "Indicate loop elements",
+      "@xformType": "repeat",
       "type": [
         "null",
         {
@@ -232,18 +256,21 @@
             "name": "iterate",
             "namespace": "MyTestForm_Test10",
             "doc": "Indicate loop elements",
+            "@xformType": "repeat",
             "type": "record",
             "fields": [
               {
                 "name": "index",
                 "namespace": "MyTestForm_Test10.iterate",
                 "doc": "Index",
+                "@xformType": "int",
                 "type": [ "null", "int" ]
               },
               {
                 "name": "value",
                 "namespace": "MyTestForm_Test10.iterate",
                 "doc": "Value",
+                "@xformType": "string",
                 "type": [ "null", "string" ]
               }
             ]
@@ -255,6 +282,7 @@
       "name": "iterate_one",
       "namespace": "MyTestForm_Test10",
       "doc": "Indicate one",
+      "@xformType": "repeat",
       "type": [
         "null",
         {
@@ -263,6 +291,7 @@
             "name": "iterate_one",
             "namespace": "MyTestForm_Test10",
             "doc": "Indicate one",
+            "@xformType": "repeat",
             "type": "record",
             "fields": [
               {
@@ -270,6 +299,7 @@
                 "aliases": ["it.em"],
                 "namespace": "MyTestForm_Test10.iterate_one",
                 "doc": "Item",
+                "@xformType": "string",
                 "type": [ "null", "string" ]
               }
             ]
@@ -281,6 +311,7 @@
       "name": "iterate_none",
       "namespace": "MyTestForm_Test10",
       "doc": "Indicate none",
+      "@xformType": "repeat",
       "type": [
         "null",
         {
@@ -289,12 +320,14 @@
             "name": "iterate_none",
             "namespace": "MyTestForm_Test10",
             "doc": "Indicate none",
+            "@xformType": "repeat",
             "type": "record",
             "fields": [
               {
                 "name": "nothing",
                 "namespace": "MyTestForm_Test10.iterate_none",
                 "doc": "None",
+                "@xformType": "string",
                 "type": [ "null", "string" ]
               }
             ]
@@ -306,24 +339,28 @@
       "name": "value",
       "namespace": "MyTestForm_Test10",
       "doc": "Dup value",
+      "@xformType": "string",
       "type": [ "null", "string" ]
     },
     {
       "name": "dup_group",
       "namespace": "MyTestForm_Test10",
       "doc": "Group",
+      "@xformType": "group",
       "type": [
         "null",
         {
           "name": "dup_group",
           "namespace": "MyTestForm_Test10",
           "doc": "Group",
+          "@xformType": "group",
           "type": "record",
           "fields": [
             {
               "name": "value",
               "namespace": "MyTestForm_Test10.dup_group",
               "doc": "Nested dup value",
+              "@xformType": "string",
               "type": [ "null", "string" ]
             }
           ]
@@ -334,26 +371,31 @@
       "name": "note_end",
       "namespace": "MyTestForm_Test10",
       "doc": "That's all folks!",
+      "@xformType": "string",
       "type": [ "null", "string" ]
     },
     {
       "name": "meta",
       "namespace": "MyTestForm_Test10",
+      "@xformType": "group",
       "type": [
         "null",
         {
           "name": "meta",
           "namespace": "MyTestForm_Test10",
+          "@xformType": "group",
           "type": "record",
           "fields": [
             {
               "name": "instanceID",
               "namespace": "MyTestForm_Test10.meta",
+              "@xformType": "string",
               "type": [ "null", "string" ]
             },
             {
               "name": "instanceName",
               "namespace": "MyTestForm_Test10.meta",
+              "@xformType": "string",
               "type": [ "null", "string" ]
             }
           ]
