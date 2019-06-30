@@ -655,7 +655,6 @@ class XFormUtilsAvroTests(CustomTestCase):
         schema = parse_xform_to_avro_schema(self.samples['xform']['raw-xml'])
         self.assertEqual(schema['name'], 'MyTestForm_Test10')
         self.assertEqual(schema['doc'], 'My Test Form (id: my-test-form, version: Test-1.0)')
-
         self.assertEqual(schema, xform_avro, json.dumps(schema, indent=2))
 
         schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'])
@@ -924,7 +923,6 @@ class XFormUtilsAvroTests(CustomTestCase):
         self.assertEqual(schema, expected, json.dumps(schema, indent=2))
 
     def test__parse_xform_to_avro_schema_type_decoration(self):
-        self.maxDiff = None
         xml_definition = '''
             <h:html
             xmlns="http://www.w3.org/2002/xforms"

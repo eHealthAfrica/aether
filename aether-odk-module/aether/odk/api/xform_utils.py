@@ -58,7 +58,7 @@ MSG_XFORM_MISSING_INSTANCE_ERR = _(
 )
 MSG_INVALID_NAME = _('Invalid name "{name}".')
 
-SELECT_KEYWORDS = ('select', 'select1', 'odk:rank')
+SELECT_TAGS = ('select', 'select1', 'odk:rank')
 
 
 # ------------------------------------------------------------------------------
@@ -264,6 +264,7 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
 
     xform_schema = __get_xform_instance_skeleton(xml_definition)
     xform_dict = __parse_xml_to_dict(xml_definition)
+    itexts = __get_xform_itexts(xform_dict)
     for xpath, definition in xform_schema.items():
         if len(xpath.split('/')) == 2:
             # include the KEY value
@@ -275,9 +276,17 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         current_name = xpath.split('/')[-1]
         current_doc = definition.get('label')
         select_options = None
-        if current_type in SELECT_KEYWORDS:
+        if current_type in SELECT_TAGS:
             select_node = list(__find_by_key_value(xform_dict, '@ref', xpath))[0]
-            select_options = select_node.get('item', select_node.get('itemset', []))
+            select_options = list(select_node.get('item', []))
+            # limitation: skips selects linked to a datasource with 'itemset'
+            # todo: extend visualization decoration to itemsets
+            for option in select_options:
+                if 'label' in option and isinstance(option['label'], dict) \
+                        and '@ref' in option['label'] and option['label']['@ref'].startswith('jr:itext'):
+                    ref_id = option['label']['@ref'].split("'")[1]
+                    translated_label = itexts[ref_id]
+                    option['label'] = translated_label
 
         parent_path = '/'.join(xpath.split('/')[:-1])
         parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
