@@ -199,7 +199,7 @@
       <bind nodeset="/Something_that_is_not_None/dup_group/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/note_end" readonly="true()" required="false()" type="string"/>
       <bind
-            calculate="concat('uuid:', uuid())"
+            jr:preload="uid"
             nodeset="/Something_that_is_not_None/meta/instanceID"
             readonly="true()"
             type="string"/>
