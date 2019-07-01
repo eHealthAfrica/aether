@@ -717,7 +717,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 {
                     'name': 'Repeat_1',
                     'namespace': 'Nested_Repeats_Test_0',
-                    '@xformType': 'repeat',
+                    '@aether_extended_type': 'repeat',
                     'type': [
                         'null',
                         {
@@ -725,19 +725,19 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'items': {
                                 'name': 'Repeat_1',
                                 'namespace': 'Nested_Repeats_Test_0',
-                                '@xformType': 'repeat',
+                                '@aether_extended_type': 'repeat',
                                 'type': 'record',
                                 'fields': [
                                     {
                                         'name': 'name_1',
                                         'namespace': 'Nested_Repeats_Test_0.Repeat_1',
-                                        '@xformType': 'string',
+                                        '@aether_extended_type': 'string',
                                         'type': ['null', 'string'],
                                     },
                                     {
                                         'name': 'Repeat_2',
                                         'namespace': 'Nested_Repeats_Test_0.Repeat_1',
-                                        '@xformType': 'repeat',
+                                        '@aether_extended_type': 'repeat',
                                         'type': [
                                             'null',
                                             {
@@ -745,13 +745,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                                                 'items': {
                                                     'name': 'Repeat_2',
                                                     'namespace': 'Nested_Repeats_Test_0.Repeat_1',
-                                                    '@xformType': 'repeat',
+                                                    '@aether_extended_type': 'repeat',
                                                     'type': 'record',
                                                     'fields': [
                                                         {
                                                             'name': 'name_2',
                                                             'namespace': 'Nested_Repeats_Test_0.Repeat_1.Repeat_2',
-                                                            '@xformType': 'string',
+                                                            '@aether_extended_type': 'string',
                                                             'type': ['null', 'string'],
                                                         },
                                                     ],
@@ -812,25 +812,25 @@ class XFormUtilsAvroTests(CustomTestCase):
                 {
                     'name': 'h:full-name',
                     'namespace': 'WrongNames_0',
-                    '@xformType': 'group',
+                    '@aether_extended_type': 'group',
                     'type': [
                         'null',
                         {
                             'name': 'h:full-name',
                             'namespace': 'WrongNames_0',
-                            '@xformType': 'group',
+                            '@aether_extended_type': 'group',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'h:first-name',
                                     'namespace': 'WrongNames_0.h:full-name',
-                                    '@xformType': 'string',
+                                    '@aether_extended_type': 'string',
                                     'type': ['null', 'string'],
                                 },
                                 {
                                     'name': 'h:last-name',
                                     'namespace': 'WrongNames_0.h:full-name',
-                                    '@xformType': 'string',
+                                    '@aether_extended_type': 'string',
                                     'type': ['null', 'string'],
                                 },
                             ],
@@ -890,25 +890,25 @@ class XFormUtilsAvroTests(CustomTestCase):
                 {
                     'name': 'dup_property',
                     'namespace': 'DupNames_0',
-                    '@xformType': 'string',
+                    '@aether_extended_type': 'string',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': 'group_name',
                     'namespace': 'DupNames_0',
-                    '@xformType': 'group',
+                    '@aether_extended_type': 'group',
                     'type': [
                         'null',
                         {
                             'name': 'group_name',
                             'namespace': 'DupNames_0',
-                            '@xformType': 'group',
+                            '@aether_extended_type': 'group',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'dup_property',
                                     'namespace': 'DupNames_0.group_name',
-                                    '@xformType': 'string',
+                                    '@aether_extended_type': 'string',
                                     'type': ['null', 'string'],
                                 },
                             ],
@@ -1007,8 +1007,8 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'name': 'surveyor',
                     'namespace': 'AetherTest_0',
                     'doc': 'Which surveyor is entering this data?',
-                    '@xformType': 'select1',
-                    '@xformOptions': [
+                    '@aether_extended_type': 'select1',
+                    '@aether_lookup': [
                         {
                             'label': 'Surveyor 1',
                             'value': 'surveyor_1'
@@ -1031,14 +1031,14 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'name': 'building_gps',
                     'namespace': 'AetherTest_0',
                     'doc': 'Take a GPS point for this building',
-                    '@xformType': 'geopoint',
+                    '@aether_extended_type': 'geopoint',
                     'type': [
                         'null',
                         {
                             'name': 'building_gps',
                             'namespace': 'AetherTest_0',
                             'doc': 'Take a GPS point for this building',
-                            '@xformType': 'geopoint',
+                            '@aether_extended_type': 'geopoint',
                             'type': 'record',
                             'fields': [
                                 {
@@ -1085,8 +1085,8 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'name': 'building_type',
                     'namespace': 'AetherTest_0',
                     'doc': 'What kind of building is this?',
-                    '@xformType': 'select',
-                    '@xformOptions': [
+                    '@aether_extended_type': 'select',
+                    '@aether_lookup': [
                         {
                             'label': 'Residential',
                             'value': 'residential'

@@ -298,11 +298,11 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
             'name': current_name,
             'namespace': namespace,
             'doc': current_doc,
-            '@xformType': current_type,
+            '@aether_extended_type': current_type,
         }
 
         if select_options:
-            current_field['@xformOptions'] = select_options
+            current_field['@aether_lookup'] = select_options if len(select_options) <= 20 else []
 
         # get AVRO valid name
         clean_current_name = __clean_odk_name(current_name)
