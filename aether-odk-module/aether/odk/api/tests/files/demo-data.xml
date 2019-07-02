@@ -19,9 +19,12 @@
     <name>Name</name>
     <country>CM</country>
     <region/>
+    <city/>
 
     <location>52.52469543 13.39282687 108.0 22.0</location>
     <location_none/>
+    <track/>
+    <polygon>52.52469543 13.39282687 108.0 22.0;13.39282687 52.52469543 108.0 22.0;52.52469543 13.39282687 108.0 22.0</polygon>
 
     <number>3</number>
     <number2>3.56</number2>
@@ -37,7 +40,8 @@
 
     <image/>
 
-    <lang>EN,FR</lang>
+    <lang>EN FR</lang>
+    <ranking_lang>EN FR GE</ranking_lang>
 
     <iterate>
         <index>1</index>

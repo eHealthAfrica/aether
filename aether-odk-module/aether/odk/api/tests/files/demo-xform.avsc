@@ -43,6 +43,12 @@
       "type": [ "null", "string" ]
     },
     {
+      "name": "city",
+      "namespace": "MyTestForm_Test10",
+      "doc": "City",
+      "type": [ "null", "string" ]
+    },
+    {
       "name": "name",
       "namespace": "MyTestForm_Test10",
       "doc": "What is your name?",
@@ -125,6 +131,91 @@
               "type": [ "null", "float" ]
             }
           ]
+        }
+      ]
+    },    {
+      "name": "track",
+      "namespace": "MyTestForm_Test10",
+      "doc": "Path",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "name": "track",
+            "namespace": "MyTestForm_Test10",
+            "doc": "Path",
+            "type": "record",
+            "fields": [
+              {
+                "name": "latitude",
+                "namespace": "MyTestForm_Test10.track",
+                "doc": "latitude",
+                "type": [ "null", "float" ]
+              },
+              {
+                "name": "longitude",
+                "namespace": "MyTestForm_Test10.track",
+                "doc": "longitude",
+                "type": [ "null", "float" ]
+              },
+              {
+                "name": "altitude",
+                "namespace": "MyTestForm_Test10.track",
+                "doc": "altitude",
+                "type": [ "null", "float" ]
+              },
+              {
+                "name": "accuracy",
+                "namespace": "MyTestForm_Test10.track",
+                "doc": "accuracy",
+                "type": [ "null", "float" ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "polygon",
+      "namespace": "MyTestForm_Test10",
+      "doc": "Boundary",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "name": "polygon",
+            "namespace": "MyTestForm_Test10",
+            "doc": "Boundary",
+            "type": "record",
+            "fields": [
+              {
+                "name": "latitude",
+                "namespace": "MyTestForm_Test10.polygon",
+                "doc": "latitude",
+                "type": [ "null", "float" ]
+              },
+              {
+                "name": "longitude",
+                "namespace": "MyTestForm_Test10.polygon",
+                "doc": "longitude",
+                "type": [ "null", "float" ]
+              },
+              {
+                "name": "altitude",
+                "namespace": "MyTestForm_Test10.polygon",
+                "doc": "altitude",
+                "type": [ "null", "float" ]
+              },
+              {
+                "name": "accuracy",
+                "namespace": "MyTestForm_Test10.polygon",
+                "doc": "accuracy",
+                "type": [ "null", "float" ]
+              }
+            ]
+          }
         }
       ]
     },
@@ -218,7 +309,13 @@
       "name": "lang",
       "namespace": "MyTestForm_Test10",
       "doc": "Spoken languages",
-      "type": [ "null", "string" ]
+      "type": [ "null", { "type": "array", "items": "string" } ]
+    },
+    {
+      "name": "ranking_lang",
+      "namespace": "MyTestForm_Test10",
+      "doc": "Ranking of languages",
+      "type": [ "null", { "type": "array", "items": "string" } ]
     },
     {
       "name": "iterate",

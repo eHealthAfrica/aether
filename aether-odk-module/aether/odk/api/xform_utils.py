@@ -142,21 +142,23 @@ def parse_submission(data, xml_definition):
                 if _type in ('date', 'dateTime'):
                     destination[k] = parser.parse(v).isoformat()
 
+                if _type in ('select', 'odk:rank'):
+                    # Space-separated list
+                    destination[k] = v.split()
+
                 if _type == 'geopoint':
-                    latitude, longitude, altitude, accuracy = v.split()
-                    destination[k] = {
-                        'latitude': float(latitude),
-                        'longitude': float(longitude),
-                        'altitude': float(altitude),
-                        'accuracy': float(accuracy),
-                    }
+                    destination[k] = __parse_geopoint_value(v)
+
+                if _type in ('geoshape', 'geotrace'):
+                    # Semi-colon-separated list of geopoints
+                    destination[k] = [__parse_geopoint_value(p) for p in v.split(';')]
+
+            elif _type in ('select', 'odk:rank', 'repeat'):
+                # null arrays are handled as empty arrays
+                destination[k] = []
 
             else:
-                if _type == 'repeat':
-                    # null arrays are handled as empty arrays
-                    destination[k] = []
-                else:
-                    destination[k] = None
+                destination[k] = None
 
     xpath_types = {
         xpath: definition.get('type')
@@ -310,7 +312,7 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                 ],
             })
 
-        # array
+        # array of objects
         elif current_type == 'repeat':
             parent['fields'].append({
                 **current_field,
@@ -328,42 +330,37 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                 ],
             })
 
-        # there are three types of GEO types: geopoint, geotrace and geoshape
-        # currently, only geopoint is implemented by ODK Collect
-        elif current_type == 'geopoint':
+        # array of strings
+        elif current_type in ('select', 'odk:rank'):
             parent['fields'].append({
                 **current_field,
                 'type': [
                     'null',
                     {
-                        **current_field,
-                        'type': 'record',
-                        'fields': [
-                            {
-                                'name': 'latitude',
-                                'namespace': f'{namespace}.{current_name}',
-                                'doc': _('latitude'),
-                                'type': __get_avro_primitive_type('float'),
-                            },
-                            {
-                                'name': 'longitude',
-                                'namespace': f'{namespace}.{current_name}',
-                                'doc': _('longitude'),
-                                'type': __get_avro_primitive_type('float'),
-                            },
-                            {
-                                'name': 'altitude',
-                                'namespace': f'{namespace}.{current_name}',
-                                'doc': _('altitude'),
-                                'type': __get_avro_primitive_type('float'),
-                            },
-                            {
-                                'name': 'accuracy',
-                                'namespace': f'{namespace}.{current_name}',
-                                'doc': _('accuracy'),
-                                'type': __get_avro_primitive_type('float'),
-                            },
-                        ],
+                        'type': 'array',
+                        'items': 'string',
+                    },
+                ],
+            })
+
+        # there are three types of GEO types: geopoint, geotrace and geoshape
+        elif current_type == 'geopoint':
+            parent['fields'].append({
+                **current_field,
+                'type': [
+                    'null',
+                    __parse_geopoint_field(current_field, f'{namespace}.{current_name}'),
+                ],
+            })
+
+        elif current_type in ('geoshape', 'geotrace'):
+            parent['fields'].append({
+                **current_field,
+                'type': [
+                    'null',
+                    {
+                        'type': 'array',
+                        'items': __parse_geopoint_field(current_field, f'{namespace}.{current_name}'),
                     },
                 ],
             })
@@ -726,6 +723,55 @@ def __get_xform_label(xform_dict, xpath, texts={}):
             return texts[label_id]
 
     return None
+
+
+def __parse_geopoint_value(value):
+    # Space-separated list of valid
+    #   latitude (decimal degrees),
+    #   longitude (decimal degrees),
+    #   altitude (decimal meters) and
+    #   accuracy (decimal meters)
+
+    latitude, longitude, altitude, accuracy = value.split()
+    return {
+        'latitude': float(latitude),
+        'longitude': float(longitude),
+        'altitude': float(altitude),
+        'accuracy': float(accuracy),
+    }
+
+
+def __parse_geopoint_field(field, namespace):
+    return {
+        **field,
+        'type': 'record',
+        'fields': [
+            {
+                'name': 'latitude',
+                'namespace': namespace,
+                'doc': _('latitude'),
+                'type': __get_avro_primitive_type('float'),
+            },
+            {
+                'name': 'longitude',
+                'namespace': namespace,
+                'doc': _('longitude'),
+                'type': __get_avro_primitive_type('float'),
+            },
+            {
+                'name': 'altitude',
+                'namespace': namespace,
+                'doc': _('altitude'),
+                'type': __get_avro_primitive_type('float'),
+            },
+            {
+                'name': 'accuracy',
+                'namespace': namespace,
+                'doc': _('accuracy'),
+                'type': __get_avro_primitive_type('float'),
+            },
+        ],
+    }
 
 
 def __get_avro_primitive_type(xform_type, required=False):
