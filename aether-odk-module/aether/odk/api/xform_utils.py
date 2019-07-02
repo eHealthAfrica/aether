@@ -263,8 +263,6 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
     }
 
     xform_schema = __get_xform_instance_skeleton(xml_definition)
-    xform_dict = __parse_xml_to_dict(xml_definition)
-    itexts = __get_xform_itexts(xform_dict)
     for xpath, definition in xform_schema.items():
         if len(xpath.split('/')) == 2:
             # include the KEY value
@@ -275,18 +273,7 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         current_type = definition.get('type')
         current_name = xpath.split('/')[-1]
         current_doc = definition.get('label')
-        select_options = None
-        if current_type in SELECT_TAGS:
-            select_node = list(__find_by_key_value(xform_dict, '@ref', xpath))[0]
-            select_options = list(select_node.get('item', []))
-            # limitation: skips selects linked to a datasource with 'itemset'
-            # todo: extend visualization decoration to itemsets
-            for option in select_options:
-                if 'label' in option and isinstance(option['label'], dict) \
-                        and '@ref' in option['label'] and option['label']['@ref'].startswith('jr:itext'):
-                    ref_id = option['label']['@ref'].split("'")[1]
-                    translated_label = itexts[ref_id]
-                    option['label'] = translated_label
+        current_choices = definition.get('choices')
 
         parent_path = '/'.join(xpath.split('/')[:-1])
         parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
@@ -301,8 +288,8 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
             '@aether_extended_type': current_type,
         }
 
-        if select_options:
-            current_field['@aether_lookup'] = select_options if len(select_options) <= 20 else []
+        if current_choices:
+            current_field['@aether_lookup'] = current_choices
 
         # get AVRO valid name
         clean_current_name = __clean_odk_name(current_name)
@@ -630,6 +617,9 @@ def __get_xform_instance_skeleton(xml_definition):
 
         - `label`, the linked label of the field, in case of multilanguage takes
           the translation for the default one.
+
+        - `choices`, a list of possible options if the field is of type select, select1, odk:rank
+          as { lable: 'Foo', value: 'foo'}
     '''
 
     schema = {}
@@ -656,6 +646,20 @@ def __get_xform_instance_skeleton(xml_definition):
                 xpath = bind_entry.get('@nodeset')
                 schema[xpath]['type'] = bind_entry.get('@type')
                 schema[xpath]['required'] = bind_entry.get('@required') == 'true()'
+                select_options = None
+                if schema[xpath]['type'] in SELECT_TAGS:
+                    select_node = list(__find_by_key_value(xform_dict, '@ref', xpath))[0]
+                    select_options = list(select_node.get('item', []))
+                    # limitation: skips selects linked to a datasource with 'itemset'
+                    # todo: extend visualization decoration to itemsets
+                    for option in select_options:
+                        if 'label' in option and isinstance(option['label'], dict) \
+                                and '@ref' in option['label'] and option['label']['@ref'].startswith('jr:itext'):
+                            ref_id = option['label']['@ref'].split("'")[1]
+                            translated_label = itexts[ref_id]
+                            option['label'] = translated_label
+                    if select_options and len(select_options) <= 20:
+                        schema[xpath]['choices'] = select_options
 
     # search in body all the repeat entries
     for entries in __find_in_dict(xform_dict, 'repeat'):
