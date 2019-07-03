@@ -105,6 +105,7 @@ services:
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       MINIO_STORAGE_MEDIA_URL: http://minio-test:9000/test-odk
       MULTITENANCY: "true"
+      ODK_COLLECT_ENDPOINT: collect-test/
       PGHOST: db-test
       STATIC_URL: /static/
       TEST_PARALLEL: ${TEST_PARALLEL}
