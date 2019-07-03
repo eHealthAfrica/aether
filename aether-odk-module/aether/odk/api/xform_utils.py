@@ -60,6 +60,8 @@ MSG_INVALID_NAME = _('Invalid name "{name}".')
 
 SELECT_TAGS = ('select', 'select1', 'odk:rank')
 
+SELECT_CHOICES_CUTOFF = 20
+
 
 # ------------------------------------------------------------------------------
 # Parser methods
@@ -619,7 +621,7 @@ def __get_xform_instance_skeleton(xml_definition):
           the translation for the default one.
 
         - `choices`, a list of possible options if the field is of type select, select1, odk:rank
-          as { lable: 'Foo', value: 'foo'}
+          as { label: 'Foo', value: 'foo'}
     '''
 
     schema = {}
@@ -646,19 +648,20 @@ def __get_xform_instance_skeleton(xml_definition):
                 xpath = bind_entry.get('@nodeset')
                 schema[xpath]['type'] = bind_entry.get('@type')
                 schema[xpath]['required'] = bind_entry.get('@required') == 'true()'
-                select_options = None
                 if schema[xpath]['type'] in SELECT_TAGS:
                     select_node = list(__find_by_key_value(xform_dict, '@ref', xpath))[0]
                     select_options = list(select_node.get('item', []))
                     # limitation: skips selects linked to a datasource with 'itemset'
                     # todo: extend visualization decoration to itemsets
                     for option in select_options:
-                        if 'label' in option and isinstance(option['label'], dict) \
-                                and '@ref' in option['label'] and option['label']['@ref'].startswith('jr:itext'):
+                        if (
+                            isinstance(option.get('label'), dict) and
+                            option['label'].get('@ref', '').startswith('jr:itext')
+                        ):
                             ref_id = option['label']['@ref'].split("'")[1]
                             translated_label = itexts[ref_id]
                             option['label'] = translated_label
-                    if select_options and len(select_options) <= 20:
+                    if len(select_options) and len(select_options) <= SELECT_CHOICES_CUTOFF:
                         schema[xpath]['choices'] = select_options
 
     # search in body all the repeat entries

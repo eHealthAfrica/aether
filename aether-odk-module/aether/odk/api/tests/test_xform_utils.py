@@ -25,7 +25,6 @@ from ..xform_utils import (
     __get_xform_instance as get_instance,
     __get_xform_itexts as get_texts,
     __get_xform_label as get_label,
-    # __get_xform_select_options as get_select_options,
     __parse_xml_to_dict as parse_xml_to_dict,
     __validate_avro_name as validate_avro_name,
 
