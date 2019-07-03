@@ -654,7 +654,6 @@ class XFormUtilsAvroTests(CustomTestCase):
         schema = parse_xform_to_avro_schema(self.samples['xform']['raw-xml'])
         self.assertEqual(schema['name'], 'MyTestForm_Test10')
         self.assertEqual(schema['doc'], 'My Test Form (id: my-test-form, version: Test-1.0)')
-
         self.assertEqual(schema, xform_avro, json.dumps(schema, indent=2))
 
         schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'])
@@ -717,6 +716,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 {
                     'name': 'Repeat_1',
                     'namespace': 'Nested_Repeats_Test_0',
+                    '@aether_extended_type': 'repeat',
                     'type': [
                         'null',
                         {
@@ -724,16 +724,19 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'items': {
                                 'name': 'Repeat_1',
                                 'namespace': 'Nested_Repeats_Test_0',
+                                '@aether_extended_type': 'repeat',
                                 'type': 'record',
                                 'fields': [
                                     {
                                         'name': 'name_1',
                                         'namespace': 'Nested_Repeats_Test_0.Repeat_1',
+                                        '@aether_extended_type': 'string',
                                         'type': ['null', 'string'],
                                     },
                                     {
                                         'name': 'Repeat_2',
                                         'namespace': 'Nested_Repeats_Test_0.Repeat_1',
+                                        '@aether_extended_type': 'repeat',
                                         'type': [
                                             'null',
                                             {
@@ -741,11 +744,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                                                 'items': {
                                                     'name': 'Repeat_2',
                                                     'namespace': 'Nested_Repeats_Test_0.Repeat_1',
+                                                    '@aether_extended_type': 'repeat',
                                                     'type': 'record',
                                                     'fields': [
                                                         {
                                                             'name': 'name_2',
                                                             'namespace': 'Nested_Repeats_Test_0.Repeat_1.Repeat_2',
+                                                            '@aether_extended_type': 'string',
                                                             'type': ['null', 'string'],
                                                         },
                                                     ],
@@ -806,21 +811,25 @@ class XFormUtilsAvroTests(CustomTestCase):
                 {
                     'name': 'h:full-name',
                     'namespace': 'WrongNames_0',
+                    '@aether_extended_type': 'group',
                     'type': [
                         'null',
                         {
                             'name': 'h:full-name',
                             'namespace': 'WrongNames_0',
+                            '@aether_extended_type': 'group',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'h:first-name',
                                     'namespace': 'WrongNames_0.h:full-name',
+                                    '@aether_extended_type': 'string',
                                     'type': ['null', 'string'],
                                 },
                                 {
                                     'name': 'h:last-name',
                                     'namespace': 'WrongNames_0.h:full-name',
+                                    '@aether_extended_type': 'string',
                                     'type': ['null', 'string'],
                                 },
                             ],
@@ -880,21 +889,25 @@ class XFormUtilsAvroTests(CustomTestCase):
                 {
                     'name': 'dup_property',
                     'namespace': 'DupNames_0',
+                    '@aether_extended_type': 'string',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': 'group_name',
                     'namespace': 'DupNames_0',
+                    '@aether_extended_type': 'group',
                     'type': [
                         'null',
                         {
                             'name': 'group_name',
                             'namespace': 'DupNames_0',
+                            '@aether_extended_type': 'group',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'dup_property',
                                     'namespace': 'DupNames_0.group_name',
+                                    '@aether_extended_type': 'string',
                                     'type': ['null', 'string'],
                                 },
                             ],
@@ -903,6 +916,174 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
             ],
             # '_errors': []  # No expected errors
+        }
+
+        schema = parse_xform_to_avro_schema(xml_definition)
+        self.assertEqual(schema, expected, json.dumps(schema, indent=2))
+
+    def test__parse_xform_to_avro_schema_type_decoration(self):
+        xml_definition = '''
+            <h:html
+            xmlns="http://www.w3.org/2002/xforms"
+            xmlns:h="http://www.w3.org/1999/xhtml">
+            <h:head>
+                <h:title>aether-test</h:title>
+                <model>
+                    <instance>
+                        <None id="aether-test">
+                            <surveyor/>
+                            <building_gps/>
+                            <building_type/>
+                        </None>
+                    </instance>
+                    <bind nodeset="/None/surveyor" required="false()" type="select1"/>
+                    <bind nodeset="/None/building_gps" required="false()" type="geopoint"/>
+                    <bind nodeset="/None/building_type" required="false()" type="select"/>
+                </model>
+            </h:head>
+            <h:body>
+                <select1 ref="/None/surveyor">
+                    <label>Which surveyor is entering this data?</label>
+                    <item>
+                        <label>Surveyor 1</label>
+                        <value>surveyor_1</value>
+                    </item>
+                    <item>
+                        <label>Surveyor 2</label>
+                        <value>surveyor_2</value>
+                    </item>
+                    <item>
+                        <label>Surveyor 3</label>
+                        <value>surveyor_3</value>
+                    </item>
+                </select1>
+                <input ref="/None/building_gps">
+                    <label>Take a GPS point for this building</label>
+                </input>
+                <select ref="/None/building_type">
+                    <label>What kind of building is this?</label>
+                    <item>
+                        <label>Residential</label>
+                        <value>residential</value>
+                    </item>
+                    <item>
+                        <label>Non-residential</label>
+                        <value>non_residentia</value>
+                    </item>
+                    <item>
+                        <label>Mixed</label>
+                        <value>mixed</value>
+                    </item>
+                </select>
+            </h:body>
+        </h:html>
+        '''
+
+        expected = {
+            'name': 'AetherTest_0',
+            'doc': 'aether-test (id: aether-test, version: 0)',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': '_id',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'xForm ID',
+                    'type': ['null', 'string']
+                },
+                {
+                    'name': '_version',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'xForm version',
+                    'type': ['null', 'string']
+                },
+                {
+                    'name': 'surveyor',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'Which surveyor is entering this data?',
+                    '@aether_extended_type': 'select1',
+                    '@aether_lookup': [
+                        {
+                            'label': 'Surveyor 1',
+                            'value': 'surveyor_1'
+                        },
+                        {
+                            'label': 'Surveyor 2',
+                            'value': 'surveyor_2'
+                        },
+                        {
+                            'label': 'Surveyor 3',
+                            'value': 'surveyor_3'
+                        }
+                    ],
+                    'type': ['null', 'string']
+                },
+                {
+                    'name': 'building_gps',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'Take a GPS point for this building',
+                    '@aether_extended_type': 'geopoint',
+                    'type': [
+                        'null',
+                        {
+                            'name': 'building_gps',
+                            'namespace': 'AetherTest_0',
+                            'doc': 'Take a GPS point for this building',
+                            '@aether_extended_type': 'geopoint',
+                            'type': 'record',
+                            'fields': [
+                                {
+                                    'name': 'latitude',
+                                    'namespace': 'AetherTest_0.building_gps',
+                                    'doc': 'latitude',
+                                    'type': ['null', 'float']
+                                },
+                                {
+                                    'name': 'longitude',
+                                    'namespace': 'AetherTest_0.building_gps',
+                                    'doc': 'longitude',
+                                    'type': ['null', 'float']
+                                },
+                                {
+                                    'name': 'altitude',
+                                    'namespace': 'AetherTest_0.building_gps',
+                                    'doc': 'altitude',
+                                    'type': ['null', 'float']
+                                },
+                                {
+                                    'name': 'accuracy',
+                                    'namespace': 'AetherTest_0.building_gps',
+                                    'doc': 'accuracy',
+                                    'type': ['null', 'float']
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    'name': 'building_type',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'What kind of building is this?',
+                    '@aether_extended_type': 'select',
+                    '@aether_lookup': [
+                        {
+                            'label': 'Residential',
+                            'value': 'residential'
+                        },
+                        {
+                            'label': 'Non-residential',
+                            'value': 'non_residentia'
+                        },
+                        {
+                            'label': 'Mixed',
+                            'value': 'mixed'
+                        }
+                    ],
+                    'type': [
+                        'null',
+                        {'type': 'array', 'items': 'string'}
+                    ]
+                }
+            ]
         }
 
         schema = parse_xform_to_avro_schema(xml_definition)
