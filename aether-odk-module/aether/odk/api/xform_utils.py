@@ -557,6 +557,47 @@ def __parse_xml_to_dict(xml_content):
 
     root = ElementTree.fromstring(xml_content)
     xml_dict = __etree_to_dict(root)
+
+    # Sometimes the "h" namespace is missing, this means that our validation and
+    # rest of methods are going to fail. To avoid that we are going to add
+    # the missing namespace in those cases.
+    #
+    # From:
+    #
+    #     {
+    #         'html': {
+    #             'head': {
+    #                 'title': ...
+    #             },
+    #             'body': { ... },
+    #         }
+    #     }
+    #
+    # To:
+    #
+    #     {
+    #         'h:html': {
+    #             'h:head': {
+    #                 'h:title': ...
+    #             },
+    #             'h:body': { ... },
+    #         }
+    #     }
+
+    if 'h:html' not in xml_dict and 'html' in xml_dict:
+        xml_dict['h:html'] = xml_dict.pop('html')
+
+    if xml_dict.get('h:html'):
+        if 'h:body' not in xml_dict['h:html'] and 'body' in xml_dict['h:html']:
+            xml_dict['h:html']['h:body'] = xml_dict['h:html'].pop('body')
+
+        if 'h:head' not in xml_dict['h:html'] and 'head' in xml_dict['h:html']:
+            xml_dict['h:html']['h:head'] = xml_dict['h:html'].pop('head')
+
+        if xml_dict['h:html'].get('h:head'):
+            if 'h:title' not in xml_dict['h:html']['h:head'] and 'title' in xml_dict['h:html']['h:head']:
+                xml_dict['h:html']['h:head']['h:title'] = xml_dict['h:html']['h:head'].pop('title')
+
     return xml_dict
 
 
@@ -860,9 +901,11 @@ def __get_all_paths(dictionary):
 def __etree_to_dict(elem):
     # this method is not perfect but it's enough for us
     def clean(name):
-        for uri, prefix in ElementTree.register_namespace._namespace_map.items():
-            pref = f'{prefix}:' if prefix else ''
-            name = name.replace('{%s}' % uri, pref)
+        # replaces "{http://namespace/url}tag-name" with "namespace:tag-name"
+        if name.startswith('{'):
+            for uri, prefix in ElementTree.register_namespace._namespace_map.items():
+                pref = f'{prefix}:' if prefix else ''
+                name = name.replace('{%s}' % uri, pref)
         return name
 
     tt = clean(elem.tag)

@@ -272,6 +272,50 @@ class XFormUtilsParsersTests(CustomTestCase):
         }
         self.assertEqual(parse_xml_to_dict(xml_str), expected)
 
+    def test__parse_xml_to_dict__missing_h_namespace(self):
+        self.assertEqual(parse_xml_to_dict('<html/>'),
+                         {'h:html': None})
+        self.assertEqual(parse_xml_to_dict('<html><html/></html>'),
+                         {'h:html': {'html': None}},
+                         'Add "h:" to html while be root')
+        self.assertEqual(parse_xml_to_dict('<html><body><head/></body></html>'),
+                         {'h:html': {'h:body': {'head': None}}},
+                         'Add "h:" to head while be html child')
+        self.assertEqual(parse_xml_to_dict('<xhtml><head/><body/></xhtml>'),
+                         {'xhtml': {'head': None, 'body': None}},
+                         'Add "h:" to head/body while be html child')
+
+        expected = {'h:html': {'h:head': {'h:title': None}, 'h:body': None}}
+
+        # missing all cases
+        xml_str = '<html><head><title/></head><body/></html>'
+        self.assertEqual(parse_xml_to_dict(xml_str), expected)
+
+        # missing some cases
+        xml_str = '''
+            <html
+                    xmlns="http://www.w3.org/2002/xforms"
+                    xmlns:h="http://www.w3.org/1999/xhtml">
+                <h:head>
+                    <title/>
+                </h:head>
+                <body/>
+            </html>
+        '''
+        self.assertEqual(parse_xml_to_dict(xml_str), expected)
+
+        xml_str = '''
+            <h:html
+                    xmlns="http://www.w3.org/2002/xforms"
+                    xmlns:h="http://www.w3.org/1999/xhtml">
+                <head>
+                    <title/>
+                </head>
+                <h:body/>
+            </h:html>
+        '''
+        self.assertEqual(parse_xml_to_dict(xml_str), expected)
+
     def test__parse_xform_file(self):
         with open(self.samples['xform']['file-xls'], 'rb') as fp:
             xls_content = parse_xform_file('xform.xls', fp)
