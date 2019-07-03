@@ -24,6 +24,8 @@ from django.test import override_settings
 from . import CustomTestCase
 from ..models import Project, XForm, MediaFile
 
+_URL_PREFIX = '/' + settings.ODK_COLLECT_ENDPOINT[:-1] if settings.ODK_COLLECT_ENDPOINT else ''
+
 
 @override_settings(MULTITENANCY=False)
 class ModelsTests(CustomTestCase):
@@ -84,8 +86,8 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(instance.title, 'xForm - Test')
         self.assertEqual(instance.version, 'v1')
         self.assertEqual(instance.download_url,
-                         f'/forms/{instance.pk}/form.xml?version=v1')
-        self.assertEqual(instance.manifest_url, '', 'without media files no manifest url')
+                         f'{_URL_PREFIX}/forms/{instance.pk}/form.xml?version=v1')
+        self.assertEqual(instance.manifest_url, '', 'without media files there is no manifest url')
         self.assertEqual(str(instance), 'xForm - Test - xform-id-test')
 
         self.assertEqual(instance.md5sum, '5e97c4e929f64d7701804043e3b544ba')
@@ -109,14 +111,15 @@ class ModelsTests(CustomTestCase):
 
         media.media_file = SimpleUploadedFile('sample2.txt', b'abcd')
         media.save()
-        self.assertEqual(media.name, 'sample.txt', 'no replaces name')
+        self.assertEqual(media.name, 'sample.txt', 'does not replace name')
         self.assertEqual(media.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
         self.assertEqual(media.hash, 'md5:e2fc714c4727ee9395f324cd2e7f331f')
         self.assertEqual(media.media_file_url, media.media_file.url)
-        self.assertEqual(media.download_url, f'/media-file/{media.pk}')
-        # with media files there is manifest_url
+        self.assertEqual(media.download_url,
+                         f'{_URL_PREFIX}/media-file/{media.pk}')
         self.assertEqual(xform.manifest_url,
-                         f'/forms/{xform.id}/manifest.xml?version={xform.version}')
+                         f'{_URL_PREFIX}/forms/{xform.id}/manifest.xml?version={xform.version}',
+                         'with media files there is a manifest_url')
 
     def test__xform__version_control(self):
         xform = XForm.objects.create(
