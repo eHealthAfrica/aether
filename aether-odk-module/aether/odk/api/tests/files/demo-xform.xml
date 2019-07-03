@@ -11,37 +11,37 @@
     <model>
       <itext>
         <translation default="true()" lang="English">
-          <text id="static_instance-country-0">
+          <text id="static_instance-countries-0">
             <value>Cameroon</value>
           </text>
-          <text id="static_instance-country-1">
+          <text id="static_instance-countries-1">
             <value>Nigeria</value>
           </text>
-          <text id="static_instance-region-0">
+          <text id="static_instance-regions-0">
             <value>Zone 1</value>
           </text>
-          <text id="static_instance-region-1">
+          <text id="static_instance-regions-1">
             <value>Zone 2</value>
           </text>
-          <text id="static_instance-region-2">
+          <text id="static_instance-regions-2">
             <value>North</value>
           </text>
-          <text id="static_instance-region-3">
+          <text id="static_instance-regions-3">
             <value>South</value>
           </text>
-          <text id="static_instance-option-0">
+          <text id="static_instance-options-0">
             <value>Option A</value>
           </text>
-          <text id="static_instance-option-1">
+          <text id="static_instance-options-1">
             <value>Option B</value>
           </text>
-          <text id="static_instance-language-0">
+          <text id="static_instance-languages-0">
             <value>English</value>
           </text>
-          <text id="static_instance-language-1">
+          <text id="static_instance-languages-1">
             <value>French</value>
           </text>
-          <text id="static_instance-language-2">
+          <text id="static_instance-languages-2">
             <value>German</value>
           </text>
         </translation>
@@ -53,9 +53,12 @@
           <deviceid/>
           <country/>
           <region/>
+          <city/>
           <name/>
           <location/>
           <location_none/>
+          <track/>
+          <polygon/>
           <image/>
           <number/>
           <number2/>
@@ -69,6 +72,7 @@
             <choice.b/>
           </option-b>
           <lang>EN</lang>
+          <ranking_lang/>
           <iterate jr:template="">
             <index/>
             <value/>
@@ -90,66 +94,66 @@
           </meta>
         </Something_that_is_not_None>
       </instance>
-      <instance id="country">
+      <instance id="countries">
         <root>
           <item>
-            <itextId>static_instance-country-0</itextId>
+            <itextId>static_instance-countries-0</itextId>
             <name>CM</name>
           </item>
           <item>
-            <itextId>static_instance-country-1</itextId>
+            <itextId>static_instance-countries-1</itextId>
             <name>NG</name>
           </item>
         </root>
       </instance>
-      <instance id="region">
+      <instance id="regions">
         <root>
           <item>
-            <itextId>static_instance-region-0</itextId>
+            <itextId>static_instance-regions-0</itextId>
             <name>CM-1</name>
             <country>CM</country>
           </item>
           <item>
-            <itextId>static_instance-region-1</itextId>
+            <itextId>static_instance-regions-1</itextId>
             <name>CM-2</name>
             <country>CM</country>
           </item>
           <item>
-            <itextId>static_instance-region-2</itextId>
+            <itextId>static_instance-regions-2</itextId>
             <name>NG-N</name>
             <country>NG</country>
           </item>
           <item>
-            <itextId>static_instance-region-3</itextId>
+            <itextId>static_instance-regions-3</itextId>
             <name>NG-S</name>
             <country>NG</country>
           </item>
         </root>
       </instance>
-      <instance id="option">
+      <instance id="options">
         <root>
           <item>
-            <itextId>static_instance-option-0</itextId>
+            <itextId>static_instance-options-0</itextId>
             <name>a</name>
           </item>
           <item>
-            <itextId>static_instance-option-1</itextId>
+            <itextId>static_instance-options-1</itextId>
             <name>b</name>
           </item>
         </root>
       </instance>
-      <instance id="language">
+      <instance id="languages">
         <root>
           <item>
-            <itextId>static_instance-language-0</itextId>
+            <itextId>static_instance-languages-0</itextId>
             <name>EN</name>
           </item>
           <item>
-            <itextId>static_instance-language-1</itextId>
+            <itextId>static_instance-languages-1</itextId>
             <name>FR</name>
           </item>
           <item>
-            <itextId>static_instance-language-2</itextId>
+            <itextId>static_instance-languages-2</itextId>
             <name>GE</name>
           </item>
         </root>
@@ -177,9 +181,12 @@
             type="string"/>
       <bind nodeset="/Something_that_is_not_None/country" required="false()" type="select1"/>
       <bind nodeset="/Something_that_is_not_None/region" required="false()" type="select1"/>
+      <bind nodeset="/Something_that_is_not_None/city" required="false()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/name" required="false()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/location" required="false()" type="geopoint"/>
       <bind nodeset="/Something_that_is_not_None/location_none" required="false()" type="geopoint"/>
+      <bind nodeset="/Something_that_is_not_None/track" required="false()" type="geotrace"/>
+      <bind nodeset="/Something_that_is_not_None/polygon" required="false()" type="geoshape"/>
       <bind nodeset="/Something_that_is_not_None/image" required="false()" type="binary"/>
       <bind nodeset="/Something_that_is_not_None/number" required="false()" type="int"/>
       <bind nodeset="/Something_that_is_not_None/number2" required="false()" type="decimal"/>
@@ -191,6 +198,7 @@
       <bind nodeset="/Something_that_is_not_None/option-b" relevant=" /Something_that_is_not_None/option ='b'"/>
       <bind nodeset="/Something_that_is_not_None/option-b/choice.b" type="string"/>
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
+      <bind nodeset="/Something_that_is_not_None/ranking_lang" type="odk:rank"/>
       <bind nodeset="/Something_that_is_not_None/iterate/index" type="int"/>
       <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate_one/it.em" type="string"/>
@@ -223,11 +231,14 @@
     </select1>
     <select1 ref="/Something_that_is_not_None/region">
       <label>Region</label>
-      <itemset nodeset="instance('region')/root/item[country =  /Something_that_is_not_None/country ]">
+      <itemset nodeset="instance('regions')/root/item[country =  /Something_that_is_not_None/country ]">
         <value ref="name"/>
         <label ref="jr:itext(itextId)"/>
       </itemset>
     </select1>
+    <input ref="/Something_that_is_not_None/city" query="instance('cities')/root/item[country =  /Something_that_is_not_None/country  and region =  /Something_that_is_not_None/region ]">
+      <label>City</label>
+    </input>
     <input ref="/Something_that_is_not_None/name">
       <label>What is your name?</label>
     </input>
@@ -236,6 +247,12 @@
     </input>
     <input ref="/Something_that_is_not_None/location_none">
       <label>Ignore your GPS coordinates</label>
+    </input>
+    <input ref="/Something_that_is_not_None/track">
+      <label>Path</label>
+    </input>
+    <input ref="/Something_that_is_not_None/polygon">
+      <label>Boundary</label>
     </input>
     <upload mediatype="image/*" ref="/Something_that_is_not_None/image">
       <label>Take a picture</label>
@@ -290,6 +307,21 @@
         <value>GE</value>
       </item>
     </select>
+    <odk:rank ref="/Something_that_is_not_None/ranking_lang">
+      <label>Ranking of languages</label>
+      <item>
+        <label>English</label>
+        <value>EN</value>
+      </item>
+      <item>
+        <label>French</label>
+        <value>FR</value>
+      </item>
+      <item>
+        <label>German</label>
+        <value>GE</value>
+      </item>
+    </odk:rank>
     <group ref="/Something_that_is_not_None/iterate">
       <label>Indicate loop elements</label>
       <repeat

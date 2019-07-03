@@ -988,19 +988,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'name': '_id',
                     'namespace': 'AetherTest_0',
                     'doc': 'xForm ID',
-                    'type': [
-                        'null',
-                        'string'
-                    ]
+                    'type': ['null', 'string']
                 },
                 {
                     'name': '_version',
                     'namespace': 'AetherTest_0',
                     'doc': 'xForm version',
-                    'type': [
-                        'null',
-                        'string'
-                    ]
+                    'type': ['null', 'string']
                 },
                 {
                     'name': 'surveyor',
@@ -1021,10 +1015,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'value': 'surveyor_3'
                         }
                     ],
-                    'type': [
-                        'null',
-                        'string'
-                    ]
+                    'type': ['null', 'string']
                 },
                 {
                     'name': 'building_gps',
@@ -1044,37 +1035,25 @@ class XFormUtilsAvroTests(CustomTestCase):
                                     'name': 'latitude',
                                     'namespace': 'AetherTest_0.building_gps',
                                     'doc': 'latitude',
-                                    'type': [
-                                        'null',
-                                        'float'
-                                    ]
+                                    'type': ['null', 'float']
                                 },
                                 {
                                     'name': 'longitude',
                                     'namespace': 'AetherTest_0.building_gps',
                                     'doc': 'longitude',
-                                    'type': [
-                                        'null',
-                                        'float'
-                                    ]
+                                    'type': ['null', 'float']
                                 },
                                 {
                                     'name': 'altitude',
                                     'namespace': 'AetherTest_0.building_gps',
                                     'doc': 'altitude',
-                                    'type': [
-                                        'null',
-                                        'float'
-                                    ]
+                                    'type': ['null', 'float']
                                 },
                                 {
                                     'name': 'accuracy',
                                     'namespace': 'AetherTest_0.building_gps',
                                     'doc': 'accuracy',
-                                    'type': [
-                                        'null',
-                                        'float'
-                                    ]
+                                    'type': ['null', 'float']
                                 }
                             ]
                         }
@@ -1101,7 +1080,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                     ],
                     'type': [
                         'null',
-                        'string'
+                        {'type': 'array', 'items': 'string'}
                     ]
                 }
             ]
