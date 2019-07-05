@@ -109,12 +109,16 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(media.md5sum, '900150983cd24fb0d6963f7d28e17f72')
         self.assertEqual(str(media), 'sample.txt')
 
+        response = media.get_content()
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('Content-Disposition', response)
+        self.assertEqual(response.content, b'abc')
+
         media.media_file = SimpleUploadedFile('sample2.txt', b'abcd')
         media.save()
         self.assertEqual(media.name, 'sample.txt', 'does not replace name')
         self.assertEqual(media.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
         self.assertEqual(media.hash, 'md5:e2fc714c4727ee9395f324cd2e7f331f')
-        self.assertEqual(media.media_file_url, media.media_file.url)
         self.assertEqual(media.download_url,
                          f'{_URL_PREFIX}/media-file/{media.pk}')
         self.assertEqual(xform.manifest_url,

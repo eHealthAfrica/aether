@@ -21,6 +21,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from aether.sdk.drf.serializers import (
+    DynamicFieldsModelSerializer,
     FilteredHyperlinkedRelatedField,
     HyperlinkedIdentityField,
     HyperlinkedRelatedField,
@@ -65,7 +66,7 @@ class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
         fields = '__all__'
 
 
-class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MappingSetSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='mappingset-detail')
     project_url = HyperlinkedRelatedField(
@@ -95,7 +96,7 @@ class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MappingSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='mapping-detail')
     mappingset_url = HyperlinkedRelatedField(
@@ -124,17 +125,30 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AttachmentSerializerNested(DynamicFieldsMixin, serializers.ModelSerializer):
+class AttachmentSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
-    name = serializers.CharField(read_only=True)
-    url = serializers.CharField(read_only=True, source='attachment_file_url')
+    name = serializers.CharField(allow_null=True, default=None)
+    submission_revision = serializers.CharField(allow_null=True, default=None)
+
+    url = HyperlinkedIdentityField(view_name='attachment-detail')
+    attachment_file_url = HyperlinkedIdentityField(view_name='attachment-content')
+    submission_url = HyperlinkedRelatedField(
+        view_name='submission-detail',
+        source='submission',
+        read_only=True,
+    )
+
+    submission = MtPrimaryKeyRelatedField(
+        queryset=models.Submission.objects.all(),
+        mt_field='project',
+    )
 
     class Meta:
         model = models.Attachment
-        fields = ('name', 'url')
+        fields = '__all__'
 
 
-class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='submission-detail')
     project_url = HyperlinkedRelatedField(
@@ -161,8 +175,11 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
 
     # this will return all linked attachment files
-    # (name, relative url) in one request call
-    attachments = AttachmentSerializerNested(many=True, read_only=True)
+    attachments = AttachmentSerializer(
+        fields=('id', 'name'),
+        many=True,
+        read_only=True,
+    )
 
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
@@ -176,8 +193,11 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
 
     def create(self, validated_data):
-        if validated_data.get('mappingset') is None:
-            raise serializers.ValidationError('Mappingset must be provided on initial submission')
+        if not validated_data.get('mappingset'):
+            raise serializers.ValidationError(
+                _('Mappingset must be provided on initial submission')
+            )
+
         instance = super(SubmissionSerializer, self).create(validated_data)
         try:
             run_entity_extraction(instance)
@@ -192,30 +212,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-
-    name = serializers.CharField(allow_null=True, default=None)
-    submission_revision = serializers.CharField(allow_null=True, default=None)
-
-    url = HyperlinkedIdentityField(view_name='attachment-detail')
-    attachment_file_url = serializers.CharField(read_only=True)
-    submission_url = HyperlinkedRelatedField(
-        view_name='submission-detail',
-        source='submission',
-        read_only=True,
-    )
-
-    submission = MtPrimaryKeyRelatedField(
-        queryset=models.Submission.objects.all(),
-        mt_field='project',
-    )
-
-    class Meta:
-        model = models.Attachment
-        fields = '__all__'
-
-
-class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class SchemaSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='schema-detail')
     schemadecorators_url = FilteredHyperlinkedRelatedField(
@@ -230,7 +227,7 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SchemaDecoratorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class SchemaDecoratorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='schemadecorator-detail')
     project_url = HyperlinkedRelatedField(
@@ -291,7 +288,7 @@ class EntityListSerializer(serializers.ListSerializer):
         return models.Entity.objects.bulk_create(entities)
 
 
-class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='entity-detail')
     project_url = HyperlinkedRelatedField(
@@ -326,9 +323,9 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     # this field is used to include the linked nested entities
     resolved = serializers.JSONField(read_only=True, default={})
 
-    # this will return all linked attachment files
-    # (name, relative url) in one request call
-    attachments = AttachmentSerializerNested(
+    # this will return all linked attachment files in one request call
+    attachments = AttachmentSerializer(
+        fields=('id', 'name'),
         many=True,
         read_only=True,
         source='submission.attachments',
@@ -381,7 +378,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         list_serializer_class = EntityListSerializer
 
 
-class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class ProjectStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
@@ -398,7 +395,7 @@ class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         )
 
 
-class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MappingSetStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()

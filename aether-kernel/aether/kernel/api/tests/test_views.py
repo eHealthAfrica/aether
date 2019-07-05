@@ -22,6 +22,7 @@ from unittest import mock
 import uuid
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -774,3 +775,19 @@ class ViewsTest(TestCase):
         ).json()
         self.assertEqual(len(response), 1)
         self.assertEqual(response[0], self.schemadecorator.name)
+
+    def test__attachment__content(self):
+        attachment = models.Attachment.objects.create(
+            submission=self.submission,
+            attachment_file=SimpleUploadedFile('sample.txt', b'abc'),
+        )
+        content_url = reverse('attachment-content', kwargs={'pk': attachment.pk})
+
+        response = self.client.get(content_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('Content-Disposition', response)
+        self.assertEqual(response.content, b'abc')
+
+        self.client.logout()
+        response = self.client.get(content_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

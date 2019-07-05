@@ -36,7 +36,7 @@ class ViewsTests(CustomTestCase):
         self.url_get_media_content = self.xform.media_files.first().download_url
         self.url_list = reverse('xform-list-xml')
 
-    def test__form_get__none(self):
+    def test__collect__form_get__none(self):
         url = reverse('xform-get-download', kwargs={'pk': 0})
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -45,7 +45,7 @@ class ViewsTests(CustomTestCase):
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test__form_get__no_surveyors(self):
+    def test__collect__form_get__no_surveyors(self):
         response = self.client.get(self.url_get_form, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content.decode(), self.xform.xml_data)
@@ -67,7 +67,7 @@ class ViewsTests(CustomTestCase):
         content = response.content.decode()
         self.assertIn('81', content, 'expect explicit port to be kept')
 
-    def test__form_get__one_surveyor(self):
+    def test__collect__form_get__one_surveyor(self):
         self.xform.surveyors.add(self.helper_create_surveyor())
 
         response = self.client.get(self.url_get_form, **self.headers_user)
@@ -79,7 +79,7 @@ class ViewsTests(CustomTestCase):
         response = self.client.get(self.url_get_media_content, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test__form_get__as_surveyor(self):
+    def test__collect__form_get__as_surveyor(self):
         self.xform.surveyors.add(self.user)
 
         self.assertEqual(self.xform.download_url, self.url_get_form)
@@ -110,7 +110,7 @@ class ViewsTests(CustomTestCase):
         response = self.client.get(self.url_get_media, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test__form_get__as_superuser(self):
+    def test__collect__form_get__as_superuser(self):
         self.helper_create_superuser()
         # with at least one surveyor
         self.xform.surveyors.add(self.helper_create_surveyor())
@@ -122,7 +122,7 @@ class ViewsTests(CustomTestCase):
         response = self.client.get(self.url_get_media, **self.headers_admin)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test__form_list(self):
+    def test__collect__form_list(self):
         response = self.client.get(self.url_list, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = response.content.decode()
@@ -169,7 +169,7 @@ class ViewsTests(CustomTestCase):
         content = response.content.decode()
         self.assertNotIn('<xform>', content, 'expect no forms in list')
 
-    def test__form_list__no_surveyors(self):
+    def test__collect__form_list__no_surveyors(self):
         # if no granted surveyors...
         response = self.client.get(self.url_list, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -177,7 +177,7 @@ class ViewsTests(CustomTestCase):
                       response.content.decode(),
                       'current user is granted surveyor')
 
-    def test__form_list__one_surveyor(self):
+    def test__collect__form_list__one_surveyor(self):
         # if at least one surveyor
         self.xform.surveyors.add(self.helper_create_surveyor())
         response = self.client.get(self.url_list, **self.headers_user)
@@ -186,7 +186,7 @@ class ViewsTests(CustomTestCase):
                          response.content.decode(),
                          'current user is not granted surveyor')
 
-    def test__form_list__as_surveyor(self):
+    def test__collect__form_list__as_surveyor(self):
         self.xform.surveyors.add(self.user)
         response = self.client.get(self.url_list, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -194,7 +194,7 @@ class ViewsTests(CustomTestCase):
                       response.content.decode(),
                       'current user is granted surveyor')
 
-    def test__form_list__as_superuser(self):
+    def test__collect__form_list__as_superuser(self):
         self.helper_create_superuser()
         # with at least one surveyor
         self.xform.surveyors.add(self.helper_create_surveyor())
@@ -308,3 +308,16 @@ class ViewsTests(CustomTestCase):
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 2)
+
+    def test__media_file__content(self):
+        media = self.xform.media_files.first()
+        content_url = reverse('mediafile-content', kwargs={'pk': media.pk})
+        self.assertEqual(content_url, f'/media-files/{media.pk}/content/')
+
+        response = self.client.get(content_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.get(content_url, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('Content-Disposition', response)
+        self.assertEqual(response.content, b'abc')

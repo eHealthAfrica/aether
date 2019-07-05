@@ -164,6 +164,10 @@ PRODUCER_ADMIN_PW=$(gen_random_string)
 # set to 1 to disable parallel execution
 TEST_PARALLEL=
 
+# to speed up development changes in the SDK library
+# https://github.com/eHealthAfrica/aether-django-sdk-library
+SDK_PATH=../aether-django-sdk-library
+
 # Docker network
 NETWORK_NAME=aether_dev
 NETWORK_DOMAIN=aether.local

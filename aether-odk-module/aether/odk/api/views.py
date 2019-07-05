@@ -126,6 +126,11 @@ class MediaFileViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     search_fields = ('name', 'xform__title',)
     mt_field = 'xform__project'
 
+    @action(detail=True, methods=['get'])
+    def content(self, request, pk=None, *args, **kwargs):
+        media = self.get_object_or_404(pk=pk)
+        return media.get_content()
+
 
 class SurveyorViewSet(MtUserViewSetMixin, viewsets.ModelViewSet):
     '''

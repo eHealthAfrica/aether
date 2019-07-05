@@ -136,9 +136,13 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(attachment.submission_revision, submission.revision)
         self.assertIsNone(attachment.revision)
         self.assertEqual(attachment.project, submission.project)
-        self.assertEqual(attachment.attachment_file_url, attachment.attachment_file.url)
         self.assertFalse(attachment.is_accessible(REALM))
         self.assertIsNone(attachment.get_realm())
+
+        response = attachment.get_content()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'abc')
+        self.assertNotIn('Content-Disposition', response)
 
         attachment_2 = models.Attachment.objects.create(
             submission=submission,
@@ -406,6 +410,7 @@ class ModelsTests(TransactionTestCase):
             schema=schema,
         )
         self.assertEqual(schemadecorator.topic, {'name': 'schema decorator'})
+        self.assertIsNotNone(schemadecorator.topic_prettified)
 
         schemadecorator.name = 'new schema decorator name'
         schemadecorator.save()
