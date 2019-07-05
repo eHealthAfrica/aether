@@ -170,6 +170,21 @@ class SerializersTests(TestCase):
         self.assertTrue(mapping.is_valid(), mapping.errors)
         mapping.save()
 
+        # check the submission without mappingset
+        submission = serializers.SubmissionSerializer(
+            data={
+                'project': project.data['id'],
+                'payload': EXAMPLE_SOURCE_DATA,
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(submission.is_valid(), submission.errors)
+
+        with self.assertRaises(ValidationError) as ve:
+            submission.save()
+        self.assertIn('Mappingset must be provided on initial submission',
+                      str(ve.exception))
+
         # check the submission with entity extraction errors
         submission = serializers.SubmissionSerializer(
             data={

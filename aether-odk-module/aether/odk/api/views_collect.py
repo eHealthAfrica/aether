@@ -224,18 +224,7 @@ def media_file_get_content(request, pk, *args, **kwargs):
     if not is_surveyor(request, media.xform):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-    # get content from File Storage and return it back
-    response = exec_request(method='GET', url=media.media_file_url)
-    http_response = HttpResponse(
-        content=response,
-        status=response.status_code,
-        content_type=response.headers.get('Content-Type'),
-    )
-    http_response['Content-Type'] = response.headers.get('Content-Type')
-    # include "content-disposition" as header (required by ODK Collect)
-    http_response['Content-Disposition'] = f'attachment; filename="{media.name}"'
-
-    return http_response
+    return media.get_content(as_attachment=True)
 
 
 @api_view(['GET'])

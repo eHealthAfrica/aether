@@ -112,6 +112,7 @@ services:
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
+      PROFILING_ENABLED: "true"
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -126,8 +127,7 @@ services:
       MINIO_STORAGE_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
       MINIO_STORAGE_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
       MINIO_STORAGE_ENDPOINT: minio:9000
-      # Use these settings to make it accessible via browser
-      MINIO_STORAGE_MEDIA_URL: http://localhost:9000/kernel
+      MINIO_STORAGE_MEDIA_URL: http://minio:9000/kernel
       MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: "true"
       MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY: "true"
 
@@ -159,6 +159,8 @@ services:
       WEB_SERVER_PORT: 8100
     volumes:
       - ./aether-kernel:/code
+      # to speed up SDK development changes
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
 
       # static folder
       - ./.persistent_data/static/kernel:/var/www/static
@@ -185,6 +187,7 @@ services:
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
+      PROFILING_ENABLED: "true"
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -199,8 +202,7 @@ services:
       MINIO_STORAGE_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
       MINIO_STORAGE_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
       MINIO_STORAGE_ENDPOINT: minio:9000
-      # Use these settings to make it accessible via browser
-      MINIO_STORAGE_MEDIA_URL: http://localhost:9000/odk
+      MINIO_STORAGE_MEDIA_URL: http://minio:9000/odk
       MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: "true"
       MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY: "true"
 
@@ -228,6 +230,8 @@ services:
       # WEB_SERVER_PORT: 8443
     volumes:
       - ./aether-odk-module:/code
+      # to speed up SDK development changes
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
 
       # static folder
       - ./.persistent_data/static/odk:/var/www/static
@@ -255,6 +259,7 @@ services:
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
+      PROFILING_ENABLED: "true"
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -296,6 +301,8 @@ services:
       WEB_SERVER_PORT: 8106
     volumes:
       - ./aether-couchdb-sync-module:/code
+      # to speed up SDK development changes
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
 
       # static folder
       - ./.persistent_data/static/sync:/var/www/static
@@ -320,6 +327,7 @@ services:
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
+      PROFILING_ENABLED: "true"
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -351,6 +359,8 @@ services:
       WEB_SERVER_PORT: 8104
     volumes:
       - ./aether-ui:/code
+      # to speed up SDK development changes
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
 
       # static folder
       - ./.persistent_data/static/ui:/var/www/static

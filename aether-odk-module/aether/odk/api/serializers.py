@@ -23,6 +23,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from aether.sdk.drf.serializers import (
+    DynamicFieldsModelSerializer,
     HyperlinkedIdentityField,
     HyperlinkedRelatedField,
 )
@@ -38,9 +39,10 @@ from .xform_utils import parse_xform_file, validate_xform
 from .surveyors_utils import get_surveyors, get_surveyor_group
 
 
-class MediaFileSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MediaFileSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     name = serializers.CharField(allow_null=True, default=None)
+    media_file_url = HyperlinkedIdentityField(view_name='mediafile-content')
 
     xform = MtPrimaryKeyRelatedField(
         queryset=XForm.objects.all(),
@@ -52,7 +54,7 @@ class MediaFileSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='xform-detail')
     project_url = HyperlinkedRelatedField(
@@ -79,7 +81,11 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
 
     # this will return all media files in one request call
-    media_files = MediaFileSerializer(many=True, read_only=True)
+    media_files = MediaFileSerializer(
+        fields=('id', 'name'),
+        many=True,
+        read_only=True,
+    )
 
     project = MtPrimaryKeyRelatedField(
         queryset=Project.objects.all(),
@@ -106,7 +112,7 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SurveyorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     password = serializers.CharField(style={'input_type': 'password'})
 
@@ -156,8 +162,13 @@ class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
         many=True,
         queryset=get_surveyors(),
     )
+
     # this will return all linked xForms with media files in one request call
-    xforms = XFormSerializer(read_only=True, many=True)
+    xforms = XFormSerializer(
+        omit=('url', 'project_url', 'project', 'avro_schema', 'kernel_id'),
+        read_only=True,
+        many=True,
+    )
 
     class Meta:
         model = Project
