@@ -22,13 +22,14 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
+from aether.sdk.drf.serializers import DynamicFieldsModelSerializer
 from aether.sdk.multitenancy.serializers import MtModelSerializer, MtPrimaryKeyRelatedField
 from aether.sdk.multitenancy.utils import add_user_to_realm
 
 from .models import Project, Schema, MobileUser
 
 
-class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class SchemaSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     avro_file = serializers.FileField(
         write_only=True,
@@ -61,14 +62,14 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
 
     # this will return all linked schemas in one request call
-    schemas = SchemaSerializer(read_only=True, many=True)
+    schemas = SchemaSerializer(omit=('project', ), read_only=True, many=True)
 
     class Meta:
         model = Project
         fields = '__all__'
 
 
-class MobileUserSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MobileUserSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     def create(self, validated_data):
         instance = super(MobileUserSerializer, self).create(validated_data)

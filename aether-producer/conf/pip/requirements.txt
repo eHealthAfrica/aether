@@ -20,7 +20,7 @@ Click==7.0
 confluent-kafka==1.0.1
 entrypoints==0.3
 flake8==3.7.7
-Flask==1.0.3
+Flask==1.1.0
 gevent==1.4.0
 greenlet==0.4.15
 idna==2.8
@@ -29,7 +29,7 @@ itsdangerous==1.1.0
 Jinja2==2.10.1
 MarkupSafe==1.1.1
 mccabe==0.6.1
-more-itertools==7.0.0
+more-itertools==7.1.0
 packaging==19.0
 pluggy==0.12.0
 psycogreen==1.0.1
@@ -38,7 +38,7 @@ py==1.8.0
 pycodestyle==2.5.0
 pyflakes==2.1.1
 pyparsing==2.4.0
-pytest==4.6.3
+pytest==5.0.0
 requests==2.22.0
 six==1.12.0
 spavro==1.1.22

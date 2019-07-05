@@ -22,6 +22,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from aether.sdk.drf.serializers import (
+    DynamicFieldsModelSerializer,
     HyperlinkedIdentityField,
     HyperlinkedRelatedField,
 )
@@ -34,7 +35,7 @@ from . import models
 from .utils import get_default_project
 
 
-class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class ContractSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='contract-detail')
     pipeline_url = HyperlinkedRelatedField(
@@ -54,7 +55,7 @@ class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class PipelineSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='pipeline-detail')
 

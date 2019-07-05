@@ -21,7 +21,6 @@ from collections import namedtuple
 import csv
 import json
 import logging
-import os
 import re
 import tempfile
 import uuid
@@ -403,10 +402,10 @@ class ExporterViewSet(ModelViewSet):
             csv.unregister_dialect(options.csv_dialect)
             logger.info(f'File "{file_name}" ready!')
 
-            response = FileResponse(open(file_path, 'rb'))
+            response = FileResponse(streaming_content=open(file_path, 'rb'),
+                                    as_attachment=True,
+                                    filename=file_name)
             response['Content-Type'] = content_type
-            response['Content-Disposition'] = f'attachment; filename="{file_name}"'
-            response['Content-Length'] = os.path.getsize(file_path)
             response['Access-Control-Expose-Headers'] = 'Content-Disposition'
 
             return response

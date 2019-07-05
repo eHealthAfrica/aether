@@ -322,7 +322,7 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             result = utils.bulk_delete_by_mappings(opts, pk)
             mappingset.delete()
             return Response(result)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             return Response(
                 str(e),
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -343,11 +343,17 @@ class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             result = utils.bulk_delete_by_mappings(opts, None, [pk])
             mapping.delete()
             return Response(result)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             return Response(
                 str(e),
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @action(detail=True, methods=['get'], url_path='topics')
+    def topics(self, request, pk=None):
+        mapping = self.get_object_or_404(pk=pk)
+        topics = mapping.schemadecorators.all().values_list('topic__name', flat=True).order_by()
+        return Response(topics)
 
 
 class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
@@ -389,6 +395,11 @@ class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
     mt_field = 'submission__project'
+
+    @action(detail=True, methods=['get'])
+    def content(self, request, pk=None, *args, **kwargs):
+        attachment = self.get_object_or_404(pk=pk)
+        return attachment.get_content()
 
 
 class SchemaViewSet(viewsets.ModelViewSet):

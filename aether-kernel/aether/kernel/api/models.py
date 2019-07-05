@@ -31,7 +31,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
-from aether.sdk.utils import json_prettified
+from aether.sdk.utils import json_prettified, get_file_content
 
 from .constants import NAMESPACE
 from .validators import (
@@ -324,9 +324,8 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
     def project(self):
         return self.submission.project
 
-    @property
-    def attachment_file_url(self):
-        return self.attachment_file.url
+    def get_content(self):
+        return get_file_content(self.name, self.attachment_file.url)
 
     def save(self, *args, **kwargs):
         # calculate file hash

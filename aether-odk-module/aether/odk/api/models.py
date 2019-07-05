@@ -30,7 +30,7 @@ from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
-from aether.sdk.utils import json_prettified
+from aether.sdk.utils import json_prettified, get_file_content
 
 from .xform_utils import (
     get_xform_data_from_xml,
@@ -315,9 +315,8 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
     def hash(self):
         return f'md5:{self.md5sum}'
 
-    @property
-    def media_file_url(self):
-        return self.media_file.url
+    def get_content(self, as_attachment=False):
+        return get_file_content(self.name, self.media_file.url, as_attachment)
 
     @property
     def download_url(self):

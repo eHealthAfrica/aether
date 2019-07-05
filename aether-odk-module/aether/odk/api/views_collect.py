@@ -131,6 +131,30 @@ logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
 
 
+def _get_host(request, current_path):
+    # ODK Collect needs the full URL to get the resources. They have only the path
+    # like /my/resouce/path/id but not the scheme or the host name,
+    # using the current path we try to figure out the real host to build the
+    # linked URLs in the XML templates.
+    #
+    # If our path is:               http://my-host:8080/my/nested/path/any-odk-url
+    # and our current path is:      /any-odk-url
+    # the result must be:           http://my-host:8443/my/nested/path
+    #
+    # With this we can build the final URLs in the templates and ODK Collect
+    # does not complain with its security requirements: https scheme or 8443 port
+
+    host = request.build_absolute_uri(request.path).replace(current_path, '')
+
+    # If the request is not HTTPS, the host must include port 8443
+    # or ODK Collect will not be able to get the resource
+    url_info = urlparse(host)
+    if url_info.scheme != 'https' and url_info.port != 8443:  # pragma: no cover
+        host = f'http://{url_info.netloc}:8443{url_info.path}'
+
+    return host
+
+
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
@@ -146,16 +170,10 @@ def xform_list(request, *args, **kwargs):
     if formID:
         xforms = xforms.filter(form_id=formID)
 
-    host = request.build_absolute_uri(request.path).replace(reverse('xform-list-xml'), '')
-    # If the request is not HTTPS, the host must include port 8443
-    # or ODK Collect will not be able to get the resource
-    url_info = urlparse(host)
-    if url_info.scheme != 'https' and not url_info.port:
-        host = f'http://{url_info.netloc}:8443{url_info.path}'
     return Response(
         data={
+            'host': _get_host(request, reverse('xform-list-xml')),
             'xforms': [xf for xf in xforms if is_surveyor(request, xf)],
-            'host': host,
             'verbose': request.query_params.get('verbose', '').lower() == 'true',
         },
         template_name='xformList.xml',
@@ -206,18 +224,7 @@ def media_file_get_content(request, pk, *args, **kwargs):
     if not is_surveyor(request, media.xform):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-    # get content from File Storage and return it back
-    response = exec_request(method='GET', url=media.media_file_url)
-    http_response = HttpResponse(
-        content=response,
-        status=response.status_code,
-        content_type=response.headers.get('Content-Type'),
-    )
-    http_response['Content-Type'] = response.headers.get('Content-Type')
-    # include "content-disposition" as header (required by ODK Collect)
-    http_response['Content-Disposition'] = f'attachment; filename="{media.name}"'
-
-    return http_response
+    return media.get_content(as_attachment=True)
 
 
 @api_view(['GET'])
@@ -248,16 +255,9 @@ def xform_get_manifest(request, pk, *args, **kwargs):
         logger.warning(MSG_XFORM_VERSION_WARNING.format(
             requested_version=version, current_version=xform.version))
 
-    host = request.build_absolute_uri(request.path) \
-                  .replace(reverse('xform-get-manifest', kwargs={'pk': pk}), '')
-    # If the request is not HTTPS, the host must include port 8443
-    # or ODK Collect will not be able to get the resource
-    url_info = urlparse(host)
-    if url_info.scheme != 'https' and not url_info.port:
-        host = f'http://{url_info.netloc}:8443{url_info.path}'
     return Response(
         data={
-            'host': host,
+            'host': _get_host(request, reverse('xform-get-manifest', kwargs={'pk': pk})),
             'media_files': xform.media_files.all(),
         },
         template_name='xformManifest.xml',
