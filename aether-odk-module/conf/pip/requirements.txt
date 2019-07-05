@@ -12,9 +12,10 @@
 #
 ################################################################################
 
-aether.sdk==1.1.0
-boto3==1.9.180
-botocore==1.12.180
+aether.sdk==1.1.1
+autopep8==1.4.4
+boto3==1.9.183
+botocore==1.12.183
 cachetools==3.1.1
 certifi==2019.6.16
 chardet==3.0.4
@@ -25,6 +26,7 @@ django-cors-headers==3.0.2
 django-debug-toolbar==2.0
 django-minio-storage==0.2.2
 django-prometheus==1.0.15
+django-silk==3.0.2
 django-storages==1.7.1
 django-uwsgi==0.2.2
 djangorestframework==3.9.4
@@ -41,10 +43,13 @@ google-cloud-core==1.0.2
 google-cloud-storage==1.16.1
 google-resumable-media==0.3.2
 googleapis-common-protos==1.6.0
+gprof2dot==2017.9.19
 idna==2.8
+Jinja2==2.10.1
 jmespath==0.9.4
 linecache2==1.0.0
 lxml==4.3.4
+MarkupSafe==1.1.1
 mccabe==0.6.1
 minio==4.0.18
 prometheus-client==0.7.1
