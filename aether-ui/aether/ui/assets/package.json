@@ -37,9 +37,9 @@
     "whatwg-fetch": "~3.0.0"
   },
   "devDependencies": {
-    "@babel/core": "~7.4.0",
-    "@babel/plugin-proposal-class-properties": "~7.4.0",
-    "@babel/preset-env": "~7.4.0",
+    "@babel/core": "~7.5.0",
+    "@babel/plugin-proposal-class-properties": "~7.5.0",
+    "@babel/preset-env": "~7.5.0",
     "@babel/preset-react": "~7.0.0",
     "@hot-loader/react-dom": "~16.8.0",
     "babel-loader": "~8.0.0",
