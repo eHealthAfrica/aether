@@ -182,6 +182,8 @@ class MultitenancyTests(CustomTestCase):
         project = xform.project
         media = xform.media_files.first()
 
+        project.add_to_realm(self.request)
+
         self.assertEqual(project.surveyors.count(), 0, 'no granted surveyors')
         self.assertEqual(xform.surveyors.count(), 0, 'no granted surveyors')
 
