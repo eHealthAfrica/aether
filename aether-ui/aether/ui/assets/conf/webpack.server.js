@@ -25,8 +25,8 @@ const webpack = require('webpack')
 const buildConfig = require('./webpack.common')
 
 const WEBPACK_PORT = 3004
-const WEBPACK_URL = `http://localhost:${WEBPACK_PORT}`
-const WEBPACK_HMR_PATH = '/__webpack_hmr'
+const WEBPACK_URL = `http://aether.local`
+const WEBPACK_HMR_PATH = '/ui-assets/__webpack_hmr'
 
 const HMR_URL = 'webpack-hot-middleware/client?' +
   '&path=' + WEBPACK_URL + WEBPACK_HMR_PATH +
@@ -44,7 +44,7 @@ const webpackOptions = Object.assign(
     output: {
       // Tell django to use this URL to load packages
       // and not use STATIC_URL + bundle_name
-      publicPath: WEBPACK_URL + '/static/'
+      publicPath: WEBPACK_URL + '/ui-assets/static/'
     },
 
     plugins: [
@@ -64,12 +64,6 @@ const serverOptions = {
 
   inline: true,
   historyApiFallback: true,
-
-  // Fixes:
-  //    Access to XXX at 'http://localhost:{port}/static/ZZZ' from origin
-  //    has been blocked by CORS policy
-  // Triggered by HMR
-  headers: { 'Access-Control-Allow-Origin': '*' },
   https: false,
 
   // It suppress error shown in console, so it has to be set to false.

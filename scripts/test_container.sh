@@ -40,23 +40,30 @@ function build_container {
         "$1"-test
 }
 
-function wait_for_kernel {
-    KERNEL_HEALTH_URL="http://localhost:9100/health"
-    until curl -s $KERNEL_HEALTH_URL > /dev/null; do
-        >&2 echo_message "Waiting for Kernel..."
+function wait_for_db {
+    until $DC_KERNEL_RUN eval pg_isready -q; do
+        >&2 echo "Waiting for database..."
         sleep 2
     done
 }
 
-function wait_for_db {
-    until $DC_TEST run --rm kernel-test eval pg_isready -q; do
-        >&2 echo_message "Waiting for db-test..."
+function start_kernel_test {
+    echo_message "Starting kernel"
+    wait_for_db
+    $DC_TEST up -d kernel-test
+
+    until $DC_KERNEL_RUN manage check_url -u $KERNEL_HEALTH_URL >/dev/null; do
+        >&2 echo "Waiting for Kernel..."
         sleep 2
     done
+    echo_message "kernel ready!"
 }
 
 # TEST environment
 DC_TEST="docker-compose -f docker-compose-test.yml"
+DC_KERNEL_RUN="$DC_TEST run --rm kernel-test"
+KERNEL_HEALTH_URL="http://kernel-test:9100/health"
+
 BUILD_OPTIONS="${BUILD_OPTIONS:-}"
 APP_VERSION=$(date "+%Y%m%d%H%M%S")
 APP_REVISION=`git rev-parse --abbrev-ref HEAD`
@@ -87,17 +94,12 @@ if [[ $1 != "kernel" ]]; then
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")
 
     build_container kernel
-
-    echo_message "Starting kernel"
-    wait_for_db
-    $DC_TEST up -d kernel-test
-    wait_for_kernel
-    echo_message "kernel ready!"
+    start_kernel_test
 
     # Producer and Integration need readonlyuser to be present
     if [[ $1 = "producer" || $1 == "integration" ]]; then
         echo_message "Creating readonlyuser on Kernel DB"
-        $DC_TEST run --rm kernel-test eval python /code/sql/create_readonly_user.py
+        $DC_KERNEL_RUN eval python /code/sql/create_readonly_user.py
 
         if [[ $1 = "integration" ]]
         then

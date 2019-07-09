@@ -40,8 +40,6 @@ services:
     volumes:
       # enable cors for mobile app in-browser development:
       - ./local-setup/couchdb/config.ini:/usr/local/etc/couchdb/local.ini
-    ports:
-      - 5984:5984
 
   redis-base:
     image: redis:alpine
@@ -78,9 +76,7 @@ services:
     environment:
       MINIO_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
-    command: minio server --quiet --address minio:9000 /data
-    ports:
-      - 9000:9000
+    command: minio server --quiet --address minio:9090 /data
 
   keycloak-base:
     image: jboss/keycloak:latest
@@ -94,8 +90,6 @@ services:
       KEYCLOAK_USER: ${KEYCLOAK_ADMIN_USERNAME}
       KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KEYCLOAK_HTTP_PORT: 8080
-    ports:
-      - 8080:8080
 
 
   # ---------------------------------
@@ -126,8 +120,8 @@ services:
       DJANGO_STORAGE_BACKEND: minio
       MINIO_STORAGE_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
       MINIO_STORAGE_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
-      MINIO_STORAGE_ENDPOINT: minio:9000
-      MINIO_STORAGE_MEDIA_URL: http://minio:9000/kernel
+      MINIO_STORAGE_ENDPOINT: minio:9090
+      MINIO_STORAGE_MEDIA_URL: http://minio:9090/kernel
       MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: "true"
       MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY: "true"
 
@@ -168,8 +162,6 @@ services:
       - ./.persistent_data/export/kernel:/tmp
       # backup folder
       - ./.persistent_data/backups/kernel:/backups
-    ports:
-      - 8100:8100
     command: start_dev
 
 
@@ -201,8 +193,8 @@ services:
       DJANGO_STORAGE_BACKEND: minio
       MINIO_STORAGE_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
       MINIO_STORAGE_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
-      MINIO_STORAGE_ENDPOINT: minio:9000
-      MINIO_STORAGE_MEDIA_URL: http://minio:9000/odk
+      MINIO_STORAGE_ENDPOINT: minio:9090
+      MINIO_STORAGE_MEDIA_URL: http://minio:9090/odk
       MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: "true"
       MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY: "true"
 
@@ -224,10 +216,7 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
-      # behind ngnix
       WEB_SERVER_PORT: 8102
-      # standalone (without nginx) (ODK Collect only accepts 443 and 8443 ports)
-      # WEB_SERVER_PORT: 8443
     volumes:
       - ./aether-odk-module:/code
       # to speed up SDK development changes
@@ -237,11 +226,6 @@ services:
       - ./.persistent_data/static/odk:/var/www/static
       # backup folder
       - ./.persistent_data/backups/odk:/backups
-    ports:
-      # behind ngnix
-      - 8102:8102
-      # standalone (without nginx)
-      # - 8443:8443
     command: start_dev
 
 
@@ -308,8 +292,6 @@ services:
       - ./.persistent_data/static/sync:/var/www/static
       # backup folder
       - ./.persistent_data/backups/sync:/backups
-    ports:
-      - 8106:8106
     command: start_dev
 
 
@@ -366,8 +348,6 @@ services:
       - ./.persistent_data/static/ui:/var/www/static
       # backup folder
       - ./.persistent_data/backups/ui:/backups
-    ports:
-      - 8104:8104
     command: start_dev
 
   ui-assets-base:
@@ -389,8 +369,6 @@ services:
       - ./aether-ui/aether/ui/assets/css:/code/css
       - ./aether-ui/aether/ui/assets/tests:/code/tests
       - ./aether-ui/aether/ui/assets/package.json:/code/package.json
-    ports:
-      - 3004:3004
     command: start_dev
 
 
@@ -408,8 +386,6 @@ services:
 
   kafka-base:
     image: confluentinc/cp-kafka:5.2.1
-    ports:
-      - 29092:29092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
@@ -428,10 +404,14 @@ services:
     image: aether-producer
     build: ./aether-producer
     stdin_open: true
-    volumes:
-      - ./aether-producer:/code
     environment:
       PYTHONUNBUFFERED: 1
+
+      # default settings file
+      PRODUCER_SETTINGS_FILE: /code/producer/settings.json
+
+      PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
+      PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
 
       # These variables will override the ones indicated in the settings file
       KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
@@ -449,12 +429,7 @@ services:
       OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
       OFFSET_DB_NAME: producer_offset_db
 
-      PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
-      PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
       SERVER_PORT: 5005
-
-      # default settings file
-      PRODUCER_SETTINGS_FILE: /code/producer/settings.json
-    ports:
-      - 5005:5005
+    volumes:
+      - ./aether-producer:/code
     command: start
