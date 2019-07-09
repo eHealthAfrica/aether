@@ -30,14 +30,12 @@ source .env
 
 KC_DB=keycloak
 KC_USER=keycloak
-KC_URL="http://localhost:8080/auth"
+KC_URL="http://keycloak:8080/auth"
 
 docker-compose kill db keycloak
 docker-compose pull db keycloak
 
-echo_message "Starting database server..."
-docker-compose up -d db
-sleep 5
+start_db
 
 DB_ID=$(docker-compose ps -q db)
 PSQL="docker container exec -i $DB_ID psql"
@@ -57,16 +55,10 @@ EOSQL
 
 
 echo_message "Starting keycloak server..."
-
-docker-compose up -d keycloak
+start_container keycloak $KC_URL
 
 KC_ID=$(docker-compose ps -q keycloak)
 KCADM="docker container exec -i ${KC_ID} ./keycloak/bin/kcadm.sh"
-
-until curl -s ${KC_URL} > /dev/null; do
-    >&2 echo_message "Waiting for keycloak server..."
-    sleep 2
-done
 
 echo_message "Connecting to keycloak server..."
 $KCADM \
@@ -89,11 +81,6 @@ BASE_URL="http://${NETWORK_DOMAIN}"
 # NGINX ports
 RU_80="${BASE_URL}/*"
 RU_8443="${BASE_URL}:8443/*"
-# standalone app ports
-RU_8100="${BASE_URL}:8100/*"
-RU_8102="${BASE_URL}:8102/*"
-RU_8104="${BASE_URL}:8104/*"
-RU_8106="${BASE_URL}:8106/*"
 
 $KCADM \
     create clients \
@@ -102,7 +89,7 @@ $KCADM \
     -s publicClient=true \
     -s directAccessGrantsEnabled=true \
     -s baseUrl="${BASE_URL}" \
-    -s 'redirectUris=["'${RU_80}'","'${RU_8443}'","'${RU_8100}'","'${RU_8102}'","'${RU_8104}'","'${RU_8106}'"]' \
+    -s 'redirectUris=["'${RU_80}'","'${RU_8443}'"]' \
     -s enabled=true
 
 
@@ -123,3 +110,4 @@ $KCADM \
 echo_message "Done!"
 
 docker-compose kill db keycloak
+docker-compose down

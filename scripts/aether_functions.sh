@@ -95,3 +95,31 @@ function create_readonly_user {
     docker-compose run --rm --no-deps kernel eval python /code/sql/create_readonly_user.py
     docker-compose kill
 }
+
+# Start database container and wait till is up and responding
+function start_db {
+    echo_message "Starting database server..."
+    docker-compose up -d db
+    until docker-compose run --rm --no-deps kernel eval pg_isready -q; do
+        >&2 echo "Waiting for database..."
+        sleep 2
+    done
+    echo_message "database is ready"
+}
+
+# Start container and wait till is up and responding
+# Usage:    start_container <container-name> <container-health-url>
+function start_container {
+    container=$1
+    url=$2
+
+    echo_message "Starting [$container] server..."
+    docker-compose up -d $container
+
+    CHECK_URL="docker-compose run --rm --no-deps kernel manage check_url -u"
+    until $CHECK_URL $url >/dev/null; do
+        >&2 echo "Waiting for [$container] at [$url]..."
+        sleep 2
+    done
+    echo_message "[$container] is ready"
+}
