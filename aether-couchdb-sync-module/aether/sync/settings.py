@@ -51,3 +51,5 @@ COUCHDB_URL = os.environ['COUCHDB_URL']
 COUCHDB_USER = os.environ['COUCHDB_USER']
 COUCHDB_PASSWORD = os.environ['COUCHDB_PASSWORD']
 COUCHDB_DIR = os.environ.get('COUCHDB_DIR', './couchdb')
+
+COUCHDB_SERVER_URL = os.environ.get('COUCHDB_SERVER_URL', COUCHDB_URL)

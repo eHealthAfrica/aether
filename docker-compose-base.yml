@@ -267,9 +267,10 @@ services:
 
       GOOGLE_CLIENT_ID: ${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
 
-      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+      COUCHDB_SERVER_URL: http://${NETWORK_DOMAIN}/_couchdb
       COUCHDB_URL: http://couchdb:5984
       COUCHDB_USER: ${COUCHDB_USER}
+      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
 
       DB_NAME: couchdb-sync
       PGHOST: db
