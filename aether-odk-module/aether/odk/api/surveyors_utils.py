@@ -20,7 +20,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from aether.sdk.multitenancy.utils import get_auth_group
+from aether.sdk.multitenancy.utils import get_auth_group, is_accessible_by_realm
 
 from .models import Project, XForm, MediaFile
 
@@ -50,7 +50,8 @@ def is_surveyor(request, instance):
     '''
     Check that the user request is a granted surveyor of the instance:
 
-    - If multitenancy is enabled the user must belong to the same realm
+    - If multitenancy is enabled:
+        - User and instance must belong to the current realm.
 
     - User is superuser.
 
@@ -69,7 +70,10 @@ def is_surveyor(request, instance):
     group = get_auth_group(request)
     user = request.user
 
-    if group and group not in user.groups.all():
+    if (
+        (group and group not in user.groups.all()) or
+        not is_accessible_by_realm(request, instance)
+    ):
         return False
 
     if user.is_superuser:
