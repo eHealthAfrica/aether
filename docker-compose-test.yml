@@ -40,7 +40,7 @@ services:
     volumes:
       # volumes in tests
       - ./tmp/test/media:/data
-    command: minio server --quiet --address minio-test:9000 /data
+    command: minio server --quiet --address minio-test:9090 /data
 
 
   # ---------------------------------
@@ -56,8 +56,8 @@ services:
       BUCKET_NAME: test-kernel
       # use a different database when testing the integration with another container
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
-      MINIO_STORAGE_ENDPOINT: minio-test:9000
-      MINIO_STORAGE_MEDIA_URL: http://minio-test:9000/test-kernel
+      MINIO_STORAGE_ENDPOINT: minio-test:9090
+      MINIO_STORAGE_MEDIA_URL: http://minio-test:9090/test-kernel
       MULTITENANCY: "true"
       PGHOST: db-test
       PROFILING_ENABLED: null
@@ -69,8 +69,6 @@ services:
       # volumes in tests
       - ./tmp/test/kernel/static:/var/www/static
       - ./tmp/test/kernel/tmp:/tmp
-    ports:
-      - 9100:9100
     command: start
 
 
@@ -103,8 +101,8 @@ services:
       APP_URL: /
       BUCKET_NAME: test-odk
       DB_NAME: test-odk
-      MINIO_STORAGE_ENDPOINT: minio-test:9000
-      MINIO_STORAGE_MEDIA_URL: http://minio-test:9000/test-odk
+      MINIO_STORAGE_ENDPOINT: minio-test:9090
+      MINIO_STORAGE_MEDIA_URL: http://minio-test:9090/test-odk
       MULTITENANCY: "true"
       ODK_COLLECT_ENDPOINT: collect-test/
       PGHOST: db-test
@@ -116,8 +114,6 @@ services:
     volumes:
       # volumes in tests
       - ./tmp/test/odk/static:/var/www/static
-    ports:
-      - 9102:9102
     command: start
 
 
@@ -143,8 +139,6 @@ services:
       TEST_PARALLEL: ${TEST_PARALLEL}
       TESTING: "true"
       WEB_SERVER_PORT: 9106
-    ports:
-      - 9106:9106
     command: start
 
 
@@ -167,8 +161,6 @@ services:
       TEST_PARALLEL: ${TEST_PARALLEL}
       TESTING: "true"
       WEB_SERVER_PORT: 9104
-    ports:
-      - 9104:9104
     command: start
 
   ui-assets-test:
@@ -227,9 +219,6 @@ services:
       PRODUCER_SETTINGS_FILE: /code/tests/conf/producer.json
 
       SERVER_PORT: 9005
-    ports:
-      - 9005:9005
-    command: start
 
 
   # ---------------------------------
