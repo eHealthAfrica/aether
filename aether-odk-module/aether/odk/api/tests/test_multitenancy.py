@@ -137,6 +137,28 @@ class MultitenancyTests(CustomTestCase):
         self.assertEqual(child1.fields['project'].get_queryset().count(), 1)
         self.assertEqual(models.Project.objects.count(), 2)
 
+        surveyor = serializers.SurveyorSerializer(
+            data={'username': 'surveyor', 'password': '~t]:vS3Q>e{2k]CE'},
+            context={'request': self.request},
+        )
+        self.assertTrue(surveyor.is_valid(), surveyor.errors)
+        surveyor.save()
+        self.assertEqual(
+            surveyor.data['username'], f'{CURRENT_REALM}__surveyor',
+            'Surveyor username starts with current realm')
+
+        user = get_user_model().objects.get(pk=surveyor.data['id'])
+        self.assertTrue(user.groups.filter(name=CURRENT_REALM).exists())
+
+        updated_user = serializers.SurveyorSerializer(
+            user,
+            data={'username': user.username, 'password': 'wUCK:CQsUd?)Zr93'},
+            context={'request': self.request},
+        )
+        self.assertTrue(updated_user.is_valid(), updated_user.errors)
+        updated_user.save()
+        self.assertEqual(updated_user.data['username'], user.username, 'Not prepended twice')
+
     def test_views(self):
         # create data assigned to different realms
         obj1 = self.helper_create_project()
@@ -357,3 +379,13 @@ class NoMultitenancyTests(CustomTestCase):
         child1 = serializers.XFormSerializer(data={}, context={'request': self.request})
         self.assertEqual(child1.fields['project'].get_queryset().count(), 2)
         self.assertEqual(models.Project.objects.count(), 2)
+
+        surveyor1 = serializers.SurveyorSerializer(
+            data={'username': 'surveyor', 'password': '~t]:vS3Q>e{2k]CE'},
+            context={'request': self.request},
+        )
+        self.assertTrue(surveyor1.is_valid(), surveyor1.errors)
+        surveyor1.save()
+        self.assertEqual(surveyor1.data['username'], 'surveyor')
+        user = get_user_model().objects.get(pk=surveyor1.data['id'])
+        self.assertEqual(user.groups.count(), 1, 'Belongs only to surveyors group')

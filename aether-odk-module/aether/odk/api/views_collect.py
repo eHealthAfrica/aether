@@ -40,11 +40,15 @@ from rest_framework.decorators import (
     permission_classes,
     renderer_classes,
 )
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from aether.sdk.multitenancy.utils import add_instance_realm_in_headers
+from aether.sdk.multitenancy.utils import (
+    add_instance_realm_in_headers,
+    filter_by_realm,
+)
 from aether.sdk.utils import request as exec_request
 
 from .models import XForm, MediaFile
@@ -125,6 +129,9 @@ MSG_SUBMISSION_SUBMIT_SUCCESS = _(
 MSG_SUBMISSION_SUBMIT_SUCCESS_ID = _(
     'The submission with instance ID "{instance}" has ID "{id}" in Aether Kernel.'
 )
+MSG_401_UNAUTHORIZED = _(
+    'You do not have authorization to access this instance.'
+)
 
 
 logger = logging.getLogger(__name__)
@@ -155,6 +162,29 @@ def _get_host(request, current_path):
     return host
 
 
+def _get_instance(request, model, pk):
+    '''
+    Custom method that raises:
+
+        - 404 NOTFOUND error if it does not exist
+
+        - 401 UNAUTHORIZED error if the instance exists but
+          is not accessible by current user (is surveyor)
+
+    otherwise returns the instance
+    '''
+
+    instance = get_object_or_404(model, pk=pk)
+    if not is_surveyor(request, instance):
+        raise AuthenticationFailed(detail=MSG_401_UNAUTHORIZED, code='authorization_failed')
+    return instance
+
+
+def _get_xforms(request):
+    # returns the queryset of xforms filtered by current realm
+    return filter_by_realm(request, XForm.objects.all(), 'project')
+
+
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
@@ -165,7 +195,7 @@ def xform_list(request, *args, **kwargs):
 
     '''
 
-    xforms = XForm.objects.all()
+    xforms = _get_xforms(request)
     formID = request.query_params.get('formID')
     if formID:
         xforms = xforms.filter(form_id=formID)
@@ -194,10 +224,7 @@ def xform_get_download(request, pk, *args, **kwargs):
 
     '''
 
-    xform = get_object_or_404(XForm, pk=pk)
-    if not is_surveyor(request, xform):
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-
+    xform = _get_instance(request, XForm, pk=pk)
     version = request.query_params.get('version', '0')
     # check provided version with current one
     if version < xform.version:
@@ -220,10 +247,7 @@ def media_file_get_content(request, pk, *args, **kwargs):
 
     '''
 
-    media = get_object_or_404(MediaFile, pk=pk)
-    if not is_surveyor(request, media.xform):
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-
+    media = _get_instance(request, MediaFile, pk=pk)
     return media.get_content(as_attachment=True)
 
 
@@ -239,16 +263,7 @@ def xform_get_manifest(request, pk, *args, **kwargs):
 
     '''
 
-    xform = get_object_or_404(XForm, pk=pk)
-    if not is_surveyor(request, xform):
-        return Response(
-            status=status.HTTP_401_UNAUTHORIZED,
-            data={'media_files': []},
-            template_name='xformManifest.xml',
-            content_type='text/xml',
-            headers=OPEN_ROSA_HEADERS,
-        )
-
+    xform = _get_instance(request, XForm, pk=pk)
     version = request.query_params.get('version', '0')
     # check provided version with current one
     if version < xform.version:
@@ -410,32 +425,33 @@ def xform_submission(request, *args, **kwargs):
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
+    # check that there is at least one xForm with that id
+    xforms = _get_xforms(request).filter(form_id=form_id)
+    if not xforms.exists():
+        msg = MSG_SUBMISSION_XFORM_NOT_FOUND_ERR.format(form_id=form_id)
+        logger.error(msg)
+        return _respond(
+            nature=NATURE_SUBMIT_ERROR,
+            message=msg,
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
     # take the first xForm in which the current user is granted surveyor
     # TODO take the one that matches the version
     xform = None
-    xforms = False
-    for xf in XForm.objects.filter(form_id=form_id).order_by('-version'):
-        xforms = True
+    for xf in xforms.order_by('-version'):
         if is_surveyor(request, xf):
             xform = xf
             break
+
     if not xform:
-        if xforms:
-            msg = MSG_SUBMISSION_XFORM_UNAUTHORIZED_ERR.format(form_id=form_id)
-            logger.error(msg)
-            return _respond(
-                nature=NATURE_SUBMIT_ERROR,
-                message=msg,
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-        else:
-            msg = MSG_SUBMISSION_XFORM_NOT_FOUND_ERR.format(form_id=form_id)
-            logger.error(msg)
-            return _respond(
-                nature=NATURE_SUBMIT_ERROR,
-                message=msg,
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        msg = MSG_SUBMISSION_XFORM_UNAUTHORIZED_ERR.format(form_id=form_id)
+        logger.error(msg)
+        return _respond(
+            nature=NATURE_SUBMIT_ERROR,
+            message=msg,
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
     # check sent version with current one
     if version < xform.version:  # pragma: no cover
