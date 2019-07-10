@@ -948,14 +948,6 @@ class XFormUtilsAvroTests(CustomTestCase):
                         <label>Surveyor 1</label>
                         <value>surveyor_1</value>
                     </item>
-                    <item>
-                        <label>Surveyor 2</label>
-                        <value>surveyor_2</value>
-                    </item>
-                    <item>
-                        <label>Surveyor 3</label>
-                        <value>surveyor_3</value>
-                    </item>
                 </select1>
                 <input ref="/None/building_gps">
                     <label>Take a GPS point for this building</label>
@@ -1006,14 +998,6 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'label': 'Surveyor 1',
                             'value': 'surveyor_1'
                         },
-                        {
-                            'label': 'Surveyor 2',
-                            'value': 'surveyor_2'
-                        },
-                        {
-                            'label': 'Surveyor 3',
-                            'value': 'surveyor_3'
-                        }
                     ],
                     'type': ['null', 'string']
                 },
