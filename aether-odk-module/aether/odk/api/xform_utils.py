@@ -645,20 +645,10 @@ def __get_xform_instance_skeleton(xml_definition):
                 xpath = bind_entry.get('@nodeset')
                 schema[xpath]['type'] = bind_entry.get('@type')
                 schema[xpath]['required'] = bind_entry.get('@required') == 'true()'
+
                 if schema[xpath]['type'] in SELECT_TAGS:
-                    select_node = list(__find_by_key_value(xform_dict, '@ref', xpath))[0]
-                    select_options = list(select_node.get('item', []))
-                    # limitation: skips selects linked to a datasource with 'itemset'
-                    # todo: extend visualization decoration to itemsets
-                    for option in select_options:
-                        if (
-                            isinstance(option.get('label'), dict) and
-                            option['label'].get('@ref', '').startswith('jr:itext')
-                        ):
-                            ref_id = option['label']['@ref'].split("'")[1]
-                            translated_label = itexts[ref_id]
-                            option['label'] = translated_label
-                    if len(select_options) and len(select_options) <= SELECT_CHOICES_CUTOFF:
+                    select_options = __get_xform_choices(xform_dict, xpath, itexts)
+                    if select_options:
                         schema[xpath]['choices'] = select_options
 
     # search in body all the repeat entries
@@ -669,6 +659,26 @@ def __get_xform_instance_skeleton(xml_definition):
             schema[xpath]['type'] = 'repeat'
 
     return schema
+
+
+def __get_xform_choices(xform_dict, xpath, texts={}):
+    select_node = list(__find_by_key_value(xform_dict, '@ref', xpath))[0]
+    select_options = __wrap_as_list(select_node.get('item', []))
+
+    # limitation: skips selects linked to a datasource with 'itemset'
+    # todo: extend visualization decoration to itemsets
+    choices = [
+        {
+            'value': option['value'],
+            'label': __get_tag_label(option, texts) or option['value'],
+        }
+        for option in select_options
+        if isinstance(option, dict) and 'value' in option
+    ]
+    if len(choices) and len(choices) <= SELECT_CHOICES_CUTOFF:
+        return choices
+
+    return None
 
 
 def __get_xform_itexts(xform_dict):
@@ -734,7 +744,10 @@ def __get_xform_label(xform_dict, xpath, texts={}):
     if not tags:
         return None
 
-    tag = tags[0]  # there is only one
+    return __get_tag_label(tags[0], texts)  # there is only one
+
+
+def __get_tag_label(tag, texts={}):
     if not tag.get('label'):
         return None
 
@@ -746,7 +759,7 @@ def __get_xform_label(xform_dict, xpath, texts={}):
     if ref and ref.startswith("jr:itext('") and ref.endswith("')"):
         #   <label ref="jr:itext('{xpath}:label')"/>
         label_id = ref[10:-2]  # f'{xpath}:label'
-        if label_id in texts and texts[label_id]:
+        if texts.get(label_id):
             return texts[label_id]
 
     return None
