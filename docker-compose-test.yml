@@ -70,6 +70,7 @@ services:
       - ./tmp/test/kernel/static:/var/www/static
       - ./tmp/test/kernel/tmp:/tmp
     command: start
+    restart: on-failure
 
 
   # ---------------------------------
@@ -167,6 +168,7 @@ services:
     extends:
       file: docker-compose-base.yml
       service: ui-assets-base
+    command: test
 
 
   # ---------------------------------
