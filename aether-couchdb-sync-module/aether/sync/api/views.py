@@ -304,7 +304,7 @@ def signin(request, *args, **kwargs):
         'username': couchdb_config['username'],
         'password': couchdb_config['password'],
         'db': device_db.db_name,
-        'url': request.build_absolute_uri('/_couchdb/' + device_db.db_name),
+        'url': settings.COUCHDB_SERVER_URL + '/' + device_db.db_name,
     }
     return Response(payload, status.HTTP_201_CREATED)
 

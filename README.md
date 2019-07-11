@@ -327,6 +327,7 @@ The default values for the export feature:
 
 #### Aether CouchDB Sync Module
 
+- `COUCHDB_SERVER_URL`: CouchDB Server url to send back to Mobile App to authenticated users.
 - `GOOGLE_CLIENT_ID`: `generate_it_in_your_google_developer_console`
   Token used to verify the device identity with Google.
   See more in https://developers.google.com/identity/protocols/OAuth2
