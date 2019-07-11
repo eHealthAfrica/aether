@@ -74,8 +74,9 @@ class DeleteStatus extends Component {
         }
 
         {
-          this.props.deleteOptions.entities && this.props.deleteStatus &&
-          this.props.deleteStatus.hasOwnProperty('entities') && (
+          this.props.deleteOptions.entities &&
+          this.props.deleteStatus &&
+          Object.prototype.hasOwnProperty.call(this.props.deleteStatus, 'entities') && (
             <div>
               <label className='form-label'>
                 <span className='badge badge-b'>{this.props.deleteStatus.entities.total}</span>
@@ -149,8 +150,9 @@ class DeleteStatus extends Component {
         }
 
         {
-          this.props.deleteOptions.submissions && this.props.deleteStatus &&
-          this.props.deleteStatus.hasOwnProperty('submissions') && (
+          this.props.deleteOptions.submissions &&
+          this.props.deleteStatus &&
+          Object.prototype.hasOwnProperty.call(this.props.deleteStatus, 'submissions') && (
             <div>
               <label className='form-label mt-4'>
                 <span className='badge badge-b'>{this.props.deleteStatus.submissions}</span>

@@ -99,7 +99,7 @@ export const deriveMappingRules = (schema, schemaName = null) => {
 export const traverseObject = (f, obj) => {
   f(obj)
   for (var k in obj) {
-    if (typeof obj[k] === 'object' && obj.hasOwnProperty(k)) {
+    if (typeof obj[k] === 'object' && Object.prototype.hasOwnProperty.call(obj, k)) {
       traverseObject(f, obj[k])
     } else {
       f(obj[k])

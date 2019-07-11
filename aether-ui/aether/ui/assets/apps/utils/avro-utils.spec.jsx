@@ -125,20 +125,19 @@ describe('AVRO utils', () => {
 
   describe('traverseObject', () => {
     it('traverses object and applies a function to each node', () => {
-      let result = []
       const f = (node) => { result.push(node) }
       const input = { a: [1, { b: [2, 3] }] }
       utils.traverseObject(f, input)
       const expected = [
-        { 'a': [1, { 'b': [2, 3] }] },
-        [1, { 'b': [2, 3] }],
+        { a: [1, { b: [2, 3] }] },
+        [1, { b: [2, 3] }],
         1,
-        { 'b': [2, 3] },
+        { b: [2, 3] },
         [2, 3],
         2,
         3
       ]
-      expect(expected).toEqual(result)
+      expect(expected).toEqual([])
     })
   })
 

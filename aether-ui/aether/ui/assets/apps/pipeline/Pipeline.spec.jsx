@@ -54,8 +54,8 @@ describe('Pipeline Component', () => {
     )
     const pipelineComponent = component.find('Pipeline')
 
-    let reduxState = component.state().store.getState().pipelines
-    let localState = pipelineComponent.state()
+    const reduxState = component.state().store.getState().pipelines
+    const localState = pipelineComponent.state()
 
     expect(reduxState.currentSection).toEqual(CONTRACT_SECTION_SETTINGS)
     expect(localState.isNew).toEqual(true)
