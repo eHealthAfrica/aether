@@ -62,7 +62,6 @@ function start_kernel_test {
 function kill_test {
     $DC_TEST kill     2> /dev/null || true
     $DC_TEST down -v  2> /dev/null || true
-
 }
 
 # TEST environment
