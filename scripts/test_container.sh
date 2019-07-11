@@ -59,6 +59,12 @@ function start_kernel_test {
     echo_message "kernel ready!"
 }
 
+function kill_test {
+    $DC_TEST kill     2> /dev/null || true
+    $DC_TEST down -v  2> /dev/null || true
+
+}
+
 # TEST environment
 DC_TEST="docker-compose -f docker-compose-test.yml"
 DC_KERNEL_RUN="$DC_TEST run --rm kernel-test"
@@ -68,7 +74,7 @@ BUILD_OPTIONS="${BUILD_OPTIONS:-}"
 APP_VERSION=$(date "+%Y%m%d%H%M%S")
 APP_REVISION=`git rev-parse --abbrev-ref HEAD`
 
-./scripts/kill_all.sh
+kill_test
 
 if [[ $1 == "ui" ]]; then
     build_container ui-assets
@@ -120,4 +126,4 @@ $DC_TEST run --rm "$1"-test test
 echo_message "$1 tests passed!"
 
 
-./scripts/kill_all.sh
+kill_test
