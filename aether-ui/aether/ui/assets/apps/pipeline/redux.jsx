@@ -334,7 +334,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...nextState,
-        pipelineList: [ newPipeline, ...state.pipelineList ],
+        pipelineList: [newPipeline, ...state.pipelineList],
 
         currentSection: PIPELINE_SECTION_INPUT,
         currentPipeline: newPipeline
@@ -366,7 +366,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     case types.CONTRACT_ADD: {
       const currentContract = parseContract(action.payload)
       const currentPipeline = state.pipelineList.find(p => p.id === currentContract.pipeline) || state.currentPipeline
-      currentPipeline.contracts = [ currentContract, ...currentPipeline.contracts ]
+      currentPipeline.contracts = [currentContract, ...currentPipeline.contracts]
 
       return {
         ...nextState,

@@ -71,10 +71,10 @@ describe('EntityTypeViewer', () => {
   it('should render type name if symbols are missing', () => {
     const entityTypeWithoutSymbols = [...mockEntityTypes]
     entityTypeWithoutSymbols[0]['fields'].push({
-      'name': 'building',
-      'type': {
-        'type': 'enum',
-        'name': 'Building'
+      name: 'building',
+      type: {
+        type: 'enum',
+        name: 'Building'
       }
     })
     const component = mountWithIntl(
