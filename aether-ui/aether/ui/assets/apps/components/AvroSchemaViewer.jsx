@@ -66,7 +66,7 @@ class AvroSchemaViewer extends Component {
           </ul>
         )
     } else if (Array.isArray(schema.type)) {
-      let typeStringOptions = []
+      const typeStringOptions = []
       const typeObjectOptions = []
       let isNullable = false
 

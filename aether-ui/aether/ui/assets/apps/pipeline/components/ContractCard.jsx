@@ -35,6 +35,7 @@ class ContractCard extends Component {
     this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES)
     this.props.history.push(`/${contract.pipeline}/${contract.id}/${CONTRACT_SECTION_ENTITY_TYPES}`)
   }
+
   render () {
     const { contract } = this.props
 

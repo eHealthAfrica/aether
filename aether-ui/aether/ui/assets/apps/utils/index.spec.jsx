@@ -62,20 +62,17 @@ describe('utils', () => {
       expect(deepEqual(1, {})).toBeFalsy()
       expect(deepEqual('1', [])).toBeFalsy()
       expect(deepEqual({}, [])).toBeFalsy()
-      expect(deepEqual({ '0': 1 }, [1])).toBeFalsy()
+      expect(deepEqual({ 0: 1 }, [1])).toBeFalsy()
     })
 
     it('should compare primitives', () => {
-      let a = 1
-      let b = 1
-      expect(deepEqual(a, b)).toBeTruthy()
-      b = 2
-      expect(deepEqual(a, b)).toBeFalsy()
+      expect(deepEqual(1, 1)).toBeTruthy()
+      expect(deepEqual(1, 2)).toBeFalsy()
     })
 
     it('should compare objects', () => {
-      let a = { foo: 11, bar: 22, baz: { y: 4 } }
-      let b = { bar: 22, foo: 11, baz: { y: 4 } }
+      const a = { foo: 11, bar: 22, baz: { y: 4 } }
+      const b = { bar: 22, foo: 11, baz: { y: 4 } }
       expect(deepEqual(a, b)).toBeTruthy()
       b.baz.y = 5
       expect(deepEqual(a, b)).toBeFalsy()
@@ -86,18 +83,14 @@ describe('utils', () => {
     })
 
     it('should compare arrays', () => {
-      let a = [1, 2, 3]
-      let b = [1, 2, 3]
-      expect(deepEqual(a, b)).toBeTruthy()
-      b = [1, 2]
-      expect(deepEqual(a, b)).toBeFalsy()
-      b = [1, 2, 2]
-      expect(deepEqual(a, b)).toBeFalsy()
+      expect(deepEqual([1, 2, 3], [1, 2, 3])).toBeTruthy()
+      expect(deepEqual([1, 2, 3], [1, 2])).toBeFalsy()
+      expect(deepEqual([1, 2, 3], [1, 2, 2])).toBeFalsy()
     })
 
     it('should ignore null and undefined values', () => {
-      let a = { x: 1, y: null, z: undefined }
-      let b = { x: 1, z: null }
+      const a = { x: 1, y: null, z: undefined }
+      const b = { x: 1, z: null }
       expect(deepEqual(a, b, true)).toBeTruthy()
       expect(deepEqual(a, b)).toBeFalsy()
     })
