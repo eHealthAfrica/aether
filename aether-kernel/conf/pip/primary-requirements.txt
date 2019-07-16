@@ -22,8 +22,12 @@ aether.sdk[cas,server,storage,test]
 # Django specific
 django-filter
 django-model-utils
-drf_yasg
+drf-yasg
 python-dateutil
+
+# Breaking change related to "drf-yasg" dependency
+# https://www.django-rest-framework.org/community/release-notes/#3100
+djangorestframework<3.10.0
 
 
 # AVRO + JSON libraries

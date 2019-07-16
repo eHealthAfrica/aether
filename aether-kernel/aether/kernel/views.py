@@ -16,22 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.urls import include, path, re_path
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 
-from aether.sdk.conf.urls import generate_urlpatterns
-from aether.kernel.views import AetherSchemaView
+from rest_framework import permissions, versioning
 
-API_PREFIX = '^(?P<version>v1)'
+SchemaView = get_schema_view(
+    openapi.Info(
+        title='Aether API',
+        default_version='v1',
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny, ),
+)
 
 
-urlpatterns = generate_urlpatterns(token=True, app=[
-    path('', include('aether.kernel.api.urls')),
-    re_path(f'{API_PREFIX}/', include('aether.kernel.api.urls')),
+class AetherSchemaView(SchemaView):
 
-    re_path(f'{API_PREFIX}/schema/',
-            view=AetherSchemaView.without_ui(cache_timeout=0),
-            name='api_schema'),
-    re_path(f'{API_PREFIX}/swagger/$',
-            view=AetherSchemaView.with_ui('swagger', cache_timeout=0),
-            name='schema-swagger-ui'),
-])
+    versioning_class = versioning.URLPathVersioning
+
+    def get(self, *args, **kwargs):
+        # this SchemaView doesn't know about realms, so we'll strip that out
+        kwargs.pop('realm', None)
+        return super().get(*args, **kwargs)
