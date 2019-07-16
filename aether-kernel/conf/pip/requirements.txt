@@ -36,7 +36,7 @@ django-prometheus==1.0.15
 django-silk==3.0.2
 django-storages==1.7.1
 django-uwsgi==0.2.2
-djangorestframework==3.10.0
+djangorestframework==3.9.4
 docutils==0.14
 drf-dynamic-fields==0.3.1
 drf-yasg==1.16.0
