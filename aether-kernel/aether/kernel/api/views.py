@@ -21,9 +21,7 @@ from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
 from aether.sdk.multitenancy.utils import filter_by_realm
 
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-from rest_framework import viewsets, permissions, status, versioning
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import (
     action,
@@ -623,25 +621,6 @@ class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
     mt_field = 'project'
-
-
-SchemaView = get_schema_view(
-    openapi.Info(
-        title='Aether API',
-        default_version='v1',
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny, ),
-)
-
-
-class AetherSchemaView(SchemaView):
-    versioning_class = versioning.URLPathVersioning
-
-    def get(self, *args, **kwargs):
-        # this SchemaView doesn't know about realms, so we'll strip that out
-        kwargs.pop('realm', None)
-        return super().get(*args, **kwargs)
 
 
 @api_view(['POST'])
