@@ -315,7 +315,7 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     mt_field = 'project'
 
     @action(detail=True, methods=['post'], url_path='delete-artefacts')
-    def delete_artefacts(self, request, pk=None):
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
         mappingset = self.get_object_or_404(pk=pk)
         opts = request.data
         try:
@@ -336,7 +336,7 @@ class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     mt_field = 'mappingset__project'
 
     @action(detail=True, methods=['post'], url_path='delete-artefacts')
-    def delete_artefacts(self, request, pk=None):
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
         mapping = self.get_object_or_404(pk=pk)
         opts = request.data
         try:
@@ -350,7 +350,7 @@ class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             )
 
     @action(detail=True, methods=['get'], url_path='topics')
-    def topics(self, request, pk=None):
+    def topics(self, request, pk=None, *args, **kwargs):
         mapping = self.get_object_or_404(pk=pk)
         topics = mapping.schemadecorators.all().values_list('topic__name', flat=True).order_by()
         return Response(topics)
