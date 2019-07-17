@@ -21,9 +21,7 @@ from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
 from aether.sdk.multitenancy.utils import filter_by_realm
 
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-from rest_framework import viewsets, permissions, status, versioning
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import (
     action,
@@ -315,7 +313,7 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     mt_field = 'project'
 
     @action(detail=True, methods=['post'], url_path='delete-artefacts')
-    def delete_artefacts(self, request, pk=None):
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
         mappingset = self.get_object_or_404(pk=pk)
         opts = request.data
         try:
@@ -336,7 +334,7 @@ class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     mt_field = 'mappingset__project'
 
     @action(detail=True, methods=['post'], url_path='delete-artefacts')
-    def delete_artefacts(self, request, pk=None):
+    def delete_artefacts(self, request, pk=None, *args, **kwargs):
         mapping = self.get_object_or_404(pk=pk)
         opts = request.data
         try:
@@ -350,7 +348,7 @@ class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             )
 
     @action(detail=True, methods=['get'], url_path='topics')
-    def topics(self, request, pk=None):
+    def topics(self, request, pk=None, *args, **kwargs):
         mapping = self.get_object_or_404(pk=pk)
         topics = mapping.schemadecorators.all().values_list('topic__name', flat=True).order_by()
         return Response(topics)
@@ -623,25 +621,6 @@ class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
     mt_field = 'project'
-
-
-SchemaView = get_schema_view(
-    openapi.Info(
-        title='Aether API',
-        default_version='v1',
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny, ),
-)
-
-
-class AetherSchemaView(SchemaView):
-    versioning_class = versioning.URLPathVersioning
-
-    def get(self, *args, **kwargs):
-        # this SchemaView doesn't know about realms, so we'll strip that out
-        kwargs.pop('realm', None)
-        return super().get(*args, **kwargs)
 
 
 @api_view(['POST'])
