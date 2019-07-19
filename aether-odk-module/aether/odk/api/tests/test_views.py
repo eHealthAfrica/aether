@@ -50,22 +50,40 @@ class ViewsTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content.decode(), self.xform.xml_data)
 
-        response = self.client.get(self.url_get_media, **self.headers_user)
+        response = self.client.get(self.url_get_media, secure=False, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = response.content.decode()
-        self.assertIn('8443', content, 'expect port to be set to default')
+        self.assertIn(':8443', content, 'expect 8443 port to be set to default with http')
+
+        response = self.client.get(self.url_get_media, secure=True, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertNotIn(':8443', content, 'expect 8443 port not to be set with https')
 
         server_info = {
-            'SERVER_PORT': '81'
+            'SERVER_PORT': '81',
         }
         server_info.update(self.headers_user)
         response = self.client.get(
             self.url_get_media,
+            secure=True,
             **server_info
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = response.content.decode()
-        self.assertIn('81', content, 'expect explicit port to be kept')
+        self.assertNotIn(':8443', content)
+        self.assertIn(':81', content, 'expect explicit port to be kept with https')
+
+        response = self.client.get(
+            self.url_get_media,
+            secure=False,
+            **server_info
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertIn(':8443', content)
+        self.assertNotIn(':81', content,
+                         'expect explicit port to be replaced by 8843 with http')
 
     def test__collect__form_get__one_surveyor(self):
         self.xform.surveyors.add(self.helper_create_surveyor())
@@ -129,19 +147,37 @@ class ViewsTests(CustomTestCase):
         self.assertIn(self.formIdXml, content, 'expect form in list')
         self.assertIn('<manifestUrl>', content, 'expect manifest url with media files')
         self.assertNotIn('<descriptionText>', content, 'expect no descriptions without verbose')
-        self.assertIn('8443', content, 'expect port to be set to default')
+        self.assertIn(':8443', content, 'expect 8443 port to be set to default with http')
+
+        response = self.client.get(self.url_list, secure=True, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertNotIn(':8443', content, 'expect 8443 port not to be set with https')
 
         server_info = {
-            'SERVER_PORT': '81'
+            'SERVER_PORT': '81',
         }
         server_info.update(self.headers_user)
         response = self.client.get(
             self.url_list,
+            secure=True,
             **server_info
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = response.content.decode()
-        self.assertIn('81', content, 'expect explicit port to be kept')
+        self.assertNotIn(':8443', content)
+        self.assertIn(':81', content, 'expect explicit port to be kept with https')
+
+        response = self.client.get(
+            self.url_list,
+            secure=False,
+            **server_info
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertIn(':8443', content)
+        self.assertNotIn(':81', content,
+                         'expect explicit port to be replaced by 8443 with http')
 
         response = self.client.get(
             self.url_list + '?verbose=true&formID=' + self.xform.form_id,
