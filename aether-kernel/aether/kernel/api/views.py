@@ -572,10 +572,13 @@ class SubmissionStatsMixin(MtViewSetMixin):
     ordering_fields = ('name', 'created',)
     ordering = ('name',)
 
+    submissions_field = 'submissions'
+    entities_field = 'submissions__entities'
+
     def get_queryset(self):
         qs = super(SubmissionStatsMixin, self).get_queryset()
 
-        entities_count = Count('submissions__entities__id', distinct=True)
+        entities_count = Count(f'{self.entities_field}__id', distinct=True)
 
         entities_filter = None
         if self.request.query_params.get('passthrough', 'false') == 'true':
@@ -584,30 +587,32 @@ class SubmissionStatsMixin(MtViewSetMixin):
 
             # compare family with project id
             # (issue: need to cast the UUID field into a Text field)
-            project_id = Cast('submissions__entities__schemadecorator__project', TextField())
+            project_id = Cast(f'{self.entities_field}__schemadecorator__project', TextField())
 
-            entities_filter = Q(
-                submissions__entities__schemadecorator__schema__family=project_id,
-                submissions__entities__mapping__is_read_only=True,
-            )
+            entities_filter = Q(**{
+                f'{self.entities_field}__schemadecorator__schema__family': project_id,
+                f'{self.entities_field}__mapping__is_read_only': True,
+            })
         else:
             family = self.request.query_params.get('family')
             if family:
-                entities_filter = Q(submissions__entities__schemadecorator__schema__family=family)
+                entities_filter = Q(**{
+                    f'{self.entities_field}__schemadecorator__schema__family': family
+                })
 
         if entities_filter:
             entities_count = Count(
-                expression='submissions__entities__id',
+                expression=f'{self.entities_field}__id',
                 distinct=True,
                 filter=entities_filter,
             )
 
         return qs.values('id', 'name', 'created') \
                  .annotate(
-                     first_submission=Min('submissions__created'),
-                     last_submission=Max('submissions__created'),
-                     submissions_count=Count('submissions__id', distinct=True),
-                     attachments_count=Count('submissions__attachments__id', distinct=True),
+                     first_submission=Min(f'{self.submissions_field}__created'),
+                     last_submission=Max(f'{self.submissions_field}__created'),
+                     submissions_count=Count(f'{self.submissions_field}__id', distinct=True),
+                     attachments_count=Count(f'{self.submissions_field}__attachments__id', distinct=True),
                      entities_count=entities_count,
                  )
 
@@ -615,6 +620,7 @@ class SubmissionStatsMixin(MtViewSetMixin):
 class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectStatsSerializer
+    entities_field = 'entities'
 
 
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
