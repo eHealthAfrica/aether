@@ -35,8 +35,6 @@ RUN mkdir -p /var/tmp && \
 ## last setup steps
 ################################################################################
 
-# create user to run container (avoid root user)
-RUN useradd -ms /bin/false aether
 RUN chown -R aether: /code
 
 ENTRYPOINT ["/code/entrypoint.sh"]

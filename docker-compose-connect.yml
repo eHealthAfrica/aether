@@ -25,6 +25,9 @@ services:
     restart: on-failure
     networks:
       - aether
+    extra_hosts:
+      - moby:127.0.0.1
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
   kafka:
     extends:
@@ -37,6 +40,9 @@ services:
       - zookeeper
     networks:
       - aether
+    extra_hosts:
+      - moby:127.0.0.1
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
   # ---------------------------------
   # Aether Kafka Producer

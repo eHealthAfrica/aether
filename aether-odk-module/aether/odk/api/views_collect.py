@@ -156,8 +156,8 @@ def _get_host(request, current_path):
     # If the request is not HTTPS, the host must include port 8443
     # or ODK Collect will not be able to get the resource
     url_info = urlparse(host)
-    if url_info.scheme != 'https' and url_info.port != 8443:  # pragma: no cover
-        host = f'http://{url_info.netloc}:8443{url_info.path}'
+    if url_info.scheme != 'https' and url_info.port != 8443:
+        host = f'http://{url_info.hostname}:8443{url_info.path}'
 
     return host
 

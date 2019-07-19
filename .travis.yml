@@ -45,6 +45,3 @@ script:
 
 after_failure:
   - ./scripts/test_travis_failure.sh $TEST_MODE
-
-after_script:
-  - ./scripts/kill_all.sh

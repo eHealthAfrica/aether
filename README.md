@@ -271,6 +271,8 @@ We have a couple of environment variables to tune it up:
   ](https://uwsgi-docs.readthedocs.io/en/latest/Configuration.html#environment-variables)
 
 https://uwsgi-docs.readthedocs.io/
+https://uwsgi-docs.readthedocs.io/en/latest/ThingsToKnow.html
+
 
 *[Return to TOC](#table-of-contents)*
 
