@@ -66,6 +66,7 @@ MarkupSafe==1.1.1
 mccabe==0.6.1
 minio==4.0.18
 openpyxl==2.6.2
+packaging==19.0
 ply==3.11
 prometheus-client==0.7.1
 protobuf==3.9.0
@@ -75,6 +76,7 @@ pyasn1-modules==0.2.5
 pycodestyle==2.5.0
 pyflakes==2.1.1
 Pygments==2.4.2
+pyparsing==2.4.1
 pyrsistent==0.15.3
 python-cas==1.4.0
 python-dateutil==2.8.0

@@ -23,6 +23,7 @@ aether.sdk[cas,server,storage,test]
 django-filter
 django-model-utils
 drf-yasg
+packaging  # missing dependency of drf-yasg
 python-dateutil
 
 
