@@ -79,6 +79,8 @@ class PipelineNew extends Component {
 
     const onSubmit = (event) => {
       event.preventDefault()
+      event.stopPropagation()
+
       this.setState({
         submitted: true
       }, () => this.props.addPipeline({ name: this.state.pipelineName }))

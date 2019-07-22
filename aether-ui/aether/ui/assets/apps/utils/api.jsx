@@ -18,6 +18,7 @@
  * under the License.
  */
 
+import { LOGOUT_URL } from './constants'
 import { NotFoundError, HTTPError } from './errors'
 
 const methods = ['get', 'post', 'put', 'patch', 'delete']
@@ -77,8 +78,8 @@ export default class ApiClient {
                 const defaultError = new HTTPError(response.statusText, response, response.status)
 
                 if (response.status === 403) { // Forbidden
-                  // redirect to root -> login page
-                  return window.location.assign(host)
+                  // redirect to logout
+                  return window.location.assign(host + LOGOUT_URL)
                 }
 
                 if (response.status === 404) {
