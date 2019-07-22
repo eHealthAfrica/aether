@@ -807,3 +807,21 @@ class ViewsTest(TestCase):
         self.client.logout()
         response = self.client.get(content_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_submission_delete(self):
+        url = reverse('submission-detail', kwargs={'pk': self.submission.pk})
+
+        self.assertIsNotNone(self.entity.submission)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertNotEqual(models.Entity.objects.count(), 0)
+        self.entity.refresh_from_db()
+        self.assertIsNone(self.entity.submission)
+
+    def test_submission_delete_cascade(self):
+        url = reverse('submission-detail', kwargs={'pk': self.submission.pk})
+
+        self.assertIsNotNone(self.entity.submission)
+        response = self.client.delete(url + '?cascade=true')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(models.Entity.objects.count(), 0)
