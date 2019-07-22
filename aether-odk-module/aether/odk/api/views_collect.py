@@ -349,11 +349,13 @@ def xform_submission(request, *args, **kwargs):
     '''
 
     def _rollback_submission(submission_id):
-        # delete submission and ignore response
+        # delete submission (with cascade parameter to delete linked entities too)
+        # and ignore response
         if submission_id:
             exec_request(
                 method='delete',
                 url=get_submissions_url(submission_id),
+                params={'cascade': 'true'},
                 headers=auth_header,
             )
 

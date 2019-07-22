@@ -110,9 +110,15 @@ class PostSubmissionTests(CustomTestCase):
         self.MAPPINGSET_URL = f'{self.KERNEL_URL}/mappingsets/{str(self.xform.kernel_id)}/'
         self.SUBMISSIONS_URL = kernel_utils.get_submissions_url()
         self.ATTACHMENTS_URL = kernel_utils.get_attachments_url()
+        self.ENTITIES_URL = f'{self.KERNEL_URL}/entities/?page_size=1'
         # cleaning the house
         self.PROJECT_URL = f'{self.KERNEL_URL}/projects/{str(self.xform.project.project_id)}/'
         self.SCHEMA_URL = f'{self.KERNEL_URL}/schemas/{str(self.xform.kernel_id)}/'
+
+        # Check the current entities (there should be none)
+        response = requests.get(self.ENTITIES_URL, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
+        self.ENTITIES_COUNT = response.json()['count']
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
@@ -154,6 +160,13 @@ class PostSubmissionTests(CustomTestCase):
             content = response.json()
             # there is always one more attachment, the original submission content itself
             self.assertEqual(content['count'], attachments + 1)
+
+        else:
+            # there are no new entities
+            response = requests.get(self.ENTITIES_URL, headers=self.KERNEL_HEADERS)
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
+            content = response.json()
+            self.assertEqual(content['count'], self.ENTITIES_COUNT)
 
     def test__submission__post__no_granted_surveyor(self):
         # remove user as granted surveyor
@@ -251,6 +264,7 @@ class PostSubmissionTests(CustomTestCase):
                     method='delete',
                     url=mock.ANY,
                     headers=mock.ANY,
+                    params={'cascade': 'true'},
                 ),
             ])
 
@@ -292,6 +306,7 @@ class PostSubmissionTests(CustomTestCase):
                     method='delete',
                     url=mock.ANY,
                     headers=mock.ANY,
+                    params={'cascade': 'true'},
                 ),
             ])
 
@@ -433,6 +448,7 @@ class PostSubmissionTests(CustomTestCase):
                     method='delete',
                     url=mock.ANY,
                     headers=mock.ANY,
+                    params={'cascade': 'true'},
                 ),
             ])
 
@@ -495,6 +511,7 @@ class PostSubmissionTests(CustomTestCase):
                     method='delete',
                     url=mock.ANY,
                     headers=mock.ANY,
+                    params={'cascade': 'true'},
                 ),
             ])
 

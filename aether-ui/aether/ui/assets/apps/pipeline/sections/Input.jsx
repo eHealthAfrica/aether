@@ -84,6 +84,8 @@ class SchemaInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
+    event.stopPropagation()
+
     if (this.props.pipeline.isInputReadOnly) {
       return
     }
@@ -195,6 +197,8 @@ class DataInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
+    event.stopPropagation()
+
     if (this.props.pipeline.isInputReadOnly) {
       return
     }

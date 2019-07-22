@@ -219,6 +219,14 @@ class ViewsTest(TestCase):
         self.assertNotEqual(json['entities_count'], entities_count)
         self.assertEqual(json['entities_count'], passthrough_entities_count)
 
+        # delete the submissions and check the entities
+        models.Submission.objects.all().delete()
+        self.assertEqual(models.Submission.objects.count(), 0)
+        response = self.client.get(url)
+        json = response.json()
+        self.assertEqual(json['submissions_count'], 0)
+        self.assertEqual(json['entities_count'], entities_count)
+
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})
         response = self.client.get(url)
@@ -233,6 +241,14 @@ class ViewsTest(TestCase):
             dateutil.parser.parse(json['first_submission']),
             dateutil.parser.parse(json['last_submission']),
         )
+
+        # delete the submissions and check the count
+        models.Submission.objects.all().delete()
+        self.assertEqual(models.Submission.objects.count(), 0)
+        response = self.client.get(url)
+        json = response.json()
+        self.assertEqual(json['submissions_count'], 0)
+        self.assertEqual(json['entities_count'], 0)
 
     def test_validate_mappings__success(self):
         '''
@@ -791,3 +807,21 @@ class ViewsTest(TestCase):
         self.client.logout()
         response = self.client.get(content_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_submission_delete(self):
+        url = reverse('submission-detail', kwargs={'pk': self.submission.pk})
+
+        self.assertIsNotNone(self.entity.submission)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertNotEqual(models.Entity.objects.count(), 0)
+        self.entity.refresh_from_db()
+        self.assertIsNone(self.entity.submission)
+
+    def test_submission_delete_cascade(self):
+        url = reverse('submission-detail', kwargs={'pk': self.submission.pk})
+
+        self.assertIsNotNone(self.entity.submission)
+        response = self.client.delete(url + '?cascade=true')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(models.Entity.objects.count(), 0)

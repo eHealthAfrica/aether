@@ -65,6 +65,8 @@ class EntityTypes extends Component {
 
   notifyChange (event) {
     event.preventDefault()
+    event.stopPropagation()
+
     if (this.props.contract.is_read_only) {
       return
     }

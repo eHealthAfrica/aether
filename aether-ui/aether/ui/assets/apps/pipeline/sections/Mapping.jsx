@@ -81,6 +81,8 @@ class Mapping extends Component {
 
   notifyChange (event) {
     event.preventDefault()
+    event.stopPropagation()
+
     if (this.props.contract.is_read_only) {
       return
     }
@@ -93,6 +95,8 @@ class Mapping extends Component {
 
   notifyChangeJSON (event) {
     event.preventDefault()
+    event.stopPropagation()
+
     if (this.props.contract.is_read_only) {
       return
     }
