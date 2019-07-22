@@ -387,6 +387,19 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+    def destroy(self, request, pk=None, *args, **kwargs):
+        '''
+        Overrides the destroy method.
+
+        Check parameter ``cascade`` and delete also the linked entities.
+        '''
+
+        if request.GET.get('cascade', 'false').lower() == 'true':
+            instance = self.get_object_or_404(pk=pk)
+            instance.entities.all().delete()
+
+        return super(SubmissionViewSet, self).destroy(request, pk, *args, **kwargs)
+
 
 class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
