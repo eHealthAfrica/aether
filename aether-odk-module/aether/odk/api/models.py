@@ -282,6 +282,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         ordering = ['title', 'form_id', 'version']
         verbose_name = _('xform')
         verbose_name_plural = _('xforms')
+        unique_together = ['project', 'form_id', 'version']
 
 
 def __media_path__(instance, filename):

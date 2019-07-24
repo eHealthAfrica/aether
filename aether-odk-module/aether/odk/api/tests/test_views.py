@@ -32,8 +32,8 @@ class ViewsTests(CustomTestCase):
 
     def test__xform__filters(self):
         project_ids = {i: self.helper_create_uuid() for i in range(4)}
-        self.helper_create_xform(project_id=project_ids[0])
-        self.helper_create_xform(project_id=project_ids[0])
+        self.helper_create_xform(project_id=project_ids[0], version_number=1)
+        self.helper_create_xform(project_id=project_ids[0], version_number=2)
         self.helper_create_xform(project_id=project_ids[1])
         self.helper_create_xform(project_id=project_ids[2])
 
@@ -103,8 +103,8 @@ class ViewsTests(CustomTestCase):
 
         project_id = project_ids[0]
         url = f'/surveyors.json?project_id={project_id}'
-        self.helper_create_xform(project_id=project_id)
-        self.helper_create_xform(project_id=project_id, surveyor=a)
+        self.helper_create_xform(project_id=project_id, version_number=1)
+        self.helper_create_xform(project_id=project_id, surveyor=a, version_number=2)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 1)
@@ -124,10 +124,10 @@ class ViewsTests(CustomTestCase):
 
         project_id = project_ids[3]
         url = f'/surveyors.json?project_id={project_id}'
-        self.helper_create_xform(project_id=project_id)
-        self.helper_create_xform(project_id=project_id, surveyor=b)
-        self.helper_create_xform(project_id=project_id, surveyor=b)
-        self.helper_create_xform(project_id=project_id, surveyor=[b, c])
+        self.helper_create_xform(project_id=project_id, version_number=1)
+        self.helper_create_xform(project_id=project_id, surveyor=b, version_number=2)
+        self.helper_create_xform(project_id=project_id, surveyor=b, version_number=3)
+        self.helper_create_xform(project_id=project_id, surveyor=[b, c], version_number=4)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 2)
