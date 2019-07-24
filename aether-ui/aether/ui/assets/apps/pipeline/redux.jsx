@@ -67,7 +67,7 @@ const ACTIONS_INITIAL_STATE = {
 export const INITIAL_STATE = {
   ...ACTIONS_INITIAL_STATE,
 
-  pipelineList: [],
+  pipelineList: null,
 
   currentSection: null,
   currentPipeline: null,
@@ -286,7 +286,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     }
 
     case types.PIPELINE_SELECT: {
-      const currentPipeline = state.pipelineList.find(p => p.id === action.payload)
+      const currentPipeline = (state.pipelineList || []).find(p => p.id === action.payload)
       const currentContract = findContract(currentPipeline, state.currentContract && state.currentContract.id)
 
       return {
@@ -298,7 +298,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     }
 
     case types.CONTRACT_SELECT: {
-      const currentPipeline = state.pipelineList.find(p => p.id === action.payload.pipeline) || state.currentPipeline
+      const currentPipeline = (state.pipelineList || []).find(p => p.id === action.payload.pipeline) || state.currentPipeline
       const currentContract = findContract(currentPipeline, action.payload.contract)
       const currentSection = !state.currentSection || state.currentSection === PIPELINE_SECTION_INPUT
         ? CONTRACT_SECTION_ENTITY_TYPES
@@ -334,7 +334,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...nextState,
-        pipelineList: [newPipeline, ...state.pipelineList],
+        pipelineList: [newPipeline, ...(state.pipelineList || [])],
 
         currentSection: PIPELINE_SECTION_INPUT,
         currentPipeline: newPipeline
@@ -365,7 +365,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.CONTRACT_ADD: {
       const currentContract = parseContract(action.payload)
-      const currentPipeline = state.pipelineList.find(p => p.id === currentContract.pipeline) || state.currentPipeline
+      const currentPipeline = (state.pipelineList || []).find(p => p.id === currentContract.pipeline) || state.currentPipeline
       currentPipeline.contracts = [currentContract, ...currentPipeline.contracts]
 
       return {
@@ -380,7 +380,9 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentContract = parseContract(action.payload)
       const uPipeline = { ...state.currentPipeline }
       uPipeline.contracts = replaceItemInList(state.currentPipeline.contracts, currentContract)
-      return { ...state,
+
+      return {
+        ...state,
         pipelineList: replaceItemInList(state.pipelineList, uPipeline),
         currentPipeline: uPipeline,
         currentContract: currentContract
@@ -391,7 +393,9 @@ const reducer = (state = INITIAL_STATE, action) => {
       const uPipeline = { ...state.currentPipeline }
       uPipeline.contracts = removeItemFromList(state.currentPipeline.contracts, state.currentContract)
       const currentContract = uPipeline.contracts[0]
-      return { ...state,
+
+      return {
+        ...state,
         pipelineList: replaceItemInList(state.pipelineList, uPipeline),
         currentPipeline: uPipeline,
         currentContract: currentContract,
@@ -404,12 +408,13 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentContract = parseContract(action.payload)
       let currentPipeline = state.currentPipeline
       if (currentPipeline.id !== currentContract.pipeline) {
-        currentPipeline = state.pipelineList.find(p => p.id === currentContract.pipeline)
+        currentPipeline = (state.pipelineList || []).find(p => p.id === currentContract.pipeline)
         if (!currentPipeline) {
           currentPipeline = state.currentPipeline
           currentContract.pipeline = currentPipeline.id
         }
       }
+
       return {
         ...state,
         currentContract,
@@ -417,7 +422,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       }
     }
     case types.CONTRACT_PUBLISH_SUCCESS: {
-      const statePipeline = state.pipelineList.find(p => p.id === action.payload.pipeline) || state.currentPipeline
+      const statePipeline = (state.pipelineList || []).find(p => p.id === action.payload.pipeline) || state.currentPipeline
       const currentContract = parseContract(action.payload)
       const currentPipeline = {
         ...statePipeline,
