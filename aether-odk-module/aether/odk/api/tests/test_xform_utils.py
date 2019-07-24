@@ -486,11 +486,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                                     'text': [
                                         {
                                             '@id': 'a',
+                                            # simple string
                                             'value': 'B',
                                         },
                                         {
                                             '@id': 'b',
-                                            'value': 'C',
+                                            # with embedded HTML
+                                            'value': '&lt;span&gt;C&lt;/span&gt;',
                                         },
                                         {
                                             '@id': 'c',
@@ -586,6 +588,19 @@ class XFormUtilsAvroTests(CustomTestCase):
             }
         }
         self.assertEqual(get_label(xform_dict, '/None/any'), 'Any')
+
+    def test__get_xform_label__embedded_html_value(self):
+        xform_dict = {
+            'h:html': {
+                'h:body': {
+                    'any-tag': {
+                        '@ref': '/None/any',
+                        'label': '&lt;span&gt;&gt;Any&lt;&lt;/span&gt;',
+                    }
+                }
+            }
+        }
+        self.assertEqual(get_label(xform_dict, '/None/any'), '>Any<')
 
     def test__get_xform_label__formula_value(self):
         xform_dict = {
