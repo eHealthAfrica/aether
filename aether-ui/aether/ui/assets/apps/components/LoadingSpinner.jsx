@@ -18,22 +18,17 @@
  * under the License.
  */
 
-// import all components
-import AppLayout from './AppLayout'
-import AvroSchemaViewer from './AvroSchemaViewer'
-import EntityTypeViewer from './EntityTypeViewer'
-import LoadingSpinner from './LoadingSpinner'
-import Modal from './Modal'
-import ModalError from './ModalError'
-import NavBar from './NavBar'
+import React from 'react'
 
-// export all components
-export {
-  AppLayout,
-  AvroSchemaViewer,
-  EntityTypeViewer,
-  LoadingSpinner,
-  Modal,
-  ModalError,
-  NavBar
-}
+const LoadingSpinner = () => (
+  <div className='loading-spinner'>
+    <div className='dot1' />
+    <div className='dot2' />
+    <div className='dot3' />
+    <div className='dot4' />
+    <div className='dot5' />
+    <div className='dot6' />
+  </div>
+)
+
+export default LoadingSpinner

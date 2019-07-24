@@ -29,13 +29,13 @@ export default () => (next) => (action) => {
   }
 
   const [REQUEST, SUCCESS, FAILURE] = types
-  next({ ...rest, type: REQUEST })
+  next({ ...rest, type: REQUEST, loading: true })
 
   return promise(apiClient)
     .then(payload => {
-      next({ ...rest, payload, type: SUCCESS })
+      next({ ...rest, payload, type: SUCCESS, loading: false })
     })
     .catch(({ message, error, status }) => {
-      next({ ...rest, error: { message, error, status }, type: FAILURE })
+      next({ ...rest, error: { message, error, status }, type: FAILURE, loading: false })
     })
 }

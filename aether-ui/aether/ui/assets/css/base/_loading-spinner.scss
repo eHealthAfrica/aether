@@ -18,10 +18,16 @@
  * under the License.
  */
 
-$duration: 1.6s;
+$duration: 1.8s;
 
 .loading-spinner {
-  position: relative;
+  background-color: rgba($text-color, .7);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999;
 }
 
 // sass-lint:disable one-declaration-per-line
@@ -39,9 +45,11 @@ $duration: 1.6s;
 .dot4,
 .dot5,
 .dot6 {
-  width: 50px;
-  height: 50px;
+  width: 100px;
+  height: 100px;
   position: absolute;
+  top: calc(50vh - 50px);
+  left: calc(50vw - 50px);
 
   &::before {
     content: '';
@@ -49,8 +57,8 @@ $duration: 1.6s;
     position: absolute;
     border-radius: 100%;
     background: $action-color;
-    width: 8px;
-    height: 8px;
+    width: 16px;
+    height: 16px;
     left: 22px;
     top: 22px;
     opacity: 0;

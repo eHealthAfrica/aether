@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { ModalError, NavBar, Modal } from '../components'
+import { LoadingSpinner, Modal, ModalError, NavBar } from '../components'
 
 import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
@@ -159,7 +159,7 @@ class Pipeline extends Component {
   render () {
     const { pipeline } = this.props
     if (!pipeline) {
-      return '' // still loading data
+      return <LoadingSpinner /> // still loading data
     }
 
     const fullscreenDiv = (
@@ -175,6 +175,7 @@ class Pipeline extends Component {
 
     return (
       <div className={`pipelines-container show-pipeline pipeline--${this.state.view}`}>
+        { this.props.loading && <LoadingSpinner /> }
         { this.props.error && <ModalError error={this.props.error} /> }
         <NavBar showBreadcrumb cb={this.linksCallBack}>
           <div className='breadcrumb-links'>
@@ -525,6 +526,7 @@ class Pipeline extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
+  loading: pipelines.loading,
   section: pipelines.currentSection,
   pipeline: pipelines.currentPipeline,
   contract: pipelines.currentContract,

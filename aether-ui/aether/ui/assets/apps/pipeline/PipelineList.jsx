@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { ModalError, NavBar } from '../components'
+import { LoadingSpinner, ModalError, NavBar } from '../components'
 
 import PipelineNew from './components/PipelineNew'
 import PipelineCard from './components/PipelineCard'
@@ -104,6 +104,7 @@ class PipelineList extends Component {
   render () {
     return (
       <div className='pipelines-container show-index'>
+        { this.props.loading && <LoadingSpinner /> }
         { this.props.error && <ModalError error={this.props.error} /> }
         <NavBar />
 
@@ -136,6 +137,7 @@ class PipelineList extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
+  loading: pipelines.loading,
   list: pipelines.pipelineList || [],
   error: pipelines.error,
   pipeline: pipelines.currentPipeline
