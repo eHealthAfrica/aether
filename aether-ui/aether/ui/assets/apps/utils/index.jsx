@@ -122,7 +122,7 @@ export const isEmpty = (value) => (
  * @param {Object}  obj
  */
 export const replaceItemInList = (list, obj) => (
-  list.map(item => item.id === obj.id ? obj : item)
+  (list || []).map(item => item.id === obj.id ? obj : item)
 )
 
 /**
@@ -132,7 +132,7 @@ export const replaceItemInList = (list, obj) => (
  * @param {Object}  obj
  */
 export const removeItemFromList = (list, obj) => (
-  list.filter(item => item.id !== obj.id)
+  (list || []).filter(item => item.id !== obj.id)
 )
 
 /**

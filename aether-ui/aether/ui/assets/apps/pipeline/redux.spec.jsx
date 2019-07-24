@@ -107,7 +107,7 @@ describe('Pipeline actions', () => {
       .post('/api/pipelines/')
       .reply(200, { id: 'mockid', contracts: [] })
 
-    expect(store.getState().pipelineList.length).toEqual(0)
+    expect(store.getState().pipelineList).toBeFalsy()
 
     return store.dispatch(addPipeline({ name: 'mock new name' }))
       .then(() => {
@@ -121,7 +121,7 @@ describe('Pipeline actions', () => {
       .post(`/api/pipelines/fetch/`)
       .reply(200, mockPipelines)
 
-    expect(store.getState().pipelineList.length).toEqual(0)
+    expect(store.getState().pipelineList).toBeFalsy()
 
     return store.dispatch(getPipelines())
       .then(() => {
@@ -256,7 +256,7 @@ describe('Pipeline actions', () => {
       .put(`/api/pipelines/1/`)
       .reply(200, pipeline)
 
-    expect(store.getState().pipelineList).toEqual([])
+    expect(store.getState().pipelineList).toBeFalsy()
     expect(store.getState().currentPipeline).toBeFalsy()
     expect(store.getState().currentContract).toBeFalsy()
 
