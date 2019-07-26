@@ -19,6 +19,7 @@
 # under the License.
 
 import uuid
+import json
 from datetime import datetime
 from hashlib import md5
 
@@ -40,12 +41,14 @@ from .validators import (
     validate_mapping_definition,
     validate_schema_definition,
 )
+from .utils import send_model_item_to_redis
 
 
 ENTITY_STATUS_CHOICES = (
     ('Pending Approval', _('Pending Approval')),
     ('Publishable', _('Publishable')),
 )
+
 
 
 '''
@@ -153,6 +156,10 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
         ),
     )
 
+    def save(self, *args, **kwargs):
+        super(Project, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
+
     def delete(self, *args, **kwargs):
         # find the linked passthrough schemas
         for schema in Schema.objects.filter(family=str(self.pk)):
@@ -219,6 +226,10 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     def schema_prettified(self):
         return json_prettified(self.schema)
 
+    def save(self, *args, **kwargs):
+        super(MappingSet, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
+
     class Meta:
         default_related_name = 'mappingsets'
         ordering = ['project__id', '-modified']
@@ -258,6 +269,8 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         verbose_name=_('project'),
     )
 
+    is_extracted = models.BooleanField(default=False, verbose_name=_('entity extracted?'))
+
     @property
     def payload_prettified(self):
         return json_prettified(self.payload)
@@ -270,6 +283,8 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project if self.mappingset else self.project
         super(Submission, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
+
 
     def __str__(self):
         return f'{self.id}'
@@ -383,6 +398,10 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
     def schema_name(self):
         return self.definition.get('name', self.name)
 
+    def save(self, *args, **kwargs):
+        super(Schema, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
+
     class Meta:
         default_related_name = 'schemas'
         ordering = ['-modified']
@@ -431,6 +450,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
         if self.topic is None:
             self.topic = {'name': self.name}
         super(SchemaDecorator, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
 
     class Meta:
         default_related_name = 'schemadecorators'
@@ -506,6 +526,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
         for entity_pk in entities.values():
             sd_list.append(SchemaDecorator.objects.get(pk=entity_pk, project=self.project))
         self.schemadecorators.add(*sd_list)
+        send_model_item_to_redis(self)
 
     def get_mt_instance(self):
         # because project can be null we need to override the method
@@ -664,6 +685,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
             raise IntegrityError(ve)
 
         super(Entity, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
 
     def __str__(self):
         return f'{self.id}'

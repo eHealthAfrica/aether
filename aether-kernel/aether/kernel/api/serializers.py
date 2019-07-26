@@ -198,14 +198,7 @@ class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
                 _('Mappingset must be provided on initial submission')
             )
 
-        instance = super(SubmissionSerializer, self).create(validated_data)
-        try:
-            run_entity_extraction(instance)
-        except Exception as e:
-            instance.payload[ENTITY_EXTRACTION_ERRORS] = instance.payload.get(ENTITY_EXTRACTION_ERRORS, [])
-            instance.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]
-            instance.save()
-        return instance
+        return super(SubmissionSerializer, self).create(validated_data)
 
     class Meta:
         model = models.Submission

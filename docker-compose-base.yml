@@ -43,7 +43,7 @@ services:
 
   redis-base:
     image: redis:alpine
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD} --notify-keyspace-events KEA
 
   nginx-base:
     image: nginx:alpine
@@ -150,11 +150,17 @@ services:
       EXPORT_HEADER_SEPARATOR: /
       EXPORT_HEADER_SHORTEN: "no"
 
+      REDIS_DB: 0
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+      WRITE_ENTITIES_TO_REDIS: ${WRITE_ENTITIES_TO_REDIS}
+
       WEB_SERVER_PORT: 8100
     volumes:
       - ./aether-kernel:/code
       # to speed up SDK development changes
-      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
+      - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
 
       # static folder
       - ./.persistent_data/static/kernel:/var/www/static
@@ -429,4 +435,31 @@ services:
       SERVER_PORT: 5005
     volumes:
       - ./aether-producer:/code
+    command: start
+
+# ---------------------------------
+  # Aether Entity Extractor
+  # ---------------------------------
+
+  exm-base:
+    image: aether-entity-extractor
+    build: ./aether-entity-extraction-module
+    stdin_open: true
+    tty: true
+    environment:
+      DEFAULT_REALM: ${DEFAULT_REALM}
+
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
+      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9100
+      DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
+
+      REDIS_DB: 0
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+    volumes:
+      - ./aether-entity-extraction-module:/code
+      # to speed up SDK development changes
+      - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
     command: start

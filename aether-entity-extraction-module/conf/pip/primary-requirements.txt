@@ -1,0 +1,27 @@
+################################################################################
+#
+#                             Primary requirements
+#
+#                                 CHANGE ME !!!
+#
+# To check the outdated dependencies run
+#     docker-compose run --rm --no-deps exm eval pip list --outdated
+#
+# Update me and then run
+#     docker-compose run --rm --no-deps exm pip_freeze
+#
+################################################################################
+
+aether.sdk[test]
+
+redis
+requests
+
+# AVRO + JSON libraries
+eha_jsonpath
+jsonschema
+spavro
+
+
+# Test libraries
+pytest

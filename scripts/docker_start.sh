@@ -110,32 +110,32 @@ done
 
 case $app in
     kernel)
-        PRE_CONTAINERS=(db nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel)
+        PRE_CONTAINERS=(db nginx minio keycloak redis)
+        SETUP_CONTAINERS=(kernel exm)
     ;;
 
     odk)
-        PRE_CONTAINERS=(db nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel odk)
+        PRE_CONTAINERS=(db nginx minio keycloak redis)
+        SETUP_CONTAINERS=(kernel odk exm)
     ;;
 
     ui)
-        PRE_CONTAINERS=(ui-assets db nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel ui)
+        PRE_CONTAINERS=(ui-assets db nginx minio keycloak redis)
+        SETUP_CONTAINERS=(kernel ui exm)
     ;;
 
     sync|couchdb-sync)
         app=couchdb-sync
 
-        PRE_CONTAINERS=(db couchdb redis nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel couchdb-sync)
+        PRE_CONTAINERS=(db couchdb redis nginx minio keycloak redis)
+        SETUP_CONTAINERS=(kernel couchdb-sync exm)
     ;;
 
     *)
         app=
 
         PRE_CONTAINERS=(ui-assets db couchdb redis nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel odk ui couchdb-sync)
+        SETUP_CONTAINERS=(kernel odk ui couchdb-sync exm)
     ;;
 esac
 

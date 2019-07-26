@@ -18,9 +18,16 @@
 
 from django.db import transaction
 from django.db.models import Count
+from uuid import UUID
+from django.conf import settings
+from django.forms.models import model_to_dict
+from aether.sdk.redis.task import TaskHelper
 
 from .constants import MergeOptions as MERGE_OPTIONS
 from . import models
+
+
+REDIS_TASK = TaskHelper(settings)
 
 
 def object_contains(test, obj):
@@ -177,3 +184,35 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset_id=None, mapping_ids=[]):
         result['submissions'] = submission_count
 
     return result
+
+def send_model_item_to_redis(model_item):
+    '''
+    Registers a model item on redis
+
+    Note: Redis host parameters must be provided as environment variables
+
+    Arguments:
+    model_item: Model item to be registered on redis.
+    '''
+
+    obj = model_to_dict(model_item)
+    model_name = model_item._meta.default_related_name
+    realm = model_item.get_realm() \
+        if model_name is not models.Schema._meta.default_related_name \
+        else settings.DEFAULT_REALM
+
+    if model_name is models.Entity._meta.default_related_name:
+        if settings.WRITE_ENTITIES_TO_REDIS:
+            REDIS_TASK.add(obj, model_name, realm)
+    elif model_name is models.Submission._meta.default_related_name:
+        if not model_item.is_extracted:
+            # used to fast track entity extraction
+            linked_mappings = model_item.mappingset.mappings.all() \
+                .filter(is_active=True).values_list('id', flat=True)
+            obj['mappings'] = list(linked_mappings)
+
+            REDIS_TASK.add(obj, model_name, realm)
+            REDIS_TASK.publish(obj, model_name, realm)
+    else:
+        REDIS_TASK.add(obj, model_name, realm)
+

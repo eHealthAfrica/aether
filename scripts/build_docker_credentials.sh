@@ -114,6 +114,7 @@ KERNEL_DJANGO_SECRET_KEY=$(gen_random_string)
 KERNEL_READONLY_DB_USERNAME=readonlyuser
 KERNEL_READONLY_DB_PASSWORD=$(gen_random_string)
 KERNEL_DB_PASSWORD=$(gen_random_string)
+WRITE_ENTITIES_TO_REDIS=
 # ------------------------------------------------------------------
 
 

@@ -58,3 +58,12 @@ EXPORT_DATA_FORMAT = os.environ.get('EXPORT_DATA_FORMAT', 'split')
 EXPORT_HEADER_CONTENT = os.environ.get('EXPORT_HEADER_CONTENT', 'labels')
 EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR', '/')
 EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
+
+
+# Redis Configuration
+# ------------------------------------------------------------------------------
+REDIS_DB = os.environ.get('REDIS_DB', 0)
+REDIS_HOST = os.environ.get('REDIS_HOST', 'redis'),
+REDIS_PORT = os.environ.get('REDIS_PORT', 6379),
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', ''),
+WRITE_ENTITIES_TO_REDIS = os.environ.get('WRITE_ENTITIES_TO_REDIS', False)
