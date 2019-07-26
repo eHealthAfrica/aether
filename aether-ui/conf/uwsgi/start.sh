@@ -30,8 +30,8 @@ fi
 # When passed as environment variables, options are capitalized and prefixed
 # with UWSGI_, and dashes are substituted with underscores.
 
-if [ ! -z "S{GATEWAY_HOST:-}" ]; then
-    DEFAULT_STATIC_URL="/${GATEWAY_PUBLIC_REALM}/${GATEWAY_SERVICE_ID}/static"
+if [ ! -z "${KEYCLOAK_SERVER_URL:-}" ] && [ ! -z "${GATEWAY_SERVICE_ID:-}" ]; then
+    DEFAULT_STATIC_URL="/${GATEWAY_PUBLIC_REALM:--}/${GATEWAY_SERVICE_ID}/static"
 else
     DEFAULT_STATIC_URL=/static
 fi
