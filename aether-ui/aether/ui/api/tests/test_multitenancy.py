@@ -19,8 +19,6 @@
 import uuid
 from unittest import mock
 
-from http.cookies import SimpleCookie
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, RequestFactory, override_settings
@@ -54,8 +52,8 @@ class MultitenancyTests(TestCase):
 
         user = get_user_model().objects.create_user(username, email, password)
         self.request.user = user
-        self.client.cookies = SimpleCookie({settings.REALM_COOKIE: CURRENT_REALM})
         self.assertTrue(self.client.login(username=username, password=password))
+        self.client.cookies[settings.REALM_COOKIE] = CURRENT_REALM
 
         auth_header = get_kernel_auth_header()
         self.HEADERS = mt_utils.add_current_realm_in_headers(self.request, auth_header)

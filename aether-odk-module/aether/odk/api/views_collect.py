@@ -60,7 +60,7 @@ from .kernel_utils import (
     propagate_kernel_artefacts,
     KernelPropagationError,
 )
-from .surveyors_utils import is_surveyor
+from .surveyors_utils import is_surveyor, is_granted_surveyor
 from .xform_utils import get_instance_data_from_xml, parse_submission
 
 
@@ -175,7 +175,7 @@ def _get_instance(request, model, pk):
     '''
 
     instance = get_object_or_404(model, pk=pk)
-    if not is_surveyor(request, instance):
+    if not is_granted_surveyor(request, instance):
         raise AuthenticationFailed(detail=MSG_401_UNAUTHORIZED, code='authorization_failed')
     return instance
 
@@ -185,10 +185,22 @@ def _get_xforms(request):
     return filter_by_realm(request, XForm.objects.all(), 'project')
 
 
+class IsAuthenticatedAndSurveyor(IsAuthenticated):
+    '''
+    Allows access only to surveyor users.
+    '''
+
+    def has_permission(self, request, view):
+        return bool(
+            super(IsAuthenticatedAndSurveyor, self).has_permission(request, view) and
+            is_surveyor(request.user)
+        )
+
+
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def xform_list(request, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
@@ -203,7 +215,7 @@ def xform_list(request, *args, **kwargs):
     return Response(
         data={
             'host': _get_host(request, reverse('xform-list-xml')),
-            'xforms': [xf for xf in xforms if is_surveyor(request, xf)],
+            'xforms': [xf for xf in xforms if is_granted_surveyor(request, xf)],
             'verbose': request.query_params.get('verbose', '').lower() == 'true',
         },
         template_name='xformList.xml',
@@ -215,7 +227,7 @@ def xform_list(request, *args, **kwargs):
 @api_view(['GET'])
 @renderer_classes([StaticHTMLRenderer])
 @authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_download(request, pk, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
@@ -240,7 +252,7 @@ def xform_get_download(request, pk, *args, **kwargs):
 
 @api_view(['GET'])
 @authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def media_file_get_content(request, pk, *args, **kwargs):
     '''
     Returns the `<downloadUrl/>` content in the form manifest file.
@@ -254,7 +266,7 @@ def media_file_get_content(request, pk, *args, **kwargs):
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_manifest(request, pk, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
@@ -284,7 +296,7 @@ def xform_get_manifest(request, pk, *args, **kwargs):
 @api_view(['POST', 'HEAD'])
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def xform_submission(request, *args, **kwargs):
     '''
     Submission specification:
@@ -442,7 +454,7 @@ def xform_submission(request, *args, **kwargs):
     # TODO take the one that matches the version
     xform = None
     for xf in xforms.order_by('-version'):
-        if is_surveyor(request, xf):
+        if is_granted_surveyor(request, xf):
             xform = xf
             break
 

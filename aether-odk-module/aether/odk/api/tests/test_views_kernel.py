@@ -19,7 +19,6 @@
 import json
 from unittest import mock
 
-from django.contrib.auth import get_user_model
 from django.test import override_settings
 from django.urls import reverse
 
@@ -32,16 +31,7 @@ class KernelViewsTests(CustomTestCase):
 
     def setUp(self):
         super(KernelViewsTests, self).setUp()
-
-        username = 'test'
-        email = 'test@example.com'
-        password = 'testtest'
-        self.user = get_user_model().objects.create_user(username, email, password)
-        self.assertTrue(self.client.login(username=username, password=password))
-
-    def tearDown(self):
-        super(KernelViewsTests, self).tearDown()
-        self.client.logout()
+        self.helper_create_user(login=True)
 
     def test__project_propagation(self):
         url_404 = reverse('project-propagate', kwargs={'pk': self.helper_create_uuid()})
