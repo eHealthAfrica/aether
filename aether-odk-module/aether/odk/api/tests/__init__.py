@@ -232,6 +232,8 @@ XML_DATA_ERR = '''
 class CustomTestCase(TransactionTestCase):
 
     def setUp(self):
+        super(TransactionTestCase, self).setUp()
+
         self.surveyor_group = get_surveyor_group()
 
         with open(XFORM_XML_FILE, 'r') as fp:
@@ -271,38 +273,52 @@ class CustomTestCase(TransactionTestCase):
 
     def tearDown(self):
         self.client.logout()
+        super(TransactionTestCase, self).tearDown()
 
     def helper_create_uuid(self):
         return uuid.uuid4()
 
-    def helper_create_superuser(self):
+    def helper_create_superuser(self, login=False):
         username = 'admin'
-        email = 'admin@example.com'
+        email = f'{username}@example.com'
         password = 'adminadmin'
-        basic = b'admin:adminadmin'
+        basic = bytearray(f'{username}:{password}', 'utf-8')
 
         self.admin = UserModel.create_superuser(username, email, password)
         self.headers_admin = {
             'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
         }
-        self.assertTrue(self.client.login(username=username, password=password))
+        if login:
+            self.assertTrue(self.client.login(username=username, password=password))
 
-    def helper_create_user(self):
+    def helper_create_user(self, login=False):
         username = 'test'
-        email = 'test@example.com'
+        email = f'{username}@example.com'
         password = 'testtest'
-        basic = b'test:testtest'
+        basic = bytearray(f'{username}:{password}', 'utf-8')
 
         self.user = UserModel.create_user(username, email, password)
         self.headers_user = {
             'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
         }
+        if login:
+            self.assertTrue(self.client.login(username=username, password=password))
 
-    def helper_create_surveyor(self, username='surveyor'):
-        email = username + '@example.com'
+    def helper_create_surveyor(self, username='surveyor', login=False):
+        email = f'{username}@example.com'
         password = 'surveyorsurveyor'
+
         surveyor = UserModel.create_user(username, email, password)
         surveyor.groups.add(self.surveyor_group)
+        if username == 'surveyor':
+            basic = bytearray(f'{username}:{password}', 'utf-8')
+            self.headers_surveyor = {
+                'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
+            }
+
+        if login:
+            self.assertTrue(self.client.login(username=username, password=password))
+
         return surveyor
 
     def helper_create_project(self, project_id=None, surveyor=None):

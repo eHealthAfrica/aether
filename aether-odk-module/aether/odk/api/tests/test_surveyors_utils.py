@@ -19,7 +19,7 @@
 from django.test import RequestFactory, override_settings
 
 from . import CustomTestCase
-from ..surveyors_utils import is_surveyor
+from ..surveyors_utils import is_granted_surveyor
 
 
 @override_settings(MULTITENANCY=False)
@@ -30,33 +30,29 @@ class SurveyorsUtilsTests(CustomTestCase):
 
         self.request = RequestFactory().get('/')
         self.helper_create_superuser()
-        self.helper_create_user()
+        self.surveyor = self.helper_create_surveyor(username='surveyor0')
 
     def test__project__surveyors(self):
         project = self.helper_create_project()
         self.assertEqual(project.surveyors.count(), 0, 'no granted surveyors')
 
         self.request.user = self.admin
-        self.assertTrue(is_surveyor(self.request, project),
-                        'superusers are always granted surveyors')
+        self.assertFalse(is_granted_surveyor(self.request, project),
+                         'superusers are not granted surveyors')
 
-        self.request.user = self.user
-        self.assertTrue(is_surveyor(self.request, project),
+        self.request.user = self.surveyor
+        self.assertTrue(is_granted_surveyor(self.request, project),
                         'if not granted surveyors all users are surveyors')
 
-        surveyor = self.helper_create_surveyor()
-        project.surveyors.add(surveyor)
+        surveyor1 = self.helper_create_surveyor(username='surveyor1')
+        project.surveyors.add(surveyor1)
 
         self.assertEqual(project.surveyors.count(), 1, 'one granted surveyor')
-        self.request.user = surveyor
-        self.assertTrue(is_surveyor(self.request, project))
+        self.request.user = surveyor1
+        self.assertTrue(is_granted_surveyor(self.request, project))
 
-        self.request.user = self.admin
-        self.assertTrue(is_surveyor(self.request, project),
-                        'superusers are always granted surveyors')
-
-        self.request.user = self.user
-        self.assertFalse(is_surveyor(self.request, project),
+        self.request.user = self.surveyor
+        self.assertFalse(is_granted_surveyor(self.request, project),
                          'if granted surveyors not all users are surveyors')
 
     def test__xform__surveyors(self):
@@ -65,60 +61,54 @@ class SurveyorsUtilsTests(CustomTestCase):
         self.assertEqual(xform.surveyors.count(), 0, 'no granted surveyors')
 
         self.request.user = self.admin
-        self.assertTrue(is_surveyor(self.request, xform),
-                        'superusers are always granted surveyors')
-        self.assertTrue(is_surveyor(self.request, media),
-                        'superusers are always granted surveyors')
+        self.assertFalse(is_granted_surveyor(self.request, xform),
+                         'superusers are not granted surveyors')
+        self.assertFalse(is_granted_surveyor(self.request, media),
+                         'superusers are not granted surveyors')
 
-        self.request.user = self.user
-        self.assertTrue(is_surveyor(self.request, xform),
+        self.request.user = self.surveyor
+        self.assertTrue(is_granted_surveyor(self.request, xform),
                         'if not granted surveyors all users are surveyors')
-        self.assertTrue(is_surveyor(self.request, media),
+        self.assertTrue(is_granted_surveyor(self.request, media),
                         'if not granted surveyors all users are surveyors')
 
-        surveyor = self.helper_create_surveyor(username='surveyor')
-        xform.surveyors.add(surveyor)
+        surveyor1 = self.helper_create_surveyor(username='surveyor1')
+        xform.surveyors.add(surveyor1)
         self.assertEqual(xform.surveyors.count(), 1, 'one custom granted surveyor')
 
-        self.request.user = surveyor
-        self.assertTrue(is_surveyor(self.request, xform))
-        self.assertTrue(is_surveyor(self.request, media))
+        self.request.user = surveyor1
+        self.assertTrue(is_granted_surveyor(self.request, xform))
+        self.assertTrue(is_granted_surveyor(self.request, media))
 
-        self.request.user = self.admin
-        self.assertTrue(is_surveyor(self.request, xform),
-                        'superusers are always granted surveyors')
-        self.assertTrue(is_surveyor(self.request, media),
-                        'superusers are always granted surveyors')
-
-        self.request.user = self.user
-        self.assertFalse(is_surveyor(self.request, xform),
+        self.request.user = self.surveyor
+        self.assertFalse(is_granted_surveyor(self.request, xform),
                          'if granted surveyors not all users are surveyors')
-        self.assertFalse(is_surveyor(self.request, media),
+        self.assertFalse(is_granted_surveyor(self.request, media),
                          'if granted surveyors not all users are surveyors')
 
         surveyor2 = self.helper_create_surveyor(username='surveyor2')
         xform.project.surveyors.add(surveyor2)
         self.assertEqual(xform.surveyors.count(), 1, 'one custom granted surveyor')
 
-        self.request.user = surveyor
-        self.assertTrue(is_surveyor(self.request, xform))
-        self.assertTrue(is_surveyor(self.request, media))
+        self.request.user = surveyor1
+        self.assertTrue(is_granted_surveyor(self.request, xform))
+        self.assertTrue(is_granted_surveyor(self.request, media))
 
         self.request.user = surveyor2
-        self.assertTrue(is_surveyor(self.request, xform),
+        self.assertTrue(is_granted_surveyor(self.request, xform),
                         'project surveyors are also xform surveyors')
-        self.assertTrue(is_surveyor(self.request, media),
+        self.assertTrue(is_granted_surveyor(self.request, media),
                         'project surveyors are also xform surveyors')
 
         xform.surveyors.clear()
         self.assertEqual(xform.surveyors.count(), 0, 'no custom granted surveyor')
 
-        self.request.user = surveyor
-        self.assertFalse(is_surveyor(self.request, xform))
-        self.assertFalse(is_surveyor(self.request, media))
+        self.request.user = surveyor1
+        self.assertFalse(is_granted_surveyor(self.request, xform))
+        self.assertFalse(is_granted_surveyor(self.request, media))
 
         self.request.user = surveyor2
-        self.assertTrue(is_surveyor(self.request, xform),
+        self.assertTrue(is_granted_surveyor(self.request, xform),
                         'project surveyors are always xform surveyors')
-        self.assertTrue(is_surveyor(self.request, media),
+        self.assertTrue(is_granted_surveyor(self.request, media),
                         'project surveyors are always xform surveyors')
