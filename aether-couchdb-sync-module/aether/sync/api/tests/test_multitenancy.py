@@ -18,8 +18,6 @@
 
 from unittest import mock
 
-from http.cookies import SimpleCookie
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, RequestFactory, override_settings
@@ -58,8 +56,8 @@ class MultitenancyTests(TestCase):
         self.helper__change_cookies_realm(CURRENT_REALM)
 
     def helper__change_cookies_realm(self, realm):
-        self.client.cookies = SimpleCookie({settings.REALM_COOKIE: realm})
         self.assertTrue(self.client.login(username=_username, password=_password))
+        self.client.cookies[settings.REALM_COOKIE] = CURRENT_REALM
 
     def test_get_multitenancy_model(self):
         self.assertEqual(settings.MULTITENANCY_MODEL, 'sync.Project')
