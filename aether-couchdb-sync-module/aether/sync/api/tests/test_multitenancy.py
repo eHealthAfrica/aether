@@ -57,7 +57,7 @@ class MultitenancyTests(TestCase):
 
     def helper__change_cookies_realm(self, realm):
         self.assertTrue(self.client.login(username=_username, password=_password))
-        self.client.cookies[settings.REALM_COOKIE] = CURRENT_REALM
+        self.client.cookies[settings.REALM_COOKIE] = realm
 
     def test_get_multitenancy_model(self):
         self.assertEqual(settings.MULTITENANCY_MODEL, 'sync.Project')
