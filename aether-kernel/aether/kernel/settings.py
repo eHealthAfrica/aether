@@ -49,6 +49,16 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
 ]
 
 
+# Upload files
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-DATA_UPLOAD_MAX_MEMORY_SIZE
+# https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-FILE_UPLOAD_MAX_MEMORY_SIZE
+
+_max_size = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', _max_size))
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', _max_size))
+
+
 # Export Configuration
 # ------------------------------------------------------------------------------
 
