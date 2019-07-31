@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.contrib.auth.mixins import UserPassesTestMixin
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -34,10 +36,23 @@ from .kernel_utils import (
     propagate_kernel_artefacts,
     KernelPropagationError,
 )
-from .surveyors_utils import get_surveyors
+from .surveyors_utils import get_surveyors, is_surveyor
 
 
-class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
+class IsNotSurveyorMixin(UserPassesTestMixin):
+    '''
+    Allows access only to non surveyor users.
+    '''
+
+    def test_func(self):
+        return bool(
+            self.request.user and
+            self.request.user.is_authenticated and
+            not is_surveyor(self.request.user)
+        )
+
+
+class ProjectViewSet(MtViewSetMixin, IsNotSurveyorMixin, viewsets.ModelViewSet):
     '''
     Create new Project entries.
     '''
@@ -69,7 +84,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class XFormViewSet(MtViewSetMixin, viewsets.ModelViewSet):
+class XFormViewSet(MtViewSetMixin, IsNotSurveyorMixin, viewsets.ModelViewSet):
     '''
     Create new xForms entries providing:
 
@@ -116,7 +131,7 @@ class XFormViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class MediaFileViewSet(MtViewSetMixin, viewsets.ModelViewSet):
+class MediaFileViewSet(MtViewSetMixin, IsNotSurveyorMixin, viewsets.ModelViewSet):
     '''
     Create new Media File entries.
     '''
@@ -132,7 +147,7 @@ class MediaFileViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         return media.get_content()
 
 
-class SurveyorViewSet(MtUserViewSetMixin, viewsets.ModelViewSet):
+class SurveyorViewSet(MtUserViewSetMixin, IsNotSurveyorMixin, viewsets.ModelViewSet):
     '''
     Create new Surveyors entries providing:
 

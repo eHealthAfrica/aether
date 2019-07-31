@@ -46,14 +46,16 @@ def get_surveyors():
                            .order_by('username')
 
 
-def is_surveyor(request, instance):
+def is_surveyor(user):
+    return get_surveyor_group() in user.groups.all()
+
+
+def is_granted_surveyor(request, instance):
     '''
-    Check that the user request is a granted surveyor of the instance:
+    Check that the user request is surveyor and is a granted surveyor of the instance:
 
     - If multitenancy is enabled:
         - User and instance must belong to the current realm.
-
-    - User is superuser.
 
     - If instance is a Project:
         - Project has no surveyors.
@@ -71,13 +73,11 @@ def is_surveyor(request, instance):
     user = request.user
 
     if (
+        not is_surveyor(user) or
         (group and group not in user.groups.all()) or
         not is_accessible_by_realm(request, instance)
     ):
         return False
-
-    if user.is_superuser:
-        return True
 
     if isinstance(instance, Project):
         return (
@@ -93,6 +93,6 @@ def is_surveyor(request, instance):
         )
 
     if isinstance(instance, MediaFile):
-        return is_surveyor(request, instance.xform)
+        return is_granted_surveyor(request, instance.xform)
 
     return False  # pragma: no cover

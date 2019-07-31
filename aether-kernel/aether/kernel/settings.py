@@ -25,6 +25,7 @@ from aether.sdk.conf.settings_aether import *  # noqa
 from aether.sdk.conf.settings_aether import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
+    PROFILING_ENABLED,
     REST_FRAMEWORK,
 )
 
@@ -48,6 +49,16 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
 ]
 
 
+# Upload files
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-DATA_UPLOAD_MAX_MEMORY_SIZE
+# https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-FILE_UPLOAD_MAX_MEMORY_SIZE
+
+_max_size = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', _max_size))
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', _max_size))
+
+
 # Export Configuration
 # ------------------------------------------------------------------------------
 
@@ -58,3 +69,17 @@ EXPORT_DATA_FORMAT = os.environ.get('EXPORT_DATA_FORMAT', 'split')
 EXPORT_HEADER_CONTENT = os.environ.get('EXPORT_HEADER_CONTENT', 'labels')
 EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR', '/')
 EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
+
+
+# Profiling workaround
+# ------------------------------------------------------------------------------
+#
+# Issue: The entities bulk creation is failing with Silk enabled.
+# The reported bug, https://github.com/jazzband/django-silk/issues/348,
+# In the meantime we will disable silk for those requests.
+
+if PROFILING_ENABLED:
+    def ignore_entities_post(request):
+        return request.method != 'POST' or '/entities' not in request.path
+
+    SILKY_INTERCEPT_FUNC = ignore_entities_post
