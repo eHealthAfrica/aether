@@ -115,7 +115,8 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
 class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
-    password = serializers.CharField(style={'input_type': 'password'})
+    username = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
     name = serializers.CharField(source='first_name', read_only=True)
 
     def validate_password(self, value):
