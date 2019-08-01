@@ -202,12 +202,7 @@ class SerializersTests(CustomTestCase):
         user.save()
         user_obj = get_user_model().objects.get(pk=user.data['id'])
 
-        self.assertNotIn('username', user.data)
-        self.assertNotIn('password', user.data)
-        self.assertEqual(user.data['name'], 'test')
-        self.assertEqual(user_obj.first_name, user.data['name'])
-        self.assertEqual(user_obj.last_name, '')
-        self.assertNotEqual(user_obj.password, password, 'no raw password')
+        self.assertNotEqual(user.data['password'], password, 'no raw password')
         self.assertIn(self.surveyor_group, user_obj.groups.all(), 'has the group "surveyor"')
 
         updated_user = SurveyorSerializer(
@@ -223,6 +218,7 @@ class SerializersTests(CustomTestCase):
         updated_user.save()
         updated_user_obj = get_user_model().objects.get(pk=updated_user.data['id'])
 
+        self.assertNotEqual(updated_user.data['password'], user.data['password'])
         self.assertEqual(updated_user_obj.password, user_obj.password)
         self.assertIn(self.surveyor_group, updated_user_obj.groups.all())
 
@@ -240,10 +236,9 @@ class SerializersTests(CustomTestCase):
         updated_user_2.save()
         updated_user_2_obj = get_user_model().objects.get(pk=updated_user_2.data['id'])
 
-        self.assertNotIn('username', updated_user_2.data)
-        self.assertNotIn('password', updated_user_2.data)
-        self.assertEqual(updated_user_2.data['name'], 'test2')
-        self.assertEqual(updated_user_2_obj.first_name, updated_user_2.data['name'])
-        self.assertEqual(updated_user_2_obj.last_name, '')
+        self.assertEqual(updated_user_2.data['username'], 'test2')
+        self.assertEqual(updated_user_2.data['password'], updated_user.data['password'])
+
+        self.assertEqual(updated_user_2_obj.username, updated_user_2.data['username'])
         self.assertEqual(updated_user_2_obj.password, updated_user_obj.password)
         self.assertIn(self.surveyor_group, updated_user_2_obj.groups.all())

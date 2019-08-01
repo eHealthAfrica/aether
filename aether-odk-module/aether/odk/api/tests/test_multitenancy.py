@@ -134,15 +134,13 @@ class MultitenancyTests(CustomTestCase):
         )
         self.assertTrue(surveyor.is_valid(), surveyor.errors)
         surveyor.save()
-        self.assertEqual(surveyor.data['name'], 'surveyor')
+        self.assertEqual(surveyor.data['username'], 'surveyor')
 
         user = get_user_model().objects.get(pk=surveyor.data['id'])
         self.assertTrue(user.groups.filter(name=CURRENT_REALM).exists())
         self.assertEqual(
             user.username, f'{CURRENT_REALM}__surveyor',
             'Surveyor username starts with current realm')
-        self.assertEqual(user.first_name, 'surveyor')
-        self.assertEqual(user.last_name, CURRENT_REALM)
 
         updated_user = serializers.SurveyorSerializer(
             user,
@@ -152,13 +150,11 @@ class MultitenancyTests(CustomTestCase):
         self.assertTrue(updated_user.is_valid(), updated_user.errors)
         updated_user.save()
         self.assertEqual(updated_user.data['id'], surveyor.data['id'])
-        self.assertEqual(updated_user.data['name'], 'surveyor')
+        self.assertEqual(updated_user.data['username'], 'surveyor')
         user.refresh_from_db()
         self.assertEqual(
             user.username, f'{CURRENT_REALM}__surveyor',
             'Not prepended twice')
-        self.assertEqual(user.first_name, 'surveyor')
-        self.assertEqual(user.last_name, CURRENT_REALM)
 
     def test_views(self):
         # create data assigned to different realms
@@ -378,9 +374,7 @@ class NoMultitenancyTests(CustomTestCase):
         )
         self.assertTrue(surveyor1.is_valid(), surveyor1.errors)
         surveyor1.save()
-        self.assertEqual(surveyor1.data['name'], 'surveyor')
+        self.assertEqual(surveyor1.data['username'], 'surveyor')
         user = get_user_model().objects.get(pk=surveyor1.data['id'])
         self.assertEqual(user.username, 'surveyor')
-        self.assertEqual(user.first_name, 'surveyor')
-        self.assertEqual(user.last_name, '')
         self.assertEqual(user.groups.count(), 1, 'Belongs only to surveyors group')
