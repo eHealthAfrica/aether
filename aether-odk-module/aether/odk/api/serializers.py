@@ -26,13 +26,14 @@ from aether.sdk.drf.serializers import (
     DynamicFieldsModelSerializer,
     HyperlinkedIdentityField,
     HyperlinkedRelatedField,
+    UsernameField,
 )
 from aether.sdk.multitenancy.serializers import (
     MtModelSerializer,
     MtPrimaryKeyRelatedField,
     MtUserRelatedField,
 )
-from aether.sdk.multitenancy.utils import get_current_realm, add_user_to_realm
+from aether.sdk.multitenancy.utils import add_user_to_realm
 
 from .models import Project, XForm, MediaFile
 from .xform_utils import parse_xform_file, validate_xform
@@ -114,25 +115,18 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
 class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
+    username = UsernameField()
     password = serializers.CharField(style={'input_type': 'password'})
 
     def validate_password(self, value):
         validate_pwd(value)
         return value
 
-    def validate_username(self, value):
-        # with multitenancy the username prepends the realm name
-        realm = get_current_realm(self.context['request'])
-        if realm and not value.startswith(f'{realm}__'):
-            value = f'{realm}__{value}'
-        return value
-
     def create(self, validated_data):
         password = validated_data.pop('password', None)
         instance = self.Meta.model(**validated_data)
         instance.set_password(password)
-        instance.save()
-        self._post_save(instance)
+        self._save(instance)
 
         return instance
 
@@ -143,12 +137,12 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
                     instance.set_password(value)
             else:
                 setattr(instance, attr, value)
-        instance.save()
-        self._post_save(instance)
+        self._save(instance)
 
         return instance
 
-    def _post_save(self, instance):
+    def _save(self, instance):
+        instance.save()
         instance.groups.add(get_surveyor_group())
         add_user_to_realm(self.context['request'], instance)
 
