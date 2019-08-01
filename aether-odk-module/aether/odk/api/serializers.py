@@ -22,6 +22,7 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
+from aether.sdk.auth.utils import parse_username, unparse_username
 from aether.sdk.drf.serializers import (
     DynamicFieldsModelSerializer,
     HyperlinkedIdentityField,
@@ -115,24 +116,20 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     password = serializers.CharField(style={'input_type': 'password'})
+    name = serializers.CharField(source='first_name', read_only=True)
 
     def validate_password(self, value):
         validate_pwd(value)
         return value
 
     def validate_username(self, value):
-        # with multitenancy the username prepends the realm name
-        realm = get_current_realm(self.context['request'])
-        if realm and not value.startswith(f'{realm}__'):
-            value = f'{realm}__{value}'
-        return value
+        return parse_username(self.context['request'], value)
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
         instance = self.Meta.model(**validated_data)
         instance.set_password(password)
-        instance.save()
-        self._post_save(instance)
+        self._save(instance)
 
         return instance
 
@@ -143,18 +140,21 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
                     instance.set_password(value)
             else:
                 setattr(instance, attr, value)
-        instance.save()
-        self._post_save(instance)
+        self._save(instance)
 
         return instance
 
-    def _post_save(self, instance):
+    def _save(self, instance):
+        req = self.context['request']
+        instance.first_name = unparse_username(req, instance.username)
+        instance.last_name = get_current_realm(req) or ''
+        instance.save()
         instance.groups.add(get_surveyor_group())
-        add_user_to_realm(self.context['request'], instance)
+        add_user_to_realm(req, instance)
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'password', )
+        fields = ('id', 'username', 'password', 'name', )
 
 
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):

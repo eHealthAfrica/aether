@@ -153,18 +153,11 @@ class SerializersTests(CustomTestCase):
             context={'request': self.request},
         )
         self.assertFalse(user.is_valid(), user.errors)
+        self.assertEqual(user.errors['password'][0].code, 'blank')
+        self.assertEqual(str(user.errors['password'][0]),
+                         'This field may not be blank.')
 
-    def test_surveyor_serializer__password_eq_username(self):
-        user = SurveyorSerializer(
-            data={
-                'username': 'test',
-                'password': 'test',
-            },
-            context={'request': self.request},
-        )
-        self.assertFalse(user.is_valid(), user.errors)
-
-    def test_surveyor_serializer__short_password(self):
+    def test_surveyor_serializer__weak_password(self):
         user = SurveyorSerializer(
             data={
                 'username': 'test',
@@ -173,6 +166,18 @@ class SerializersTests(CustomTestCase):
             context={'request': self.request},
         )
         self.assertFalse(user.is_valid(), user.errors)
+
+        self.assertEqual(user.errors['password'][0].code, 'password_too_short')
+        self.assertEqual(str(user.errors['password'][0]),
+                         'This password is too short. It must contain at least 10 characters.')
+
+        self.assertEqual(user.errors['password'][1].code, 'password_too_common')
+        self.assertEqual(str(user.errors['password'][1]),
+                         'This password is too common.')
+
+        self.assertEqual(user.errors['password'][2].code, 'password_entirely_numeric')
+        self.assertEqual(str(user.errors['password'][2]),
+                         'This password is entirely numeric.')
 
     def test_surveyor_serializer__strong_password(self):
         user = SurveyorSerializer(
@@ -197,6 +202,9 @@ class SerializersTests(CustomTestCase):
         user.save()
         user_obj = get_user_model().objects.get(pk=user.data['id'])
 
+        self.assertEqual(user.data['username'], user.data['name'])
+        self.assertEqual(user_obj.first_name, user.data['name'])
+        self.assertEqual(user_obj.last_name, '')
         self.assertNotEqual(user.data['password'], password, 'no raw password')
         self.assertIn(self.surveyor_group, user_obj.groups.all(), 'has the group "surveyor"')
 
@@ -231,5 +239,8 @@ class SerializersTests(CustomTestCase):
         updated_user_2_obj = get_user_model().objects.get(pk=updated_user_2.data['id'])
 
         self.assertEqual(updated_user_2.data['username'], 'test2')
+        self.assertEqual(updated_user_2.data['username'], updated_user_2.data['name'])
+        self.assertEqual(updated_user_2_obj.first_name, updated_user_2.data['name'])
+        self.assertEqual(updated_user_2_obj.last_name, '')
         self.assertEqual(updated_user_2.data['password'], updated_user.data['password'])
         self.assertIn(self.surveyor_group, updated_user_2_obj.groups.all())

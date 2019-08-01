@@ -137,9 +137,12 @@ class MultitenancyTests(CustomTestCase):
         self.assertEqual(
             surveyor.data['username'], f'{CURRENT_REALM}__surveyor',
             'Surveyor username starts with current realm')
+        self.assertEqual(surveyor.data['name'], 'surveyor')
 
         user = get_user_model().objects.get(pk=surveyor.data['id'])
         self.assertTrue(user.groups.filter(name=CURRENT_REALM).exists())
+        self.assertEqual(user.first_name, 'surveyor')
+        self.assertEqual(user.last_name, CURRENT_REALM)
 
         updated_user = serializers.SurveyorSerializer(
             user,
@@ -148,7 +151,11 @@ class MultitenancyTests(CustomTestCase):
         )
         self.assertTrue(updated_user.is_valid(), updated_user.errors)
         updated_user.save()
+        self.assertEqual(updated_user.data['id'], surveyor.data['id'])
         self.assertEqual(updated_user.data['username'], user.username, 'Not prepended twice')
+        user.refresh_from_db()
+        self.assertEqual(user.first_name, 'surveyor')
+        self.assertEqual(user.last_name, CURRENT_REALM)
 
     def test_views(self):
         # create data assigned to different realms
