@@ -33,7 +33,6 @@ from django.urls import reverse
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
-from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -45,6 +44,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
+from aether.sdk.auth.authentication import GatewayBasicAuthentication
 from aether.sdk.multitenancy.utils import (
     add_instance_realm_in_headers,
     filter_by_realm,
@@ -199,7 +199,7 @@ class IsAuthenticatedAndSurveyor(IsAuthenticated):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([BasicAuthentication])
+@authentication_classes([GatewayBasicAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_list(request, *args, **kwargs):
     '''
@@ -226,7 +226,7 @@ def xform_list(request, *args, **kwargs):
 
 @api_view(['GET'])
 @renderer_classes([StaticHTMLRenderer])
-@authentication_classes([BasicAuthentication])
+@authentication_classes([GatewayBasicAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_download(request, pk, *args, **kwargs):
     '''
@@ -251,7 +251,7 @@ def xform_get_download(request, pk, *args, **kwargs):
 
 
 @api_view(['GET'])
-@authentication_classes([BasicAuthentication])
+@authentication_classes([GatewayBasicAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def media_file_get_content(request, pk, *args, **kwargs):
     '''
@@ -265,7 +265,7 @@ def media_file_get_content(request, pk, *args, **kwargs):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([BasicAuthentication])
+@authentication_classes([GatewayBasicAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_manifest(request, pk, *args, **kwargs):
     '''
@@ -295,7 +295,7 @@ def xform_get_manifest(request, pk, *args, **kwargs):
 
 @api_view(['POST', 'HEAD'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([BasicAuthentication])
+@authentication_classes([GatewayBasicAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_submission(request, *args, **kwargs):
     '''
