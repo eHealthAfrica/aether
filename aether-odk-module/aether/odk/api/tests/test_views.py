@@ -145,9 +145,7 @@ class ViewsTests(CustomTestCase):
 
         self.client.logout()
         response = self.client.get(content_url)
-        # redirects to login page
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response.url, f'/accounts/login?next={content_url}')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test__is_surveyor(self):
         self.helper_create_surveyor(login=True)
