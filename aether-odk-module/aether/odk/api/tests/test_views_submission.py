@@ -151,7 +151,15 @@ class PostSubmissionTests(CustomTestCase):
             self.assertEqual(content['count'], 1)  # using identity mapping
             if entity:  # check that the entity payload matches
                 payload = dict(content['results'][0]['payload'])
-                del payload['id']  # dynamically generated
+                # remove added fields
+                for f in ['id', '_submitted_at']:
+                    self.assertIn(f, payload)
+                    del payload[f]
+                # special case with _surveyor
+                self.assertIn('_surveyor', payload)
+                self.assertEqual(payload['_surveyor'], self.surveyor.username)
+                del payload['_surveyor']
+
                 self.assertEqual(payload, entity)
 
             # get attachments
