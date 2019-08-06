@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 function echo_message {
-    LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /=}`
+    local LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /=}`
 
     if [ -z "$1" ]; then
         echo "$LINE"
@@ -40,23 +40,35 @@ function build_container {
         "$1"-test
 }
 
-function wait_for_db {
-    until $DC_KERNEL_RUN eval pg_isready -q; do
-        >&2 echo "Waiting for database..."
+
+function _wait_for {
+    local container=$1
+    local is_ready=$2
+
+    echo_message "Starting $container..."
+    $DC_TEST up -d "${container}-test"
+
+    local retries=1
+    until $is_ready > /dev/null; do
+        >&2 echo "Waiting for $container... $retries"
         sleep 2
+
+        ((retries++))
+        if [[ $retries -gt 30 ]]; then
+            echo_message "It could not be possible to start $container"
+            exit 1
+        fi
     done
+    echo_message "$container is ready!"
+}
+
+function start_database_test {
+    _wait_for "db" "$DC_KERNEL_RUN eval pg_isready -q"
 }
 
 function start_kernel_test {
-    echo_message "Starting kernel"
-    wait_for_db
-    $DC_TEST up -d kernel-test
-
-    until $DC_KERNEL_RUN manage check_url -u $KERNEL_HEALTH_URL >/dev/null; do
-        >&2 echo "Waiting for Kernel..."
-        sleep 2
-    done
-    echo_message "kernel ready!"
+    start_database_test
+    _wait_for "kernel" "$DC_KERNEL_RUN manage check_url -u $KERNEL_HEALTH_URL"
 }
 
 function kill_test {
@@ -120,7 +132,7 @@ fi
 echo_message "Preparing $1 container"
 build_container $1
 echo_message "$1 ready!"
-wait_for_db
+start_database_test
 $DC_TEST run --rm "$1"-test test
 echo_message "$1 tests passed!"
 
