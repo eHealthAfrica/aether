@@ -22,6 +22,7 @@ Views needed by ODK Collect
 https://docs.opendatakit.org/
 '''
 
+import datetime
 import logging
 import json
 from urllib.parse import urlparse
@@ -508,6 +509,10 @@ def xform_submission(request, *args, **kwargs):
         # `submission_id`.
         if previous_submissions_count == 0:
             submission_id = None
+            # internal audit log
+            data['_surveyor'] = request.user.username
+            data['_submitted_at'] = datetime.datetime.utcnow().isoformat()
+
             response = exec_request(
                 method='post',
                 url=submissions_url,
