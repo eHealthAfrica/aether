@@ -62,6 +62,8 @@ Entity = collections.namedtuple(
 
 ENTITY_EXTRACTION_ERRORS = 'aether_errors'
 ENTITY_EXTRACTION_ENRICHMENT = 'aether_extractor_enrichment'
+SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
+SUBMISSION_PAYLOAD_FIELD = 'payload'
 
 # RegEx for jsonpaths containing a partial wildcard as a key:
 # $.path.to[*].key_* where the matching path might be $.path.to[1].key_1
@@ -549,7 +551,7 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
         # iterate over expected output entities
         # some paths will satisfy more than one entity, so we increment in different places
         i = 0
-        while i <= count-1:
+        while i <= count - 1:
             # if fewer paths than required use the last value
             # otherwise use the current path
             path = paths[-1] if len(paths) < (i + 1) else paths[i]

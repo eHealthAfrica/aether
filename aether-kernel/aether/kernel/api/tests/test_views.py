@@ -41,6 +41,8 @@ from . import (
     SAMPLE_LOCATION_SCHEMA_DEFINITION,
 )
 
+WAIT_FOR_ENTITY_EXTRACTION = 1
+
 
 @override_settings(MULTITENANCY=False)
 class ViewsTest(TestCase):
@@ -114,110 +116,6 @@ class ViewsTest(TestCase):
         else:
             self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
         return response
-
-    def test_project_stats_view(self):
-        # cleaning data
-        models.Submission.objects.all().delete()
-        self.assertEqual(models.Submission.objects.count(), 0)
-        models.Entity.objects.all().delete()
-        self.assertEqual(models.Entity.objects.count(), 0)
-
-        schemadecorator_2 = models.SchemaDecorator.objects.create(
-            name='a schema decorator with stats',
-            project=self.project,
-            schema=models.Schema.objects.create(
-                name='another schema',
-                type='eha.test.schemas',
-                family=str(self.project.pk),  # identifies passthrough schemas
-                definition={
-                    'name': 'Person',
-                    'type': 'record',
-                    'fields': [{'name': 'id', 'type': 'string'}]
-                },
-                revision='a sample revision',
-            ),
-        )
-        mapping_2 = models.Mapping.objects.create(
-            name='a read only mapping with stats',
-            definition={
-                'entities': {'Person': str(schemadecorator_2.pk)},
-                'mapping': [['#!uuid', 'Person.id']],
-            },
-            mappingset=self.mappingset,
-            is_read_only=True,
-        )
-
-        for _ in range(4):
-            for __ in range(5):
-                # this will also trigger the entities extraction
-                # (4 entities per submission -> 3 for self.schemadecorator + 1 for schemadecorator_2)
-                self.helper_create_object('submission-list', {
-                    'payload': EXAMPLE_SOURCE_DATA,
-                    'mappingset': str(self.mappingset.pk),
-                })
-
-        submissions_count = models.Submission \
-                                  .objects \
-                                  .filter(mappingset__project=self.project) \
-                                  .count()
-        self.assertEqual(submissions_count, 20)
-
-        entities_count = models.Entity \
-                               .objects \
-                               .filter(submission__mappingset__project=self.project) \
-                               .count()
-        self.assertEqual(entities_count, 80)
-
-        family_person_entities_count = models.Entity \
-                                             .objects \
-                                             .filter(mapping=self.mapping) \
-                                             .count()
-        self.assertEqual(family_person_entities_count, 60)
-
-        passthrough_entities_count = models.Entity \
-                                           .objects \
-                                           .filter(mapping=mapping_2) \
-                                           .count()
-        self.assertEqual(passthrough_entities_count, 20)
-
-        url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        json = response.json()
-        self.assertEqual(json['id'], str(self.project.pk))
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertEqual(json['entities_count'], entities_count)
-        self.assertLessEqual(
-            dateutil.parser.parse(json['first_submission']),
-            dateutil.parser.parse(json['last_submission']),
-        )
-
-        # let's try with the family filter
-        response = self.client.get(f'{url}?family=Person')
-        json = response.json()
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEqual(json['entities_count'], family_person_entities_count)
-
-        # let's try again but with an unexistent family
-        response = self.client.get(f'{url}?family=unknown')
-        json = response.json()
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertEqual(json['entities_count'], 0, 'No entities in this family')
-
-        # let's try with using the project id
-        response = self.client.get(f'{url}?family={str(self.project.pk)}')
-        json = response.json()
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEqual(json['entities_count'], passthrough_entities_count)
-
-        # let's try with the passthrough filter
-        response = self.client.get(f'{url}?passthrough=true')
-        json = response.json()
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEqual(json['entities_count'], passthrough_entities_count)
 
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})

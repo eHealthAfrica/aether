@@ -44,5 +44,6 @@ REDIS_DB = os.environ.get('REDIS_DB', 0)
 REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
 KERNEL_TOKEN = os.environ.get('AETHER_KERNEL_TOKEN', '')
 KERNEL_URL = os.environ.get('AETHER_KERNEL_URL', '')
+DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
 
 LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)

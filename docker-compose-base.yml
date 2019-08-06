@@ -43,7 +43,13 @@ services:
 
   redis-base:
     image: redis:alpine
-    command: redis-server --requirepass ${REDIS_PASSWORD} --notify-keyspace-events KEA
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --notify-keyspace-events KEA
+      --appendonly yes
+      --auto-aof-rewrite-percentage 100
+      --auto-aof-rewrite-min-size 64mb
 
   nginx-base:
     image: nginx:alpine
@@ -451,7 +457,6 @@ services:
 
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
       AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
-      AETHER_KERNEL_URL_TEST: http://kernel-test:9100
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
 
       REDIS_DB: 0

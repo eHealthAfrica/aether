@@ -19,13 +19,12 @@
 # under the License.
 
 import uuid
-import json
 from datetime import datetime
 from hashlib import md5
 
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.db import models, IntegrityError
+from django.db import models, IntegrityError, transaction
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
@@ -48,8 +47,6 @@ ENTITY_STATUS_CHOICES = (
     ('Pending Approval', _('Pending Approval')),
     ('Publishable', _('Publishable')),
 )
-
-
 
 '''
 Data model schema:
@@ -280,11 +277,16 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         name = self.mappingset.name if self.mappingset else self.id
         return f'{self.project.name}-{name}'
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project if self.mappingset else self.project
         super(Submission, self).save(*args, **kwargs)
-        send_model_item_to_redis(self)
-
+        try:
+            send_model_item_to_redis(self)
+        except Exception as e:
+            raise ValidationError(
+                str(e)
+            )
 
     def __str__(self):
         return f'{self.id}'

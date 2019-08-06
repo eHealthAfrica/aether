@@ -28,3 +28,5 @@ class MergeOptions(Enum):
 LINKED_DATA_MAX_DEPTH = 3
 
 NAMESPACE = 'org.ehealthafrica.aether'
+
+SUBMISSION_BULK_UPDATEABLE_FIELDS = ['payload', 'is_extracted']

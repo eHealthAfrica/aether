@@ -360,6 +360,25 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
     filter_class = filters.SubmissionFilter
     mt_field = 'project'
 
+    def get_serializer(self, *args, **kwargs):
+        if 'data' in kwargs:
+            kwargs['many'] = isinstance(kwargs.get('data'), list)
+        return super(SubmissionViewSet, self).get_serializer(*args, **kwargs)
+
+    @action(detail=False, methods=['patch'])
+    def bulk_update(self, request, *args, **kwargs):
+        try:
+            result = utils.submissions_flag_extracted(request.data)
+            return Response(
+                result,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                str(e),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
     @action(detail=True, methods=['patch'])
     def extract(self, request, pk, *args, **kwargs):
         '''

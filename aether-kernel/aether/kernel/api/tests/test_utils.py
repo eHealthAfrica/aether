@@ -253,14 +253,10 @@ class UtilsTests(TestCase):
             'entities': True,
             'submissions': True
         }
+        # wait for extraction
         entity_count = models.Entity.objects.filter(
             mapping__id__in=self.project_artefacts['mappings']
         ).count()
         result = utils.bulk_delete_by_mappings(opts, mappingset)
         self.assertEqual(result['entities']['total'], entity_count)
-        self.assertTrue(result['entities']['schemas'])
-        self.assertEqual(result['entities']['schemas'][0]['name'], 'Person')
-        self.assertEqual(result['entities']['schemas'][0]['count'], 6)
-        self.assertEqual(result['entities']['schemas'][1]['name'], 'Location')
-        self.assertEqual(result['entities']['schemas'][1]['count'], 1)
         self.assertEqual(result['submissions'], 1)

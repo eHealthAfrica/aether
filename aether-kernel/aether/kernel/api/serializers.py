@@ -32,7 +32,6 @@ from aether.sdk.multitenancy.serializers import (
 )
 
 from .constants import MergeOptions as MERGE_OPTIONS
-from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
 
 from . import models, utils, validators
 
@@ -148,6 +147,27 @@ class AttachmentSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         fields = '__all__'
 
 
+class SubmissionListSerializer(serializers.ListSerializer):
+
+    def create(self, validated_data):
+        errors = []
+        submissions = [models.Submission(**s) for s in validated_data]
+        for submission in submissions:
+            if not submission.mappingset:
+                errors.append((submission.id, _('Mappingset must be provided on initial submission')))
+            else:
+                submission.project = submission.mappingset.project
+        if errors:
+            # reject ALL if ANY invalid submissions are included
+            raise(serializers.ValidationError(errors))
+        # bulk database operation
+        results = models.Submission.objects.bulk_create(submissions)
+        for submission in submissions:
+            #  send to redis
+            utils.send_model_item_to_redis(submission)
+        return results
+
+
 class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='submission-detail')
@@ -203,6 +223,7 @@ class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     class Meta:
         model = models.Submission
         fields = '__all__'
+        list_serializer_class = SubmissionListSerializer
 
 
 class SchemaSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
@@ -278,7 +299,11 @@ class EntityListSerializer(serializers.ListSerializer):
             # reject ALL if ANY invalid entities are included
             raise(serializers.ValidationError(errors))
         # bulk database operation
-        return models.Entity.objects.bulk_create(entities)
+        created_entities = models.Entity.objects.bulk_create(entities)
+        # send created entities to redis
+        for entity in entities:
+            utils.send_model_item_to_redis(entity)
+        return created_entities
 
 
 class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):

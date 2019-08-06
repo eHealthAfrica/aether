@@ -22,6 +22,11 @@ from rest_framework import status
 from aether.sdk.redis.task import TaskHelper
 from aether.sdk.utils import request
 from django.conf import settings
+from typing import (
+    Dict,
+    NamedTuple,
+    Union,
+)
 
 EXTERNAL_APP_KERNEL = 'aether-kernel'
 CONSTANTS = collections.namedtuple(
@@ -42,6 +47,13 @@ KERNEL_ARTEFACT_NAMES = CONSTANTS(
 )
 
 REDIS_TASK = TaskHelper(settings)
+
+
+class Task(NamedTuple):
+    id: str
+    tenant: str
+    type: str
+    data: Union[Dict, None] = None
 
 
 def kernel_data_request(url='', method='get', data=None, headers=None):
@@ -87,6 +99,35 @@ def get_from_redis_or_kernel(id, type, tenant):
             return resource
         except Exception:
             return None
+
+
+def remove_from_redis(id, type, tenant):
+    return REDIS_TASK.remove(id, type, tenant)
+
+
+def get_redis_keys_by_pattern(pattern):
+    return REDIS_TASK.get_keys(pattern)
+
+
+def get_redis_subcribed_message(key):
+    doc = REDIS_TASK.get_by_key(key)
+    if doc:
+        _type, tenant, _id = key.split(':')
+        return Task(
+            id=_id,
+            tenant=tenant,
+            type='set',
+            data=doc
+        )
+    return None
+
+
+def redis_subscribe(callback: callable, pattern: str):
+    return REDIS_TASK.subscribe(
+        callback=callback,
+        pattern=pattern,
+        keep_alive=True,
+    )
 
 
 def object_contains(test, obj):

@@ -16,18 +16,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from aether.sdk.redis.task import TaskHelper
 from .manager import ExtractionManager
-from django.conf import settings
+from .utils import redis_subscribe
 
 SUBMISSION_CHANNEL = '_submissions:*'
 
 
 def main():
     extractor = ExtractionManager()
-    REDIS_TASK = TaskHelper(settings)
-    REDIS_TASK.subscribe(
+    extractor.handle_pending_submissions()
+    redis_subscribe(
         callback=extractor.add_to_queue,
-        pattern=SUBMISSION_CHANNEL, keep_alive=True
+        pattern=SUBMISSION_CHANNEL
     )
-    print("Started Enitity Extractor")
+    print('Entity Extractor Started.')

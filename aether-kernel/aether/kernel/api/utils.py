@@ -18,12 +18,11 @@
 
 from django.db import transaction
 from django.db.models import Count
-from uuid import UUID
 from django.conf import settings
 from django.forms.models import model_to_dict
 from aether.sdk.redis.task import TaskHelper
 
-from .constants import MergeOptions as MERGE_OPTIONS
+from .constants import SUBMISSION_BULK_UPDATEABLE_FIELDS, MergeOptions as MERGE_OPTIONS
 from . import models
 
 
@@ -185,6 +184,7 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset_id=None, mapping_ids=[]):
 
     return result
 
+
 def send_model_item_to_redis(model_item):
     '''
     Registers a model item on redis
@@ -199,7 +199,7 @@ def send_model_item_to_redis(model_item):
     model_name = model_item._meta.default_related_name
     realm = model_item.get_realm() \
         if model_name is not models.Schema._meta.default_related_name \
-        else settings.DEFAULT_REALM
+        and model_item.get_realm() else settings.DEFAULT_REALM
 
     if model_name is models.Entity._meta.default_related_name:
         if settings.WRITE_ENTITIES_TO_REDIS:
@@ -213,6 +213,22 @@ def send_model_item_to_redis(model_item):
 
             REDIS_TASK.add(obj, model_name, realm)
             REDIS_TASK.publish(obj, model_name, realm)
+    elif model_name is models.Mapping._meta.default_related_name:
+        obj['schemadecorators'] = list(model_item.schemadecorators.all().values_list('id', flat=True))
+        REDIS_TASK.add(obj, model_name, realm)
     else:
         REDIS_TASK.add(obj, model_name, realm)
 
+
+def submissions_flag_extracted(submissions):
+    updated_submissions = []
+    for submission in submissions:
+        s = models.Submission.objects.get(pk=submission['id'])
+        s.is_extracted = submission['is_extracted']
+        s.payload = submission['payload']
+        updated_submissions.append(s)
+
+    models.Submission.objects.bulk_update(updated_submissions, SUBMISSION_BULK_UPDATEABLE_FIELDS)
+    return [
+        s['id'] for s in submissions
+    ]

@@ -48,6 +48,19 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
 ]
 
 
+def silk_custom_logic(request):
+    if request.method == 'POST':
+        try:
+            return 'record_requests' in request.session
+        except Exception:
+            return False
+    else:
+        True
+
+
+SILKY_INTERCEPT_FUNC = silk_custom_logic
+
+
 # Export Configuration
 # ------------------------------------------------------------------------------
 

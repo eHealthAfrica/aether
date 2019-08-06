@@ -82,6 +82,11 @@ if [[ $1 == "ui" ]]; then
     echo_message "Tested and built ui assets"
 fi
 
+if [[ $1 == "kernel" ]]; then
+    $DC_TEST up -d redis-test
+    $DC_TEST up -d exm-test
+fi
+
 
 echo_message "Starting databases + Minio Storage server"
 $DC_TEST up -d db-test minio-test
