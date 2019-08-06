@@ -259,6 +259,20 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                 'doc': _('xForm version'),
                 'type': __get_avro_primitive_type('string'),
             },
+            # internal audit log
+            {
+                'name': '_surveyor',
+                'namespace': name,
+                'doc': _('Surveyor'),
+                'type': __get_avro_primitive_type('string'),
+            },
+            {
+                'name': '_submitted_at',
+                'namespace': name,
+                'doc': _('Submitted at'),
+                'type': __get_avro_primitive_type('dateTime'),
+                '@aether_extended_type': 'dateTime',
+            },
         ],
         # this is going to be removed later,
         # but it's used to speed up the build process

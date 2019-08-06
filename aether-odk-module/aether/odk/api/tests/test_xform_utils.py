@@ -729,6 +729,19 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'type': ['null', 'string'],
                 },
                 {
+                    'name': '_surveyor',
+                    'namespace': 'Nested_Repeats_Test_0',
+                    'doc': 'Surveyor',
+                    'type': ['null', 'string'],
+                },
+                {
+                    'name': '_submitted_at',
+                    'namespace': 'Nested_Repeats_Test_0',
+                    'doc': 'Submitted at',
+                    '@aether_extended_type': 'dateTime',
+                    'type': ['null', 'string'],
+                },
+                {
                     'name': 'Repeat_1',
                     'namespace': 'Nested_Repeats_Test_0',
                     '@aether_extended_type': 'repeat',
@@ -824,6 +837,19 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'type': ['null', 'string'],
                 },
                 {
+                    'name': '_surveyor',
+                    'namespace': 'WrongNames_0',
+                    'doc': 'Surveyor',
+                    'type': ['null', 'string'],
+                },
+                {
+                    'name': '_submitted_at',
+                    'namespace': 'WrongNames_0',
+                    'doc': 'Submitted at',
+                    '@aether_extended_type': 'dateTime',
+                    'type': ['null', 'string'],
+                },
+                {
                     'name': 'h:full-name',
                     'namespace': 'WrongNames_0',
                     '@aether_extended_type': 'group',
@@ -899,6 +925,19 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'name': '_version',
                     'namespace': 'DupNames_0',
                     'doc': 'xForm version',
+                    'type': ['null', 'string'],
+                },
+                {
+                    'name': '_surveyor',
+                    'namespace': 'DupNames_0',
+                    'doc': 'Surveyor',
+                    'type': ['null', 'string'],
+                },
+                {
+                    'name': '_submitted_at',
+                    'namespace': 'DupNames_0',
+                    'doc': 'Submitted at',
+                    '@aether_extended_type': 'dateTime',
                     'type': ['null', 'string'],
                 },
                 {
@@ -1002,6 +1041,19 @@ class XFormUtilsAvroTests(CustomTestCase):
                     'namespace': 'AetherTest_0',
                     'doc': 'xForm version',
                     'type': ['null', 'string']
+                },
+                {
+                    'name': '_surveyor',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'Surveyor',
+                    'type': ['null', 'string'],
+                },
+                {
+                    'name': '_submitted_at',
+                    'namespace': 'AetherTest_0',
+                    'doc': 'Submitted at',
+                    '@aether_extended_type': 'dateTime',
+                    'type': ['null', 'string'],
                 },
                 {
                     'name': 'surveyor',
