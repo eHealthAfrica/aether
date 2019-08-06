@@ -18,6 +18,7 @@
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from aether.sdk.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
@@ -34,7 +35,19 @@ from .kernel_utils import (
     propagate_kernel_artefacts,
     KernelPropagationError,
 )
-from .surveyors_utils import get_surveyors
+from .surveyors_utils import get_surveyors, is_surveyor
+
+
+class IsAuthenticatedAndNotSurveyor(IsAuthenticated):
+    '''
+    Allows access only to non-surveyor users.
+    '''
+
+    def has_permission(self, request, view):
+        return bool(
+            super(IsAuthenticatedAndNotSurveyor, self).has_permission(request, view) and
+            not is_surveyor(request.user)
+        )
 
 
 class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
@@ -42,6 +55,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     Create new Project entries.
     '''
 
+    permission_classes = [IsAuthenticatedAndNotSurveyor]
     queryset = Project.objects \
                       .prefetch_related('xforms', 'xforms__media_files') \
                       .order_by('name')
@@ -78,6 +92,7 @@ class XFormViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
     '''
 
+    permission_classes = [IsAuthenticatedAndNotSurveyor]
     queryset = XForm.objects \
                     .prefetch_related('media_files') \
                     .order_by('title')
@@ -121,6 +136,7 @@ class MediaFileViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     Create new Media File entries.
     '''
 
+    permission_classes = [IsAuthenticatedAndNotSurveyor]
     queryset = MediaFile.objects.order_by('name')
     serializer_class = MediaFileSerializer
     search_fields = ('name', 'xform__title',)
@@ -141,6 +157,7 @@ class SurveyorViewSet(MtUserViewSetMixin, viewsets.ModelViewSet):
 
     '''
 
+    permission_classes = [IsAuthenticatedAndNotSurveyor]
     queryset = get_surveyors()
     serializer_class = SurveyorSerializer
     search_fields = ('username',)

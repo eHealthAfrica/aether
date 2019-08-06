@@ -46,13 +46,23 @@ const MESSAGES = defineMessages({
     defaultMessage: 'You have provided an invalid AVRO schema.',
     id: 'input.schema.invalid.message.head'
   },
+
   inputDataPlaceholder: {
     defaultMessage: 'Once you have added a schema, we will generate some sample data for you. Alternatively, you can enter some JSON data and Aether will derive an AVRO schema for you.',
     id: 'input.data.placeholder'
   },
+  inputDataNonObjectError: {
+    defaultMessage: 'The JSON data can only be a valid dictionary.',
+    id: 'input.data.error.non-object'
+  },
+
   inputSchemaPlacehoder: {
     defaultMessage: 'Paste an AVRO Schema and Sample Data will be generated for your convenience to use in the pipeline.',
     id: 'input.schema.placeholder'
+  },
+  inputSchemaNonObjectError: {
+    defaultMessage: 'The AVRO schema can only be of type "record".',
+    id: 'input.schema.error.non-object'
   }
 })
 
@@ -84,6 +94,8 @@ class SchemaInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
+    event.stopPropagation()
+
     if (this.props.pipeline.isInputReadOnly) {
       return
     }
@@ -97,6 +109,13 @@ class SchemaInput extends Component {
     try {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
+      if (!schema.fields) {
+        this.setState({
+          error: formatMessage(MESSAGES.inputSchemaNonObjectError),
+          errorHead: formatMessage(MESSAGES.regularError)
+        })
+        return
+      }
       const type = parseSchema(schema)
 
       // generate a new input sample
@@ -195,6 +214,8 @@ class DataInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
+    event.stopPropagation()
+
     if (this.props.pipeline.isInputReadOnly) {
       return
     }
@@ -202,6 +223,12 @@ class DataInput extends Component {
     try {
       // Validate data and generate avro schema from input
       const input = JSON.parse(this.state.inputData)
+      // the input cannot be an array or a primitive, only an object
+      if (Object.prototype.toString.call(input) !== '[object Object]') {
+        const { formatMessage } = this.props.intl
+        this.setState({ error: formatMessage(MESSAGES.inputDataNonObjectError) })
+        return
+      }
       const schema = generateSchema(input)
 
       // Take pipeline name and remove forbidden characters

@@ -21,6 +21,7 @@ import re
 
 from collections import defaultdict
 from dateutil import parser
+from lxml import html
 from xml.etree import ElementTree
 
 from pyxform import builder, xls2json
@@ -257,6 +258,20 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                 'namespace': name,
                 'doc': _('xForm version'),
                 'type': __get_avro_primitive_type('string'),
+            },
+            # internal audit log
+            {
+                'name': '_surveyor',
+                'namespace': name,
+                'doc': _('Surveyor'),
+                'type': __get_avro_primitive_type('string'),
+            },
+            {
+                'name': '_submitted_at',
+                'namespace': name,
+                'doc': _('Submitted at'),
+                'type': __get_avro_primitive_type('dateTime'),
+                '@aether_extended_type': 'dateTime',
             },
         ],
         # this is going to be removed later,
@@ -669,8 +684,8 @@ def __get_xform_choices(xform_dict, xpath, texts={}):
     # todo: extend visualization decoration to itemsets
     choices = [
         {
-            'value': option['value'],
-            'label': __get_tag_label(option, texts) or option['value'],
+            'value': __parse_embedded_html(option['value']),
+            'label': __get_tag_label(option, texts) or __parse_embedded_html(option['value']),
         }
         for option in select_options
         if isinstance(option, dict) and 'value' in option
@@ -722,7 +737,7 @@ def __get_xform_itexts(xform_dict):
     for text_entry in __wrap_as_list(translation.get('text')):
         for value in __wrap_as_list(text_entry.get('value')):
             if isinstance(value, str):
-                itexts[text_entry.get('@id')] = value
+                itexts[text_entry.get('@id')] = __parse_embedded_html(value)
                 break
     return itexts
 
@@ -753,7 +768,7 @@ def __get_tag_label(tag, texts={}):
 
     label_tag = tag.get('label')
     if isinstance(label_tag, str):
-        return label_tag
+        return __parse_embedded_html(label_tag)
 
     ref = label_tag.get('@ref')
     if ref and ref.startswith("jr:itext('") and ref.endswith("')"):
@@ -856,6 +871,13 @@ def __validate_avro_schema(avro_schema):  # pragma: no cover
 
 def __validate_avro_name(name):
     return _RE_AVRO_NAME.match(name) is not None
+
+
+def __parse_embedded_html(value):
+    # &lt;span style="font-family:cursive"&gt;Begin data collection. &lt;/span&gt;
+    # &lt;span style="color:red"&gt;Follow ALL instructions carefully&lt;/span&gt;
+    text = html.fromstring(value).text_content()  # transform "&lt;" into "<" and so on
+    return html.fromstring(text).text_content()   # takes only text and ignores tags
 
 
 # ------------------------------------------------------------------------------

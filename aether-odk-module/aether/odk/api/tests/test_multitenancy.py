@@ -18,8 +18,6 @@
 
 from unittest import mock
 
-from http.cookies import SimpleCookie
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, override_settings
@@ -36,7 +34,7 @@ from ..kernel_utils import (
     get_kernel_url,
     __upsert_kernel_artefacts as upsert_kernel,
 )
-from ..surveyors_utils import is_surveyor
+from ..surveyors_utils import is_granted_surveyor
 
 from . import CustomTestCase
 
@@ -49,19 +47,12 @@ class MultitenancyTests(CustomTestCase):
         super(MultitenancyTests, self).setUp()
 
         self.helper_create_superuser()
-        self.helper_create_user()
+        self.helper_create_user(login=True)
 
         self.request = RequestFactory().get('/')
         self.request.COOKIES[settings.REALM_COOKIE] = CURRENT_REALM
-
-        username = 'user'
-        email = 'user@example.com'
-        password = 'secretsecret'
-
-        user = get_user_model().objects.create_user(username, email, password)
-        self.request.user = user
-        self.client.cookies = SimpleCookie({settings.REALM_COOKIE: CURRENT_REALM})
-        self.assertTrue(self.client.login(username=username, password=password))
+        self.request.user = self.user
+        self.client.cookies[settings.REALM_COOKIE] = CURRENT_REALM
 
     def test_get_multitenancy_model(self):
         self.assertEqual(settings.MULTITENANCY_MODEL, 'odk.Project')
@@ -143,12 +134,13 @@ class MultitenancyTests(CustomTestCase):
         )
         self.assertTrue(surveyor.is_valid(), surveyor.errors)
         surveyor.save()
-        self.assertEqual(
-            surveyor.data['username'], f'{CURRENT_REALM}__surveyor',
-            'Surveyor username starts with current realm')
+        self.assertEqual(surveyor.data['username'], 'surveyor')
 
         user = get_user_model().objects.get(pk=surveyor.data['id'])
         self.assertTrue(user.groups.filter(name=CURRENT_REALM).exists())
+        self.assertEqual(
+            user.username, f'{CURRENT_REALM}__surveyor',
+            'Surveyor username starts with current realm')
 
         updated_user = serializers.SurveyorSerializer(
             user,
@@ -157,20 +149,25 @@ class MultitenancyTests(CustomTestCase):
         )
         self.assertTrue(updated_user.is_valid(), updated_user.errors)
         updated_user.save()
-        self.assertEqual(updated_user.data['username'], user.username, 'Not prepended twice')
+        self.assertEqual(updated_user.data['id'], surveyor.data['id'])
+        self.assertEqual(updated_user.data['username'], 'surveyor')
+        user.refresh_from_db()
+        self.assertEqual(
+            user.username, f'{CURRENT_REALM}__surveyor',
+            'Not prepended twice')
 
     def test_views(self):
         # create data assigned to different realms
         obj1 = self.helper_create_project()
-        child1 = self.helper_create_xform(project_id=obj1.project_id)
         obj1.add_to_realm(self.request)
         self.assertEqual(obj1.mt.realm, CURRENT_REALM)
+        child1 = self.helper_create_xform(project_id=obj1.project_id)
 
         # change realm
         obj2 = self.helper_create_project()
         MtInstance.objects.create(instance=obj2, realm='another')
-        child2 = self.helper_create_xform(project_id=obj2.project_id)
         self.assertEqual(obj2.mt.realm, 'another')
+        child2 = self.helper_create_xform(project_id=obj2.project_id)
 
         self.assertEqual(models.Project.objects.count(), 2)
         self.assertEqual(models.XForm.objects.count(), 2)
@@ -199,7 +196,7 @@ class MultitenancyTests(CustomTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_is_surveyor(self):
+    def test_is_granted_surveyor(self):
         xform = self.helper_create_xform(with_media=True)
         project = xform.project
         media = xform.media_files.first()
@@ -210,85 +207,82 @@ class MultitenancyTests(CustomTestCase):
         self.assertEqual(xform.surveyors.count(), 0, 'no granted surveyors')
 
         self.request.user = self.admin
-        # even superusers must also belong to the realm
-        self.assertFalse(is_surveyor(self.request, project))
-        self.assertFalse(is_surveyor(self.request, xform))
-        self.assertFalse(is_surveyor(self.request, media))
-
         utils.add_user_to_realm(self.request, self.admin)
-        # realm superusers are always granted surveyors
-        self.assertTrue(is_surveyor(self.request, project))
-        self.assertTrue(is_surveyor(self.request, xform))
-        self.assertTrue(is_surveyor(self.request, media))
+        # realm superusers are not granted surveyors
+        self.assertFalse(is_granted_surveyor(self.request, project))
+        self.assertFalse(is_granted_surveyor(self.request, xform))
+        self.assertFalse(is_granted_surveyor(self.request, media))
 
         self.request.user = self.user
-        # users must also belong to the realm it there are no granted surveyors
-        self.assertFalse(is_surveyor(self.request, project))
-        self.assertFalse(is_surveyor(self.request, xform))
-        self.assertFalse(is_surveyor(self.request, media))
-
         utils.add_user_to_realm(self.request, self.user)
-        # if not granted surveyors all realm users are surveyors
-        self.assertTrue(is_surveyor(self.request, project))
-        self.assertTrue(is_surveyor(self.request, xform))
-        self.assertTrue(is_surveyor(self.request, media))
+        # realm users are not granted surveyors
+        self.assertFalse(is_granted_surveyor(self.request, project))
+        self.assertFalse(is_granted_surveyor(self.request, xform))
+        self.assertFalse(is_granted_surveyor(self.request, media))
 
-        surveyor = self.helper_create_surveyor(username='surveyor')
-        xform.surveyors.add(surveyor)
+        surveyor0 = self.helper_create_surveyor(username='surveyor0')
+        self.request.user = surveyor0
+        # users must also belong to the realm if there are no granted surveyors
+        self.assertFalse(is_granted_surveyor(self.request, project))
+        self.assertFalse(is_granted_surveyor(self.request, xform))
+        self.assertFalse(is_granted_surveyor(self.request, media))
+
+        utils.add_user_to_realm(self.request, surveyor0)
+        # if not granted surveyors all realm surveyors are granted surveyors
+        self.assertTrue(is_granted_surveyor(self.request, project))
+        self.assertTrue(is_granted_surveyor(self.request, xform))
+        self.assertTrue(is_granted_surveyor(self.request, media))
+
+        surveyor1 = self.helper_create_surveyor(username='surveyor1')
+        xform.surveyors.add(surveyor1)
         self.assertEqual(xform.surveyors.count(), 1, 'one custom granted surveyor')
 
         # is in the xform surveyors list but does not belong to the realm
-        self.request.user = surveyor
-        self.assertFalse(is_surveyor(self.request, project))
-        self.assertFalse(is_surveyor(self.request, xform))
-        self.assertFalse(is_surveyor(self.request, media))
+        self.request.user = surveyor1
+        self.assertFalse(is_granted_surveyor(self.request, project))
+        self.assertFalse(is_granted_surveyor(self.request, xform))
+        self.assertFalse(is_granted_surveyor(self.request, media))
 
-        utils.add_user_to_realm(self.request, surveyor)
-        self.assertTrue(is_surveyor(self.request, project), 'project has no surveyors')
-        self.assertTrue(is_surveyor(self.request, xform))
-        self.assertTrue(is_surveyor(self.request, media))
+        utils.add_user_to_realm(self.request, surveyor1)
+        self.assertTrue(is_granted_surveyor(self.request, project), 'project has no surveyors')
+        self.assertTrue(is_granted_surveyor(self.request, xform))
+        self.assertTrue(is_granted_surveyor(self.request, media))
 
-        self.request.user = self.admin
-        # realm superusers are always granted surveyors even with declared surveyors
-        self.assertTrue(is_surveyor(self.request, project))
-        self.assertTrue(is_surveyor(self.request, xform))
-        self.assertTrue(is_surveyor(self.request, media))
-
-        self.request.user = self.user
+        self.request.user = surveyor0
         # if granted surveyors not all realm users are surveyors
-        self.assertFalse(is_surveyor(self.request, xform))
-        self.assertFalse(is_surveyor(self.request, media))
+        self.assertFalse(is_granted_surveyor(self.request, xform))
+        self.assertFalse(is_granted_surveyor(self.request, media))
 
         surveyor2 = self.helper_create_surveyor(username='surveyor2')
         project.surveyors.add(surveyor2)
         self.assertEqual(xform.surveyors.count(), 1, 'one custom granted surveyor')
 
-        self.request.user = surveyor
-        self.assertFalse(is_surveyor(self.request, project))
-        self.assertTrue(is_surveyor(self.request, xform))
-        self.assertTrue(is_surveyor(self.request, media))
+        self.request.user = surveyor1
+        self.assertFalse(is_granted_surveyor(self.request, project))
+        self.assertTrue(is_granted_surveyor(self.request, xform))
+        self.assertTrue(is_granted_surveyor(self.request, media))
 
         # is in the project surveyors list but does not belong to the realm
         self.request.user = surveyor2
-        self.assertFalse(is_surveyor(self.request, xform))
-        self.assertFalse(is_surveyor(self.request, media))
+        self.assertFalse(is_granted_surveyor(self.request, xform))
+        self.assertFalse(is_granted_surveyor(self.request, media))
 
         utils.add_user_to_realm(self.request, surveyor2)
         # realm project surveyors are also xform surveyors
-        self.assertTrue(is_surveyor(self.request, xform))
-        self.assertTrue(is_surveyor(self.request, media))
+        self.assertTrue(is_granted_surveyor(self.request, xform))
+        self.assertTrue(is_granted_surveyor(self.request, media))
 
         xform.surveyors.clear()
         self.assertEqual(xform.surveyors.count(), 0, 'no custom granted surveyor')
 
-        self.request.user = surveyor
-        self.assertFalse(is_surveyor(self.request, xform))
-        self.assertFalse(is_surveyor(self.request, media))
+        self.request.user = surveyor1
+        self.assertFalse(is_granted_surveyor(self.request, xform))
+        self.assertFalse(is_granted_surveyor(self.request, media))
 
         self.request.user = surveyor2
         # realm project surveyors are also xform surveyors
-        self.assertTrue(is_surveyor(self.request, xform))
-        self.assertTrue(is_surveyor(self.request, media))
+        self.assertTrue(is_granted_surveyor(self.request, xform))
+        self.assertTrue(is_granted_surveyor(self.request, media))
 
     @mock.patch('aether.odk.api.kernel_utils.request',
                 return_value=MockResponse(status_code=200))
@@ -323,15 +317,9 @@ class NoMultitenancyTests(CustomTestCase):
     def setUp(self):
         super(NoMultitenancyTests, self).setUp()
 
+        self.helper_create_user()
         self.request = RequestFactory().get('/')
-
-        username = 'user'
-        email = 'user@example.com'
-        password = 'secretsecret'
-
-        user = get_user_model().objects.create_user(username, email, password)
-        self.request.user = user
-        self.assertTrue(self.client.login(username=username, password=password))
+        self.request.user = self.user
 
     def test_no_multitenancy(self, *args):
         obj1 = self.helper_create_project()
@@ -388,4 +376,5 @@ class NoMultitenancyTests(CustomTestCase):
         surveyor1.save()
         self.assertEqual(surveyor1.data['username'], 'surveyor')
         user = get_user_model().objects.get(pk=surveyor1.data['id'])
+        self.assertEqual(user.username, 'surveyor')
         self.assertEqual(user.groups.count(), 1, 'Belongs only to surveyors group')

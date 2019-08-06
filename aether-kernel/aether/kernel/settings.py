@@ -25,6 +25,7 @@ from aether.sdk.conf.settings_aether import *  # noqa
 from aether.sdk.conf.settings_aether import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
+    PROFILING_ENABLED,
     REST_FRAMEWORK,
 )
 
@@ -47,18 +48,34 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
 
+# Profiling workaround
+# ------------------------------------------------------------------------------
+#
+# Issue: The entities bulk creation is failing with Silk enabled.
+# The reported bug, https://github.com/jazzband/django-silk/issues/348,
+# In the meantime we will disable silk for those requests.
 
-def silk_custom_logic(request):
-    if request.method == 'POST':
+
+def silk_ignore_bulk_request(request):
+    if request.method == 'POST' and PROFILING_ENABLED:
         try:
             return 'record_requests' in request.session
         except Exception:
             return False
     else:
-        True
+        return True
 
 
-SILKY_INTERCEPT_FUNC = silk_custom_logic
+SILKY_INTERCEPT_FUNC = silk_ignore_bulk_request
+
+# Upload files
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-DATA_UPLOAD_MAX_MEMORY_SIZE
+# https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-FILE_UPLOAD_MAX_MEMORY_SIZE
+
+_max_size = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', _max_size))
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', _max_size))
 
 
 # Export Configuration

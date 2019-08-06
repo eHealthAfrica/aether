@@ -26,6 +26,7 @@ class PipelineRename extends Component {
 
     const onSubmit = (event) => {
       event.preventDefault()
+      event.stopPropagation()
       this.props.onSave(this.state.name)
     }
 

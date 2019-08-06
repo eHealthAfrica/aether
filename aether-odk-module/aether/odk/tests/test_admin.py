@@ -34,15 +34,16 @@ class AdminTests(CustomTestCase):
 
     def setUp(self):
         super(AdminTests, self).setUp()
-        user = self.helper_create_superuser()
+        self.helper_create_superuser(login=True)
 
         self.request = RequestFactory().get('/admin/')
-        self.request.user = user
+        self.request.user = self.admin
         setattr(self.request, 'session', 'session')
         messages = FallbackStorage(self.request)
         setattr(self.request, '_messages', messages)
 
         self.url = reverse('admin:odk_xform_add')
+        self.url_list = self.url.replace('add/', '')
 
         self.project = self.helper_create_project()
         self.PROJECT_ID = self.project.project_id
@@ -84,6 +85,7 @@ class AdminTests(CustomTestCase):
                 },
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
+        self.assertEqual(response.url, self.url_list)
         self.assertEqual(XForm.objects.count(), 1)
 
         instance = XForm.objects.first()
@@ -104,6 +106,7 @@ class AdminTests(CustomTestCase):
                 },
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
+        self.assertEqual(response.url, self.url_list)
         self.assertEqual(XForm.objects.count(), 1)
 
         instance = XForm.objects.first()
@@ -123,6 +126,7 @@ class AdminTests(CustomTestCase):
             },
         )
         self.assertEqual(response.status_code, 302)  # redirected to list
+        self.assertEqual(response.url, self.url_list)
         self.assertEqual(XForm.objects.count(), 1)
 
         instance = XForm.objects.first()
@@ -133,7 +137,7 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
 
     def test__post__surveyors(self):
-        surveyor = self.helper_create_surveyor()
+        surveyor = self.helper_create_surveyor(username='surveyor0')
         response = self.client.post(
             self.url,
             {
@@ -145,6 +149,7 @@ class AdminTests(CustomTestCase):
             },
         )
         self.assertEqual(response.status_code, 302)  # redirected to list
+        self.assertEqual(response.url, self.url_list)
         self.assertEqual(XForm.objects.count(), 1)
 
         instance = XForm.objects.first()

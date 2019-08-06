@@ -22,6 +22,7 @@ Views needed by ODK Collect
 https://docs.opendatakit.org/
 '''
 
+import datetime
 import logging
 import json
 from urllib.parse import urlparse
@@ -33,7 +34,6 @@ from django.urls import reverse
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
-from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -45,6 +45,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
+from aether.sdk.auth.authentication import GatewayBasicAuthentication
 from aether.sdk.multitenancy.utils import (
     add_instance_realm_in_headers,
     filter_by_realm,
@@ -60,7 +61,7 @@ from .kernel_utils import (
     propagate_kernel_artefacts,
     KernelPropagationError,
 )
-from .surveyors_utils import is_surveyor
+from .surveyors_utils import is_surveyor, is_granted_surveyor
 from .xform_utils import get_instance_data_from_xml, parse_submission
 
 
@@ -156,8 +157,8 @@ def _get_host(request, current_path):
     # If the request is not HTTPS, the host must include port 8443
     # or ODK Collect will not be able to get the resource
     url_info = urlparse(host)
-    if url_info.scheme != 'https' and url_info.port != 8443:  # pragma: no cover
-        host = f'http://{url_info.netloc}:8443{url_info.path}'
+    if url_info.scheme != 'https' and url_info.port != 8443:
+        host = f'http://{url_info.hostname}:8443{url_info.path}'
 
     return host
 
@@ -175,7 +176,7 @@ def _get_instance(request, model, pk):
     '''
 
     instance = get_object_or_404(model, pk=pk)
-    if not is_surveyor(request, instance):
+    if not is_granted_surveyor(request, instance):
         raise AuthenticationFailed(detail=MSG_401_UNAUTHORIZED, code='authorization_failed')
     return instance
 
@@ -185,10 +186,22 @@ def _get_xforms(request):
     return filter_by_realm(request, XForm.objects.all(), 'project')
 
 
+class IsAuthenticatedAndSurveyor(IsAuthenticated):
+    '''
+    Allows access only to surveyor users.
+    '''
+
+    def has_permission(self, request, view):
+        return bool(
+            super(IsAuthenticatedAndSurveyor, self).has_permission(request, view) and
+            is_surveyor(request.user)
+        )
+
+
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@authentication_classes([GatewayBasicAuthentication])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def xform_list(request, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
@@ -203,7 +216,7 @@ def xform_list(request, *args, **kwargs):
     return Response(
         data={
             'host': _get_host(request, reverse('xform-list-xml')),
-            'xforms': [xf for xf in xforms if is_surveyor(request, xf)],
+            'xforms': [xf for xf in xforms if is_granted_surveyor(request, xf)],
             'verbose': request.query_params.get('verbose', '').lower() == 'true',
         },
         template_name='xformList.xml',
@@ -214,8 +227,8 @@ def xform_list(request, *args, **kwargs):
 
 @api_view(['GET'])
 @renderer_classes([StaticHTMLRenderer])
-@authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@authentication_classes([GatewayBasicAuthentication])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_download(request, pk, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
@@ -239,8 +252,8 @@ def xform_get_download(request, pk, *args, **kwargs):
 
 
 @api_view(['GET'])
-@authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@authentication_classes([GatewayBasicAuthentication])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def media_file_get_content(request, pk, *args, **kwargs):
     '''
     Returns the `<downloadUrl/>` content in the form manifest file.
@@ -253,8 +266,8 @@ def media_file_get_content(request, pk, *args, **kwargs):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@authentication_classes([GatewayBasicAuthentication])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_manifest(request, pk, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
@@ -283,8 +296,8 @@ def xform_get_manifest(request, pk, *args, **kwargs):
 
 @api_view(['POST', 'HEAD'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+@authentication_classes([GatewayBasicAuthentication])
+@permission_classes([IsAuthenticatedAndSurveyor])
 def xform_submission(request, *args, **kwargs):
     '''
     Submission specification:
@@ -349,11 +362,13 @@ def xform_submission(request, *args, **kwargs):
     '''
 
     def _rollback_submission(submission_id):
-        # delete submission and ignore response
+        # delete submission (with cascade parameter to delete linked entities too)
+        # and ignore response
         if submission_id:
             exec_request(
                 method='delete',
                 url=get_submissions_url(submission_id),
+                params={'cascade': 'true'},
                 headers=auth_header,
             )
 
@@ -440,7 +455,7 @@ def xform_submission(request, *args, **kwargs):
     # TODO take the one that matches the version
     xform = None
     for xf in xforms.order_by('-version'):
-        if is_surveyor(request, xf):
+        if is_granted_surveyor(request, xf):
             xform = xf
             break
 
@@ -494,6 +509,10 @@ def xform_submission(request, *args, **kwargs):
         # `submission_id`.
         if previous_submissions_count == 0:
             submission_id = None
+            # internal audit log
+            data['_surveyor'] = request.user.username
+            data['_submitted_at'] = datetime.datetime.utcnow().isoformat()
+
             response = exec_request(
                 method='post',
                 url=submissions_url,
