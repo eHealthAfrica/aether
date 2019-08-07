@@ -55,7 +55,7 @@ function _wait_for {
 
         ((retries++))
         if [[ $retries -gt 30 ]]; then
-            echo_message "It could not be possible to start $container"
+            echo_message "It was not possible to start $container"
             exit 1
         fi
     done
