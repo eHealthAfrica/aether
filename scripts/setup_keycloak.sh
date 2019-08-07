@@ -54,7 +54,6 @@ $PSQL <<- EOSQL
 EOSQL
 
 
-echo_message "Starting keycloak server..."
 start_container keycloak $KC_URL
 
 KC_ID=$(docker-compose ps -q keycloak)
