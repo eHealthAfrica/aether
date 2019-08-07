@@ -42,6 +42,7 @@ class PipelineCard extends Component {
 
   onPipelineSelect (pipeline) {
     this.props.selectPipeline(pipeline.id)
+    this.props.history.push(`/${pipeline.id}/`)
   }
 
   onRename () {

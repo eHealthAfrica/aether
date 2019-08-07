@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 DC_FILE="docker-compose -f ./aether-client-library/docker-compose.yml"
-$DC_FILE down
+$DC_FILE down -v
 
 if [ ! -f VERSION ]; then
     APP_VERSION="0.0.0"
@@ -55,4 +55,4 @@ do
     echo "----------------------------------------------------------------------"
 done
 
-$DC_FILE down
+$DC_FILE down -v
