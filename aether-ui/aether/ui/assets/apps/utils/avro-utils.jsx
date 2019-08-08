@@ -20,7 +20,7 @@
 
 import avro from 'avsc'
 
-import { generateGUID } from './index'
+import { generateGUID, isEmpty } from './index'
 
 // AVRO types:
 // - primitive: null, boolean, int, long, float, double, bytes, string
@@ -135,6 +135,10 @@ export const typeToString = (type, nullable = '(nullable)', short = false) => {
 
   let typeStr = t
   switch (t) {
+    case 'enum':
+      typeStr = `${t} (${cleanType.symbols.join(', ')})`
+      break
+
     case 'map':
       typeStr = `${t} {${typeToString(cleanType.values, nullable, short)}}`
       break

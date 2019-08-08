@@ -284,13 +284,15 @@ describe('AVRO utils', () => {
 
     it('should detect nullable types', () => {
       expect(utils.typeToString(['null', 'int'])).toEqual('int (nullable)')
-      expect(utils.typeToString(['null', { type: 'enum' }])).toEqual('enum (nullable)')
+      expect(utils.typeToString(['null', { type: 'enum', symbols: ['a', 'b'] }]))
+        .toEqual('enum (a, b) (nullable)')
 
       expect(utils.typeToString(['null', 'int', { type: 'record' }]))
         .toEqual('int, record (nullable)')
 
       expect(utils.typeToString(['null', 'int'], '(null)', true)).toEqual('int (null)')
-      expect(utils.typeToString(['null', { type: 'enum' }], '(null)', true)).toEqual('enum (null)')
+      expect(utils.typeToString(['null', { type: 'enum', symbols: ['a', 'b'] }], '(null)', true))
+        .toEqual('enum (a, b) (null)')
       expect(utils.typeToString(['null', 'int', { type: 'record' }], '(null)', true))
         .toEqual('union (null)')
     })

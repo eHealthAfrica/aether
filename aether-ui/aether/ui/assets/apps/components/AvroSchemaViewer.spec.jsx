@@ -76,7 +76,7 @@ describe('AvroSchemaViewer', () => {
     const choicesDiv = component.find('[data-qa="choices"]').html()
     expect(choicesDiv).toContain('<div class=" field">')
     expect(choicesDiv).toContain('<span class="name">choices</span>')
-    expect(choicesDiv).toContain('<span class="type">enum</span>')
+    expect(choicesDiv).toContain('<span class="type">enum (a, b)</span>')
 
     // RECORDS
 
