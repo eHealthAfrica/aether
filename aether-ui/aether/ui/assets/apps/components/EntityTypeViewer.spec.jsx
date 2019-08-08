@@ -27,79 +27,83 @@ import { mockEntityTypes } from '../../tests/mock'
 import { EntityTypeViewer } from '../components'
 
 describe('EntityTypeViewer', () => {
-  it('should take a valid json list of schemas and render entity visualizers', () => {
-    const component = mountWithIntl(
-      <EntityTypeViewer schema={mockEntityTypes} highlight={['Person.firstName']} />
-    )
-    expect(component.find('div.entity-types-schema').children().length).toEqual(2)
-    expect(component.html()).not.toContain('Invalid entity type')
-    expect(component.html()).not.toContain('Invalid schema')
-    expect(component.find('[id="entityType_Person.lastName"]').html())
-      .toContain('<span class="type"> (nullable)</span>')
-    expect(component.find('[id="entityType_Person.age"]').html())
-      .toContain('<span class="type"> int,string</span>')
-    expect(component.find('[id="entityType_Person.age"]').html())
-      .toContain('<i class="fas fa-lock"></i>')
-    expect(component.find('[id="entityType_Person.lastName"]').html())
-      .not.toContain('<i class="fas fa-lock"></i>')
-  })
-
-  it('should take a valid json with empty entities', () => {
-    const validJSONWithEmptyObjects = [{}, {}, {}]
-    const component = mountWithIntl(<EntityTypeViewer schema={validJSONWithEmptyObjects} />)
-    expect(component.find('div.entity-types-schema').children().length).toEqual(3)
-    expect(component.html()).toContain('Invalid entity type')
-  })
-
   it('should take an empty schema and render error', () => {
-    const inValidSchema = []
-    const component = mountWithIntl(<EntityTypeViewer schema={inValidSchema} />)
-    expect(component.html()).toContain('No entity types added to this pipeline yet.')
+    const component = mountWithIntl(<EntityTypeViewer schema={[]} />)
+    expect(component.text()).toContain('No entity types added yet.')
   })
 
   it('should take an empty schema input and render message', () => {
     const component = mountWithIntl(<EntityTypeViewer />)
-    expect(component.html()).toContain('No entity types added to this pipeline yet.')
+    expect(component.text()).toContain('No entity types added yet.')
   })
 
-  it('should take entity type without fields', () => {
-    const entityTypeWithoutProperties = [{ name: 'test-name', type: 'record', fields: [] }]
-    const component = mountWithIntl(<EntityTypeViewer schema={entityTypeWithoutProperties} />)
-    expect(component.html()).toContain('Entity has no properties')
+  it('should take a valid json with empty entities and render error', () => {
+    const component = mountWithIntl(<EntityTypeViewer schema={[{}, {}, {}]} />)
+    expect(component.find('div.entity-types-schema').children().length).toEqual(3)
+    expect(component.text()).toContain('Invalid entity type')
   })
 
-  it('should render type name if symbols are missing', () => {
-    const entityTypeWithoutSymbols = [...mockEntityTypes]
-    entityTypeWithoutSymbols[0]['fields'].push({
-      name: 'building',
-      type: {
-        type: 'enum',
-        name: 'Building'
-      }
-    })
+  it('should not take entity type that is not a record', () => {
+    const entities = [{ name: 'test-name', type: 'string' }]
+    const component = mountWithIntl(<EntityTypeViewer schema={entities} />)
+    expect(component.text()).toContain('Entity type can only be of type "record"')
+  })
+
+  it('should not take entity type of type record without fields', () => {
+    const entities = [{ name: 'test-name', type: 'record', fields: [] }]
+    const component = mountWithIntl(<EntityTypeViewer schema={entities} />)
+    expect(component.text()).toContain('Invalid entity type')
+  })
+
+  it('should not render enum type if symbols are missing', () => {
+    const entities = [{
+      name: 'test-name',
+      type: 'record',
+      fields: [
+        {
+          name: 'building',
+          type: {
+            type: 'enum',
+            name: 'Building'
+          }
+        }
+      ]
+    }]
+
+    const component = mountWithIntl(<EntityTypeViewer schema={entities} />)
+    expect(component.text()).toContain('Invalid entity type')
+  })
+
+  it('should take a valid json list of schemas and render entity visualizers', () => {
+    const highlight = [
+      'Person.firstName',
+      'Screening.id'
+    ]
     const component = mountWithIntl(
-      <EntityTypeViewer schema={entityTypeWithoutSymbols} highlight={['Person.firstName']} />
+      <EntityTypeViewer schema={mockEntityTypes} highlight={highlight} />
     )
-    expect(component.html()).toContain('<span class="type"> enum</span>')
-    expect(component.html()).toContain('<span class="name">building</span>')
-  })
 
-  it('should take schema JSON with a min depth of 3', () => {
-    const entityTypeDepth3 = [...mockEntityTypes]
-    entityTypeDepth3[1]['fields'][2]['type']['fields'].push({
-      name: 'cordinates',
-      type: {
-        type: 'record',
-        name: 'coordinates',
-        fields: [
-          { name: 'Y', type: 'string' },
-          { name: 'X', type: 'int' }
-        ]
-      }
-    })
-    const component = mountWithIntl(
-      <EntityTypeViewer schema={entityTypeDepth3} highlight={['Person.firstName']} />
-    )
-    expect(component.html()).toContain('location.cordinates.Y')
+    expect(component.text()).not.toContain('Invalid entity type')
+    expect(component.text()).not.toContain('Invalid schema')
+
+    expect(component.find('div.entity-types-schema').children().length).toEqual(2)
+
+    expect(component.find('[data-qa="Person.firstName"]').html())
+      .toContain('<li data-qa="Person.firstName" class="entityType-mapped">')
+
+    expect(component.find('[data-qa="Person.lastName"]').html())
+      .toContain('<span class="type">string (nullable)</span>')
+    expect(component.find('[data-qa="Person.lastName"]').html())
+      .not.toContain('<i class="fas fa-lock"></i>')
+
+    expect(component.find('[data-qa="Person.age"]').html())
+      .toContain('<span class="type">union: int, string</span>')
+    expect(component.find('[data-qa="Person.age"]').html())
+      .toContain('<i class="fas fa-lock"></i>')
+
+    expect(component.find('[data-qa="Screening.id"]').html())
+      .toContain('<li data-qa="Screening.id" class="entityType-mapped">')
+    expect(component.find('[data-qa="Screening.location"]').html())
+      .toContain('<span class="type">record</span>')
   })
 })

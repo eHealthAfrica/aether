@@ -28,13 +28,25 @@ import { parseSchema } from '../../utils/avro-utils'
 import { updateContract } from '../redux'
 
 const MESSAGES = defineMessages({
+  nonObjectError: {
+    defaultMessage: 'The AVRO schema can only be of type "record".',
+    id: 'entity.types.error.non-object'
+  },
   missingIdError: {
-    defaultMessage: 'The AVRO schemas MUST have an "id" field with type "string".',
+    defaultMessage: 'The AVRO schema MUST have an "id" field with type "string".',
     id: 'entity.types.missing-id-field'
+  },
+  uniqueNamesError: {
+    defaultMessage: 'The schema names cannot be repeated.',
+    id: 'entity.types.error.repeatedNames'
   },
   entityTypeSchemaPlaceHolder: {
     defaultMessage: 'Enter your schemas',
     id: 'entity.types.schema.placeholder'
+  },
+  schema: {
+    defaultMessage: 'Schema',
+    id: 'entity.type.schema'
   }
 })
 
@@ -76,13 +88,29 @@ class EntityTypes extends Component {
     try {
       // validate schemas
       const schemas = JSON.parse(this.state.entityTypesSchema)
-      schemas.forEach(schema => {
-        parseSchema(schema)
+      schemas.forEach((schema, index) => {
+        const current = `${formatMessage(MESSAGES.schema)} ${index + 1}`
+        try {
+          parseSchema(schema)
+        } catch (error) {
+          throw new Error(`${current}: ${error.message}`)
+        }
+
+        if (schema.type !== 'record') {
+          throw new Error(`${current}: ${formatMessage(MESSAGES.nonObjectError)}`)
+        }
+
         // all entity types must have an "id" field with type "string"
         if (!schema.fields.find(field => field.name === 'id' && field.type === 'string')) {
-          throw new Error(formatMessage(MESSAGES.missingIdError))
+          throw new Error(`${current}: ${formatMessage(MESSAGES.missingIdError)}`)
         }
       })
+
+      const names = new Set(schemas.map(({ name }) => name))
+      if (names.size !== schemas.length) {
+        throw new Error(formatMessage(MESSAGES.uniqueNamesError))
+      }
+
       this.props.updateContract({
         ...this.props.contract,
         entity_types: schemas,
