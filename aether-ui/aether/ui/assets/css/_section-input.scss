@@ -72,92 +72,56 @@
 }
 
 .input-schema {
+  padding: 0;
   padding-bottom: 2rem;
+  margin-left: $indent * -1;
 
   .name {
     font-weight: 600;
   }
 
   .type {
+    margin-left: .5rem;
     font-style: italic;
+    font-size: $font-size-xs;
     color: $grey;
   }
 
   .group,
-  .group-list {
-    padding: 0;
-    list-style: none;
+  .group-list,
+  .group-union {
     font-size: $font-size-xs;
   }
 
-  .group {
-
-    li {
-      padding: 0;
-    }
-
-    li:not(:only-child),
-    .group-title {
-      border-bottom: 1px solid $light-grey;
-      padding-top: .2rem;
-      padding-bottom: .2rem;
-    }
-
-    li[class^='input-mapped'] {
-      border-bottom: 1px solid $white;
-    }
+  .group-title {
+    color: $grey;
+    font-size: $font-size-standard;
+    border-bottom: 3px solid $light-grey;
   }
-}
 
-.input-schema>.group>.group-title {
-  color: $grey;
-  font-size: $font-size-standard;
-  border-bottom: 3px solid $light-grey;
-}
+  .group-union .name {
+    color: $grey;
+  }
 
-.input-schema>.group {
-
-  ul {
-    padding-left: 0;
+  .group-list .name {
+    color: $text-color;
   }
 
   .group {
     padding-left: $indent;
 
-    li {
-      margin-left: $indent * -1;
+    div:not(:only-child),
+    .group-title {
+      margin-top: .2rem;
+      margin-bottom: .2rem;
     }
 
-    li:not(.group-title) {
-      padding-left: $indent;
-    }
-  }
-
-  .group .group {
-    padding-left: $indent * 2;
-    margin-left: $indent * -1;
-
-    li {
-      margin-left: $indent * -2;
-      padding-left: $indent;
+    div[class^='input-mapped'] {
+      border-bottom: 1px solid $white;
     }
 
-    li:not(.group-title) {
-      padding-left: $indent * 2;
-    }
-  }
-
-  .group .group .group {
-    padding-left: $indent * 3;
-    margin-left: $indent * -2;
-
-    li {
-      margin-left: $indent * -3;
-      padding-left: $indent * 2;
-    }
-
-    li:not(.group-title) {
-      padding-left: $indent * 3;
+    div.field {
+      border-bottom: 1px solid $light-grey;
     }
   }
 }

@@ -19,18 +19,129 @@
  */
 
 import React, { Component } from 'react'
-import { FormattedMessage } from 'react-intl'
+import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 
-import { clone, generateGUID } from '../utils'
-import { parseSchema } from '../utils/avro-utils'
+import { clone, isEmpty, generateGUID } from '../utils'
+import { parseSchema, isOptionalType, isPrimitive, typeToString } from '../utils/avro-utils'
+
+const MESSAGES = defineMessages({
+  nullable: {
+    defaultMessage: '(nullable)',
+    id: 'avro.schema.nullable'
+  }
+})
+
+const getPath = (parent, field) => `${parent ? parent + '.' : ''}${field.name || '#'}`
 
 class AvroSchemaViewer extends Component {
+  render () {
+    if (isEmpty(this.props.schema)) {
+      return (
+        <div className='hint'>
+          <FormattedMessage
+            id='schema.empty'
+            defaultMessage='Your AVRO schema will be displayed here once you have added a valid source.'
+          />
+        </div>
+      )
+    }
+
+    try {
+      parseSchema(this.props.schema)
+
+      return (
+        <div className='input-schema'>
+          <div className='group'>
+            <div
+              data-qa={`group-title-${this.props.schema.name}`}
+              className={`group-title ${this.props.className || ''}`}
+            >
+              { this.props.schema.name }
+            </div>
+            <div className='group-list'>
+              { this.props.schema.fields.map(f => this.renderField(clone(f))) }
+            </div>
+          </div>
+        </div>
+      )
+    } catch (error) {
+      return (
+        <div className='hint'>
+          <FormattedMessage
+            id='schema.invalid'
+            defaultMessage='You have provided an invalid AVRO schema.'
+          />
+        </div>
+      )
+    }
+  }
+
+  renderField (field, parentJsonPath = null) {
+    const { formatMessage } = this.props.intl
+    const nullableStr = formatMessage(MESSAGES.nullable)
+
+    const jsonPath = getPath(parentJsonPath, field)
+    const highlightedClassName = this.getHighlightedClassName(jsonPath)
+    const type = typeToString(field.type, nullableStr, true)
+
+    let currentType = (field.type.type || field.type) && field.type
+    if (isOptionalType(currentType)) {
+      // remove "null" item
+      currentType = currentType.filter(typeItem => typeItem !== 'null')
+    }
+    if (Array.isArray(currentType) && currentType.length === 1) {
+      // this is a fake union type, extract the real type
+      currentType = currentType[0]
+      currentType = (currentType.type || currentType) && currentType
+    }
+
+    const isUnion = Array.isArray(currentType) && !isPrimitive(currentType)
+
+    let children = null
+    if (currentType.type === 'record') {
+      children = currentType.fields.map(f => this.renderField(f, jsonPath))
+    }
+    if (currentType.type === 'array' && !isPrimitive(currentType.items)) {
+      children = this.renderField({ type: currentType.items }, jsonPath)
+    }
+    if (currentType.type === 'map' && !isPrimitive(currentType.values)) {
+      children = this.renderField({ type: currentType.values }, jsonPath)
+    }
+    if (isUnion) { // union type
+      children = currentType.map((t, i) => this.renderField({ name: `${i + 1}`, type: t }, jsonPath))
+    }
+
+    if (children) {
+      children = (
+        <div
+          data-qa={jsonPath + '.$'}
+          key={generateGUID()}
+          className={(isUnion ? 'group-union' : 'group-list')}
+        >
+          { children }
+        </div>
+      )
+    }
+
+    return (
+      <div data-qa={jsonPath} key={generateGUID()} className='group'>
+        { field.name &&
+          <div className={highlightedClassName + (children ? ' group-title' : ' field')}>
+            <span className='name'>{ field.name }</span>
+            <span className='type'>{ type }</span>
+          </div>
+        }
+        { children }
+      </div>
+    )
+  }
+
   getHighlightedClassName (jsonPath) {
-    const { highlight = {} } = this.props
+    const { highlight } = this.props
     // the simplest way (equality)
     // TODO: check that the jsonPath is included in any of the keys,
     // because they can also be "formulas"
-    const keys = Object.keys(highlight)
+    const keys = Object.keys(highlight || {})
     for (let i = 0; i < keys.length; i++) {
       if (keys[i] === jsonPath) {
         return `input-mapped-${highlight[keys[i]]}`
@@ -39,148 +150,6 @@ class AvroSchemaViewer extends Component {
 
     return ''
   }
-
-  // parent is passed if schema fields in view are nested.
-  schemaToMarkup (schema, parent = null, isUnion = false, isItem = false) {
-    if (schema.fields && schema.fields.length) {
-      const jsonPath = `${parent || schema.name}`
-      const className = this.getHighlightedClassName(jsonPath)
-
-      return isUnion
-        ? (
-          <ul key={`${schema.name}-${generateGUID()}`} className='group-list'>
-            { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
-          </ul>
-        )
-        : (
-          <ul key={`${schema.name}-${generateGUID()}`} className='group'>
-            <li
-              data-qa={`group-title-${schema.name}`}
-              className={`group-title ${className}`}
-              id={`input_${jsonPath}`}>
-              {schema.name}
-            </li>
-            <ul key={`${schema.name}-${generateGUID()}`} className='group-list'>
-              { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
-            </ul>
-          </ul>
-        )
-    } else if (Array.isArray(schema.type)) {
-      const typeStringOptions = []
-      const typeObjectOptions = []
-      let isNullable = false
-
-      schema.type.forEach(typeItem => {
-        if (typeof typeItem === 'string') {
-          if (typeItem === 'null') {
-            isNullable = true
-          } else {
-            typeStringOptions.push(typeItem)
-          }
-        } else if (typeof typeItem === 'object') {
-          typeStringOptions.push(typeof typeItem.type === 'string' ? typeItem.type : typeof typeItem.type)
-          typeObjectOptions.push(typeItem)
-        }
-      })
-
-      const nestedList = typeObjectOptions.length && typeObjectOptions.map(obj => (
-        this.schemaToMarkup(obj, `${parent ? parent + '.' : ''}${schema.name}`, true, isItem))
-      )
-
-      return this.deepestRender(
-        schema, parent, true, isItem, typeStringOptions, isNullable,
-        nestedList !== 0 && <ul>{nestedList}</ul>
-      )
-    } else if (schema.type && typeof schema.type !== 'string') {
-      schema.type.name = schema.name
-      let parentName = ''
-      if (parent) {
-        parentName = schema.type.type === 'array' ? parent : `${parent}.${schema.name}`
-      } else {
-        parentName = schema.type.type === 'array' ? '' : schema.name
-      }
-
-      return this.schemaToMarkup(schema.type, parentName, isUnion, isItem)
-    } else {
-      return this.deepestRender(schema, parent, isUnion, isItem)
-    }
-  }
-
-  deepestRender (
-    schema,
-    parent = null,
-    isUnion = false,
-    isItem = false,
-    typesOptions = null,
-    isNullable = false,
-    children = null) {
-    const jsonPath = `${parent ? parent + '.' : ''}${schema.name}`
-    const className = this.getHighlightedClassName(jsonPath)
-    let arrayItems = null
-    if (schema.type === 'array' && typeof schema.items !== 'string') {
-      arrayItems = this.schemaToMarkup(schema.items, parent, isUnion, true)
-    }
-
-    return schema.name
-      ? (
-        <li
-          data-qa={`no-children-${schema.name}`}
-          key={`${schema.name}-${generateGUID()}`}
-          className={className}
-          id={`input_${jsonPath}`}>
-          { schema.name &&
-            <span>
-              <span className={isItem ? 'name item' : 'name'}> { schema.name } </span>
-              <span className='type'>
-                { typesOptions && typesOptions.length ? typesOptions.toString() : schema.type }
-              </span>
-            </span>
-          }
-          { isNullable &&
-            <span className='type'> (nullable)</span>
-          }
-          { arrayItems }
-          { children }
-        </li>
-      )
-      : (
-        <ul key={generateGUID()}>
-          { arrayItems }
-          { children }
-        </ul>
-      )
-  }
-
-  render () {
-    if (!this.props.schema || !Object.keys(this.props.schema).length) {
-      return (
-        <div className='hint'>
-          <FormattedMessage
-            id='pipeline.schema.empty'
-            defaultMessage='Your schema for this pipeline will be displayed here once you have added a valid source.'
-          />
-        </div>
-      )
-    }
-
-    try {
-      parseSchema(this.props.schema)
-      return (
-        <div className='input-schema'>
-          { this.schemaToMarkup(clone(this.props.schema)) }
-        </div>
-      )
-    } catch (error) {
-      return (
-        <div className='hint'>
-          <FormattedMessage
-            id='pipeline.schema.invalid'
-            defaultMessage='You have provided an invalid AVRO schema.'
-          />
-        </div>
-      )
-    }
-  }
 }
 
-export default AvroSchemaViewer
+export default injectIntl(AvroSchemaViewer)
