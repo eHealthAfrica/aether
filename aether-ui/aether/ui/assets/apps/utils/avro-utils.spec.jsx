@@ -288,7 +288,7 @@ describe('AVRO utils', () => {
         .toEqual('enum (a, b) (nullable)')
 
       expect(utils.typeToString(['null', 'int', { type: 'record' }]))
-        .toEqual('int, record (nullable)')
+        .toEqual('union: int, record (nullable)')
 
       expect(utils.typeToString(['null', 'int'], '(null)', true)).toEqual('int (null)')
       expect(utils.typeToString(['null', { type: 'enum', symbols: ['a', 'b'] }], '(null)', true))
@@ -301,18 +301,18 @@ describe('AVRO utils', () => {
       expect(utils.typeToString({ type: 'array', items: 'another_type' }))
         .toEqual('array [another_type]')
       expect(utils.typeToString({ type: 'array', items: ['null', 'boolean', 'long'] }))
-        .toEqual('array [boolean, long (nullable)]')
+        .toEqual('array [union: boolean, long (nullable)]')
       expect(utils.typeToString({ type: 'array', items: ['null', 'boolean', { type: 'record' }] }))
-        .toEqual('array [boolean, record (nullable)]')
+        .toEqual('array [union: boolean, record (nullable)]')
     })
 
     it('should detect map types', () => {
       expect(utils.typeToString({ type: 'map', values: 'another_type' }))
         .toEqual('map {another_type}')
       expect(utils.typeToString({ type: 'map', values: ['null', 'boolean', 'long'] }))
-        .toEqual('map {boolean, long (nullable)}')
+        .toEqual('map {union: boolean, long (nullable)}')
       expect(utils.typeToString({ type: 'map', values: ['null', 'boolean', { type: 'record' }] }))
-        .toEqual('map {boolean, record (nullable)}')
+        .toEqual('map {union: boolean, record (nullable)}')
     })
 
     it('should detect complex types', () => {
@@ -323,7 +323,7 @@ describe('AVRO utils', () => {
           { type: 'map', values: ['null', 'int', { type: 'record' }] }
         ]
       }))
-        .toEqual('array [map {int, record (nullable)} (nullable)]')
+        .toEqual('array [map {union: int, record (nullable)} (nullable)]')
     })
   })
 })

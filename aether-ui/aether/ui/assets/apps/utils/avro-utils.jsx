@@ -20,7 +20,7 @@
 
 import avro from 'avsc'
 
-import { generateGUID, isEmpty } from './index'
+import { generateGUID } from './index'
 
 // AVRO types:
 // - primitive: null, boolean, int, long, float, double, bytes, string
@@ -133,28 +133,29 @@ export const typeToString = (type, nullable = '(nullable)', short = false) => {
   const cleanType = clean(type)
   const t = flat((cleanType && cleanType.type) || cleanType)
 
-  let typeStr = t
+  const typeStr = Array.isArray(t) ? 'union' : t
+  let childrenStr = ''
   switch (t) {
     case 'enum':
-      typeStr = `${t} (${cleanType.symbols.join(', ')})`
+      childrenStr = ` (${cleanType.symbols.join(', ')})`
       break
 
     case 'map':
-      typeStr = `${t} {${typeToString(cleanType.values, nullable, short)}}`
+      childrenStr = ` {${typeToString(cleanType.values, nullable, short)}}`
       break
 
     case 'array':
-      typeStr = `${t} [${typeToString(cleanType.items, nullable, short)}]`
+      childrenStr = ` [${typeToString(cleanType.items, nullable, short)}]`
       break
 
     default:
-      typeStr = Array.isArray(t)
-        ? short && !isPrimitive(t)
-          ? 'union'
-          : t.map(v => typeToString(v, nullable, short)).join(', ')
-        : t
+      if (Array.isArray(t)) {
+        childrenStr = !short || isPrimitive(t)
+          ? ': ' + t.map(v => typeToString(v, nullable, short)).join(', ')
+          : ''
+      }
   }
-  return `${typeStr}${suffix}`
+  return `${typeStr}${childrenStr}${suffix}`
 }
 
 export const deriveEntityTypes = (schema, schemaName = null) => {

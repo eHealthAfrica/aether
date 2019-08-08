@@ -94,7 +94,7 @@ describe('AvroSchemaViewer', () => {
     const listNumbersDiv = component.find('[data-qa="list_of_numbers"]').html()
     expect(listNumbersDiv).toContain('<div class=" field">')
     expect(listNumbersDiv).toContain('<span class="name">list_of_numbers</span>')
-    expect(listNumbersDiv).toContain('<span class="type">array [int, boolean (nullable)]</span>')
+    expect(listNumbersDiv).toContain('<span class="type">array [union: int, boolean (nullable)]</span>')
 
     // ARRAYS
 
@@ -145,7 +145,7 @@ describe('AvroSchemaViewer', () => {
     const unionPrimitivesDiv = component.find('[data-qa="primitive_union"]').html()
     expect(unionPrimitivesDiv).toContain('<div class=" field">')
     expect(unionPrimitivesDiv).toContain('<span class="name">primitive_union</span>')
-    expect(unionPrimitivesDiv).toContain('<span class="type">int, string (nullable)</span>')
+    expect(unionPrimitivesDiv).toContain('<span class="type">union: int, string (nullable)</span>')
 
     const unionComplexDiv = component.find('[data-qa="complex_union"]').html()
     expect(unionComplexDiv).toContain('<div class=" group-title">')
