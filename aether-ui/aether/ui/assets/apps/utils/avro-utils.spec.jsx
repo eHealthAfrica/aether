@@ -203,6 +203,33 @@ describe('AVRO utils', () => {
     })
   })
 
+  describe('makeOptionalField', () => {
+    it('makes an AVRO field optional', () => {
+      const tests = [
+        [
+          { name: 'id', type: 'string' },
+          { name: 'id', type: 'string' }
+        ],
+        [
+          { name: 'a', type: 'string' },
+          { name: 'a', type: ['null', 'string'] }
+        ],
+        [
+          { name: 'b', type: ['null', 'string'] },
+          { name: 'b', type: ['null', 'string'] }
+        ],
+        [
+          { name: 'c', type: ['int', 'string'] },
+          { name: 'c', type: ['null', 'int', 'string'] }
+        ]
+      ]
+
+      tests.map(([args, result]) => {
+        expect(utils.makeOptionalField(args)).toEqual(result)
+      })
+    })
+  })
+
   describe('isPrimitive', () => {
     it('should flag basic primitives as primitives', () => {
       expect(utils.isPrimitive('null')).toBeTruthy()
