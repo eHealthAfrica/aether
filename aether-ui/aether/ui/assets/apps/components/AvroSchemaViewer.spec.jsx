@@ -43,6 +43,16 @@ describe('AvroSchemaViewer', () => {
     expect(component.text()).toContain('You have provided an invalid AVRO schema.')
   })
 
+  it('should take a non-record avro schema and render an invalid error message', () => {
+    const inputSchemaNoRecord = {
+      name: 'id',
+      type: 'string'
+    }
+
+    const component = mountWithIntl(<AvroSchemaViewer schema={inputSchemaNoRecord} />)
+    expect(component.text()).toContain('Initial AVRO schema type can only be of type "record".')
+  })
+
   it('should take a valid avro schema and highlight the indicated fields', () => {
     const component = mountWithIntl(
       <AvroSchemaViewer
@@ -70,6 +80,7 @@ describe('AvroSchemaViewer', () => {
 
     const idDiv = component.find('[data-qa="id"]').html()
     expect(idDiv).toContain('<div class=" field">')
+    expect(idDiv).not.toContain('<i class="fas fa-lock"></i>') // public
     expect(idDiv).toContain('<span class="name">id</span>')
     expect(idDiv).toContain('<span class="type">string</span>')
 
@@ -171,5 +182,57 @@ describe('AvroSchemaViewer', () => {
     expect(unionComplexRecordDiv).toContain('<div class=" group-title">')
     expect(unionComplexRecordDiv).toContain('<span class="name">3</span>')
     expect(unionComplexRecordDiv).toContain('<span class="type">record</span>')
+
+    // Extended types and non public
+
+    const locationDiv = component.find('[data-qa="location"]').html()
+    expect(locationDiv).toContain('<div data-qa="location" class="group">')
+    expect(locationDiv).toContain('<div class=" group-title">')
+    expect(locationDiv).toContain('<i class="fas fa-lock"></i>') // restricted
+    expect(locationDiv).toContain('<span class="name">location</span>')
+    expect(locationDiv).toContain('<span class="type">geopoint (nullable)</span>') // not record
+
+    const timestampDiv = component.find('[data-qa="timestamp"]').html()
+    expect(timestampDiv).toContain('<div data-qa="timestamp" class="group">')
+    expect(timestampDiv).toContain('<div class=" field">')
+    expect(timestampDiv).toContain('<span class="name">timestamp</span>')
+    expect(timestampDiv).toContain('<span class="type">dateTime</span>') // not string
+
+    const updatedAtDiv = component.find('[data-qa="updated_at"]').html()
+    expect(updatedAtDiv).toContain('<div data-qa="updated_at" class="group">')
+    expect(updatedAtDiv).toContain('<div class=" field">')
+    expect(updatedAtDiv).toContain('<span class="name">updated_at</span>')
+    expect(updatedAtDiv).toContain('<span class="type">dateTime (nullable)</span>') // not string
+  })
+
+  it('should take a valid avro schema and render an avro visualizer without nested fields', () => {
+    const component = mountWithIntl(
+      <AvroSchemaViewer schema={mockInputSchema} hideChildren />
+    )
+
+    expect(component.find('[data-qa^="group-title-"]').length).toEqual(1)
+
+    // 1st level
+
+    const idDiv = component.find('[data-qa="id"]').html()
+    expect(idDiv).toContain('<div class=" field">')
+    expect(idDiv).toContain('<span class="name">id</span>')
+    expect(idDiv).toContain('<span class="type">string</span>')
+
+    const dictionaryDiv = component.find('[data-qa="dictionary"]').html()
+    expect(dictionaryDiv).toContain('<div data-qa="dictionary" class="group">')
+    expect(dictionaryDiv).toContain('<div class=" field">')
+    expect(dictionaryDiv).toContain('<span class="name">dictionary</span>')
+    expect(dictionaryDiv).toContain('<span class="type">record</span>')
+
+    // 2nd Level
+    expect(component.find('[data-qa="dictionary.code"]')).toEqual({})
+
+    const locationDiv = component.find('[data-qa="location"]').html()
+    expect(locationDiv).toContain('<div data-qa="location" class="group">')
+    expect(locationDiv).toContain('<div class=" field">')
+    expect(locationDiv).toContain('<i class="fas fa-lock"></i>')
+    expect(locationDiv).toContain('<span class="name">location</span>')
+    expect(locationDiv).toContain('<span class="type">geopoint (nullable)</span>')
   })
 })

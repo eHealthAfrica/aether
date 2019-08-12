@@ -21,6 +21,7 @@
 import avro from 'avsc'
 
 import { generateGUID } from './index'
+import { AVRO_EXTENDED_TYPE } from './constants'
 
 // AVRO types:
 // - primitive: null, boolean, int, long, float, double, bytes, string
@@ -123,7 +124,7 @@ export const isPrimitive = (type) => (
   (Array.isArray(type) && type.filter(isPrimitive).length === type.length)
 )
 
-export const typeToString = (type, nullable = '(nullable)', short = false) => {
+export const typeToString = (type, nullable = '(nullable)', short = false, extended = null) => {
   const flat = (a) => Array.isArray(a) && a.length === 1 ? a[0] : a
   const clean = (type) => flat(
     !isOptionalType(type) ? type : type.filter(v => (v.type || v) !== NULL)
@@ -131,9 +132,9 @@ export const typeToString = (type, nullable = '(nullable)', short = false) => {
 
   const suffix = isOptionalType(type) ? ' ' + nullable : ''
   const cleanType = clean(type)
-  const t = flat((cleanType && cleanType.type) || cleanType)
+  const t = flat((cleanType && (cleanType[AVRO_EXTENDED_TYPE] || cleanType.type)) || cleanType)
 
-  const typeStr = Array.isArray(t) ? 'union' : t
+  const typeStr = Array.isArray(t) ? 'union' : extended || t
   let childrenStr = ''
   switch (t) {
     case 'enum':
@@ -141,11 +142,11 @@ export const typeToString = (type, nullable = '(nullable)', short = false) => {
       break
 
     case 'map':
-      childrenStr = ` {${typeToString(cleanType.values, nullable, short)}}`
+      childrenStr = ` {${typeToString(cleanType.values, nullable, short, cleanType[AVRO_EXTENDED_TYPE])}}`
       break
 
     case 'array':
-      childrenStr = ` [${typeToString(cleanType.items, nullable, short)}]`
+      childrenStr = ` [${typeToString(cleanType.items, nullable, short, cleanType[AVRO_EXTENDED_TYPE])}]`
       break
 
     default:

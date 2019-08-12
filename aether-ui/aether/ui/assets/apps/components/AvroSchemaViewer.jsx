@@ -64,7 +64,7 @@ class AvroSchemaViewer extends Component {
           <div className='hint error-message'>
             <FormattedMessage
               id='avro.schema.type.not.record'
-              defaultMessage='Initial AVRO schema type can only be of type "record"'
+              defaultMessage='Initial AVRO schema type can only be of type "record".'
             />
           </div>
         )
@@ -100,7 +100,7 @@ class AvroSchemaViewer extends Component {
 
     const jsonPath = getPath(parentJsonPath, field)
     const highlightedClassName = this.getHighlightedClassName(jsonPath)
-    const type = field[AVRO_EXTENDED_TYPE] || typeToString(field.type, nullableStr, !this.props.hideChildren)
+    const type = typeToString(field.type, nullableStr, !this.props.hideChildren, field[AVRO_EXTENDED_TYPE])
 
     let currentType = (field.type.type || field.type) && field.type
     if (isOptionalType(currentType)) {
