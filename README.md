@@ -4,7 +4,7 @@
 
 ## Table of contents
 
-- [Set up](#set-up)
+- [Setup](#setup)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
   - [Aether Django SDK Library](#aether-django-sdk-library)
@@ -48,7 +48,7 @@
 - [Troubleshooting](/TROUBLESHOOTING.md)
 
 
-## Set up
+## Setup
 
 ### Dependencies
 
