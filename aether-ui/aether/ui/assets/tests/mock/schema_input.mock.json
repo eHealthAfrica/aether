@@ -4,7 +4,8 @@
   "fields": [
     {
       "name": "id",
-      "type": "string"
+      "type": "string",
+      "aetherDataClassification": "Public"
     },
     {
       "name": "text",
@@ -177,6 +178,53 @@
           ]
         }
       ]
+    },
+    {
+      "name": "location",
+      "doc": "Collect your GPS coordinates",
+      "aetherDataClassification": "restricted",
+      "@aether_extended_type": "geopoint",
+      "type": [
+        "null",
+        {
+          "name": "location",
+          "doc": "Collect your GPS coordinates",
+          "@aether_extended_type": "geopoint",
+          "type": "record",
+          "fields": [
+            {
+              "name": "latitude",
+              "doc": "latitude",
+              "type": ["null", "float"]
+            },
+            {
+              "name": "longitude",
+              "doc": "longitude",
+              "type": ["null", "float"]
+            },
+            {
+              "name": "altitude",
+              "doc": "altitude",
+              "type": ["null", "float"]
+            },
+            {
+              "name": "accuracy",
+              "doc": "accuracy",
+              "type": ["null", "float"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "timestamp",
+      "@aether_extended_type": "dateTime",
+      "type": "string"
+    },
+    {
+      "name": "updated_at",
+      "@aether_extended_type": "dateTime",
+      "type":  ["null", "string"]
     }
   ]
 }
