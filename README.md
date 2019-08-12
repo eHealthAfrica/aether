@@ -4,8 +4,7 @@
 
 ## Table of contents
 
-- [Table of contents](#table-of-contents)
-- [Setup](#Setup)
+- [Setup](#setup)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
   - [Aether Django SDK Library](#aether-django-sdk-library)
@@ -20,21 +19,32 @@
     - [Aether ODK Module](#aether-odk-module)
     - [Aether UI](#aether-ui)
     - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
+
 - [Usage](#usage)
   - [Start the app](#start-the-app)
   - [Users & Authentication](#users--authentication)
     - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
     - [Gateway Authentication](#gateway-authentication)
+
 - [Development](#development)
+  - [Building on Aether](#building-on-aether)
+  - [Code style](#code-style)
+  - [Naming conventions](#naming-conventions)
+
 - [Release Management](#release-management)
+
 - [Deployment](#deployment)
+  - [Health endpoints](#health-endpoints)
+
 - [Containers and services](#containers-and-services)
+
 - [Run commands in the containers](#run-commands-in-the-containers)
   - [Run tests](#run-tests)
-  - [Upgrade python dependencies](#upgrade-python-dependencies)
+  - [Upgrade dependencies](#upgrade-dependencies)
     - [Check outdated dependencies](#check-outdated-dependencies)
     - [Update requirements file](#update-requirements-file)
+
 - [Troubleshooting](/TROUBLESHOOTING.md)
 
 
@@ -493,7 +503,7 @@ use the public realm.
 All development should be tested within the container, but developed in the host folder.
 Read the [docker-compose-base.yml](docker-compose-base.yml) file to see how it's mounted.
 
-#### Building on Aether
+### Building on Aether
 
 To get started on building solutions on Aether, an
 [aether-bootstrap](https://github.com/eHealthAfrica/aether-bootstrap) repository
@@ -503,9 +513,73 @@ on [Try it for yourself](http://aether.ehealthafrica.org/documentation/try/index
 
 *[Return to TOC](#table-of-contents)*
 
+### Code style
+
+The code style is tested:
+
+- In **python** with [flake8](http://flake8.pycqa.org/en/latest/).
+  Defined in the file `{module}/setup.cfg`.
+
+- In **javascript** with [standard](https://github.com/feross/standard/).
+
+- In **styles** with [sass-lint](https://github.com/sasstools/sass-lint/).
+  Defined in the file `aether-ui/aether/ui/assets/conf/sass-lint.yml`.
+
+```bash
+# Python files
+docker-compose run --rm --no-deps <container-name> test_lint
+# Javascript files
+docker-compose run --rm --no-deps ui-assets eval npm run test-lint-js
+# CSS files
+docker-compose run --rm --no-deps ui-assets eval npm run test-lint-sass
+```
+
+- - -
+**Comments are warmly welcome!!!**
+- - -
+
+*[Return to TOC](#table-of-contents)*
+
+### Naming conventions
+
+There are a couple of naming/coding conventions followed by the
+Python modules and the React Components:
+
+- Names are self-explanatory like `export_project`, `ProjectList`, `constants` and so on.
+
+- Case conventions:
+
+  - Python specific:
+    - class names use title case (`TitleCase`)
+    - file, method and variable names use snake case (`snake_case`)
+
+  - Javascript specific:
+    - component names use title case (`TitleCase`)
+    - utility file names use kebab case (`kebab-case`)
+    - method and variable names use camel case (`camelCase`)
+
+- Javascript specific:
+
+  - Meaningful suffixes:
+    - `Container` indicates that the component will fetch data from the server.
+    - `List` indicates that the data is a list and is displayed as a table or list.
+    - `Form` indicates that a form will be displayed.
+
+  - The file name will match the default Component name defined inside,
+    it might be the case that auxiliary components are also defined within
+    the same file.
+
+  - App "agnostic" components are kept in folder `/assets/apps/components`
+
+  - App "agnostic" methods are kept in folder `/assets/apps/utils`
+
+*[Return to TOC](#table-of-contents)*
+
 ## Release Management
 
 To learn more about the Aether release process, refer to the [release management](https://github.com/eHealthAfrica/aether/wiki/Release-Management) page on the wiki.
+
+*[Return to TOC](#table-of-contents)*
 
 ## Deployment
 
@@ -518,16 +592,43 @@ starting the `aether-odk-module` to have ODK Collect submissions posted to Aethe
 If a valid `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` combination is not set,
 the server will still start, but ODK Collect submissions will fail.
 
-To check if it is possible to connect to Aether Kernel with those variables
-visit the entrypoint `/check-kernel` in the odk server (no credentials needed).
-If the response is `Always Look on the Bright Side of Life!!!`
-it's not possible to connect, on the other hand if the message is
-`Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
-
 This also applies for `aether-ui` and `aether-couchdb-sync-module`.
 
 In the case of `aether-couchdb-sync-module` a valid `GOOGLE_CLIENT_ID`
 environment variable is necessary to verify the device credentials as well.
+
+*[Return to TOC](#table-of-contents)*
+
+### Health endpoints
+
+- `/health`, always responds with `200` status and an empty content.
+
+- `/check-db`, checks the database connection.
+
+  Possible responses:
+  - `200` — `Brought to you by eHealth Africa - good tech for hard places`.
+    The database is available.
+  - `500` — `Always Look on the Bright Side of Life!!!`.
+    The database is **not** available.
+
+- `/check-app`, responds with current application version and revision.
+
+  ```json
+  {
+    "app_name": "Aether Kernel",
+    "app_version": "1.0.0",
+    "app_revision": "83c736ff0b52fb9ee8e569af62c3800a330a43cd"
+  }
+  ```
+
+- `/check-app/kernel`, checks the kernel connection using the environment
+  variables `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL`.
+
+  Possible responses:
+  - `200` — `Brought to you by eHealth Africa - good tech for hard places`.
+    The communication with kernel is possible.
+  - `500` — `Always Look on the Bright Side of Life!!!`.
+    The communication with kernel is **not** possible.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -545,8 +646,9 @@ The list of the main containers:
 | nginx             | [NGINX](https://www.nginx.com/) the web server                          |
 | **kernel**        | Aether Kernel                                                           |
 | **odk**           | Aether ODK module (imports data from ODK Collect)                       |
-| **ui**            | Aether Kernel UI (advanced mapping functionality)                       |
 | **couchdb-sync**  | Aether CouchDB Sync module (imports data from Aether Mobile app)        |
+| **ui**            | Aether Kernel UI (advanced mapping functionality)                       |
+| **ui-assets**     | Auxiliary service to develop Aether Kernel UI assets                    |
 
 
 All of the containers definition for development can be found in the
@@ -592,17 +694,23 @@ To execute tests in just one container:
 ./scripts/test_container.sh <container-name>
 ```
 
-or
+or (building also dependencies)
 
 ```bash
-docker-compose run --rm <container-name> test
+./scripts/test_travis.sh <container-name>
 ```
 
 or
 
 ```bash
-docker-compose run --rm <container-name> test_lint
-docker-compose run --rm <container-name> test_coverage
+docker-compose -f docker-compose-test.yml run --rm <container-name> test
+```
+
+or
+
+```bash
+docker-compose -f docker-compose-test.yml run --rm <container-name> test_lint
+docker-compose -f docker-compose-test.yml run --rm <container-name> test_coverage
 ```
 
 The e2e tests are run against different containers, the config file used
@@ -619,7 +727,7 @@ docker-compose -f docker-compose-test.yml up -d <container-name>-test
 Never run `odk`, `ui` or `couchdb-sync` tests against any PRODUCTION server.
 The tests clean up would **DELETE ALL PROJECTS!!!**
 
-Look into [docker-compose-base.yml](docker-compose-base.yml), the variable
+Look into [docker-compose-test.yml](docker-compose-test.yml), the variable
 `AETHER_KERNEL_URL_TEST` indicates the Aether Kernel Server used in tests.
 
 The tests are run in parallel, use the `TEST_PARALLEL` environment variable
@@ -627,12 +735,47 @@ to indicate the number of concurrent jobs.
 
 *[Return to TOC](#table-of-contents)*
 
-### Upgrade python dependencies
+#### Assets testing
+
+The CSS style is analyzed by
+[Sass Lint](https://github.com/sasstools/sass-lint).
+
+The Javascript style is analyzed by
+[Standard JS](https://github.com/feross/standard/>).
+
+The Javascript code is tested using
+[Jest](https://facebook.github.io/jest/docs/en/getting-started.html)
+and [Enzyme](http://airbnb.io/enzyme/).
+
+```bash
+# all tests
+docker-compose run --rm ui-assets test
+
+# by type
+docker-compose run --rm ui-assets test_lint
+docker-compose run --rm ui-assets test_js
+
+# more detailed
+docker-compose run --rm ui-assets eval npm run test-lint-sass
+docker-compose run --rm ui-assets eval npm run test-lint-js
+# in case you need to check `console.log` messages
+docker-compose run --rm ui-assets eval npm run test-js-verbose
+```
+
+*[Return to TOC](#table-of-contents)*
+
+### Upgrade dependencies
 
 #### Check outdated dependencies
 
 ```bash
 docker-compose run --rm --no-deps <container-name> eval pip list --outdated
+```
+
+Special case for Aether Kernel UI assets (node container)
+
+```bash
+docker-compose run --rm --no-deps ui-assets eval npm outdated
 ```
 
 #### Update requirements file
@@ -646,5 +789,8 @@ or
 ```bash
 docker-compose run --rm --no-deps <container-name> pip_freeze
 ```
+
+The Aether Kernel UI assets [package.json](aether-ui/aether/ui/assets/package.json)
+file must be updated manually.
 
 *[Return to TOC](#table-of-contents)*

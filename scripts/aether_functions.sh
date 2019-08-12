@@ -22,12 +22,12 @@
 set -Eeuo pipefail
 
 function echo_message {
-    LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /_}`
+    local LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /_}`
 
     if [ -z "$1" ]; then
         echo "$LINE"
     else
-        msg=" $1 "
+        local msg=" $1 "
         echo "${LINE:${#msg}}$msg"
     fi
 }
@@ -53,7 +53,7 @@ function build_libraries_and_distribute {
 
 # build Aether UI assets
 function build_ui_assets {
-    container=ui-assets
+    local container=ui-assets
 
     build_container $container
     docker-compose run --rm $container build
@@ -61,15 +61,15 @@ function build_ui_assets {
 
 # build the indicated container
 function build_container {
-    container=$1
-    APP_REVISION=`git rev-parse --abbrev-ref HEAD`
+    local container=$1
+    local APP_REVISION=`git rev-parse --abbrev-ref HEAD`
     if [ ! -f VERSION ]; then
-        APP_VERSION="0.0.0"
+        local APP_VERSION="0.0.0"
     else
-        APP_VERSION=`cat ./VERSION`
+        local APP_VERSION=`cat ./VERSION`
     fi
 
-    DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
+    local DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
 
     echo_message "Building container $container"
     $DC build \
@@ -81,8 +81,8 @@ function build_container {
 
 # upgrade the dependencies of the indicated container
 function pip_freeze_container {
-    container=$1
-    DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml"
+    local container=$1
+    local DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml"
 
     echo_message "Upgrading container $container"
     $DC run --rm --no-deps $container pip_freeze
@@ -98,28 +98,35 @@ function create_readonly_user {
 
 # Start database container and wait till is up and responding
 function start_db {
-    echo_message "Starting database server..."
-    docker-compose up -d db
-    until docker-compose run --rm --no-deps kernel eval pg_isready -q; do
-        >&2 echo "Waiting for database..."
-        sleep 2
-    done
-    echo_message "database is ready"
+    _wait_for "db" "docker-compose run --rm --no-deps kernel eval pg_isready -q"
 }
 
 # Start container and wait till is up and responding
 # Usage:    start_container <container-name> <container-health-url>
 function start_container {
-    container=$1
-    url=$2
+    local container=$1
+    local is_ready="docker-compose run --rm --no-deps kernel manage check_url -u $2"
 
-    echo_message "Starting [$container] server..."
+    _wait_for "$container" "$is_ready"
+}
+
+function _wait_for {
+    local container=$1
+    local is_ready=$2
+
+    echo_message "Starting $container server..."
     docker-compose up -d $container
 
-    CHECK_URL="docker-compose run --rm --no-deps kernel manage check_url -u"
-    until $CHECK_URL $url >/dev/null; do
-        >&2 echo "Waiting for [$container] at [$url]..."
+    local retries=1
+    until $is_ready > /dev/null; do
+        >&2 echo "Waiting for $container... $retries"
         sleep 2
+
+        ((retries++))
+        if [[ $retries -gt 30 ]]; then
+            echo_message "It was not possible to start $container"
+            exit 1
+        fi
     done
-    echo_message "[$container] is ready"
+    echo_message "$container is ready!"
 }

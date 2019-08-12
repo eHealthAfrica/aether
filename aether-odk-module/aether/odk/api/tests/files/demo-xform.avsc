@@ -16,6 +16,19 @@
       "type": [ "null", "string" ]
     },
     {
+      "name": "_surveyor",
+      "namespace": "MyTestForm_Test10",
+      "doc": "Surveyor",
+      "type": [ "null", "string" ]
+    },
+    {
+      "name": "_submitted_at",
+      "namespace": "MyTestForm_Test10",
+      "doc": "Submitted at",
+      "@aether_extended_type": "dateTime",
+      "type": [ "null", "string" ]
+    },
+    {
       "name": "starttime",
       "namespace": "MyTestForm_Test10",
       "@aether_extended_type": "dateTime",
