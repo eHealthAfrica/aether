@@ -21,6 +21,7 @@
 import React, { Component } from 'react'
 import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 
+import { AVRO_EXTENDED_TYPE, MASKING_ANNOTATION, MASKING_PUBLIC } from '../utils/constants'
 import { clone, isEmpty, generateGUID } from '../utils'
 import { parseSchema, isOptionalType, isPrimitive, typeToString } from '../utils/avro-utils'
 
@@ -33,13 +34,22 @@ const MESSAGES = defineMessages({
 
 const getPath = (parent, field) => `${parent ? parent + '.' : ''}${field.name || '#'}`
 
+const isMasked = (field) => (
+  Boolean(
+    field &&
+    field[MASKING_ANNOTATION] &&
+    field[MASKING_ANNOTATION].toLowerCase() !== MASKING_PUBLIC
+  )
+)
+
 class AvroSchemaViewer extends Component {
   render () {
-    if (isEmpty(this.props.schema)) {
+    const { schema } = this.props
+    if (isEmpty(schema)) {
       return (
         <div className='hint'>
           <FormattedMessage
-            id='schema.empty'
+            id='avro.schema.empty'
             defaultMessage='Your AVRO schema will be displayed here once you have added a valid source.'
           />
         </div>
@@ -47,19 +57,27 @@ class AvroSchemaViewer extends Component {
     }
 
     try {
-      parseSchema(this.props.schema)
+      parseSchema(schema)
+
+      if (schema.type !== 'record') {
+        return (
+          <div className='hint error-message'>
+            <FormattedMessage
+              id='avro.schema.type.not.record'
+              defaultMessage='Initial AVRO schema type can only be of type "record"'
+            />
+          </div>
+        )
+      }
 
       return (
-        <div className='input-schema'>
+        <div className={this.props.className}>
           <div className='group'>
-            <div
-              data-qa={`group-title-${this.props.schema.name}`}
-              className={`group-title ${this.props.className || ''}`}
-            >
-              { this.props.schema.name }
+            <div data-qa={`group-title-${schema.name}`} className='title group-title'>
+              { schema.name }
             </div>
-            <div className='group-list'>
-              { this.props.schema.fields.map(f => this.renderField(clone(f))) }
+            <div className='properties group-list'>
+              { schema.fields.map(f => this.renderField(clone(f), this.props.pathPrefix)) }
             </div>
           </div>
         </div>
@@ -68,7 +86,7 @@ class AvroSchemaViewer extends Component {
       return (
         <div className='hint'>
           <FormattedMessage
-            id='schema.invalid'
+            id='avro.schema.invalid'
             defaultMessage='You have provided an invalid AVRO schema.'
           />
         </div>
@@ -82,7 +100,7 @@ class AvroSchemaViewer extends Component {
 
     const jsonPath = getPath(parentJsonPath, field)
     const highlightedClassName = this.getHighlightedClassName(jsonPath)
-    const type = typeToString(field.type, nullableStr, true)
+    const type = field[AVRO_EXTENDED_TYPE] || typeToString(field.type, nullableStr, !this.props.hideChildren)
 
     let currentType = (field.type.type || field.type) && field.type
     if (isOptionalType(currentType)) {
@@ -98,35 +116,38 @@ class AvroSchemaViewer extends Component {
     const isUnion = Array.isArray(currentType) && !isPrimitive(currentType)
 
     let children = null
-    if (currentType.type === 'record') {
-      children = currentType.fields.map(f => this.renderField(f, jsonPath))
-    }
-    if (currentType.type === 'array' && !isPrimitive(currentType.items)) {
-      children = this.renderField({ type: currentType.items }, jsonPath)
-    }
-    if (currentType.type === 'map' && !isPrimitive(currentType.values)) {
-      children = this.renderField({ type: currentType.values }, jsonPath)
-    }
-    if (isUnion) { // union type
-      children = currentType.map((t, i) => this.renderField({ name: `${i + 1}`, type: t }, jsonPath))
-    }
+    if (!this.props.hideChildren) {
+      if (currentType.type === 'record') {
+        children = currentType.fields.map(f => this.renderField(f, jsonPath))
+      }
+      if (currentType.type === 'array' && !isPrimitive(currentType.items)) {
+        children = this.renderField({ type: currentType.items }, jsonPath)
+      }
+      if (currentType.type === 'map' && !isPrimitive(currentType.values)) {
+        children = this.renderField({ type: currentType.values }, jsonPath)
+      }
+      if (isUnion) { // union type
+        children = currentType.map((t, i) => this.renderField({ name: `${i + 1}`, type: t }, jsonPath))
+      }
 
-    if (children) {
-      children = (
-        <div
-          data-qa={jsonPath + '.$'}
-          key={generateGUID()}
-          className={(isUnion ? 'group-union' : 'group-list')}
-        >
-          { children }
-        </div>
-      )
+      if (children) {
+        children = (
+          <div
+            data-qa={jsonPath + '.$'}
+            key={generateGUID()}
+            className={(isUnion ? 'group-union' : 'group-list')}
+          >
+            { children }
+          </div>
+        )
+      }
     }
 
     return (
       <div data-qa={jsonPath} key={generateGUID()} className='group'>
         { field.name &&
           <div className={highlightedClassName + (children ? ' group-title' : ' field')}>
+            { isMasked(field) && <i className='fas fa-lock' /> }
             <span className='name'>{ field.name }</span>
             <span className='type'>{ type }</span>
           </div>
@@ -144,7 +165,7 @@ class AvroSchemaViewer extends Component {
     const keys = Object.keys(highlight || {})
     for (let i = 0; i < keys.length; i++) {
       if (keys[i] === jsonPath) {
-        return `input-mapped-${highlight[keys[i]]}`
+        return `${this.props.className}-mapped-${highlight[keys[i]]}`
       }
     }
 

@@ -45,13 +45,18 @@ describe('AvroSchemaViewer', () => {
 
   it('should take a valid avro schema and highlight the indicated fields', () => {
     const component = mountWithIntl(
-      <AvroSchemaViewer schema={mockInputSchema} highlight={{ id: 1, 'dictionary.code': 2 }} />
+      <AvroSchemaViewer
+        schema={mockInputSchema}
+        highlight={{ '$.id': 1, '$.dictionary.code': 2 }}
+        pathPrefix='$'
+        className='input-schema'
+      />
     )
 
-    expect(component.find('[data-qa="id"]').html())
-      .toContain('<div class="input-mapped-1 field"><span class="name">id</span>')
-    expect(component.find('[data-qa="dictionary.code"]').html())
-      .toContain('<div class="input-mapped-2 field"><span class="name">code</span>')
+    expect(component.find('[data-qa="$.id"]').html())
+      .toContain('<div class="input-schema-mapped-1 field"><span class="name">id</span>')
+    expect(component.find('[data-qa="$.dictionary.code"]').html())
+      .toContain('<div class="input-schema-mapped-2 field"><span class="name">code</span>')
   })
 
   it('should take a valid avro schema and render an avro visualizer', () => {

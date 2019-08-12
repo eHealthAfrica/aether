@@ -99,28 +99,51 @@
     overflow-wrap: break-word;
   }
 
-  .name {
-    font-weight: 600;
-  }
-
-  .type {
-    margin-left: .5rem;
-    font-style: italic;
-    color: $grey;
-  }
-
   .properties {
     list-style: none;
     padding: 0;
     margin: 0;
   }
 
-  li {
-    padding: .2rem $indent;
+  i {
+    margin-left: $indent / 2;
+    color: $text-color;
+    font-size: $font-size-xs;
   }
 
-  i {
-    margin-right: .5rem;
+  .name {
+    margin-left: $indent / 2;
+    font-weight: 600;
+  }
+
+  .type {
+    margin-left: .5rem;
+    font-style: italic;
+    font-size: $font-size-xs;
+    color: $grey;
+  }
+
+  .group,
+  .group-list,
+  .group-union {
+    font-size: $font-size-xs;
+  }
+
+  .group-title {
+    color: $grey;
+    font-size: $font-size-standard;
+  }
+
+  .group-union .name {
+    color: $grey;
+  }
+
+  .group-list .name {
+    color: $text-color;
+  }
+
+  .group {
+    margin-top: .2rem;
   }
 }
 

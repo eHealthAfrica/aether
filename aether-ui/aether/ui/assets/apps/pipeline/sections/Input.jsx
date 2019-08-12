@@ -328,6 +328,8 @@ class Input extends Component {
           <AvroSchemaViewer
             schema={this.props.pipeline.schema}
             highlight={this.props.highlight}
+            pathPrefix='$'
+            className='input-schema'
           />
         </div>
 

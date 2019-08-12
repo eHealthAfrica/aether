@@ -133,7 +133,7 @@ describe('Pipeline actions', () => {
             isInputReadOnly: false, // added by "parsePipeline"
             contracts: pipeline.contracts.map(contract => ({
               ...contract,
-              highlightDestination: [], // added by "parseContract"
+              highlightDestination: {}, // added by "parseContract"
               highlightSource: {} // added by "parseContract"
             }))
           }))

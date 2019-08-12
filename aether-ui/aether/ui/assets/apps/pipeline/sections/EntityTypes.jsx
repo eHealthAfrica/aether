@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
-import { EntityTypeViewer } from '../../components'
+import { AvroSchemaViewer } from '../../components'
 import { deepEqual, objectToString } from '../../utils'
 import { parseSchema } from '../../utils/avro-utils'
 import { updateContract } from '../redux'
@@ -136,10 +136,18 @@ class EntityTypes extends Component {
     return (
       <div className='section-body'>
         <div className='section-left'>
-          <EntityTypeViewer
-            schema={this.props.contract.entity_types}
-            highlight={this.props.contract.highlightDestination}
-          />
+          {
+            (this.props.contract.entity_types || []).map((entityType, index) => (
+              <AvroSchemaViewer
+                key={index}
+                schema={entityType}
+                highlight={this.props.contract.highlightDestination}
+                pathPrefix={entityType.name}
+                className='entity-type'
+                hideChildren
+              />
+            ))
+          }
         </div>
 
         <div className='section-right'>

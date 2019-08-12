@@ -211,7 +211,7 @@ const parseContract = (contract) => {
   const COLORS = 10 // This value is the number of colors in the `_color-codes.scss`
   // will highlight the relations among mapping rules, entity types and input schema
   const highlightSource = {}
-  const highlightDestination = []
+  const highlightDestination = {}
 
   // each EntityType has a color based on the order it was added to the list
   const entityColors = {}
@@ -227,8 +227,8 @@ const parseContract = (contract) => {
     const entityType = rule.destination.split('.')[0]
     const color = entityColors[entityType] || 0
 
-    highlightSource[rule.source.replace('$.', '')] = color
-    highlightDestination.push(rule.destination)
+    highlightSource[rule.source] = color
+    highlightDestination[rule.destination] = color
   })
 
   return {

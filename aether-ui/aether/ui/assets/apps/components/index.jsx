@@ -21,7 +21,6 @@
 // import all components
 import AppLayout from './AppLayout'
 import AvroSchemaViewer from './AvroSchemaViewer'
-import EntityTypeViewer from './EntityTypeViewer'
 import LoadingSpinner from './LoadingSpinner'
 import Modal from './Modal'
 import ModalError from './ModalError'
@@ -31,7 +30,6 @@ import NavBar from './NavBar'
 export {
   AppLayout,
   AvroSchemaViewer,
-  EntityTypeViewer,
   LoadingSpinner,
   Modal,
   ModalError,
