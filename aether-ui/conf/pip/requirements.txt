@@ -30,11 +30,11 @@ djangorestframework==3.10.2
 drf-dynamic-fields==0.3.1
 entrypoints==0.3
 flake8==3.7.8
-flake8-quotes==2.0.1
+flake8-quotes==2.1.0
 gprof2dot==2017.9.19
 idna==2.8
 Jinja2==2.10.1
-lxml==4.4.0
+lxml==4.4.1
 MarkupSafe==1.1.1
 mccabe==0.6.1
 prometheus-client==0.7.1
