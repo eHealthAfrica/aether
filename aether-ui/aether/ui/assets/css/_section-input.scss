@@ -74,12 +74,16 @@
 .input-schema {
   padding: 0;
   padding-bottom: 2rem;
-  margin-left: $indent * -1;
 
   i {
     color: $text-color;
-    font-size: $font-size-xs;
-    margin-right: .5rem;
+    font-size: .8em;
+    position: absolute;
+    top: .4rem;
+  }
+
+  i + .name {
+    padding-left: .8rem;
   }
 
   .name {
@@ -102,32 +106,73 @@
   .group-title {
     color: $grey;
     font-size: $font-size-standard;
-    border-bottom: 3px solid $light-grey;
+    border-bottom: 1px solid $light-grey;
+    padding-bottom: 4px;
+    position: relative;
+
+    &>.name {
+      font-weight: 400;
+      position: relative;
+      
+      &::before {
+        content: "";
+        display: inline-block;
+        width: 0;
+        height: 0;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 5px solid $grey;
+        //background: $grey;
+        position: absolute;
+        left: -.8rem;
+        top: .5rem;
+      }
+    }
   }
 
-  .group-union .name {
-    color: $grey;
-  }
-
-  .group-list .name {
+  .group .group .group-title {
     color: $text-color;
+    font-size: $font-size-xs;
   }
 
-  .group {
-    padding-left: $indent;
+  .group .group {
 
-    div:not(:only-child),
+    .field,
     .group-title {
-      margin-top: .2rem;
-      margin-bottom: .2rem;
+      padding-top: .1rem;
+      padding-bottom: .1rem;
     }
 
     div[class^='input-schema-mapped'] {
       border-bottom: 1px solid $white;
     }
 
-    div.field {
+    .field {
       border-bottom: 1px solid $light-grey;
+    }
+  }
+
+  .group .group .group {
+
+    .field,
+    .group-title {
+      padding-left: $indent;
+    }
+
+    .group-list:not(:only-child) {
+
+      .field,
+      .group-title {
+        padding-left: $indent*2;
+      }
+
+      .group-list:not(:only-child) {
+
+        .field,
+        .group-title {
+          padding-left: $indent*3;
+        }
+      }
     }
   }
 }

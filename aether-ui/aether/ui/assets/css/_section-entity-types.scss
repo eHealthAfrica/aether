@@ -99,21 +99,20 @@
     overflow-wrap: break-word;
   }
 
-  .properties {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  .field {
+    padding: .1rem 1rem;
+    border-bottom: 1px solid $white;
   }
 
   i {
-    margin-left: $indent / 2;
+    margin-right: .4em;
     color: $text-color;
-    font-size: $font-size-xs;
+    font-size: .8em;
   }
 
   .name {
-    margin-left: $indent / 2;
     font-weight: 600;
+    color: $text-color;
   }
 
   .type {
@@ -121,29 +120,6 @@
     font-style: italic;
     font-size: $font-size-xs;
     color: $grey;
-  }
-
-  .group,
-  .group-list,
-  .group-union {
-    font-size: $font-size-xs;
-  }
-
-  .group-title {
-    color: $grey;
-    font-size: $font-size-standard;
-  }
-
-  .group-union .name {
-    color: $grey;
-  }
-
-  .group-list .name {
-    color: $text-color;
-  }
-
-  .group {
-    margin-top: .2rem;
   }
 }
 
