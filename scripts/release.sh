@@ -52,11 +52,12 @@ function build_app {
 
 function release_app {
     APP_NAME=$1
+    APP_TAG=$2
     AETHER_APP="aether-${APP_NAME}"
 
-    echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-    docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-    docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+    echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${APP_TAG}"
+    docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${APP_TAG}"
+    docker push "${IMAGE_REPO}/${AETHER_APP}:${APP_TAG}"
     echo "${LINE}"
 }
 
@@ -78,7 +79,8 @@ function release_process {
 
     for APP in "${RELEASE_APPS[@]}"; do
         build_app $APP
-        release_app $APP
+        release_app $APP $VERSION
+        release_app $APP $TRAVIS_COMMIT
     done
 }
 
