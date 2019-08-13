@@ -40,7 +40,6 @@ function build_container {
         "$1"-test
 }
 
-
 function _wait_for {
     local container=$1
     local is_ready=$2
@@ -51,13 +50,14 @@ function _wait_for {
     local retries=1
     until $is_ready > /dev/null; do
         >&2 echo "Waiting for $container... $retries"
-        sleep 2
 
         ((retries++))
         if [[ $retries -gt 30 ]]; then
             echo_message "It was not possible to start $container"
             exit 1
         fi
+
+        sleep 2
     done
     echo_message "$container is ready!"
 }
@@ -103,6 +103,7 @@ fi
 if [[ $1 = "integration" ]]; then
     echo_message "Starting Zookeeper and Kafka"
     $DC_TEST up -d zookeeper-test kafka-test
+    $DC_TEST run --rm --no-deps kafka-test dub wait kafka-test 29092 60
 fi
 
 
@@ -118,8 +119,7 @@ if [[ $1 != "kernel" ]]; then
         echo_message "Creating readonlyuser on Kernel DB"
         $DC_KERNEL_RUN eval python /code/sql/create_readonly_user.py
 
-        if [[ $1 = "integration" ]]
-        then
+        if [[ $1 = "integration" ]]; then
             build_container producer
             echo_message "Starting producer"
             $DC_TEST up -d producer-test
