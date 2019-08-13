@@ -22,7 +22,7 @@
 set -Eeuo pipefail
 
 # ensure that the network and volumes were already created
-source ./scripts/aether_functions.sh
+source ./scripts/_lib.sh
 create_credentials
 create_docker_assets
 

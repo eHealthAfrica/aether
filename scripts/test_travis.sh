@@ -20,13 +20,12 @@
 #
 set -Eeuo pipefail
 
-source ./scripts/aether_functions.sh
+source ./scripts/_lib.sh
 
 export BUILD_OPTIONS="--no-cache --force-rm --pull"
 
 create_credentials
 create_docker_assets
-build_libraries_and_distribute
 
 case "$1" in
     all)
@@ -45,6 +44,8 @@ case "$1" in
 
     integration)
         ./scripts/test_container.sh producer
+
+        build_client
         ./scripts/test_container.sh integration
     ;;
 
