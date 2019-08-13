@@ -46,6 +46,7 @@ from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
 from aether.sdk.auth.authentication import GatewayBasicAuthentication
+from aether.sdk.auth.utils import unparse_username
 from aether.sdk.multitenancy.utils import (
     add_instance_realm_in_headers,
     filter_by_realm,
@@ -510,7 +511,7 @@ def xform_submission(request, *args, **kwargs):
         if previous_submissions_count == 0:
             submission_id = None
             # internal audit log
-            data['_surveyor'] = request.user.username
+            data['_surveyor'] = unparse_username(request, request.user.username)
             data['_submitted_at'] = datetime.datetime.utcnow().isoformat()
 
             response = exec_request(
