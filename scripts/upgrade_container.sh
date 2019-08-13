@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-source ./scripts/aether_functions.sh
+source ./scripts/_lib.sh
 
 function show_help {
     echo """
@@ -46,8 +46,7 @@ function show_help {
 build=no
 containers=( kernel odk couchdb-sync ui producer )
 
-while [[ $# -gt 0 ]]
-do
+while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help)
             # shows help
@@ -73,12 +72,10 @@ done
 
 create_docker_assets
 
-for container in "${containers[@]}"
-do
+for container in "${containers[@]}"; do
     pip_freeze_container $container
 
-    if [[ $build = "yes" ]]
-    then
+    if [[ $build = "yes" ]]; then
         build_container $container
     fi
 done
