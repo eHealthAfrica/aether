@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-source ./scripts/aether_functions.sh
+source ./scripts/_lib.sh
 
 function show_help {
     echo """
@@ -171,7 +171,6 @@ if [[ $build = "yes" ]]; then
     echo "---- Building containers                                          ----"
     echo "----------------------------------------------------------------------"
 
-    build_libraries_and_distribute
     build_ui_assets
 
     for container in "${SETUP_CONTAINERS[@]}"; do

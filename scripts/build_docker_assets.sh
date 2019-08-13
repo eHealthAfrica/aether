@@ -27,8 +27,7 @@ docker network rm ${NETWORK_NAME} || true
 {
     docker network create ${NETWORK_NAME} \
         --attachable \
-        --subnet=${NETWORK_SUBNET} \
-        --gateway=${NETWORK_GATEWAY}
+        --subnet=${NETWORK_SUBNET}
 } || true
 echo "${NETWORK_NAME} network is ready."
 
