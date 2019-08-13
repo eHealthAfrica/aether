@@ -22,7 +22,7 @@ import os
 # ------------------------------------------------------------------------------
 
 from aether.sdk.conf.settings_aether import *  # noqa
-from aether.sdk.conf.settings_aether import MIGRATION_MODULES
+from aether.sdk.conf.settings_aether import INSTALLED_APPS, MIGRATION_MODULES
 
 
 # ODK Configuration
@@ -39,6 +39,9 @@ MIGRATION_MODULES['odk'] = 'aether.odk.api.migrations'
 SURVEYOR_GROUP_NAME = 'surveyor'
 
 ODK_COLLECT_ENDPOINT = os.environ.get('ODK_COLLECT_ENDPOINT', '')
+
+INSTALLED_APPS += ['django_digest', ]
+DIGEST_REALM = 'odk'
 
 
 # Upload files

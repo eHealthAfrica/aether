@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from python_digest import build_authorization_request
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
@@ -247,3 +248,44 @@ class CollectViewsTests(CustomTestCase):
         self.assertIn(self.formIdXml,
                       response.content.decode(),
                       'current user is granted surveyor')
+
+    def test__digest_auth(self):
+        response = self.client.get(self.url_list)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Digest realm="***", nonce="***", opaque="***"
+        auth_type, auth_info = response.get('WWW-Authenticate').split(None, 1)
+        digest_auth = dict()
+        for h in auth_info.split(','):
+            key, value = h.split('=')
+            digest_auth[key.strip()] = value[1:-1]
+
+        wrong_password = build_authorization_request(
+            username=self.surveyor.username,
+            password='wrong-password',
+            realm=digest_auth['realm'],
+            method='GET',
+            uri=self.url_list,
+            nonce=digest_auth['nonce'],
+            opaque=digest_auth['opaque'],
+            nonce_count=0,
+            request_digest=None,
+            client_nonce=None,
+        )
+        response = self.client.get(self.url_list, **{'HTTP_AUTHORIZATION': wrong_password})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        header = build_authorization_request(
+            username=self.surveyor.username,
+            password='surveyorsurveyor',
+            realm=digest_auth['realm'],
+            method='GET',
+            uri=self.url_list,
+            nonce=digest_auth['nonce'],
+            opaque=digest_auth['opaque'],
+            nonce_count=0,
+            request_digest=None,
+            client_nonce=None,
+        )
+        response = self.client.get(self.url_list, **{'HTTP_AUTHORIZATION': header})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

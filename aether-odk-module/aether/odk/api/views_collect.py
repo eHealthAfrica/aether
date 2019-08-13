@@ -23,8 +23,11 @@ https://docs.opendatakit.org/
 '''
 
 import datetime
-import logging
 import json
+import logging
+import random
+import time
+
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -44,6 +47,9 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
+
+from python_digest import build_digest_challenge
+from django_digest import HttpDigestAuthenticator
 
 from aether.sdk.auth.authentication import GatewayBasicAuthentication
 from aether.sdk.auth.utils import unparse_username
@@ -140,6 +146,27 @@ logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
 
 
+class DigestAuthentication(HttpDigestAuthenticator):
+
+    def authenticate(self, request):
+        if self.contains_digest_credentials(request):
+            ok = super(DigestAuthentication, self).authenticate(request)
+            if ok:
+                return (request.user, None)
+            raise AuthenticationFailed()
+        return None
+
+    def authenticate_header(self, request):
+        opaque = ''.join([random.choice('0123456789ABCDEF') for x in range(32)])
+        return build_digest_challenge(time.time(), self.secret_key, self.realm, opaque, True)
+
+
+_COLLECT_AUTH_CLASSES = [
+    DigestAuthentication,
+    GatewayBasicAuthentication,
+]
+
+
 def _get_host(request, current_path):
     # ODK Collect needs the full URL to get the resources. They have only the path
     # like /my/resouce/path/id but not the scheme or the host name,
@@ -201,7 +228,7 @@ class IsAuthenticatedAndSurveyor(IsAuthenticated):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes(_COLLECT_AUTH_CLASSES)
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_list(request, *args, **kwargs):
     '''
@@ -228,7 +255,7 @@ def xform_list(request, *args, **kwargs):
 
 @api_view(['GET'])
 @renderer_classes([StaticHTMLRenderer])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes(_COLLECT_AUTH_CLASSES)
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_download(request, pk, *args, **kwargs):
     '''
@@ -253,7 +280,7 @@ def xform_get_download(request, pk, *args, **kwargs):
 
 
 @api_view(['GET'])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes(_COLLECT_AUTH_CLASSES)
 @permission_classes([IsAuthenticatedAndSurveyor])
 def media_file_get_content(request, pk, *args, **kwargs):
     '''
@@ -267,7 +294,7 @@ def media_file_get_content(request, pk, *args, **kwargs):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes(_COLLECT_AUTH_CLASSES)
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_manifest(request, pk, *args, **kwargs):
     '''
@@ -297,7 +324,7 @@ def xform_get_manifest(request, pk, *args, **kwargs):
 
 @api_view(['POST', 'HEAD'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes(_COLLECT_AUTH_CLASSES)
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_submission(request, *args, **kwargs):
     '''
