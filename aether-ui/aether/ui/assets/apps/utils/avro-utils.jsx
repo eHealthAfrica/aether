@@ -44,7 +44,7 @@ const PRIMITIVE_TYPES = [
   // {"type": {"type": "fixed", "size": 16, "name": "f"}}
   'fixed'
 ]
-const FIELD_ID = 'id'
+export const FIELD_ID = 'id'
 
 // In-house workaround to the avsc library to avoid null values
 // in case of union types
@@ -57,9 +57,30 @@ avro.types.UnwrappedUnionType.prototype.random = function () {
   return types[index].random()
 }
 
+const randomBytes = (len = 8) => Math.floor((1 + Math.random()) * 16 ** len).toString(16).slice(1)
+
+// In-house workaround to the avsc library to avoid buffer serialization
+avro.types.FixedType.prototype.random = function () {
+  return randomBytes(this.size)
+}
+avro.types.BytesType.prototype.random = function () {
+  return randomBytes()
+}
+
 export const parseSchema = (schema) => (
   avro.parse(schema, { noAnonymousTypes: true, wrapUnions: false })
 )
+
+export const randomInput = (schema) => {
+  const type = parseSchema(schema)
+  const input = type.random()
+
+  // check if there is a string "id" field
+  if (schema.fields.find(field => field.name === FIELD_ID && field.type === 'string')) {
+    input[FIELD_ID] = generateGUID() // make it more UUID
+  }
+  return input
+}
 
 /**
  * Indicates if the given AVRO type corresponds to a "nullable" type

@@ -24,7 +24,7 @@ import { connect } from 'react-redux'
 
 import { AvroSchemaViewer } from '../../components'
 import { deepEqual, objectToString } from '../../utils'
-import { parseSchema } from '../../utils/avro-utils'
+import { FIELD_ID, parseSchema } from '../../utils/avro-utils'
 import { updateContract } from '../redux'
 
 const MESSAGES = defineMessages({
@@ -101,7 +101,7 @@ class EntityTypes extends Component {
         }
 
         // all entity types must have an "id" field with type "string"
-        if (!schema.fields.find(field => field.name === 'id' && field.type === 'string')) {
+        if (!schema.fields.find(field => field.name === FIELD_ID && field.type === 'string')) {
           throw new Error(`${current}: ${formatMessage(MESSAGES.missingIdError)}`)
         }
       })

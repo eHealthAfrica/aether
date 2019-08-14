@@ -224,7 +224,7 @@
     {
       "name": "updated_at",
       "@aether_extended_type": "dateTime",
-      "type":  ["null", "string"]
+      "type": ["null", {"type": "string", "@aether_extended_type": "dateTime"}]
     }
   ]
 }

@@ -23,8 +23,8 @@ import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { AvroSchemaViewer } from '../../components'
-import { deepEqual, generateGUID, objectToString } from '../../utils'
-import { generateSchema, parseSchema } from '../../utils/avro-utils'
+import { deepEqual, objectToString } from '../../utils'
+import { generateSchema, randomInput } from '../../utils/avro-utils'
 
 import { updatePipeline } from '../redux'
 
@@ -116,15 +116,10 @@ class SchemaInput extends Component {
         })
         return
       }
-      const type = parseSchema(schema)
 
       // generate a new input sample
       try {
-        const input = type.random()
-        // check if there is a string "id" field
-        if (schema.fields.find(field => field.name === 'id' && field.type === 'string')) {
-          input.id = generateGUID() // make it more UUID
-        }
+        const input = randomInput(schema)
         this.props.updatePipeline({ ...this.props.pipeline, schema, input })
       } catch (error) {
         this.setState({
