@@ -33,7 +33,7 @@ under the License.
   <span
     id="logged-in-user-info"
     data-user-id="{{ request.user.id }}"
-    data-user-name="{{ request.user|get_fullname }}"
+    data-user-name="{{ request.user|get_fullname:request }}"
     class="invisible"></span>
 
   <div id="pipeline-app"></div>
