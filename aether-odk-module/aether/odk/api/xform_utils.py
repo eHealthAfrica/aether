@@ -183,7 +183,11 @@ def parse_submission(data, xml_definition):
     return submission
 
 
-def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VERSION):
+def parse_xform_to_avro_schema(
+    xml_definition,
+    project_name,
+    default_version=DEFAULT_XFORM_VERSION,
+):
     '''
     Transforms the xForm definition (in XML format) to AVRO schema.
 
@@ -235,16 +239,16 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
     title, form_id, version = get_xform_data_from_xml(xml_definition)
     version = version or default_version
     # include version within name to identify different entity source
-    name = f'{form_id}_{version}'
+    name = project_name
     # AVRO names contain only [A-Za-z0-9_]
-    name = ''.join([c if c.isalnum() or c == '_' else ' ' for c in name]).title().replace(' ', '')
+    name = ''.join([c if c.isalnum() or c == '_' else ' ' for c in name]).replace(' ', '')
 
     KEY = '-----'
 
     # initial schema, with "id" and "version" attributes
     avro_schema = {
         'name': name,
-        'doc': f'{title} (id: {form_id}, version: {version})',
+        'doc': f'{project_name} (title: {title} id: {form_id}, version: {version})',
         'type': 'record',
         'fields': [
             {
