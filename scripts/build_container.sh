@@ -21,21 +21,22 @@
 
 set -Eeuo pipefail
 
-source ./scripts/aether_functions.sh
+source ./scripts/_lib.sh
 
 create_credentials
 create_docker_assets
-build_libraries_and_distribute
 
-if [[ $1 == "ui" ]]
-then
+if [[ $1 == "ui" ]]; then
     build_ui_assets
+fi
+
+if [[ $1 == "integration" ]]; then
+    build_client
 fi
 
 build_container $1
 
-if [[ $1 == "kernel" ]]
-then
+if [[ $1 == "kernel" ]]; then
     create_readonly_user
 fi
 

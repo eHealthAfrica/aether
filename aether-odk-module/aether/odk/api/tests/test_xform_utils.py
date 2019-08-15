@@ -665,15 +665,18 @@ class XFormUtilsAvroTests(CustomTestCase):
     def test__parse_xform_to_avro_schema__with_multilanguage(self):
         with open(self.samples['xform']['file-avro'], 'rb') as content:
             xform_avro = json.load(content)
-
-        schema = parse_xform_to_avro_schema(self.samples['xform']['raw-xml'])
-        self.assertEqual(schema['name'], 'MyTestForm_Test10')
-        self.assertEqual(schema['doc'], 'My Test Form (id: my-test-form, version: Test-1.0)')
+        project_name = 'TestProject'
+        schema = parse_xform_to_avro_schema(self.samples['xform']['raw-xml'], project_name)
+        self.assertEqual(schema['name'], 'TestProject')
+        self.assertEqual(schema['doc'], 'TestProject (title: My Test Form id: my-test-form, version: Test-1.0)')
         self.assertEqual(schema, xform_avro, json.dumps(schema, indent=2))
 
-        schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'])
-        self.assertEqual(schema_i18n['name'], 'MyTestForm_Test10')
-        self.assertEqual(schema_i18n['doc'], 'My Test Form (multilang) (id: my-test-form, version: Test-1.0)')
+        schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'], project_name)
+        self.assertEqual(schema_i18n['name'], 'TestProject')
+        self.assertEqual(
+            schema_i18n['doc'],
+            'TestProject (title: My Test Form (multilang) id: my-test-form, version: Test-1.0)'
+        )
 
         # the same fields
         self.assertEqual(schema['fields'], schema_i18n['fields'])
@@ -712,38 +715,38 @@ class XFormUtilsAvroTests(CustomTestCase):
         '''
 
         expected = {
-            'name': 'Nested_Repeats_Test_0',
-            'doc': 'nested repeats test (id: nested_repeats_test, version: 0)',
+            'name': 'NestedProjectName',
+            'doc': 'NestedProjectName (title: nested repeats test id: nested_repeats_test, version: 0)',
             'type': 'record',
             'fields': [
                 {
                     'name': '_id',
-                    'namespace': 'Nested_Repeats_Test_0',
+                    'namespace': 'NestedProjectName',
                     'doc': 'xForm ID',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_version',
-                    'namespace': 'Nested_Repeats_Test_0',
+                    'namespace': 'NestedProjectName',
                     'doc': 'xForm version',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_surveyor',
-                    'namespace': 'Nested_Repeats_Test_0',
+                    'namespace': 'NestedProjectName',
                     'doc': 'Surveyor',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_submitted_at',
-                    'namespace': 'Nested_Repeats_Test_0',
+                    'namespace': 'NestedProjectName',
                     'doc': 'Submitted at',
                     '@aether_extended_type': 'dateTime',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': 'Repeat_1',
-                    'namespace': 'Nested_Repeats_Test_0',
+                    'namespace': 'NestedProjectName',
                     '@aether_extended_type': 'repeat',
                     'type': [
                         'null',
@@ -751,19 +754,19 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'type': 'array',
                             'items': {
                                 'name': 'Repeat_1',
-                                'namespace': 'Nested_Repeats_Test_0',
+                                'namespace': 'NestedProjectName',
                                 '@aether_extended_type': 'repeat',
                                 'type': 'record',
                                 'fields': [
                                     {
                                         'name': 'name_1',
-                                        'namespace': 'Nested_Repeats_Test_0.Repeat_1',
+                                        'namespace': 'NestedProjectName.Repeat_1',
                                         '@aether_extended_type': 'string',
                                         'type': ['null', 'string'],
                                     },
                                     {
                                         'name': 'Repeat_2',
-                                        'namespace': 'Nested_Repeats_Test_0.Repeat_1',
+                                        'namespace': 'NestedProjectName.Repeat_1',
                                         '@aether_extended_type': 'repeat',
                                         'type': [
                                             'null',
@@ -771,13 +774,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                                                 'type': 'array',
                                                 'items': {
                                                     'name': 'Repeat_2',
-                                                    'namespace': 'Nested_Repeats_Test_0.Repeat_1',
+                                                    'namespace': 'NestedProjectName.Repeat_1',
                                                     '@aether_extended_type': 'repeat',
                                                     'type': 'record',
                                                     'fields': [
                                                         {
                                                             'name': 'name_2',
-                                                            'namespace': 'Nested_Repeats_Test_0.Repeat_1.Repeat_2',
+                                                            'namespace': 'NestedProjectName.Repeat_1.Repeat_2',
                                                             '@aether_extended_type': 'string',
                                                             'type': ['null', 'string'],
                                                         },
@@ -793,8 +796,8 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
             ],
         }
-
-        schema = parse_xform_to_avro_schema(xml_definition)
+        project_name = 'NestedProjectName'
+        schema = parse_xform_to_avro_schema(xml_definition, project_name)
         self.assertEqual(schema, expected, json.dumps(schema, indent=2))
 
     def test__parse_xform_to_avro_schema__validate_errors(self):
@@ -820,56 +823,56 @@ class XFormUtilsAvroTests(CustomTestCase):
         '''
 
         expected = {
-            'name': 'WrongNames_0',
-            'doc': 'forcing validation error (id: wrong-names, version: 0)',
+            'name': 'ProjectWrongName',
+            'doc': 'ProjectWrongName (title: forcing validation error id: wrong-names, version: 0)',
             'type': 'record',
             'fields': [
                 {
                     'name': '_id',
-                    'namespace': 'WrongNames_0',
+                    'namespace': 'ProjectWrongName',
                     'doc': 'xForm ID',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_version',
-                    'namespace': 'WrongNames_0',
+                    'namespace': 'ProjectWrongName',
                     'doc': 'xForm version',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_surveyor',
-                    'namespace': 'WrongNames_0',
+                    'namespace': 'ProjectWrongName',
                     'doc': 'Surveyor',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_submitted_at',
-                    'namespace': 'WrongNames_0',
+                    'namespace': 'ProjectWrongName',
                     'doc': 'Submitted at',
                     '@aether_extended_type': 'dateTime',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': 'h:full-name',
-                    'namespace': 'WrongNames_0',
+                    'namespace': 'ProjectWrongName',
                     '@aether_extended_type': 'group',
                     'type': [
                         'null',
                         {
                             'name': 'h:full-name',
-                            'namespace': 'WrongNames_0',
+                            'namespace': 'ProjectWrongName',
                             '@aether_extended_type': 'group',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'h:first-name',
-                                    'namespace': 'WrongNames_0.h:full-name',
+                                    'namespace': 'ProjectWrongName.h:full-name',
                                     '@aether_extended_type': 'string',
                                     'type': ['null', 'string'],
                                 },
                                 {
                                     'name': 'h:last-name',
-                                    'namespace': 'WrongNames_0.h:full-name',
+                                    'namespace': 'ProjectWrongName.h:full-name',
                                     '@aether_extended_type': 'string',
                                     'type': ['null', 'string'],
                                 },
@@ -884,8 +887,8 @@ class XFormUtilsAvroTests(CustomTestCase):
                 'Invalid name "h:last-name".',
             ],
         }
-
-        schema = parse_xform_to_avro_schema(xml_definition)
+        project_name = 'ProjectWrongName'
+        schema = parse_xform_to_avro_schema(xml_definition, project_name)
         self.assertEqual(schema, expected, json.dumps(schema, indent=2))
 
     def test__parse_xform_to_avro_schema__repeated_names(self):
@@ -911,56 +914,56 @@ class XFormUtilsAvroTests(CustomTestCase):
         '''
 
         expected = {
-            'name': 'DupNames_0',
-            'doc': 'Repeating names (id: dup-names, version: 0)',
+            'name': 'ProjectDupNames',
+            'doc': 'ProjectDupNames (title: Repeating names id: dup-names, version: 0)',
             'type': 'record',
             'fields': [
                 {
                     'name': '_id',
-                    'namespace': 'DupNames_0',
+                    'namespace': 'ProjectDupNames',
                     'doc': 'xForm ID',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_version',
-                    'namespace': 'DupNames_0',
+                    'namespace': 'ProjectDupNames',
                     'doc': 'xForm version',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_surveyor',
-                    'namespace': 'DupNames_0',
+                    'namespace': 'ProjectDupNames',
                     'doc': 'Surveyor',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_submitted_at',
-                    'namespace': 'DupNames_0',
+                    'namespace': 'ProjectDupNames',
                     'doc': 'Submitted at',
                     '@aether_extended_type': 'dateTime',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': 'dup_property',
-                    'namespace': 'DupNames_0',
+                    'namespace': 'ProjectDupNames',
                     '@aether_extended_type': 'string',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': 'group_name',
-                    'namespace': 'DupNames_0',
+                    'namespace': 'ProjectDupNames',
                     '@aether_extended_type': 'group',
                     'type': [
                         'null',
                         {
                             'name': 'group_name',
-                            'namespace': 'DupNames_0',
+                            'namespace': 'ProjectDupNames',
                             '@aether_extended_type': 'group',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'dup_property',
-                                    'namespace': 'DupNames_0.group_name',
+                                    'namespace': 'ProjectDupNames.group_name',
                                     '@aether_extended_type': 'string',
                                     'type': ['null', 'string'],
                                 },
@@ -971,8 +974,8 @@ class XFormUtilsAvroTests(CustomTestCase):
             ],
             # '_errors': []  # No expected errors
         }
-
-        schema = parse_xform_to_avro_schema(xml_definition)
+        project_name = 'ProjectDupNames'
+        schema = parse_xform_to_avro_schema(xml_definition, project_name)
         self.assertEqual(schema, expected, json.dumps(schema, indent=2))
 
     def test__parse_xform_to_avro_schema_type_decoration(self):
@@ -1026,38 +1029,38 @@ class XFormUtilsAvroTests(CustomTestCase):
         '''
 
         expected = {
-            'name': 'AetherTest_0',
-            'doc': 'aether-test (id: aether-test, version: 0)',
+            'name': 'TestProject',
+            'doc': 'TestProject (title: aether-test id: aether-test, version: 0)',
             'type': 'record',
             'fields': [
                 {
                     'name': '_id',
-                    'namespace': 'AetherTest_0',
+                    'namespace': 'TestProject',
                     'doc': 'xForm ID',
                     'type': ['null', 'string']
                 },
                 {
                     'name': '_version',
-                    'namespace': 'AetherTest_0',
+                    'namespace': 'TestProject',
                     'doc': 'xForm version',
                     'type': ['null', 'string']
                 },
                 {
                     'name': '_surveyor',
-                    'namespace': 'AetherTest_0',
+                    'namespace': 'TestProject',
                     'doc': 'Surveyor',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': '_submitted_at',
-                    'namespace': 'AetherTest_0',
+                    'namespace': 'TestProject',
                     'doc': 'Submitted at',
                     '@aether_extended_type': 'dateTime',
                     'type': ['null', 'string'],
                 },
                 {
                     'name': 'surveyor',
-                    'namespace': 'AetherTest_0',
+                    'namespace': 'TestProject',
                     'doc': 'Which surveyor is entering this data?',
                     '@aether_extended_type': 'select1',
                     '@aether_lookup': [
@@ -1070,39 +1073,39 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
                 {
                     'name': 'building_gps',
-                    'namespace': 'AetherTest_0',
+                    'namespace': 'TestProject',
                     'doc': 'Take a GPS point for this building',
                     '@aether_extended_type': 'geopoint',
                     'type': [
                         'null',
                         {
                             'name': 'building_gps',
-                            'namespace': 'AetherTest_0',
+                            'namespace': 'TestProject',
                             'doc': 'Take a GPS point for this building',
                             '@aether_extended_type': 'geopoint',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'latitude',
-                                    'namespace': 'AetherTest_0.building_gps',
+                                    'namespace': 'TestProject.building_gps',
                                     'doc': 'latitude',
                                     'type': ['null', 'float']
                                 },
                                 {
                                     'name': 'longitude',
-                                    'namespace': 'AetherTest_0.building_gps',
+                                    'namespace': 'TestProject.building_gps',
                                     'doc': 'longitude',
                                     'type': ['null', 'float']
                                 },
                                 {
                                     'name': 'altitude',
-                                    'namespace': 'AetherTest_0.building_gps',
+                                    'namespace': 'TestProject.building_gps',
                                     'doc': 'altitude',
                                     'type': ['null', 'float']
                                 },
                                 {
                                     'name': 'accuracy',
-                                    'namespace': 'AetherTest_0.building_gps',
+                                    'namespace': 'TestProject.building_gps',
                                     'doc': 'accuracy',
                                     'type': ['null', 'float']
                                 }
@@ -1112,7 +1115,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
                 {
                     'name': 'building_type',
-                    'namespace': 'AetherTest_0',
+                    'namespace': 'TestProject',
                     'doc': 'What kind of building is this?',
                     '@aether_extended_type': 'select',
                     '@aether_lookup': [
@@ -1136,6 +1139,6 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             ]
         }
-
-        schema = parse_xform_to_avro_schema(xml_definition)
+        project_name = 'TestProject'
+        schema = parse_xform_to_avro_schema(xml_definition, project_name)
         self.assertEqual(schema, expected, json.dumps(schema, indent=2))

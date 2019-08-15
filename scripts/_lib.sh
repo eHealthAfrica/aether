@@ -47,7 +47,7 @@ function create_docker_assets {
 }
 
 # build Aether client python library
-function build_libraries_and_distribute {
+function build_client {
     ./scripts/build_client_and_distribute.sh
 }
 
@@ -120,13 +120,14 @@ function _wait_for {
     local retries=1
     until $is_ready > /dev/null; do
         >&2 echo "Waiting for $container... $retries"
-        sleep 2
 
         ((retries++))
         if [[ $retries -gt 30 ]]; then
             echo_message "It was not possible to start $container"
             exit 1
         fi
+
+        sleep 2
     done
     echo_message "$container is ready!"
 }
