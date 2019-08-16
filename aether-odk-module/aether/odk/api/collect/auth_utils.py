@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
 import random
 import time
 
@@ -32,7 +33,7 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from aether.sdk.auth.utils import parse_username, unparse_username
 from aether.sdk.multitenancy.utils import get_current_realm
-from aether.odk.api.collect.models import DigestAuthCounter, DigestPartial
+from aether.odk.api.collect.models import DigestCounter, DigestPartial
 
 # https://docs.opendatakit.org/openrosa-authentication/
 
@@ -63,6 +64,15 @@ _REQUIRED_FIELDS = (
     'username',
 )
 
+MSG_MISSING = _('Required field "{}" not found')
+MSG_WRONG = _('Supplied field "{}" does not match')
+MSG_COUNTER = _('Attempt to establish a previously used nonce counter')
+MSG_USERNAME = _('Invalid username')
+MSG_HEADER = _('Invalid digest header')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(settings.LOGGING_LEVEL)
+
 
 def get_www_authenticate_header(request):
     '''
@@ -80,16 +90,16 @@ def get_www_authenticate_header(request):
 
 def save_partial_digest(request, user, raw_password):
     '''
-    Saves the partial digest for the parsed username and the unparsed username
+    Saves the partial digest for the parsed/unparsed username
     '''
     def _save(username):
         ha1 = _create_HA1(username, realm, raw_password)
         try:
-            partial = DigestPartial.objects.get(username=username, realm=realm)
+            partial = DigestPartial.objects.get(user=user, username=username)
             partial.digest = ha1
             partial.save()
         except ObjectDoesNotExist:
-            DigestPartial.objects.create(username=username, realm=realm, digest=ha1)
+            DigestPartial.objects.create(user=user, username=username, digest=ha1)
 
     realm = _get_digest_realm(request)
 
@@ -101,46 +111,46 @@ def parse_authorization_header(challenge):
     # Digest field1="***", field2="***", field3="***", ...
     auth_type, auth_info = challenge.split(None, 1)
 
-    digest_auth = dict()
+    challenge = dict()
     for h in auth_info.split(','):
         key, value = h.split('=', 1)
-        digest_auth[key.strip()] = (
+        challenge[key.strip()] = (
             value[1:-1]
             if value and value[0] == value[-1] == '"'
             else value
         )
 
-    return digest_auth
+    return challenge
 
 
 def check_authorization_header(request):
-    '''
-    The values of the opaque and algorithm fields must be those supplied
-    in the WWW-Authenticate response header
-    '''
-
     auth_header = request.META['HTTP_AUTHORIZATION']
     challenge = parse_authorization_header(auth_header)
+    realm = _get_digest_realm(request)
 
     # check fields
     for field in _REQUIRED_FIELDS:
         if field not in challenge:
-            raise AuthenticationFailed(_('Required field "{}" not found').format(field))
+            msg = MSG_MISSING.format(field)
+            logger.error(msg)
+            raise AuthenticationFailed(msg)
 
-    realm = _get_digest_realm(request)
-
-    # validate field values
+    # check field values
     values = {'algorithm': COLLECT_ALGORITHM, 'qop': COLLECT_QOP, 'realm': realm}
     for field in ('algorithm', 'qop', 'realm'):
         if challenge[field] != values[field]:
-            raise AuthenticationFailed(_('Supplied field "{}" does not match').format(field))
+            msg = MSG_WRONG.format(field)
+            logger.error(msg)
+            raise AuthenticationFailed(msg)
 
     if unquote(urlparse(challenge['uri']).path) != request.path:
-        raise AuthenticationFailed(_('Supplied field "{}" does not match').format('uri'))
+        msg = MSG_WRONG.format('uri')
+        logger.error(msg)
+        raise AuthenticationFailed(msg)
 
     # check nonce counter
     try:
-        auth_counter = DigestAuthCounter.objects.get(
+        auth_counter = DigestCounter.objects.get(
             server_nonce=challenge['nonce'],
             client_nonce=challenge['cnonce'],
         )
@@ -150,12 +160,11 @@ def check_authorization_header(request):
 
     current_counter = int(challenge['nc'], 16)
     if last_counter is not None and not last_counter < current_counter:
-        raise AuthenticationFailed(_(
-            'Attempt to establish a previously used nonce counter'
-        ))
+        logger.error(MSG_COUNTER)
+        raise AuthenticationFailed(MSG_COUNTER)
 
     else:
-        auth_counter, __ = DigestAuthCounter.objects.get_or_create(
+        auth_counter, __ = DigestCounter.objects.get_or_create(
             server_nonce=challenge['nonce'],
             client_nonce=challenge['cnonce'],
         )
@@ -164,15 +173,17 @@ def check_authorization_header(request):
 
     username = challenge['username']
     try:
-        partial = DigestPartial.objects.get(username=username, realm=realm)
         user = get_user_model().objects.get(username=parse_username(request, username))
+        partial = DigestPartial.objects.get(user=user, username=username)
     except ObjectDoesNotExist:
-        raise AuthenticationFailed(_('Invalid username'))
+        logger.error(MSG_USERNAME)
+        raise AuthenticationFailed(MSG_USERNAME)
 
     # check header response
     response_hash = _generate_response(request, partial.digest, challenge)
     if response_hash != challenge['response']:
-        raise AuthenticationFailed(_('Invalid digest header'))
+        logger.error(MSG_HEADER)
+        raise AuthenticationFailed(MSG_HEADER)
 
     return user
 

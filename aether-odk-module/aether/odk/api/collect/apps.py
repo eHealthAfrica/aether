@@ -23,4 +23,4 @@ from django.utils.translation import gettext_lazy as _
 class Config(AppConfig):
 
     name = 'aether.odk.api.collect'
-    verbose_name = _('Collect Authentication')
+    verbose_name = _('Aether ODK Collect')

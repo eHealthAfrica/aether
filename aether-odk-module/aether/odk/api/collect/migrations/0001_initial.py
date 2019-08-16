@@ -16,7 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -28,7 +30,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='DigestAuthCounter',
+            name='DigestCounter',
             fields=[
                 ('id', models.AutoField(
                     auto_created=True,
@@ -54,14 +56,16 @@ class Migration(migrations.Migration):
                     primary_key=True,
                     serialize=False,
                     verbose_name='ID')),
+                ('user', models.ForeignKey(
+                    to=settings.AUTH_USER_MODEL,
+                    on_delete=django.db.models.deletion.CASCADE)),
                 ('username', models.TextField()),
-                ('realm', models.TextField()),
                 ('digest', models.TextField()),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
             ],
             options={
-                'unique_together': {('username', 'realm')},
+                'unique_together': {('user', 'username')},
             },
         ),
     ]

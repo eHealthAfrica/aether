@@ -21,7 +21,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
 
-from aether.sdk.auth.authentication import GatewayBasicAuthentication as BasicAuthentication
+from aether.sdk.auth.authentication import BasicAuthentication
 from aether.sdk.multitenancy.utils import check_user_in_realm
 
 from .auth_utils import check_authorization_header, get_www_authenticate_header

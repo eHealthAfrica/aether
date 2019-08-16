@@ -16,10 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.contrib.auth import get_user_model
 from django.db import models
 
 
-class DigestAuthCounter(models.Model):
+class DigestCounter(models.Model):
 
     server_nonce = models.TextField()
     client_nonce = models.TextField()
@@ -35,8 +36,8 @@ class DigestAuthCounter(models.Model):
 
 class DigestPartial(models.Model):
 
+    user = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE)
     username = models.TextField()
-    realm = models.TextField()
     digest = models.TextField()
 
     created = models.DateTimeField(auto_now_add=True)
@@ -44,4 +45,4 @@ class DigestPartial(models.Model):
 
     class Meta:
         app_label = 'collect'
-        unique_together = ('username', 'realm')
+        unique_together = ('user', 'username')
