@@ -25,8 +25,6 @@ https://docs.opendatakit.org/
 import datetime
 import json
 import logging
-import random
-import time
 
 from urllib.parse import urlparse
 
@@ -48,10 +46,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from python_digest import build_digest_challenge
-from django_digest import HttpDigestAuthenticator
-
-from aether.sdk.auth.authentication import GatewayBasicAuthentication
 from aether.sdk.auth.utils import unparse_username
 from aether.sdk.multitenancy.utils import (
     add_instance_realm_in_headers,
@@ -59,8 +53,8 @@ from aether.sdk.multitenancy.utils import (
 )
 from aether.sdk.utils import request as exec_request
 
-from .models import XForm, MediaFile
-from .kernel_utils import (
+from ..models import XForm, MediaFile
+from ..kernel_utils import (
     check_kernel_connection,
     get_attachments_url,
     get_kernel_auth_header,
@@ -68,8 +62,9 @@ from .kernel_utils import (
     propagate_kernel_artefacts,
     KernelPropagationError,
 )
-from .surveyors_utils import is_surveyor, is_granted_surveyor
-from .xform_utils import get_instance_data_from_xml, parse_submission
+from ..surveyors_utils import is_surveyor, is_granted_surveyor
+from ..xform_utils import get_instance_data_from_xml, parse_submission
+from .authentication import CollectAuthentication
 
 
 OPEN_ROSA_HEADERS = {'X-OpenRosa-Version': '1.0'}
@@ -146,27 +141,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
 
 
-class DigestAuthentication(HttpDigestAuthenticator):
-
-    def authenticate(self, request):
-        if self.contains_digest_credentials(request):
-            ok = super(DigestAuthentication, self).authenticate(request)
-            if ok:
-                return (request.user, None)
-            raise AuthenticationFailed()
-        return None
-
-    def authenticate_header(self, request):
-        opaque = ''.join([random.choice('0123456789ABCDEF') for x in range(32)])
-        return build_digest_challenge(time.time(), self.secret_key, self.realm, opaque, True)
-
-
-_COLLECT_AUTH_CLASSES = [
-    DigestAuthentication,
-    GatewayBasicAuthentication,
-]
-
-
 def _get_host(request, current_path):
     # ODK Collect needs the full URL to get the resources. They have only the path
     # like /my/resouce/path/id but not the scheme or the host name,
@@ -228,7 +202,7 @@ class IsAuthenticatedAndSurveyor(IsAuthenticated):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes(_COLLECT_AUTH_CLASSES)
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_list(request, *args, **kwargs):
     '''
@@ -255,7 +229,7 @@ def xform_list(request, *args, **kwargs):
 
 @api_view(['GET'])
 @renderer_classes([StaticHTMLRenderer])
-@authentication_classes(_COLLECT_AUTH_CLASSES)
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_download(request, pk, *args, **kwargs):
     '''
@@ -280,7 +254,7 @@ def xform_get_download(request, pk, *args, **kwargs):
 
 
 @api_view(['GET'])
-@authentication_classes(_COLLECT_AUTH_CLASSES)
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def media_file_get_content(request, pk, *args, **kwargs):
     '''
@@ -294,7 +268,7 @@ def media_file_get_content(request, pk, *args, **kwargs):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes(_COLLECT_AUTH_CLASSES)
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_manifest(request, pk, *args, **kwargs):
     '''
@@ -324,7 +298,7 @@ def xform_get_manifest(request, pk, *args, **kwargs):
 
 @api_view(['POST', 'HEAD'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes(_COLLECT_AUTH_CLASSES)
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_submission(request, *args, **kwargs):
     '''

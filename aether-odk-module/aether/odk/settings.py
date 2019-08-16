@@ -40,8 +40,8 @@ SURVEYOR_GROUP_NAME = 'surveyor'
 
 ODK_COLLECT_ENDPOINT = os.environ.get('ODK_COLLECT_ENDPOINT', '')
 
-INSTALLED_APPS += ['django_digest', ]
-DIGEST_REALM = 'odk'
+INSTALLED_APPS += ['aether.odk.api.collect', ]
+MIGRATION_MODULES['collect'] = 'aether.odk.api.collect.migrations'
 
 
 # Upload files
