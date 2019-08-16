@@ -122,8 +122,11 @@ class AuthenticationTests(CustomTestCase):
         basic = bytearray(f'{self.username}:{self.password}', 'utf-8')
         auth = 'Basic ' + base64.b64encode(basic).decode('ascii')
 
-        response = self.client.get(self.url, HTTP_AUTHORIZATION=auth)
-        self.assertEqual(response.status_code, 200)
+        response = self.client.get(self.url, secure=False, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 401, 'Basic auth over HTTP protocol')
+
+        response = self.client.get(self.url, secure=True, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 200, 'Basic auth over HTTPS protocol')
 
     def test_another_auth(self):
         response = self.client.get(self.url, HTTP_AUTHORIZATION='Something else')

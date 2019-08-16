@@ -42,7 +42,12 @@ class CollectAuthentication(BaseAuthentication):
             return None
 
         if method == b'basic':
-            # TODO: security check: this is run over "https" and not "http"
+            # SECURITY CHECK: this runs over "https" and not "http"
+            host = request.build_absolute_uri(request.path)
+            if not host.startswith('https://'):
+                msg = _('Basic authentication is only allowed over HTTPS')
+                raise AuthenticationFailed(msg)
+
             return BasicAuthentication().authenticate(request)
 
         # HTTP Digest authentication

@@ -59,8 +59,6 @@ services:
       - ./.persistent_data/static:/static
     ports:
       - 80:80
-      # needed for ODK behind nginx (ODK Collect only accepts 443 and 8443 ports)
-      - 8443:8443
     extra_hosts:
       - ${NETWORK_DOMAIN}:127.0.0.1
     healthcheck:

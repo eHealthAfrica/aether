@@ -26,8 +26,6 @@ import datetime
 import json
 import logging
 
-from urllib.parse import urlparse
-
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -149,20 +147,9 @@ def _get_host(request, current_path):
     #
     # If our path is:               http://my-host:8080/my/nested/path/any-odk-url
     # and our current path is:      /any-odk-url
-    # the result must be:           http://my-host:8443/my/nested/path
-    #
-    # With this we can build the final URLs in the templates and ODK Collect
-    # does not complain with its security requirements: https scheme or 8443 port
+    # the result must be:           http://my-host:8080/my/nested/path
 
-    host = request.build_absolute_uri(request.path).replace(current_path, '')
-
-    # If the request is not HTTPS, the host must include port 8443
-    # or ODK Collect will not be able to get the resource
-    url_info = urlparse(host)
-    if url_info.scheme != 'https' and url_info.port != 8443:
-        host = f'http://{url_info.hostname}:8443{url_info.path}'
-
-    return host
+    return request.build_absolute_uri(request.path).replace(current_path, '')
 
 
 def _get_instance(request, model, pk):

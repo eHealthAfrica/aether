@@ -286,6 +286,7 @@ class CustomTestCase(TransactionTestCase):
 
         self.admin = UserModel.create_superuser(username, email, password)
         self.headers_admin = {
+            'secure': True,
             'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
         }
         if login:
@@ -299,6 +300,7 @@ class CustomTestCase(TransactionTestCase):
 
         self.user = UserModel.create_user(username, email, password)
         self.headers_user = {
+            'secure': True,
             'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
         }
         if login:
@@ -313,6 +315,7 @@ class CustomTestCase(TransactionTestCase):
         if username == 'surveyor':
             basic = bytearray(f'{username}:{password}', 'utf-8')
             self.headers_surveyor = {
+                'secure': True,
                 'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
             }
 
