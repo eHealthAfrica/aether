@@ -21,7 +21,7 @@ import time
 import concurrent.futures
 import threading
 import logging
-import traceback
+import datetime
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from .utils import (
@@ -31,7 +31,11 @@ from .utils import (
     remove_from_redis,
     get_redis_keys_by_pattern,
     get_redis_subcribed_message,
+    redis_subscribe,
+    redis_stop,
+    MAX_WORKERS
 )
+
 from .entity_extraction import (
     extract_create_entities,
     ENTITY_EXTRACTION_ERRORS,
@@ -47,27 +51,55 @@ logger.setLevel(settings.LOGGING_LEVEL)
 
 class ExtractionManager():
 
-    SUBMISSION_QUEUE = collections.deque()
-    PROCESSED_SUBMISSIONS = collections.deque()
-    PROCESSED_ENTITIES = collections.deque()
-    is_extracting = False
-    is_pushing_to_kernel = False
+    def __init__(self, redis=None):
+        self.SUBMISSION_QUEUE = collections.deque()
+        self.PROCESSED_SUBMISSIONS = collections.deque()
+        self.PROCESSED_ENTITIES = collections.deque()
+        self.is_extracting = False
+        self.is_pushing_to_kernel = False
+        self.redis = redis
+        self.push_to_kernel_thread = None
+        self.extraction_thread = None
+        self.start_time = None
+        self.end_time = None
 
-    def handle_pending_submissions(self):
-        pending_submission_keys = get_redis_keys_by_pattern('_submissions*')
+    def stop(self):
+        redis_stop(self.redis)
+        self.is_extracting = False
+        self.is_pushing_to_kernel = False
+
+    def subscribe_to_redis_channel(self, callback: callable, channel: str):
+        redis_subscribe(
+            callback=callback,
+            pattern=channel,
+            redis=self.redis
+        )
+
+    def handle_pending_submissions(self, channel='*'):
+        pending_submission_keys = get_redis_keys_by_pattern(
+            channel,
+            self.redis
+        )
         for key in pending_submission_keys:
-            self.add_to_queue(get_redis_subcribed_message(key))
+            self.add_to_queue(get_redis_subcribed_message(
+                key,
+                self.redis
+            ))
 
     def add_to_queue(self, submission):
+        if not self.start_time:
+            self.start_time = datetime.datetime.now()
+            print('Extraction Start Time: ', self.start_time)
+
         if submission:
             self.SUBMISSION_QUEUE.appendleft(submission)
             if not self.is_extracting:
                 self.is_extracting = True
-                extraction_thread = threading.Thread(
+                self.extraction_thread = threading.Thread(
                     target=self.process,
                     name='extraction-thread'
                 )
-                extraction_thread.start()
+                self.extraction_thread.start()
 
             if not self.is_pushing_to_kernel:
                 self.is_pushing_to_kernel = True
@@ -92,7 +124,8 @@ class ExtractionManager():
             mapping = get_from_redis_or_kernel(
                 mapping_id,
                 KERNEL_ARTEFACT_NAMES.mappings,
-                submission.tenant
+                submission.tenant,
+                self.redis
             )
             if mapping and KERNEL_ARTEFACT_NAMES.schemadecorators in mapping:
                 schemadecorator_ids = mapping[KERNEL_ARTEFACT_NAMES.schemadecorators]
@@ -101,7 +134,8 @@ class ExtractionManager():
                     sd = get_from_redis_or_kernel(
                         shemadecorator_id,
                         KERNEL_ARTEFACT_NAMES.schemadecorators,
-                        submission.tenant
+                        submission.tenant,
+                        self.redis
                     )
                     schema_definition = None
                     if sd and KERNEL_ARTEFACT_NAMES.schema_definition in sd:
@@ -110,7 +144,8 @@ class ExtractionManager():
                         schema = get_from_redis_or_kernel(
                             sd[KERNEL_ARTEFACT_NAMES.single_schema],
                             KERNEL_ARTEFACT_NAMES.schemas,
-                            settings.DEFAULT_REALM
+                            settings.DEFAULT_REALM,
+                            self.redis
                         )
                         if schema and schema['definition']:
                             schema_definition = schema['definition']
@@ -160,7 +195,7 @@ class ExtractionManager():
         return submission
 
     def process(self):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             while self.SUBMISSION_QUEUE:
                 executor.submit(self.entity_extraction, self.SUBMISSION_QUEUE.pop())
         if self.SUBMISSION_QUEUE:
@@ -197,6 +232,7 @@ class ExtractionManager():
                 for submission in submissions:
                     submission_tenant[submission['id']] = submission['tenant']
                     submission.pop('tenant')
+                    submission.pop('mappings')
 
                 # post to kernel submissions
                 try:
@@ -212,10 +248,15 @@ class ExtractionManager():
                             s,
                             f'{KERNEL_ARTEFACT_NAMES.submissions}',
                             submission_tenant[s],
+                            self.redis
                         )
                 except Exception as e:
                     logger.debug(str(e))
 
             time.sleep(PUSH_TO_KERNEL_INTERVAL)
         self.is_pushing_to_kernel = False
+        self.end_time = datetime.datetime.now()
+        print('Extraction End Time: ', self.end_time)
+        print('Duration: ', self.end_time - self.start_time)
+        self.start_time = None
         logger.debug('Pushed all entities and submissions to kernel')

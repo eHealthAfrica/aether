@@ -26,8 +26,6 @@ from aether.kernel.api import models, serializers
 
 from . import EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_MAPPING
 
-WAIT_FOR_EXTRACTION = 0.5
-
 
 class SerializersTests(TestCase):
 

@@ -46,7 +46,15 @@ KERNEL_ARTEFACT_NAMES = CONSTANTS(
     submissions='submissions',
 )
 
-REDIS_TASK = TaskHelper(settings)
+MAX_WORKERS = 5
+
+REDIS_INSTANCE = None
+
+REDIS_TASK = TaskHelper(settings, REDIS_INSTANCE)
+
+
+def get_redis(redis):
+    return TaskHelper(settings, redis) if redis else TaskHelper(settings)
 
 
 class Task(NamedTuple):
@@ -75,7 +83,7 @@ def kernel_data_request(url='', method='get', data=None, headers=None):
     return json.loads(res.content.decode('utf-8'))
 
 
-def get_from_redis_or_kernel(id, type, tenant):
+def get_from_redis_or_kernel(id, type, tenant, redis=None):
     '''
     Get resource from redis by key or fetch from kernel and cache in redis.
 
@@ -86,48 +94,60 @@ def get_from_redis_or_kernel(id, type, tenant):
     tenant: the current tenant
     '''
 
+    redis = get_redis(redis)
+
     try:
         # Get from redis
-        return REDIS_TASK.get(id, type, tenant)
+        return redis.get(id, type, tenant)
     except Exception:
         # get from kernel
         url = f'{type}/{id}/'
         try:
             resource = kernel_data_request(url)
             # cache on redis
-            REDIS_TASK.add(task=resource, type=type, tenant=tenant)
+            redis.add(task=resource, type=type, tenant=tenant)
             return resource
         except Exception:
             return None
 
 
-def remove_from_redis(id, type, tenant):
-    return REDIS_TASK.remove(id, type, tenant)
+def remove_from_redis(id, type, tenant, redis=None):
+    redis = get_redis(redis)
+    return redis.remove(id, type, tenant)
 
 
-def get_redis_keys_by_pattern(pattern):
-    return REDIS_TASK.get_keys(pattern)
+def get_redis_keys_by_pattern(pattern, redis=None):
+    redis = get_redis(redis)
+    return redis.get_keys(pattern)
 
 
-def get_redis_subcribed_message(key):
-    doc = REDIS_TASK.get_by_key(key)
+def get_redis_subcribed_message(key, redis=None):
+    redis = get_redis(redis)
+    doc = redis.get_by_key(key)
     if doc:
+        key = key if isinstance(key, str) else key.decode()
         _type, tenant, _id = key.split(':')
         return Task(
             id=_id,
             tenant=tenant,
-            type='set',
+            type=_type,
             data=doc
         )
     return None
 
 
-def redis_subscribe(callback: callable, pattern: str):
-    return REDIS_TASK.subscribe(
+def redis_subscribe(callback, pattern, redis=None):
+    redis = get_redis(redis)
+    return redis.subscribe(
         callback=callback,
         pattern=pattern,
         keep_alive=True,
     )
+
+
+def redis_stop(redis):
+    redis = get_redis(redis)
+    return redis.stop()
 
 
 def object_contains(test, obj):

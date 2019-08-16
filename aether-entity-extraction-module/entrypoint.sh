@@ -30,7 +30,7 @@ function show_help {
     flake8            : check against code style guidelines
     pip_freeze        : freeze pip dependencies and write to requirements.txt
 
-    start             : start extractor with settings from production
+    start             : start extractor with settings from extractor
 
     test              : run unit and integration tests.
     test_lint         : run flake8 tests
@@ -44,6 +44,17 @@ function test_flake8 {
 }
 
 function after_test {
+    rm -R /code/.coverage* 2>/dev/null || true
+    coverage run \
+        --concurrency=multiprocessing \
+        --parallel-mode \
+        test.py test \
+        --parallel \
+        --noinput \
+        "${@:1}"
+    coverage combine --append
+    coverage report
+    coverage erase
     cat /code/conf/extras/good_job.txt
     rm -R .pytest_cache
     rm -rf tests/__pycache__

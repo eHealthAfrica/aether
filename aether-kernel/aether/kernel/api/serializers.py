@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import concurrent
 from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
@@ -31,7 +32,7 @@ from aether.sdk.multitenancy.serializers import (
     MtModelSerializer,
 )
 
-from .constants import MergeOptions as MERGE_OPTIONS
+from .constants import MergeOptions as MERGE_OPTIONS, MAX_WORKERS
 
 from . import models, utils, validators
 
@@ -162,9 +163,11 @@ class SubmissionListSerializer(serializers.ListSerializer):
             raise(serializers.ValidationError(errors))
         # bulk database operation
         results = models.Submission.objects.bulk_create(submissions)
-        for submission in submissions:
-            #  send to redis
-            utils.send_model_item_to_redis(submission)
+        #  send to redis
+        submission_list = list(submissions)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            while submission_list:
+                executor.submit(utils.send_model_item_to_redis, submission_list.pop())
         return results
 
 

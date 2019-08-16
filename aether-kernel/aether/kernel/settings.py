@@ -57,7 +57,7 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
 
 
 def silk_ignore_bulk_request(request):
-    if request.method == 'POST' and PROFILING_ENABLED:
+    if request.method in ('POST', 'PATCH',) and PROFILING_ENABLED:
         try:
             return 'record_requests' in request.session
         except Exception:
@@ -93,7 +93,7 @@ EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
 # Redis Configuration
 # ------------------------------------------------------------------------------
 REDIS_DB = os.environ.get('REDIS_DB', 0)
-REDIS_HOST = os.environ.get('REDIS_HOST', 'redis'),
-REDIS_PORT = os.environ.get('REDIS_PORT', 6379),
-REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', ''),
+REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
+REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
 WRITE_ENTITIES_TO_REDIS = os.environ.get('WRITE_ENTITIES_TO_REDIS', False)

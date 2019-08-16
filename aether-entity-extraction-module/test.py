@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -16,15 +18,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from .manager import ExtractionManager
-
-SUBMISSION_CHANNEL = '_submissions*'
+import sys
 
 
-def main():
-    extractor = ExtractionManager()
-    extractor.handle_pending_submissions(SUBMISSION_CHANNEL)
-    extractor.subscribe_to_redis_channel(
-        callback=extractor.add_to_queue,
-        channel=SUBMISSION_CHANNEL
-    )
+if __name__ == '__main__':
+    from django.core.management import execute_from_command_line
+    execute_from_command_line(sys.argv)

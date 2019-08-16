@@ -283,7 +283,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         super(Submission, self).save(*args, **kwargs)
         try:
             send_model_item_to_redis(self)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover : rollback if redis is offline
             raise ValidationError(
                 str(e)
             )
