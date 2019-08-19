@@ -16,9 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
+import requests
+
 from bravado.requests_client import Authenticator, RequestsClient
 from requests.auth import HTTPBasicAuth
-import requests
 from urllib.parse import urlparse
 
 
@@ -58,5 +60,7 @@ class BasicRealmAuthenticator(Authenticator):
 
     def apply(self, req):
         req.auth = self.auth
-        req.headers['aether-realm'] = self.realm
+        if self.realm:
+            header = os.environ['KERNEL_REALM_HEADER']
+            req.headers[header] = self.realm
         return req
