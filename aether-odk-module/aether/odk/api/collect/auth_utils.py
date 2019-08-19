@@ -16,9 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import logging
 import random
-import time
 
 from hashlib import md5
 from urllib.parse import unquote, urlparse
@@ -27,6 +27,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import six
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework.exceptions import AuthenticationFailed
@@ -40,6 +41,7 @@ from aether.odk.api.collect.models import DigestCounter, DigestPartial
 COLLECT_ALGORITHM = 'MD5'
 COLLECT_QOP = 'auth'  # Quality Of Protection
 COLLECT_REALM = 'collect'
+COLLECT_NONCE_LIFESPAN = datetime.timedelta(days=1)
 
 
 _WWW_AUTHENTICATE = (
@@ -80,10 +82,8 @@ def get_www_authenticate_header(request):
     '''
 
     realm = _get_digest_realm(request)
-
     opaque = ''.join([random.choice('0123456789ABCDEF') for x in range(32)])
-    _nonce_data = f'{time.time()}:{realm}:{settings.SECRET_KEY}'
-    nonce = _hash_fn(_nonce_data)
+    nonce = _create_nonce(now().timestamp(), realm)
 
     return _WWW_AUTHENTICATE.format(nonce=nonce, opaque=opaque, realm=realm)
 
@@ -128,6 +128,11 @@ def check_authorization_header(request):
     challenge = parse_authorization_header(auth_header)
     realm = _get_digest_realm(request)
 
+    lifespan = now() - COLLECT_NONCE_LIFESPAN
+
+    # remove old counters before checking them
+    DigestCounter.objects.filter(modified__lte=lifespan).delete()
+
     # check fields
     for field in _REQUIRED_FIELDS:
         if field not in challenge:
@@ -136,15 +141,28 @@ def check_authorization_header(request):
             raise AuthenticationFailed(msg)
 
     # check field values
-    values = {'algorithm': COLLECT_ALGORITHM, 'qop': COLLECT_QOP, 'realm': realm}
-    for field in ('algorithm', 'qop', 'realm'):
-        if challenge[field] != values[field]:
+    timestamp, __ = challenge['nonce'].split(':', 1)
+    expected_values = {
+        'algorithm': COLLECT_ALGORITHM,
+        'nonce': _create_nonce(timestamp, realm),
+        'qop': COLLECT_QOP,
+        'realm': realm,
+    }
+    for field in ('algorithm', 'nonce', 'qop', 'realm'):
+        if challenge[field] != expected_values[field]:
             msg = MSG_WRONG.format(field)
             logger.error(msg)
             raise AuthenticationFailed(msg)
 
+    # check URI
     if unquote(urlparse(challenge['uri']).path) != request.path:
         msg = MSG_WRONG.format('uri')
+        logger.error(msg)
+        raise AuthenticationFailed(msg)
+
+    # SECURITY ENHANCEMENT: check if the nonce timepstamp is not older than ...
+    if float(timestamp) <= lifespan.timestamp():
+        msg = MSG_WRONG.format('nonce')
         logger.error(msg)
         raise AuthenticationFailed(msg)
 
@@ -159,7 +177,7 @@ def check_authorization_header(request):
         last_counter = None
 
     current_counter = int(challenge['nc'], 16)
-    if last_counter is not None and not last_counter < current_counter:
+    if last_counter is not None and last_counter >= current_counter:
         logger.error(MSG_COUNTER)
         raise AuthenticationFailed(MSG_COUNTER)
 
@@ -171,6 +189,7 @@ def check_authorization_header(request):
         auth_counter.client_counter = current_counter
         auth_counter.save()
 
+    # check username
     username = challenge['username']
     try:
         user = get_user_model().objects.get(username=parse_username(request, username))
@@ -239,6 +258,11 @@ def _create_HA2(method, uri):
     '''
 
     return _hash_fn(':'.join((method, uri)))
+
+
+def _create_nonce(timestamp, realm):
+    _nonce_data = f'{timestamp}:{realm}:{settings.SECRET_KEY}'
+    return f'{timestamp}:{_hash_fn(_nonce_data)}'
 
 
 def _hash_fn(data):

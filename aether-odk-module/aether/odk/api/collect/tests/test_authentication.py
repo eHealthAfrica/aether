@@ -25,11 +25,22 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
+from django.utils.timezone import now
 
 from ...tests import CustomTestCase
 from ...serializers import SurveyorSerializer
 
-from ..auth_utils import parse_authorization_header
+from ..auth_utils import COLLECT_NONCE_LIFESPAN, parse_authorization_header
+
+
+def md5_utf8(x):
+    if isinstance(x, str):
+        x = x.encode('utf-8')
+    return hashlib.md5(x).hexdigest()
+
+
+def KD(s, d):
+    return md5_utf8(f'{s}:{d}')
 
 
 def build_digest_header(
@@ -38,6 +49,7 @@ def build_digest_header(
         challenge_header,
         method,
         path,
+        nonce=None,
         nonce_count=1,
         cnonce=None,
         algorithm='MD5',
@@ -45,17 +57,9 @@ def build_digest_header(
 ):
     challenge_data = parse_authorization_header(challenge_header)
     realm = challenge_data['realm']
-    nonce = challenge_data['nonce']
+    nonce = nonce or challenge_data['nonce']
     qop = challenge_data['qop']
     opaque = challenge_data['opaque']
-
-    def md5_utf8(x):
-        if isinstance(x, str):
-            x = x.encode('utf-8')
-        return hashlib.md5(x).hexdigest()
-
-    def KD(s, d):
-        return md5_utf8(f'{s}:{d}')
 
     A1 = f'{username}:{realm}:{password}'
     A2 = f'{method}:{path}'
@@ -185,6 +189,28 @@ class AuthenticationTests(CustomTestCase):
                                    self.url)
         response = self.client.get(self.url, HTTP_AUTHORIZATION=auth)
         self.assertEqual(response.status_code, 401)
+
+    def test_digest__old_nonce(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 401)
+        self.assertIn('WWW-Authenticate', response)
+        challenge = parse_authorization_header(response['WWW-Authenticate'])
+
+        old_ts = (now() - COLLECT_NONCE_LIFESPAN * 2).timestamp()
+        realm = challenge['realm']
+
+        _nonce_data = f'{old_ts}:{realm}:{settings.SECRET_KEY}'
+        _nonce_data = md5_utf8(_nonce_data)
+        nonce = f'{old_ts}:{_nonce_data}'
+
+        auth = build_digest_header(self.username,
+                                   self.password,
+                                   response['WWW-Authenticate'],
+                                   'GET',
+                                   self.url,
+                                   nonce=nonce)
+        response = self.client.get(self.url, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 401, auth)
 
     def test_access(self):
         response = self.client.get(self.url)
