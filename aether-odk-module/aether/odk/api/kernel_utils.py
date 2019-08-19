@@ -23,7 +23,7 @@ from django.utils.translation import ugettext as _
 from aether.sdk.health.utils import (
     check_external_app,
     get_external_app_url,
-    get_external_app_token,
+    get_external_app_auth_header,
 )
 from aether.sdk.multitenancy.utils import add_instance_realm_in_headers
 from aether.sdk.utils import request
@@ -59,7 +59,7 @@ def get_kernel_url():
 
 
 def get_kernel_auth_header():
-    return {'Authorization': f'Token {get_external_app_token(EXTERNAL_APP_KERNEL)}'}
+    return get_external_app_auth_header(EXTERNAL_APP_KERNEL)
 
 
 def get_submissions_url(submission_id=None):
