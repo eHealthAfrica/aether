@@ -27,10 +27,15 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils.timezone import now
 
-from ...tests import CustomTestCase
+from aether.sdk.unittest import UrlsTestCase
+
 from ...serializers import SurveyorSerializer
 
-from ..auth_utils import COLLECT_NONCE_LIFESPAN, parse_authorization_header
+from ..auth_utils import (
+    COLLECT_REALM,
+    COLLECT_NONCE_LIFESPAN,
+    parse_authorization_header,
+)
 
 
 def md5_utf8(x):
@@ -88,7 +93,7 @@ def build_digest_header(
 
 
 @override_settings(MULTITENANCY=False)
-class AuthenticationTests(CustomTestCase):
+class AuthenticationTests(UrlsTestCase):
 
     def setUp(self):
         super(AuthenticationTests, self).setUp()
@@ -115,7 +120,7 @@ class AuthenticationTests(CustomTestCase):
         self.assertIn('WWW-Authenticate', response)
         challenge = response['WWW-Authenticate']
         self.assertIn('Digest ', challenge)
-        self.assertIn(' realm="collect@testserver"', challenge)
+        self.assertIn(f' realm="{COLLECT_REALM}"', challenge)
         self.assertIn(' qop="auth', challenge)
         self.assertIn(' algorithm="MD5"', challenge)
         self.assertIn(' stale="false"', challenge)
@@ -266,7 +271,7 @@ class AuthenticationTests(CustomTestCase):
             self.assertEqual(response.status_code, 200)
 
 
-class MultitenancyAuthenticationTests(CustomTestCase):
+class MultitenancyAuthenticationTests(UrlsTestCase):
 
     def setUp(self):
         super(MultitenancyAuthenticationTests, self).setUp()
@@ -293,7 +298,7 @@ class MultitenancyAuthenticationTests(CustomTestCase):
         self.assertIn('WWW-Authenticate', response)
         challenge = response['WWW-Authenticate']
         self.assertIn('Digest ', challenge)
-        self.assertIn(f' realm="{settings.DEFAULT_REALM}@testserver"', challenge)
+        self.assertIn(f' realm="{COLLECT_REALM}"', challenge)
         self.assertIn(' qop="auth', challenge)
         self.assertIn(' algorithm="MD5"', challenge)
         self.assertIn(' stale="false"', challenge)
@@ -343,4 +348,167 @@ class MultitenancyAuthenticationTests(CustomTestCase):
         self.user.groups.filter(name=settings.DEFAULT_REALM).delete()
 
         response = self.client.get(self.url, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 401)
+
+
+@override_settings(
+    DEFAULT_REALM='digest',
+    GATEWAY_ENABLED=True,
+    GATEWAY_SERVICE_ID='odk',
+    GATEWAY_PUBLIC_REALM='-',
+    GATEWAY_PUBLIC_PATH='/-/odk',
+    GATEWAY_HEADER_TOKEN='X-Oauth-Token',
+)
+class GatewayAuthenticationTests(UrlsTestCase):
+
+    def setUp(self):
+        super(GatewayAuthenticationTests, self).setUp()
+
+        self.username = 'surveyor'
+        self.password = '~t]:vS3Q>e{2k]CE'
+
+        self.url = reverse('xform-list-xml', kwargs={'realm': 'testing'})
+        self.assertEqual(self.url, '/testing/odk/collect-test/formList')
+
+        self.url_internal = reverse('xform-list-xml')
+        self.assertEqual(self.url_internal, '/collect-test/formList')
+
+        self.url_public = reverse('xform-list-xml', kwargs={'realm': '-'})
+        self.assertEqual(self.url_public, '/-/odk/collect-test/formList')
+
+        # belongs to "testing" realm
+        user1 = SurveyorSerializer(
+            data={
+                'username': self.username,
+                'password': self.password,
+            },
+            context={'request': RequestFactory().get(self.url)},
+        )
+        self.assertTrue(user1.is_valid(), user1.errors)
+        user1.save()
+
+        user_obj1 = get_user_model().objects.get(pk=user1.data['id'])
+        self.assertNotEqual(user_obj1.username, 'digest__surveyor')
+        self.assertEqual(user_obj1.username, 'testing__surveyor')
+        self.assertFalse(user_obj1.groups.filter(name='digest').exists())
+        self.assertTrue(user_obj1.groups.filter(name='testing').exists())
+
+        # belongs to default realm "digest"
+        user2 = SurveyorSerializer(
+            data={
+                'username': self.username,
+                'password': self.password,
+            },
+            context={'request': RequestFactory().get(self.url_internal)},
+        )
+        self.assertTrue(user2.is_valid(), user2.errors)
+        user2.save()
+
+        user_obj2 = get_user_model().objects.get(pk=user2.data['id'])
+        self.assertEqual(user_obj2.username, 'digest__surveyor')
+        self.assertNotEqual(user_obj2.username, 'testing__surveyor')
+        self.assertTrue(user_obj2.groups.filter(name='digest').exists())
+        self.assertFalse(user_obj2.groups.filter(name='testing').exists())
+
+    def test__access__with_realm_in_path__and_short_username(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 401)
+
+        self.assertIn('WWW-Authenticate', response)
+        auth = build_digest_header(self.username,
+                                   self.password,
+                                   response['WWW-Authenticate'],
+                                   'GET',
+                                   self.url)
+
+        response = self.client.get(self.url, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['User'], 'testing__surveyor')
+
+    def test__access__with_realm_in_path__and_long_username(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 401)
+        auth = build_digest_header('testing__surveyor',
+                                   self.password,
+                                   response['WWW-Authenticate'],
+                                   'GET',
+                                   self.url)
+
+        response = self.client.get(self.url, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['User'], 'testing__surveyor')
+
+    def test__access__without_realm_in_path__and_wrong_username(self):
+        response = self.client.get(self.url_internal)
+        self.assertEqual(response.status_code, 401)
+
+        self.assertIn('WWW-Authenticate', response)
+        auth = build_digest_header('testing__surveyor',
+                                   self.password,
+                                   response['WWW-Authenticate'],
+                                   'GET',
+                                   self.url_internal)
+
+        response = self.client.get(self.url_internal, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 401)
+
+    def test__access__without_realm_in_path__and_long_username(self):
+        response = self.client.get(self.url_internal)
+        self.assertEqual(response.status_code, 401)
+
+        auth = build_digest_header('digest__surveyor',
+                                   self.password,
+                                   response['WWW-Authenticate'],
+                                   'GET',
+                                   self.url_internal)
+
+        response = self.client.get(self.url_internal, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['User'], 'digest__surveyor')
+
+    def test__access__without_realm_in_path__and_short_username(self):
+        response = self.client.get(self.url_internal)
+        self.assertEqual(response.status_code, 401)
+
+        self.assertIn('WWW-Authenticate', response)
+        auth = build_digest_header(self.username,
+                                   self.password,
+                                   response['WWW-Authenticate'],
+                                   'GET',
+                                   self.url_internal)
+
+        response = self.client.get(self.url_internal, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['User'], 'digest__surveyor')
+
+    def test__access__with_public_realm_in_path__and_short_username(self):
+        response = self.client.get(self.url_public)
+        self.assertEqual(response.status_code, 401)
+
+        self.assertIn('WWW-Authenticate', response)
+        auth = build_digest_header(self.username,
+                                   self.password,
+                                   response['WWW-Authenticate'],
+                                   'GET',
+                                   self.url_public)
+
+        response = self.client.get(self.url_public, HTTP_AUTHORIZATION=auth)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['User'], 'digest__surveyor')
+
+    def test__access__with_another_realm_in_path(self):
+        url = reverse('xform-list-xml', kwargs={'realm': 'another'})
+        self.assertEqual(url, '/another/odk/collect-test/formList')
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 401)
+
+        self.assertIn('WWW-Authenticate', response)
+        auth = build_digest_header(self.username,
+                                   self.password,
+                                   response['WWW-Authenticate'],
+                                   'GET',
+                                   url)
+
+        response = self.client.get(url, HTTP_AUTHORIZATION=auth)
         self.assertEqual(response.status_code, 401)

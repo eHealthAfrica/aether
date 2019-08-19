@@ -30,6 +30,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
@@ -210,7 +211,11 @@ def xform_list(request, *args, **kwargs):
         },
         template_name='xformList.xml',
         content_type='text/xml',
-        headers=OPEN_ROSA_HEADERS,
+        headers={
+            'User': request.user.username,
+            'Date': str(now()),
+            **OPEN_ROSA_HEADERS
+        },
     )
 
 
@@ -236,7 +241,11 @@ def xform_get_download(request, pk, *args, **kwargs):
     return Response(
         data=xform.xml_data,
         content_type='text/xml',
-        headers=OPEN_ROSA_HEADERS,
+        headers={
+            'User': request.user.username,
+            'Date': str(now()),
+            **OPEN_ROSA_HEADERS
+        },
     )
 
 
@@ -279,7 +288,11 @@ def xform_get_manifest(request, pk, *args, **kwargs):
         },
         template_name='xformManifest.xml',
         content_type='text/xml',
-        headers=OPEN_ROSA_HEADERS,
+        headers={
+            'User': request.user.username,
+            'Date': str(now()),
+            **OPEN_ROSA_HEADERS
+        },
     )
 
 
@@ -367,7 +380,11 @@ def xform_submission(request, *args, **kwargs):
             status=status,
             template_name='openRosaResponse.xml',
             content_type='text/xml',
-            headers=OPEN_ROSA_HEADERS,
+            headers={
+                'User': request.user.username,
+                'Date': str(now()),
+                **OPEN_ROSA_HEADERS
+            },
         )
 
     # first of all check if the connection is possible
@@ -382,6 +399,7 @@ def xform_submission(request, *args, **kwargs):
         response = HttpResponse(status=status.HTTP_204_NO_CONTENT)
         for k, v in OPEN_ROSA_HEADERS.items():
             response[k] = v
+        response['Date'] = str(now())
         return response
 
     if not request.FILES or XML_SUBMISSION_PARAM not in request.FILES:

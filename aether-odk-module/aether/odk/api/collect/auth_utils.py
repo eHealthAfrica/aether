@@ -33,14 +33,13 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import AuthenticationFailed
 
 from aether.sdk.auth.utils import parse_username, unparse_username
-from aether.sdk.multitenancy.utils import get_current_realm
 from aether.odk.api.collect.models import DigestCounter, DigestPartial
 
 # https://docs.opendatakit.org/openrosa-authentication/
 
 COLLECT_ALGORITHM = 'MD5'
 COLLECT_QOP = 'auth'  # Quality Of Protection
-COLLECT_REALM = 'collect'
+COLLECT_REALM = 'collect@aether.odk'
 COLLECT_NONCE_LIFESPAN = datetime.timedelta(days=1)
 
 
@@ -81,11 +80,10 @@ def get_www_authenticate_header(request):
     Builds the WWW-Authenticate response header
     '''
 
-    realm = _get_digest_realm(request)
     opaque = ''.join([random.choice('0123456789ABCDEF') for x in range(32)])
-    nonce = _create_nonce(now().timestamp(), realm)
+    nonce = _create_nonce(now().timestamp(), COLLECT_REALM)
 
-    return _WWW_AUTHENTICATE.format(nonce=nonce, opaque=opaque, realm=realm)
+    return _WWW_AUTHENTICATE.format(nonce=nonce, opaque=opaque, realm=COLLECT_REALM)
 
 
 def save_partial_digest(request, user, raw_password):
@@ -93,15 +91,13 @@ def save_partial_digest(request, user, raw_password):
     Saves the partial digest for the parsed/unparsed username
     '''
     def _save(username):
-        ha1 = _create_HA1(username, realm, raw_password)
+        ha1 = _create_HA1(username, COLLECT_REALM, raw_password)
         try:
             partial = DigestPartial.objects.get(user=user, username=username)
             partial.digest = ha1
             partial.save()
         except ObjectDoesNotExist:
             DigestPartial.objects.create(user=user, username=username, digest=ha1)
-
-    realm = _get_digest_realm(request)
 
     _save(parse_username(request, user.username))
     _save(unparse_username(request, user.username))
@@ -126,8 +122,6 @@ def parse_authorization_header(challenge):
 def check_authorization_header(request):
     auth_header = request.META['HTTP_AUTHORIZATION']
     challenge = parse_authorization_header(auth_header)
-    realm = _get_digest_realm(request)
-
     lifespan = now() - COLLECT_NONCE_LIFESPAN
 
     # remove old counters before checking them
@@ -144,9 +138,9 @@ def check_authorization_header(request):
     timestamp, __ = challenge['nonce'].split(':', 1)
     expected_values = {
         'algorithm': COLLECT_ALGORITHM,
-        'nonce': _create_nonce(timestamp, realm),
+        'nonce': _create_nonce(timestamp, COLLECT_REALM),
         'qop': COLLECT_QOP,
-        'realm': realm,
+        'realm': COLLECT_REALM,
     }
     for field in ('algorithm', 'nonce', 'qop', 'realm'):
         if challenge[field] != expected_values[field]:
@@ -209,20 +203,6 @@ def check_authorization_header(request):
 
 ################################################################################
 # Helpers
-
-def _get_digest_realm(request):
-    '''
-    A string to be displayed to users so they know which username and
-    password to use.
-
-    Compliant with RFC 7616 (https://tools.ietf.org/html/rfc7616#section-3.3).
-    '''
-
-    url_info = urlparse(request.build_absolute_uri())
-    realm = get_current_realm(request) or COLLECT_REALM
-
-    return f'{realm}@{url_info.hostname}'
-
 
 def _generate_response(request, ha1, challenge):
     '''
