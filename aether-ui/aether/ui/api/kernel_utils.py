@@ -19,7 +19,7 @@
 from aether.sdk.health.utils import (
     check_external_app,
     get_external_app_url,
-    get_external_app_token,
+    get_external_app_auth_header,
 )
 
 EXTERNAL_APP_KERNEL = 'aether-kernel'
@@ -34,4 +34,4 @@ def get_kernel_url(request=None):
 
 
 def get_kernel_auth_header():
-    return {'Authorization': f'Token {get_external_app_token(EXTERNAL_APP_KERNEL)}'}
+    return get_external_app_auth_header(EXTERNAL_APP_KERNEL)
