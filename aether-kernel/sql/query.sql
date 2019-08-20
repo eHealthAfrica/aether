@@ -42,7 +42,7 @@ CREATE VIEW kernel_schema_vw AS
 
     mt.realm                          AS realm,
 
-    s.family == sd.project_id::text   AS is_identity
+    (s.family = sd.project_id::text)  AS is_identity
 
   FROM kernel_schemadecorator         AS sd
   INNER JOIN kernel_schema            AS s
