@@ -89,10 +89,12 @@ function pip_freeze_container {
 }
 
 # kernel readonly user (used by Aether Producer)
+# Usage:    create_readonly_user <db-user-name> <db-user-password>
 function create_readonly_user {
     docker-compose up -d db
     docker-compose run --rm --no-deps kernel setup
-    docker-compose run --rm --no-deps kernel eval python /code/sql/create_readonly_user.py
+    docker-compose run --rm --no-deps kernel eval \
+        python3 /code/sql/create_readonly_user.py "$1" "$2"
     docker-compose kill
 }
 

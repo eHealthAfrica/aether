@@ -68,20 +68,7 @@ class ProducerManager(object):
     # Spawns a TopicManager for each schema type in Kernel
     # TopicManager registers own eventloop greenlet (update_kafka) with ProducerManager
 
-    SCHEMAS_STR = '''
-            SELECT
-                ps.id as schemadecorator_id,
-                ps.name as schemadecorator_name,
-                ps.modified as modified,
-                s.name as schema_name,
-                s.id as schema_id,
-                s.definition as schema_definition,
-                s.revision as schema_revision,
-                mt.realm as realm
-            FROM kernel_schemadecorator ps
-            inner join kernel_schema s on ps.schema_id = s.id
-            inner join multitenancy_mtinstance mt on ps.project_id = mt.instance_id
-            ORDER BY s.modified ASC'''
+    SCHEMAS_STR = 'SELECT * FROM kernel_schema_vw'
 
     def __init__(self, settings):
         self.settings = settings
@@ -371,53 +358,32 @@ class TopicManager(object):
 
     # Changes detection query
     NEW_STR = '''
-        SELECT
-            e.id,
-            e.modified
-        FROM kernel_entity e
-        inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
-        inner join kernel_schema s on sd.schema_id = s.id
-        inner join multitenancy_mtinstance mt on sd.project_id = mt.instance_id
-        WHERE e.modified > {modified}
-        AND s.name = {schema_name}
-        AND mt.realm = {realm}
-        LIMIT 1; '''
+        SELECT id, modified
+        FROM kernel_entity_vw
+        WHERE modified    > {modified}
+          AND schema_name = {schema_name}
+          AND realm       = {realm}
+        LIMIT 1;
+    '''
 
     # Count how many unique (controlled by kernel) messages should currently be in this topic
     COUNT_STR = '''
-            SELECT
-                count(e.id)
-            FROM kernel_entity e
-            inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
-            inner join kernel_schema s on sd.schema_id = s.id
-            inner join multitenancy_mtinstance mt on sd.project_id = mt.instance_id
-            WHERE s.name = {schema_name}
-            AND mt.realm = {realm};
+        SELECT COUNT(id)
+        FROM kernel_entity_vw
+        WHERE schema_name = {schema_name}
+          AND realm       = {realm};
     '''
 
     # Changes pull query
     QUERY_STR = '''
-            SELECT
-                e.id,
-                e.revision,
-                e.payload,
-                e.modified,
-                e.status,
-                sd.id as schema_decorator_id,
-                sd.name as schema_decorator_name,
-                s.name as schema_name,
-                s.id as schema_id,
-                s.revision as schema_revision
-            FROM kernel_entity e
-            inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
-            inner join kernel_schema s on sd.schema_id = s.id
-            inner join multitenancy_mtinstance mt on sd.project_id = mt.instance_id
-            WHERE e.modified > {modified}
-            AND mt.realm = {realm}
-            AND s.name = {schema_name}
-            ORDER BY e.modified ASC
-            LIMIT {limit};
-        '''
+        SELECT *
+        FROM kernel_entity_vw
+        WHERE modified    > {modified}
+          AND schema_name = {schema_name}
+          AND realm       = {realm}
+        ORDER BY modified ASC
+        LIMIT {limit};
+    '''
 
     def __init__(self, server_handler, schema, realm):
         self.context = server_handler
