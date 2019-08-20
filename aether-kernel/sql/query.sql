@@ -32,20 +32,22 @@ CREATE VIEW kernel_schema_vw AS
   SELECT
     GREATEST(sd.modified, s.modified) AS modified,
 
-    sd.id        AS schemadecorator_id,
-    sd.name      AS schemadecorator_name,
+    sd.id                             AS schemadecorator_id,
+    sd.name                           AS schemadecorator_name,
 
-    s.id         AS schema_id,
-    s.name       AS schema_name,
-    s.definition AS schema_definition,
-    s.revision   AS schema_revision,
+    s.id                              AS schema_id,
+    s.name                            AS schema_name,
+    s.definition                      AS schema_definition,
+    s.revision                        AS schema_revision,
 
-    mt.realm     AS realm
+    mt.realm                          AS realm,
 
-  FROM kernel_schemadecorator        AS sd
-  INNER JOIN kernel_schema           AS s
+    s.family == sd.project_id::text   AS is_identity
+
+  FROM kernel_schemadecorator         AS sd
+  INNER JOIN kernel_schema            AS s
           ON sd.schema_id = s.id
-  INNER JOIN multitenancy_mtinstance AS mt
+  INNER JOIN multitenancy_mtinstance  AS mt
           ON sd.project_id = mt.instance_id
   ORDER BY 1 ASC
   ;
