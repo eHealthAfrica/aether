@@ -77,8 +77,11 @@ function kill_test {
 }
 
 # TEST environment
+source .env
+
 DC_TEST="docker-compose -f docker-compose-test.yml"
-DC_KERNEL_RUN="$DC_TEST run --rm kernel-test"
+DC_RUN="$DC_TEST run --rm"
+DC_KERNEL_RUN="$DC_RUN kernel-test"
 KERNEL_HEALTH_URL="http://kernel-test:9100/health"
 
 BUILD_OPTIONS="${BUILD_OPTIONS:-}"
@@ -89,8 +92,8 @@ kill_test
 
 if [[ $1 == "ui" ]]; then
     build_container ui-assets
-    $DC_TEST run --rm ui-assets-test test
-    $DC_TEST run --rm ui-assets-test build
+    $DC_RUN ui-assets-test test
+    $DC_RUN ui-assets-test build
     echo_message "Tested and built ui assets"
 fi
 
@@ -103,7 +106,7 @@ fi
 if [[ $1 = "integration" ]]; then
     echo_message "Starting Zookeeper and Kafka"
     $DC_TEST up -d zookeeper-test kafka-test
-    $DC_TEST run --rm --no-deps kafka-test dub wait kafka-test 29092 60
+    $DC_RUN --no-deps kafka-test dub wait kafka-test 29092 60
 fi
 
 
@@ -114,10 +117,18 @@ if [[ $1 != "kernel" ]]; then
     build_container kernel
     start_kernel_test
 
+    if [[ $1 = "client" || $1 == "integration" ]]; then
+        echo_message "Creating client user on Kernel"
+        $DC_KERNEL_RUN manage create_user \
+            -u=$CLIENT_USERNAME \
+            -p=$CLIENT_PASSWORD \
+            -r=$CLIENT_REALM
+    fi
+
     # Producer and Integration need readonlyuser to be present
     if [[ $1 = "producer" || $1 == "integration" ]]; then
         echo_message "Creating readonlyuser on Kernel DB"
-        $DC_KERNEL_RUN eval python /code/sql/create_readonly_user.py
+        $DC_KERNEL_RUN eval python3 /code/sql/create_readonly_user.py
 
         if [[ $1 = "integration" ]]; then
             build_container producer
@@ -133,7 +144,7 @@ echo_message "Preparing $1 container"
 build_container $1
 echo_message "$1 ready!"
 start_database_test
-$DC_TEST run --rm "$1"-test test
+$DC_RUN "$1"-test test
 echo_message "$1 tests passed!"
 
 
