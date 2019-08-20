@@ -45,6 +45,7 @@ logger = logging.getLogger(__name__)
 # Create a readonly user with username "{role_id}" if none exists.
 # Grant read permission for relevant tables.
 
+
 def main(ro_user, ro_password):
     dbname = os.environ['DB_NAME']
     host = os.environ['PGHOST']
