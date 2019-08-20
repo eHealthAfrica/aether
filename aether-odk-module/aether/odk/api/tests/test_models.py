@@ -171,3 +171,30 @@ class ModelsTests(CustomTestCase):
         self.assertIsNone(project.get_realm())
         self.assertIsNone(xform.get_realm())
         self.assertIsNone(media_file.get_realm())
+
+    def test__xform__uniqueness(self):
+        project = Project.objects.create()
+        XForm.objects.create(
+            project=project,
+            xml_data=self.samples['xform']['xml-ok'],
+        )
+
+        # duplicated form_id and version
+        with self.assertRaises(IntegrityError) as ie:
+            XForm.objects.create(
+                project=project,
+                xml_data=self.samples['xform']['xml-ok'],
+            )
+
+        self.assertIsNotNone(ie)
+        self.assertIn('duplicate key value violates unique constraint',
+                      str(ie.exception), ie)
+
+        # it works with another version
+        XForm.objects.create(
+            project=project,
+            xml_data=self.samples['xform']['xml-ok'].replace(
+                '<Mapping id="xform-id-test" version="v1">',
+                '<Mapping id="xform-id-test" version="v2">'
+            ),
+        )

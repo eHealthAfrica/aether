@@ -345,9 +345,16 @@ class CustomTestCase(TransactionTestCase):
                             surveyor=None,
                             xml_data=None,
                             with_media=False,
-                            with_version=True):
+                            with_version=True,
+                            version_number=None):
         if not xml_data:
-            if with_version:
+            if version_number:
+                xml_data = self.samples['xform']['xml-ok-noversion']
+                xml_data = xml_data.replace(
+                    '<Mapping id="xform-id-test">',
+                    f'<Mapping id="xform-id-test" version="{version_number}">'
+                )
+            elif with_version:
                 xml_data = self.samples['xform']['xml-ok']
             else:
                 xml_data = self.samples['xform']['xml-ok-noversion']
