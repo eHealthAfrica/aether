@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -30,6 +32,8 @@ access to all environment variables available in that context.
 import os
 import logging
 import psycopg2
+import sys
+
 from psycopg2 import sql
 
 DEBUG = os.environ.get('DEBUG')
@@ -40,46 +44,9 @@ logger = logging.getLogger(__name__)
 
 # Create a readonly user with username "{role_id}" if none exists.
 # Grant read permission for relevant tables.
-CREATE_READONLY_USER = '''
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = {role_literal})
-  THEN
-      CREATE ROLE {role_id} WITH LOGIN ENCRYPTED PASSWORD {password}
-      INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
-  END IF;
-END
-$$ LANGUAGE plpgsql;
-
-REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role_id} CASCADE;
-
-GRANT CONNECT ON DATABASE {database} TO {role_id};
-GRANT USAGE ON SCHEMA public TO {role_id};
-GRANT SELECT ON kernel_entity TO {role_id};
-GRANT SELECT ON kernel_mapping TO {role_id};
-GRANT SELECT ON kernel_schemadecorator TO {role_id};
-GRANT SELECT ON kernel_schema TO {role_id};
-GRANT SELECT ON kernel_project TO {role_id};
-
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'multitenancy_mtinstance')
-  THEN
-      DROP VIEW IF EXISTS multitenancy_mtinstance;
-      CREATE VIEW multitenancy_mtinstance AS
-            SELECT '-'    AS realm,
-                    p.id  AS instance_id
-            FROM kernel_project AS p;
-  END IF;
-END
-$$ LANGUAGE plpgsql;
-
-GRANT SELECT ON multitenancy_mtinstance TO {role_id};
-
-'''
 
 
-def main():
+def main(ro_user, ro_password):
     dbname = os.environ['DB_NAME']
     host = os.environ['PGHOST']
     port = os.environ['PGPORT']
@@ -100,10 +67,10 @@ def main():
         'user': root_user,
         'password': root_password,
     }
+    with open('/code/sql/query.sql', 'r') as fp:
+        CREATE_READONLY_USER = fp.read()
 
     with psycopg2.connect(**postgres_credentials) as conn:
-        ro_user = os.environ['KERNEL_READONLY_DB_USERNAME']
-        ro_password = os.environ['KERNEL_READONLY_DB_PASSWORD']
         cursor = conn.cursor()
         query = sql.SQL(CREATE_READONLY_USER).format(
             database=sql.Identifier(dbname),
@@ -115,4 +82,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        args = sys.argv[1:]
+        main(*args)
+    except Exception as e:
+        logger.error(str(e))
+        sys.exit(1)
