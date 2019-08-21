@@ -16,13 +16,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf import settings
-from django.urls import include, path
+from django.urls import path
 
-from aether.sdk.conf.urls import generate_urlpatterns
+from . import views
 
+urlpatterns = [
+    path(route='formList',
+         view=views.xform_list,
+         name='xform-list-xml'),
 
-urlpatterns = generate_urlpatterns(token=True, app=[
-    path('', include('aether.odk.api.urls')),
-    path(settings.ODK_COLLECT_ENDPOINT, include('aether.odk.api.collect.urls')),
-])
+    path(route='forms/<slug:pk>/form.xml',
+         view=views.xform_get_download,
+         name='xform-get-download'),
+
+    path(route='forms/<slug:pk>/manifest.xml',
+         view=views.xform_get_manifest,
+         name='xform-get-manifest'),
+
+    path(route='media-file/<slug:pk>',
+         view=views.media_file_get_content,
+         name='media-file-get-content'),
+
+    path(route='submission',
+         view=views.xform_submission,
+         name='xform-submission'),
+]

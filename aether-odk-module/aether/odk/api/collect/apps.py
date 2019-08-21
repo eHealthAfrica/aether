@@ -16,13 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf import settings
-from django.urls import include, path
-
-from aether.sdk.conf.urls import generate_urlpatterns
+from django.apps import AppConfig
+from django.utils.translation import gettext_lazy as _
 
 
-urlpatterns = generate_urlpatterns(token=True, app=[
-    path('', include('aether.odk.api.urls')),
-    path(settings.ODK_COLLECT_ENDPOINT, include('aether.odk.api.collect.urls')),
-])
+class Config(AppConfig):
+
+    name = 'aether.odk.api.collect'
+    verbose_name = _('Aether ODK Collect')

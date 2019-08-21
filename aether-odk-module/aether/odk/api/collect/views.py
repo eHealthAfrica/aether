@@ -23,14 +23,14 @@ https://docs.opendatakit.org/
 '''
 
 import datetime
-import logging
 import json
-from urllib.parse import urlparse
+import logging
 
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
@@ -45,7 +45,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from aether.sdk.auth.authentication import GatewayBasicAuthentication
 from aether.sdk.auth.utils import unparse_username
 from aether.sdk.multitenancy.utils import (
     add_instance_realm_in_headers,
@@ -53,8 +52,8 @@ from aether.sdk.multitenancy.utils import (
 )
 from aether.sdk.utils import request as exec_request
 
-from .models import XForm, MediaFile
-from .kernel_utils import (
+from ..models import XForm, MediaFile
+from ..kernel_utils import (
     check_kernel_connection,
     get_attachments_url,
     get_kernel_auth_header,
@@ -62,8 +61,9 @@ from .kernel_utils import (
     propagate_kernel_artefacts,
     KernelPropagationError,
 )
-from .surveyors_utils import is_surveyor, is_granted_surveyor
-from .xform_utils import get_instance_data_from_xml, parse_submission
+from ..surveyors_utils import is_surveyor, is_granted_surveyor
+from ..xform_utils import get_instance_data_from_xml, parse_submission
+from .authentication import CollectAuthentication
 
 
 OPEN_ROSA_HEADERS = {'X-OpenRosa-Version': '1.0'}
@@ -148,20 +148,9 @@ def _get_host(request, current_path):
     #
     # If our path is:               http://my-host:8080/my/nested/path/any-odk-url
     # and our current path is:      /any-odk-url
-    # the result must be:           http://my-host:8443/my/nested/path
-    #
-    # With this we can build the final URLs in the templates and ODK Collect
-    # does not complain with its security requirements: https scheme or 8443 port
+    # the result must be:           http://my-host:8080/my/nested/path
 
-    host = request.build_absolute_uri(request.path).replace(current_path, '')
-
-    # If the request is not HTTPS, the host must include port 8443
-    # or ODK Collect will not be able to get the resource
-    url_info = urlparse(host)
-    if url_info.scheme != 'https' and url_info.port != 8443:
-        host = f'http://{url_info.hostname}:8443{url_info.path}'
-
-    return host
+    return request.build_absolute_uri(request.path).replace(current_path, '')
 
 
 def _get_instance(request, model, pk):
@@ -201,7 +190,7 @@ class IsAuthenticatedAndSurveyor(IsAuthenticated):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_list(request, *args, **kwargs):
     '''
@@ -222,13 +211,17 @@ def xform_list(request, *args, **kwargs):
         },
         template_name='xformList.xml',
         content_type='text/xml',
-        headers=OPEN_ROSA_HEADERS,
+        headers={
+            'User': request.user.username,
+            'Date': str(now()),
+            **OPEN_ROSA_HEADERS
+        },
     )
 
 
 @api_view(['GET'])
 @renderer_classes([StaticHTMLRenderer])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_download(request, pk, *args, **kwargs):
     '''
@@ -248,12 +241,16 @@ def xform_get_download(request, pk, *args, **kwargs):
     return Response(
         data=xform.xml_data,
         content_type='text/xml',
-        headers=OPEN_ROSA_HEADERS,
+        headers={
+            'User': request.user.username,
+            'Date': str(now()),
+            **OPEN_ROSA_HEADERS
+        },
     )
 
 
 @api_view(['GET'])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def media_file_get_content(request, pk, *args, **kwargs):
     '''
@@ -267,7 +264,7 @@ def media_file_get_content(request, pk, *args, **kwargs):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_get_manifest(request, pk, *args, **kwargs):
     '''
@@ -291,13 +288,17 @@ def xform_get_manifest(request, pk, *args, **kwargs):
         },
         template_name='xformManifest.xml',
         content_type='text/xml',
-        headers=OPEN_ROSA_HEADERS,
+        headers={
+            'User': request.user.username,
+            'Date': str(now()),
+            **OPEN_ROSA_HEADERS
+        },
     )
 
 
 @api_view(['POST', 'HEAD'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([GatewayBasicAuthentication])
+@authentication_classes([CollectAuthentication])
 @permission_classes([IsAuthenticatedAndSurveyor])
 def xform_submission(request, *args, **kwargs):
     '''
@@ -379,7 +380,11 @@ def xform_submission(request, *args, **kwargs):
             status=status,
             template_name='openRosaResponse.xml',
             content_type='text/xml',
-            headers=OPEN_ROSA_HEADERS,
+            headers={
+                'User': request.user.username,
+                'Date': str(now()),
+                **OPEN_ROSA_HEADERS
+            },
         )
 
     # first of all check if the connection is possible
@@ -394,6 +399,7 @@ def xform_submission(request, *args, **kwargs):
         response = HttpResponse(status=status.HTTP_204_NO_CONTENT)
         for k, v in OPEN_ROSA_HEADERS.items():
             response[k] = v
+        response['Date'] = str(now())
         return response
 
     if not request.FILES or XML_SUBMISSION_PARAM not in request.FILES:
