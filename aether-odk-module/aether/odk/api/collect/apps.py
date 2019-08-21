@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-#
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,22 +15,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeo pipefail
 
-function check_variable {
-    if [ -z "$1" ];
-    then
-        echo "Missing $2 in Aether Kernel!"
-        exit 1
-    fi
-}
+from django.apps import AppConfig
+from django.utils.translation import gettext_lazy as _
 
-# Admin user
-check_variable "$ADMIN_USERNAME" "Admin user username (ADMIN_USERNAME)"
-check_variable "$ADMIN_PASSWORD" "Admin user password (ADMIN_PASSWORD)"
-check_variable "$ADMIN_TOKEN"    "Admin user authorization token (ADMIN_TOKEN)"
 
-# App requirements
-check_variable "$DB_NAME"         "Database name (DB_NAME)"
-check_variable "$WEB_SERVER_PORT" "Web server port (WEB_SERVER_PORT)"
+class Config(AppConfig):
+
+    name = 'aether.odk.api.collect'
+    verbose_name = _('Aether ODK Collect')

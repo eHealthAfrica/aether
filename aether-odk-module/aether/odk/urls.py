@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.urls import include, path
 
 from aether.sdk.conf.urls import generate_urlpatterns
@@ -23,4 +24,5 @@ from aether.sdk.conf.urls import generate_urlpatterns
 
 urlpatterns = generate_urlpatterns(token=True, app=[
     path('', include('aether.odk.api.urls')),
+    path(settings.ODK_COLLECT_ENDPOINT, include('aether.odk.api.collect.urls')),
 ])

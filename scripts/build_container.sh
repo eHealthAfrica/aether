@@ -21,6 +21,7 @@
 
 set -Eeuo pipefail
 
+source .env
 source ./scripts/_lib.sh
 
 create_credentials
@@ -37,7 +38,9 @@ fi
 build_container $1
 
 if [[ $1 == "kernel" ]]; then
-    create_readonly_user
+    create_readonly_user \
+        "$KERNEL_READONLY_DB_USERNAME" \
+        "$KERNEL_READONLY_DB_PASSWORD"
 fi
 
 ./scripts/clean_all.sh
