@@ -99,27 +99,27 @@
     overflow-wrap: break-word;
   }
 
-  .name {
-    font-weight: 600;
-  }
-
-  .type {
-    font-style: italic;
-    color: $grey;
-  }
-
-  .properties {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  li {
-    padding: .2rem $indent;
+  .field {
+    padding: .1rem 1rem;
+    border-bottom: 1px solid $white;
   }
 
   i {
-    margin-right: .5rem;
+    margin-right: .4em;
+    color: $text-color;
+    font-size: .8em;
+  }
+
+  .name {
+    font-weight: 600;
+    color: $text-color;
+  }
+
+  .type {
+    margin-left: .5rem;
+    font-style: italic;
+    font-size: $font-size-xs;
+    color: $grey;
   }
 }
 
