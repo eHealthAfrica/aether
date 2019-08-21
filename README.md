@@ -390,7 +390,7 @@ This will start:
 
 - **Aether Kernel** on `http://aether.local/kernel/`.
 
-- **Aether ODK Module** on `http://aether.local/odk/` or `http://<your IP address>/odk/`.
+- **Aether ODK Module** on `http://aether.local/odk/`.
 
 - **Aether CouchDB Sync Module** on `http://aether.local/sync/`.
 
