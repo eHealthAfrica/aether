@@ -108,7 +108,7 @@ server {
   ...
 ```
 
-You can now configure ODK Collect, using `http://<your IP address>/odk` for the server URL.
+Note that you can use wild cards and RegExps here, e.g. `192.168.178.*`. You can now configure ODK Collect, using `http://<your IP address>/odk` for the server URL.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -390,7 +390,7 @@ This will start:
 
 - **Aether Kernel** on `http://aether.local/kernel/`.
 
-- **Aether ODK Module** on `http://aether.local/odk/` or `http://aether.local:8443/odk/`.
+- **Aether ODK Module** on `http://aether.local/odk/` or `http://<your IP address>/odk/`.
 
 - **Aether CouchDB Sync Module** on `http://aether.local/sync/`.
 
