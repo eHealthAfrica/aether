@@ -83,9 +83,10 @@ services:
       service: client
     environment:
       KERNEL_URL: http://kernel-test:9100
-      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-      TEST_REALM: test
+      KERNEL_USERNAME: ${CLIENT_USERNAME}
+      KERNEL_PASSWORD: ${CLIENT_PASSWORD}
+      KERNEL_REALM: ${CLIENT_REALM}
+      KERNEL_REALM_HEADER: ${REALM_COOKIE}
     command: test
 
 
@@ -235,14 +236,14 @@ services:
     build: ./test-aether-integration-module
     environment:
       KERNEL_URL: http://kernel-test:9100
-      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      KERNEL_USERNAME: ${CLIENT_USERNAME}
+      KERNEL_PASSWORD: ${CLIENT_PASSWORD}
+      KERNEL_REALM: ${CLIENT_REALM}
+      KERNEL_REALM_HEADER: ${REALM_COOKIE}
 
       PRODUCER_URL: http://producer-test:9005
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
-
-      TEST_REALM: test
     volumes:
       - ./test-aether-integration-module:/code
     command: test

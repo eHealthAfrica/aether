@@ -248,7 +248,11 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
         self.update_hash(increase_version=version is None)
 
-        new_avro_schema = parse_xform_to_avro_schema(self.xml_data, default_version=self.version)
+        new_avro_schema = parse_xform_to_avro_schema(
+            self.xml_data,
+            self.project.name,
+            default_version=self.version
+        )
         if new_avro_schema != self.avro_schema:
             self.avro_schema = new_avro_schema
             # set a new `kernel_id` value, this will generate
@@ -282,6 +286,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         ordering = ['title', 'form_id', 'version']
         verbose_name = _('xform')
         verbose_name_plural = _('xforms')
+        unique_together = ['project', 'form_id', 'version']
 
 
 def __media_path__(instance, filename):

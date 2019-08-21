@@ -42,7 +42,8 @@ SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
 
 
 SEED_TYPE = 'CurrentStock'
-REALM = os.environ['TEST_REALM']
+# realm is only required if Kernel is MultiTenant
+REALM = os.environ.get('KERNEL_REALM', '-')
 KAFKA_SEED_TYPE = f'{REALM}.{SEED_TYPE}'
 
 PRODUCER_CREDS = [
