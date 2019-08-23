@@ -21,7 +21,6 @@ import time
 import concurrent.futures
 import threading
 import logging
-import datetime
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from .utils import (
@@ -36,7 +35,7 @@ from .utils import (
     MAX_WORKERS
 )
 
-from .entity_extraction import (
+from .entity_extractor import (
     extract_create_entities,
     ENTITY_EXTRACTION_ERRORS,
     ENTITY_EXTRACTION_ENRICHMENT,
@@ -44,7 +43,7 @@ from .entity_extraction import (
     SUBMISSION_PAYLOAD_FIELD,
 )
 
-PUSH_TO_KERNEL_INTERVAL = 0.1
+PUSH_TO_KERNEL_INTERVAL = 0.05
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
 
@@ -87,10 +86,6 @@ class ExtractionManager():
             ))
 
     def add_to_queue(self, submission):
-        if not self.start_time:
-            self.start_time = datetime.datetime.now()
-            print('Extraction Start Time: ', self.start_time)
-
         if submission:
             self.SUBMISSION_QUEUE.appendleft(submission)
             if not self.is_extracting:
@@ -159,6 +154,7 @@ class ExtractionManager():
                     mapping_definition=mapping['definition'],
                     schemas=schemas,
                 )
+
                 for entity in entities:
                     schemadecorator_name = entity.schemadecorator_name
                     schemadecorator = schema_decorators[schemadecorator_name]
@@ -170,7 +166,6 @@ class ExtractionManager():
                         'mapping': mapping_id,
                         'mapping_revision': mapping['revision'],
                     })
-
                 if ENTITY_EXTRACTION_ENRICHMENT in submission_data:
                     current_submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ENRICHMENT] = \
                         submission_data[ENTITY_EXTRACTION_ENRICHMENT]
@@ -180,6 +175,7 @@ class ExtractionManager():
                     submission_data,
                     e
                 )
+
         if ENTITY_EXTRACTION_ERRORS not in current_submission:
             current_submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ERRORS] = []
             current_submission[SUBMISSION_EXTRACTION_FLAG] = True
@@ -255,8 +251,4 @@ class ExtractionManager():
 
             time.sleep(PUSH_TO_KERNEL_INTERVAL)
         self.is_pushing_to_kernel = False
-        self.end_time = datetime.datetime.now()
-        print('Extraction End Time: ', self.end_time)
-        print('Duration: ', self.end_time - self.start_time)
-        self.start_time = None
         logger.debug('Pushed all entities and submissions to kernel')

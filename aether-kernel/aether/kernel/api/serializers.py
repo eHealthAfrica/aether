@@ -20,6 +20,7 @@ import concurrent
 from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
+from django.conf import settings
 
 from aether.sdk.drf.serializers import (
     DynamicFieldsModelSerializer,
@@ -303,9 +304,10 @@ class EntityListSerializer(serializers.ListSerializer):
             raise(serializers.ValidationError(errors))
         # bulk database operation
         created_entities = models.Entity.objects.bulk_create(entities)
-        # send created entities to redis
-        for entity in entities:
-            utils.send_model_item_to_redis(entity)
+        if settings.WRITE_ENTITIES_TO_REDIS:
+            # send created entities to redis
+            for entity in entities:
+                utils.send_model_item_to_redis(entity)
         return created_entities
 
 

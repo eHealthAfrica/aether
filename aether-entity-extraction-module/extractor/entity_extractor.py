@@ -41,9 +41,9 @@ import json
 import logging
 import re
 import uuid
+import gettext
 
 from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext as _
 from django.conf import settings
 
 from eha_jsonpath import parse as eha_jsonpath_parse
@@ -53,6 +53,8 @@ from .utils import object_contains
 
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
+
+_ = gettext.gettext
 
 
 Entity = collections.namedtuple(
@@ -614,7 +616,6 @@ def extract_entities(requirements, response_data, entity_definitions, schemas):
 
 
 def extract_create_entities(submission_payload, mapping_definition, schemas):
-
     # Get entity definitions
     entity_defs = get_entity_definitions(mapping_definition, schemas)
 

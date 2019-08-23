@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-containers=( kernel client ui odk couchdb-sync producer integration )
+containers=( kernel exm client ui odk couchdb-sync producer integration )
 
 for container in "${containers[@]}"
 do

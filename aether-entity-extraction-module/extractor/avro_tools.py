@@ -24,10 +24,10 @@ for details.
 
 import random
 import re
+import gettext
 
 from collections import namedtuple
 from copy import deepcopy
-from django.utils.translation import ugettext as _
 from os import urandom
 from string import ascii_letters
 from uuid import uuid4
@@ -87,6 +87,8 @@ PRIMITIVE_TYPES = [
 ARRAY_PATH = '#'
 MAP_PATH = '*'
 UNION_PATH = '?'
+
+_ = gettext.gettext
 
 
 def random_string():

@@ -47,6 +47,14 @@ function wait_for_db {
     done
 }
 
+function start_exm_test {
+    build_container exm
+    echo_message "Starting Entity Extractor"
+    $DC_TEST up -d redis-test
+    $DC_TEST up -d exm-test
+    echo_message "extractor ready!"
+}
+
 function start_kernel_test {
     echo_message "Starting kernel"
     wait_for_db
@@ -82,12 +90,6 @@ if [[ $1 == "ui" ]]; then
     echo_message "Tested and built ui assets"
 fi
 
-if [[ $1 == "kernel" ]]; then
-    $DC_TEST up -d redis-test
-    $DC_TEST up -d exm-test
-fi
-
-
 echo_message "Starting databases + Minio Storage server"
 $DC_TEST up -d db-test minio-test
 if [[ $1 = "couchdb-sync" ]]; then
@@ -98,13 +100,17 @@ if [[ $1 = "integration" ]]; then
     $DC_TEST up -d zookeeper-test kafka-test
 fi
 
+if [[ $1 == "kernel" ]]; then
+    start_exm_test
+fi
 
-if [[ $1 != "kernel" ]]; then
+if [[ $1 != "kernel" && $1 != "exm" ]]; then
     # rename kernel test database in each case
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")
 
     build_container kernel
     start_kernel_test
+    start_exm_test
 
     # Producer and Integration need readonlyuser to be present
     if [[ $1 = "producer" || $1 == "integration" ]]; then

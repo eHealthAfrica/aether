@@ -46,7 +46,7 @@ KERNEL_ARTEFACT_NAMES = CONSTANTS(
     submissions='submissions',
 )
 
-MAX_WORKERS = 5
+MAX_WORKERS = 10
 
 REDIS_INSTANCE = None
 
@@ -68,7 +68,6 @@ def kernel_data_request(url='', method='get', data=None, headers=None):
     '''
     Handle request calls to the kernel server
     '''
-
     res = request(
         method=method,
         url=f'{settings.KERNEL_URL}/{url}',

@@ -19,6 +19,7 @@
 import json
 from unittest import mock
 import requests
+import time
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, override_settings
@@ -30,6 +31,8 @@ from . import CustomTestCase
 from .. import kernel_utils
 from ..surveyors_utils import is_granted_surveyor
 from ..views_collect import XML_SUBMISSION_PARAM
+
+WAIT_FOR_EXTRACTOR = 1
 
 
 @override_settings(MULTITENANCY=False)
@@ -100,11 +103,12 @@ class PostSubmissionTests(CustomTestCase):
         )
         self.assertTrue(is_granted_surveyor(self.request, self.xform))
         self.assertIsNotNone(self.xform.kernel_id)
-        # propagate in kernel
-        self.assertTrue(kernel_utils.propagate_kernel_artefacts(self.xform))
 
         # check Kernel testing server
         self.assertTrue(kernel_utils.check_kernel_connection())
+        # propagate in kernel
+        self.assertTrue(kernel_utils.propagate_kernel_artefacts(self.xform))
+
         self.KERNEL_HEADERS = kernel_utils.get_kernel_auth_header()
         self.KERNEL_URL = kernel_utils.get_kernel_url()
         self.MAPPINGSET_URL = f'{self.KERNEL_URL}/mappingsets/{str(self.xform.kernel_id)}/'
@@ -122,7 +126,6 @@ class PostSubmissionTests(CustomTestCase):
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
-
         # delete the test objects created in kernel testing server
         requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.SCHEMA_URL, headers=self.KERNEL_HEADERS)
@@ -145,6 +148,7 @@ class PostSubmissionTests(CustomTestCase):
             submission = content['results'][0]
 
             # get entities
+            time.sleep(WAIT_FOR_EXTRACTOR)
             response = requests.get(submission['entities_url'], headers=self.KERNEL_HEADERS)
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
             content = response.json()
@@ -198,7 +202,6 @@ class PostSubmissionTests(CustomTestCase):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
-
         mock_req.assert_called_once_with(
             method='get',
             url=self.SUBMISSIONS_URL,
@@ -328,7 +331,6 @@ class PostSubmissionTests(CustomTestCase):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
-        self.helper_check_submission(entity=entity_payload)
 
     def test__submission__post__with_one_attachment(self):
         with open(self.samples['submission']['file-ok-json'], 'rb') as content:

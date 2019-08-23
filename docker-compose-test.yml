@@ -262,4 +262,6 @@ services:
       LOGGING_LEVEL: DEBUG
       AETHER_KERNEL_URL: http://kernel-test:9100
       REDIS_HOST: redis-test
+      DEFAULT_REALM: 'test'
+
     command: start

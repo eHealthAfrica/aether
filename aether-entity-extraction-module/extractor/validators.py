@@ -19,11 +19,13 @@
 import collections
 import uuid
 import json
+import gettext
 
-from django.utils.translation import gettext_lazy as _
 from spavro.schema import parse
 
 from .avro_tools import AvroValidator, format_validation_error
+
+_ = gettext.gettext
 
 MESSAGE_NOT_UUID = _('Entity id "{}" is not a valid uuid')
 

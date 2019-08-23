@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuo pipefail
+set -Eeo pipefail
 
 function show_help {
     echo """
@@ -56,8 +56,6 @@ function after_test {
     coverage report
     coverage erase
     cat /code/conf/extras/good_job.txt
-    rm -R .pytest_cache
-    rm -rf tests/__pycache__
 }
 
 function test_unit {
@@ -120,7 +118,12 @@ case "$1" in
 
     test )
         test_flake8
-        test_all
+        if [ -z "$2" ]
+        then
+            test_all
+        else
+            pytest "$2"
+        fi
     ;;
 
     help)
