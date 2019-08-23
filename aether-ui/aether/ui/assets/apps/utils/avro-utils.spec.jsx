@@ -23,29 +23,6 @@
 import * as utils from './avro-utils'
 
 describe('AVRO utils', () => {
-  describe('makeOptionalField', () => {
-    it('makes an AVRO field optional', () => {
-      const tests = [
-        [
-          { name: 'a', type: 'string' },
-          { name: 'a', type: ['null', 'string'] }
-        ],
-        [
-          { name: 'b', type: ['null', 'string'] },
-          { name: 'b', type: ['null', 'string'] }
-        ],
-        [
-          { name: 'c', type: ['int', 'string'] },
-          { name: 'c', type: ['null', 'int', 'string'] }
-        ]
-      ]
-
-      tests.map(([args, result]) => {
-        expect(utils.makeOptionalField(args)).toEqual(result)
-      })
-    })
-  })
-
   describe('deriveEntityTypes', () => {
     it('derives valid entity types from a schema', () => {
       const schemaName = 'Test'
@@ -202,6 +179,151 @@ describe('AVRO utils', () => {
       }
       const result = utils.generateSchema(input)
       expect(expected).toEqual(result)
+    })
+  })
+
+  describe('isOptionalType', () => {
+    it('should return false if type is not a union', () => {
+      expect(utils.isOptionalType({ type: 'array', items: 'another_type' })).toBeFalsy()
+      expect(utils.isOptionalType({ type: 'record' })).toBeFalsy()
+      expect(utils.isOptionalType({ type: 'map' })).toBeFalsy()
+      expect(utils.isOptionalType('null')).toBeFalsy()
+      expect(utils.isOptionalType({ type: 'null' })).toBeFalsy()
+    })
+
+    it('should return true only if type is a union of at least two elements, one of them "null" and another not', () => {
+      expect(utils.isOptionalType(['boolean', 'int'])).toBeFalsy()
+      expect(utils.isOptionalType(['float', { type: 'enum' }])).toBeFalsy()
+      expect(utils.isOptionalType(['string', 'int', { type: 'record' }])).toBeFalsy()
+      expect(utils.isOptionalType(['null', { type: 'null' }])).toBeFalsy()
+
+      expect(utils.isOptionalType(['null', 'int'])).toBeTruthy()
+      expect(utils.isOptionalType(['null', { type: 'enum' }])).toBeTruthy()
+      expect(utils.isOptionalType(['null', 'int', { type: 'record' }])).toBeTruthy()
+    })
+  })
+
+  describe('makeOptionalField', () => {
+    it('makes an AVRO field optional', () => {
+      const tests = [
+        [
+          { name: 'id', type: 'string' },
+          { name: 'id', type: 'string' }
+        ],
+        [
+          { name: 'a', type: 'string' },
+          { name: 'a', type: ['null', 'string'] }
+        ],
+        [
+          { name: 'b', type: ['null', 'string'] },
+          { name: 'b', type: ['null', 'string'] }
+        ],
+        [
+          { name: 'c', type: ['int', 'string'] },
+          { name: 'c', type: ['null', 'int', 'string'] }
+        ]
+      ]
+
+      tests.map(([args, result]) => {
+        expect(utils.makeOptionalField(args)).toEqual(result)
+      })
+    })
+  })
+
+  describe('isPrimitive', () => {
+    it('should flag basic primitives as primitives', () => {
+      expect(utils.isPrimitive('null')).toBeTruthy()
+      expect(utils.isPrimitive('boolean')).toBeTruthy()
+      expect(utils.isPrimitive('int')).toBeTruthy()
+      expect(utils.isPrimitive('long')).toBeTruthy()
+      expect(utils.isPrimitive('float')).toBeTruthy()
+      expect(utils.isPrimitive('double')).toBeTruthy()
+      expect(utils.isPrimitive('bytes')).toBeTruthy()
+      expect(utils.isPrimitive('string')).toBeTruthy()
+      expect(utils.isPrimitive('enum')).toBeTruthy()
+      expect(utils.isPrimitive('fixed')).toBeTruthy()
+
+      expect(utils.isPrimitive({ type: 'null' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'boolean' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'int' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'long' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'float' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'double' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'bytes' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'string' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'enum' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'fixed' })).toBeTruthy()
+    })
+
+    it('should detect complex types', () => {
+      expect(utils.isPrimitive({ type: 'array', items: 'another_type' })).toBeFalsy()
+      expect(utils.isPrimitive({ type: 'record' })).toBeFalsy()
+      expect(utils.isPrimitive({ type: 'map' })).toBeFalsy()
+    })
+
+    it('should flag as primitive certain complex types', () => {
+      expect(utils.isPrimitive(['null', 'int'])).toBeTruthy()
+      expect(utils.isPrimitive(['null', 'int', 'string'])).toBeTruthy()
+      expect(utils.isPrimitive(['null', { type: 'enum' }])).toBeTruthy()
+      expect(utils.isPrimitive(['null', 'int', { type: 'record' }])).toBeFalsy()
+
+      expect(utils.isPrimitive({ type: 'array', items: 'long' })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'array', items: ['null', 'boolean', 'long'] })).toBeTruthy()
+      expect(utils.isPrimitive({ type: 'array', items: { type: 'map' } })).toBeFalsy()
+    })
+  })
+
+  describe('typeToString', () => {
+    it('should keep basic types', () => {
+      expect(utils.typeToString('null')).toEqual('null')
+      expect(utils.typeToString('any')).toEqual('any')
+
+      expect(utils.typeToString({ type: 'null' })).toEqual('null')
+      expect(utils.typeToString({ type: 'any' })).toEqual('any')
+    })
+
+    it('should detect nullable types', () => {
+      expect(utils.typeToString(['null', 'int'])).toEqual('int (nullable)')
+      expect(utils.typeToString(['null', { type: 'enum', symbols: ['a', 'b'] }]))
+        .toEqual('enum (a, b) (nullable)')
+
+      expect(utils.typeToString(['null', 'int', { type: 'record' }]))
+        .toEqual('union: int, record (nullable)')
+
+      expect(utils.typeToString(['null', 'int'], '(null)', true)).toEqual('int (null)')
+      expect(utils.typeToString(['null', { type: 'enum', symbols: ['a', 'b'] }], '(null)', true))
+        .toEqual('enum (a, b) (null)')
+      expect(utils.typeToString(['null', 'int', { type: 'record' }], '(null)', true))
+        .toEqual('union (null)')
+    })
+
+    it('should detect array types', () => {
+      expect(utils.typeToString({ type: 'array', items: 'another_type' }))
+        .toEqual('array [another_type]')
+      expect(utils.typeToString({ type: 'array', items: ['null', 'boolean', 'long'] }))
+        .toEqual('array [union: boolean, long (nullable)]')
+      expect(utils.typeToString({ type: 'array', items: ['null', 'boolean', { type: 'record' }] }))
+        .toEqual('array [union: boolean, record (nullable)]')
+    })
+
+    it('should detect map types', () => {
+      expect(utils.typeToString({ type: 'map', values: 'another_type' }))
+        .toEqual('map {another_type}')
+      expect(utils.typeToString({ type: 'map', values: ['null', 'boolean', 'long'] }))
+        .toEqual('map {union: boolean, long (nullable)}')
+      expect(utils.typeToString({ type: 'map', values: ['null', 'boolean', { type: 'record' }] }))
+        .toEqual('map {union: boolean, record (nullable)}')
+    })
+
+    it('should detect complex types', () => {
+      expect(utils.typeToString({
+        type: 'array',
+        items: [
+          'null',
+          { type: 'map', values: ['null', 'int', { type: 'record' }] }
+        ]
+      }))
+        .toEqual('array [map {union: int, record (nullable)} (nullable)]')
     })
   })
 })

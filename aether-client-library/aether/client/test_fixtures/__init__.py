@@ -28,7 +28,8 @@ from aether.client import Client
 URL = os.environ['KERNEL_URL']
 USER = os.environ['KERNEL_USERNAME']
 PW = os.environ['KERNEL_PASSWORD']
-REALM = os.environ['TEST_REALM']
+# realm is only required if Kernel is MultiTenant
+REALM = os.environ.get('KERNEL_REALM')
 
 
 def simple_entity(value_size=10):

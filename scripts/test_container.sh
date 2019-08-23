@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 function echo_message {
-    LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /=}`
+    local LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /=}`
 
     if [ -z "$1" ]; then
         echo "$LINE"
@@ -40,11 +40,26 @@ function build_container {
         "$1"-test
 }
 
-function wait_for_db {
-    until $DC_KERNEL_RUN eval pg_isready -q; do
-        >&2 echo "Waiting for database..."
+function _wait_for {
+    local container=$1
+    local is_ready=$2
+
+    echo_message "Starting $container..."
+    $DC_TEST up -d "${container}-test"
+
+    local retries=1
+    until $is_ready > /dev/null; do
+        >&2 echo "Waiting for $container... $retries"
+
+        ((retries++))
+        if [[ $retries -gt 30 ]]; then
+            echo_message "It was not possible to start $container"
+            exit 1
+        fi
+
         sleep 2
     done
+    echo_message "$container is ready!"
 }
 
 function start_exm_test {
@@ -55,16 +70,13 @@ function start_exm_test {
     echo_message "extractor ready!"
 }
 
-function start_kernel_test {
-    echo_message "Starting kernel"
-    wait_for_db
-    $DC_TEST up -d kernel-test
+function start_database_test {
+    _wait_for "db" "$DC_KERNEL_RUN eval pg_isready -q"
+}
 
-    until $DC_KERNEL_RUN manage check_url -u $KERNEL_HEALTH_URL >/dev/null; do
-        >&2 echo "Waiting for Kernel..."
-        sleep 2
-    done
-    echo_message "kernel ready!"
+function start_kernel_test {
+    start_database_test
+    _wait_for "kernel" "$DC_KERNEL_RUN manage check_url -u $KERNEL_HEALTH_URL"
 }
 
 function kill_test {
@@ -73,8 +85,11 @@ function kill_test {
 }
 
 # TEST environment
+source .env
+
 DC_TEST="docker-compose -f docker-compose-test.yml"
-DC_KERNEL_RUN="$DC_TEST run --rm kernel-test"
+DC_RUN="$DC_TEST run --rm"
+DC_KERNEL_RUN="$DC_RUN kernel-test"
 KERNEL_HEALTH_URL="http://kernel-test:9100/health"
 
 BUILD_OPTIONS="${BUILD_OPTIONS:-}"
@@ -85,8 +100,8 @@ kill_test
 
 if [[ $1 == "ui" ]]; then
     build_container ui-assets
-    $DC_TEST run --rm ui-assets-test test
-    $DC_TEST run --rm ui-assets-test build
+    $DC_RUN ui-assets-test test
+    $DC_RUN ui-assets-test build
     echo_message "Tested and built ui assets"
 fi
 
@@ -98,6 +113,7 @@ fi
 if [[ $1 = "integration" ]]; then
     echo_message "Starting Zookeeper and Kafka"
     $DC_TEST up -d zookeeper-test kafka-test
+    $DC_RUN --no-deps kafka-test dub wait kafka-test 29092 60
 fi
 
 if [[ $1 == "kernel" ]]; then
@@ -112,13 +128,23 @@ if [[ $1 != "kernel" && $1 != "exm" ]]; then
     start_kernel_test
     start_exm_test
 
+    if [[ $1 = "client" || $1 == "integration" ]]; then
+        echo_message "Creating client user on Kernel"
+        $DC_KERNEL_RUN manage create_user \
+            -u=$CLIENT_USERNAME \
+            -p=$CLIENT_PASSWORD \
+            -r=$CLIENT_REALM
+    fi
+
     # Producer and Integration need readonlyuser to be present
     if [[ $1 = "producer" || $1 == "integration" ]]; then
         echo_message "Creating readonlyuser on Kernel DB"
-        $DC_KERNEL_RUN eval python /code/sql/create_readonly_user.py
+        $DC_KERNEL_RUN eval \
+            python3 /code/sql/create_readonly_user.py \
+            "$KERNEL_READONLY_DB_USERNAME" \
+            "$KERNEL_READONLY_DB_PASSWORD"
 
-        if [[ $1 = "integration" ]]
-        then
+        if [[ $1 = "integration" ]]; then
             build_container producer
             echo_message "Starting producer"
             $DC_TEST up -d producer-test
@@ -131,8 +157,8 @@ fi
 echo_message "Preparing $1 container"
 build_container $1
 echo_message "$1 ready!"
-wait_for_db
-$DC_TEST run --rm "$1"-test test
+start_database_test
+$DC_RUN "$1"-test test
 echo_message "$1 tests passed!"
 
 

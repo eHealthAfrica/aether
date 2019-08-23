@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-#
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,11 +15,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-containers=( kernel exm client ui odk couchdb-sync producer integration )
+from django.apps import AppConfig
+from django.utils.translation import gettext_lazy as _
 
-for container in "${containers[@]}"; do
-    ./scripts/test_container.sh $container
-done
+
+class Config(AppConfig):
+
+    name = 'aether.odk.api.collect'
+    verbose_name = _('Aether ODK Collect')

@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-#
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,11 +15,29 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-containers=( kernel exm client ui odk couchdb-sync producer integration )
+from django.urls import path
 
-for container in "${containers[@]}"; do
-    ./scripts/test_container.sh $container
-done
+from . import views
+
+urlpatterns = [
+    path(route='formList',
+         view=views.xform_list,
+         name='xform-list-xml'),
+
+    path(route='forms/<slug:pk>/form.xml',
+         view=views.xform_get_download,
+         name='xform-get-download'),
+
+    path(route='forms/<slug:pk>/manifest.xml',
+         view=views.xform_get_manifest,
+         name='xform-get-manifest'),
+
+    path(route='media-file/<slug:pk>',
+         view=views.media_file_get_content,
+         name='media-file-get-content'),
+
+    path(route='submission',
+         view=views.xform_submission,
+         name='xform-submission'),
+]

@@ -22,7 +22,7 @@
 set -Eeuo pipefail
 
 # ensure that the network and volumes were already created
-source ./scripts/aether_functions.sh
+source ./scripts/_lib.sh
 create_credentials
 create_docker_assets
 
@@ -54,7 +54,6 @@ $PSQL <<- EOSQL
 EOSQL
 
 
-echo_message "Starting keycloak server..."
 start_container keycloak $KC_URL
 
 KC_ID=$(docker-compose ps -q keycloak)
@@ -78,10 +77,6 @@ echo_message "Creating default client..."
 
 BASE_URL="http://${NETWORK_DOMAIN}"
 
-# NGINX ports
-RU_80="${BASE_URL}/*"
-RU_8443="${BASE_URL}:8443/*"
-
 $KCADM \
     create clients \
     -r ${DEFAULT_REALM} \
@@ -89,7 +84,7 @@ $KCADM \
     -s publicClient=true \
     -s directAccessGrantsEnabled=true \
     -s baseUrl="${BASE_URL}" \
-    -s 'redirectUris=["'${RU_80}'","'${RU_8443}'"]' \
+    -s 'redirectUris=["'${BASE_URL}/*'"]' \
     -s enabled=true
 
 

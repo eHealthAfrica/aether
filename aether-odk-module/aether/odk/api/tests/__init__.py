@@ -286,6 +286,7 @@ class CustomTestCase(TransactionTestCase):
 
         self.admin = UserModel.create_superuser(username, email, password)
         self.headers_admin = {
+            'secure': True,
             'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
         }
         if login:
@@ -299,6 +300,7 @@ class CustomTestCase(TransactionTestCase):
 
         self.user = UserModel.create_user(username, email, password)
         self.headers_user = {
+            'secure': True,
             'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
         }
         if login:
@@ -313,6 +315,7 @@ class CustomTestCase(TransactionTestCase):
         if username == 'surveyor':
             basic = bytearray(f'{username}:{password}', 'utf-8')
             self.headers_surveyor = {
+                'secure': True,
                 'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
             }
 
@@ -345,9 +348,16 @@ class CustomTestCase(TransactionTestCase):
                             surveyor=None,
                             xml_data=None,
                             with_media=False,
-                            with_version=True):
+                            with_version=True,
+                            version_number=None):
         if not xml_data:
-            if with_version:
+            if version_number:
+                xml_data = self.samples['xform']['xml-ok-noversion']
+                xml_data = xml_data.replace(
+                    '<Mapping id="xform-id-test">',
+                    f'<Mapping id="xform-id-test" version="{version_number}">'
+                )
+            elif with_version:
                 xml_data = self.samples['xform']['xml-ok']
             else:
                 xml_data = self.samples['xform']['xml-ok-noversion']

@@ -142,13 +142,13 @@ function start_worker {
     trap _term SIGINT SIGTERM
 
     ./manage.py rqscheduler &
-    scheduler=$!
+    local scheduler=$!
 
     # We assign a random worker name to avoid collisions with old worker
     # values in redis. RQ uses the hostname and PID as name and those
     # might be the same as before when restarting the container.
     ./manage.py rqworker default --name "rq-${RANDOM}" &
-    worker=$!
+    local worker=$!
 
     wait $scheduler
     wait $worker

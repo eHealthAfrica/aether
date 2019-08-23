@@ -160,6 +160,15 @@ PRODUCER_ADMIN_PW=$(gen_random_string)
 
 
 # ------------------------------------------------------------------
+# Aether Client (tests)
+# ==================================================================
+CLIENT_USERNAME=user
+CLIENT_PASSWORD=$(gen_random_string)
+CLIENT_REALM=test
+# ------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------
 # Other
 # ==================================================================
 # set to 1 to disable parallel execution
@@ -172,7 +181,6 @@ SDK_PATH=../aether-django-sdk-library
 # Docker network
 NETWORK_NAME=aether_dev
 NETWORK_DOMAIN=aether.local
-NETWORK_GATEWAY=192.168.2.1
 NETWORK_NGINX_IP=192.168.2.10
 NETWORK_SUBNET=192.168.2.0/24
 # ------------------------------------------------------------------

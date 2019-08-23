@@ -1,54 +1,54 @@
 {
-  "name": "MyTestForm_Test10",
-  "doc": "My Test Form (id: my-test-form, version: Test-1.0)",
+  "name": "TestProject",
+  "doc": "TestProject (title: My Test Form id: my-test-form, version: Test-1.0)",
   "type": "record",
   "fields": [
     {
       "name": "_id",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "xForm ID",
       "type": [ "null", "string" ]
     },
     {
       "name": "_version",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "xForm version",
       "type": [ "null", "string" ]
     },
     {
       "name": "_surveyor",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Surveyor",
       "type": [ "null", "string" ]
     },
     {
       "name": "_submitted_at",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Submitted at",
       "@aether_extended_type": "dateTime",
       "type": [ "null", "string" ]
     },
     {
       "name": "starttime",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "@aether_extended_type": "dateTime",
       "type": [ "null", "string" ]
     },
     {
       "name": "endtime",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "@aether_extended_type": "dateTime",
       "type": [ "null", "string" ]
     },
     {
       "name": "deviceid",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "@aether_extended_type": "string",
       "type": [ "null", "string" ]
     },
     {
       "name": "country",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Country",
       "@aether_extended_type": "select1",
       "@aether_lookup": [
@@ -59,60 +59,60 @@
     },
     {
       "name": "region",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Region",
       "@aether_extended_type": "select1",
       "type": [ "null", "string" ]
     },
     {
       "name": "city",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "City",
       "@aether_extended_type": "string",
       "type": [ "null", "string" ]
     },
     {
       "name": "name",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "What is your name?",
       "@aether_extended_type": "string",
       "type": [ "null", "string" ]
     },
     {
       "name": "location",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Collect your GPS coordinates",
       "@aether_extended_type": "geopoint",
       "type": [
         "null",
         {
           "name": "location",
-          "namespace": "MyTestForm_Test10",
+          "namespace": "TestProject",
           "doc": "Collect your GPS coordinates",
           "@aether_extended_type": "geopoint",
           "type": "record",
           "fields": [
             {
               "name": "latitude",
-              "namespace": "MyTestForm_Test10.location",
+              "namespace": "TestProject.location",
               "doc": "latitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "longitude",
-              "namespace": "MyTestForm_Test10.location",
+              "namespace": "TestProject.location",
               "doc": "longitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "altitude",
-              "namespace": "MyTestForm_Test10.location",
+              "namespace": "TestProject.location",
               "doc": "altitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "accuracy",
-              "namespace": "MyTestForm_Test10.location",
+              "namespace": "TestProject.location",
               "doc": "accuracy",
               "type": [ "null", "float" ]
             }
@@ -122,39 +122,39 @@
     },
     {
       "name": "location_none",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Ignore your GPS coordinates",
       "@aether_extended_type": "geopoint",
       "type": [
         "null",
         {
           "name": "location_none",
-          "namespace": "MyTestForm_Test10",
+          "namespace": "TestProject",
           "doc": "Ignore your GPS coordinates",
           "@aether_extended_type": "geopoint",
           "type": "record",
           "fields": [
             {
               "name": "latitude",
-              "namespace": "MyTestForm_Test10.location_none",
+              "namespace": "TestProject.location_none",
               "doc": "latitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "longitude",
-              "namespace": "MyTestForm_Test10.location_none",
+              "namespace": "TestProject.location_none",
               "doc": "longitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "altitude",
-              "namespace": "MyTestForm_Test10.location_none",
+              "namespace": "TestProject.location_none",
               "doc": "altitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "accuracy",
-              "namespace": "MyTestForm_Test10.location_none",
+              "namespace": "TestProject.location_none",
               "doc": "accuracy",
               "type": [ "null", "float" ]
             }
@@ -164,7 +164,7 @@
     },
     {
       "name": "track",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Path",
       "@aether_extended_type": "geotrace",
       "type": [
@@ -173,32 +173,32 @@
           "type": "array",
           "items": {
             "name": "track",
-            "namespace": "MyTestForm_Test10",
+            "namespace": "TestProject",
             "doc": "Path",
             "@aether_extended_type": "geotrace",
             "type": "record",
             "fields": [
               {
                 "name": "latitude",
-                "namespace": "MyTestForm_Test10.track",
+                "namespace": "TestProject.track",
                 "doc": "latitude",
                 "type": [ "null", "float" ]
               },
               {
                 "name": "longitude",
-                "namespace": "MyTestForm_Test10.track",
+                "namespace": "TestProject.track",
                 "doc": "longitude",
                 "type": [ "null", "float" ]
               },
               {
                 "name": "altitude",
-                "namespace": "MyTestForm_Test10.track",
+                "namespace": "TestProject.track",
                 "doc": "altitude",
                 "type": [ "null", "float" ]
               },
               {
                 "name": "accuracy",
-                "namespace": "MyTestForm_Test10.track",
+                "namespace": "TestProject.track",
                 "doc": "accuracy",
                 "type": [ "null", "float" ]
               }
@@ -209,7 +209,7 @@
     },
     {
       "name": "polygon",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Boundary",
       "@aether_extended_type": "geoshape",
       "type": [
@@ -218,32 +218,32 @@
           "type": "array",
           "items": {
             "name": "polygon",
-            "namespace": "MyTestForm_Test10",
+            "namespace": "TestProject",
             "doc": "Boundary",
             "@aether_extended_type": "geoshape",
             "type": "record",
             "fields": [
               {
                 "name": "latitude",
-                "namespace": "MyTestForm_Test10.polygon",
+                "namespace": "TestProject.polygon",
                 "doc": "latitude",
                 "type": [ "null", "float" ]
               },
               {
                 "name": "longitude",
-                "namespace": "MyTestForm_Test10.polygon",
+                "namespace": "TestProject.polygon",
                 "doc": "longitude",
                 "type": [ "null", "float" ]
               },
               {
                 "name": "altitude",
-                "namespace": "MyTestForm_Test10.polygon",
+                "namespace": "TestProject.polygon",
                 "doc": "altitude",
                 "type": [ "null", "float" ]
               },
               {
                 "name": "accuracy",
-                "namespace": "MyTestForm_Test10.polygon",
+                "namespace": "TestProject.polygon",
                 "doc": "accuracy",
                 "type": [ "null", "float" ]
               }
@@ -254,42 +254,42 @@
     },
     {
       "name": "image",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Take a picture",
       "@aether_extended_type": "binary",
       "type": [ "null", "string" ]
     },
     {
       "name": "number",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "How many?",
       "@aether_extended_type": "int",
       "type": [ "null", "int" ]
     },
     {
       "name": "number2",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Percentage",
       "@aether_extended_type": "decimal",
       "type": [ "null", "double" ]
     },
     {
       "name": "date",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "When?",
       "@aether_extended_type": "date",
       "type": [ "null", "string" ]
     },
     {
       "name": "datetime",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "At?",
       "@aether_extended_type": "dateTime",
       "type": [ "null", "string" ]
     },
     {
       "name": "option",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Choice (A/B)",
       "@aether_extended_type": "select1",
       "@aether_lookup": [
@@ -301,7 +301,7 @@
     {
       "name": "option__a",
       "aliases": ["option-a"],
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Option A",
       "@aether_extended_type": "group",
       "type": [
@@ -309,7 +309,7 @@
         {
           "name": "option__a",
           "aliases": ["option-a"],
-          "namespace": "MyTestForm_Test10",
+          "namespace": "TestProject",
           "doc": "Option A",
           "@aether_extended_type": "group",
           "type": "record",
@@ -317,7 +317,7 @@
             {
               "name": "choice__a",
               "aliases": ["choice.a"],
-              "namespace": "MyTestForm_Test10.option-a",
+              "namespace": "TestProject.option-a",
               "doc": "Choice A",
               "@aether_extended_type": "string",
               "type": [ "null", "string" ]
@@ -329,7 +329,7 @@
     {
       "name": "option__b",
       "aliases": ["option-b"],
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Option B",
       "@aether_extended_type": "group",
       "type": [
@@ -337,7 +337,7 @@
         {
           "name": "option__b",
           "aliases": ["option-b"],
-          "namespace": "MyTestForm_Test10",
+          "namespace": "TestProject",
           "doc": "Option B",
           "@aether_extended_type": "group",
           "type": "record",
@@ -345,7 +345,7 @@
             {
               "name": "choice__b",
               "aliases": ["choice.b"],
-              "namespace": "MyTestForm_Test10.option-b",
+              "namespace": "TestProject.option-b",
               "doc": "Choice B",
               "@aether_extended_type": "string",
               "type": [ "null", "string" ]
@@ -356,7 +356,7 @@
     },
     {
       "name": "lang",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Spoken languages",
       "@aether_extended_type": "select",
       "@aether_lookup": [
@@ -368,7 +368,7 @@
     },
     {
       "name": "ranking_lang",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Ranking of languages",
       "@aether_extended_type": "odk:rank",
       "@aether_lookup": [
@@ -380,7 +380,7 @@
     },
     {
       "name": "iterate",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Indicate loop elements",
       "@aether_extended_type": "repeat",
       "type": [
@@ -389,21 +389,21 @@
           "type": "array",
           "items": {
             "name": "iterate",
-            "namespace": "MyTestForm_Test10",
+            "namespace": "TestProject",
             "doc": "Indicate loop elements",
             "@aether_extended_type": "repeat",
             "type": "record",
             "fields": [
               {
                 "name": "index",
-                "namespace": "MyTestForm_Test10.iterate",
+                "namespace": "TestProject.iterate",
                 "doc": "Index",
                 "@aether_extended_type": "int",
                 "type": [ "null", "int" ]
               },
               {
                 "name": "value",
-                "namespace": "MyTestForm_Test10.iterate",
+                "namespace": "TestProject.iterate",
                 "doc": "Value",
                 "@aether_extended_type": "string",
                 "type": [ "null", "string" ]
@@ -415,7 +415,7 @@
     },
     {
       "name": "iterate_one",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Indicate one",
       "@aether_extended_type": "repeat",
       "type": [
@@ -424,7 +424,7 @@
           "type": "array",
           "items": {
             "name": "iterate_one",
-            "namespace": "MyTestForm_Test10",
+            "namespace": "TestProject",
             "doc": "Indicate one",
             "@aether_extended_type": "repeat",
             "type": "record",
@@ -432,7 +432,7 @@
               {
                 "name": "it__em",
                 "aliases": ["it.em"],
-                "namespace": "MyTestForm_Test10.iterate_one",
+                "namespace": "TestProject.iterate_one",
                 "doc": "Item",
                 "@aether_extended_type": "string",
                 "type": [ "null", "string" ]
@@ -444,7 +444,7 @@
     },
     {
       "name": "iterate_none",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Indicate none",
       "@aether_extended_type": "repeat",
       "type": [
@@ -453,14 +453,14 @@
           "type": "array",
           "items": {
             "name": "iterate_none",
-            "namespace": "MyTestForm_Test10",
+            "namespace": "TestProject",
             "doc": "Indicate none",
             "@aether_extended_type": "repeat",
             "type": "record",
             "fields": [
               {
                 "name": "nothing",
-                "namespace": "MyTestForm_Test10.iterate_none",
+                "namespace": "TestProject.iterate_none",
                 "doc": "None",
                 "@aether_extended_type": "string",
                 "type": [ "null", "string" ]
@@ -472,28 +472,28 @@
     },
     {
       "name": "value",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Dup value",
       "@aether_extended_type": "string",
       "type": [ "null", "string" ]
     },
     {
       "name": "dup_group",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "Group",
       "@aether_extended_type": "group",
       "type": [
         "null",
         {
           "name": "dup_group",
-          "namespace": "MyTestForm_Test10",
+          "namespace": "TestProject",
           "doc": "Group",
           "@aether_extended_type": "group",
           "type": "record",
           "fields": [
             {
               "name": "value",
-              "namespace": "MyTestForm_Test10.dup_group",
+              "namespace": "TestProject.dup_group",
               "doc": "Nested dup value",
               "@aether_extended_type": "string",
               "type": [ "null", "string" ]
@@ -504,32 +504,32 @@
     },
     {
       "name": "note_end",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "doc": "That's all folks!",
       "@aether_extended_type": "string",
       "type": [ "null", "string" ]
     },
     {
       "name": "meta",
-      "namespace": "MyTestForm_Test10",
+      "namespace": "TestProject",
       "@aether_extended_type": "group",
       "type": [
         "null",
         {
           "name": "meta",
-          "namespace": "MyTestForm_Test10",
+          "namespace": "TestProject",
           "@aether_extended_type": "group",
           "type": "record",
           "fields": [
             {
               "name": "instanceID",
-              "namespace": "MyTestForm_Test10.meta",
+              "namespace": "TestProject.meta",
               "@aether_extended_type": "string",
               "type": [ "null", "string" ]
             },
             {
               "name": "instanceName",
-              "namespace": "MyTestForm_Test10.meta",
+              "namespace": "TestProject.meta",
               "@aether_extended_type": "string",
               "type": [ "null", "string" ]
             }

@@ -24,6 +24,7 @@ export const DEFAULT_LOCALE = 'en'
 // calls pending when pagination is fully implemented
 export const MAX_PAGE_SIZE = 5000
 
+export const AVRO_EXTENDED_TYPE = '@aether_extended_type'
 export const MASKING_ANNOTATION = 'aetherDataClassification'
 export const MASKING_PUBLIC = 'public'
 

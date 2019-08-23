@@ -4,7 +4,7 @@
 
 ## Table of contents
 
-- [Set up](#set-up)
+- [Setup](#setup)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
   - [Aether Django SDK Library](#aether-django-sdk-library)
@@ -48,7 +48,7 @@
 - [Troubleshooting](/TROUBLESHOOTING.md)
 
 
-## Set up
+## Setup
 
 ### Dependencies
 
@@ -95,6 +95,20 @@ for local development. Never deploy these to publicly accessible servers.
 ```
 
 > Note: `aether.local` is the `NETWORK_DOMAIN` value (see generated `.env` file).
+
+##### Using ODK Collect with your local installation
+
+If you want to use ODK Collect, you will need to configure Nginx to accept your IP address. To do this, add your IP address to `local-setup/nginx/sites-enabled/aether.conf`:
+
+```
+server {
+  listen                    80;
+  charset                   utf-8;
+  server_name               aether.local 192.168.178.xxx;
+  ...
+```
+
+Note that you can use wild cards and RegExps here, e.g. `192.168.178.*`. You can now configure ODK Collect, using `http://<your IP address>/odk` for the server URL.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -376,7 +390,7 @@ This will start:
 
 - **Aether Kernel** on `http://aether.local/kernel/`.
 
-- **Aether ODK Module** on `http://aether.local/odk/` or `http://aether.local:8443/odk/`.
+- **Aether ODK Module** on `http://aether.local/odk/`.
 
 - **Aether CouchDB Sync Module** on `http://aether.local/sync/`.
 

@@ -24,13 +24,16 @@ import time
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
+
 from rest_framework import status
+
 from aether.sdk.unittest import MockResponse
 
-from . import CustomTestCase
-from .. import kernel_utils
-from ..surveyors_utils import is_granted_surveyor
-from ..views_collect import XML_SUBMISSION_PARAM
+from ...tests import CustomTestCase
+from ... import kernel_utils
+from ...surveyors_utils import is_granted_surveyor
+
+from ..views import XML_SUBMISSION_PARAM
 
 WAIT_FOR_EXTRACTOR = 1
 
@@ -43,7 +46,7 @@ class SubmissionTests(CustomTestCase):
         self.surveyor = self.helper_create_surveyor()
         self.url = reverse('xform-submission')
 
-    @mock.patch('aether.odk.api.views_collect.check_kernel_connection', return_value=False)
+    @mock.patch('aether.odk.api.collect.views.check_kernel_connection', return_value=False)
     def test__submission__424__connection(self, *args):
         # Test submission with authorization error on kernel server side
         response = self.client.head(self.url, **self.headers_surveyor)
@@ -73,8 +76,8 @@ class SubmissionTests(CustomTestCase):
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.content)
 
-    @mock.patch('aether.odk.api.views_collect.check_kernel_connection', return_value=True)
-    @mock.patch('aether.odk.api.views_collect.propagate_kernel_artefacts',
+    @mock.patch('aether.odk.api.collect.views.check_kernel_connection', return_value=True)
+    @mock.patch('aether.odk.api.collect.views.propagate_kernel_artefacts',
                 side_effect=kernel_utils.KernelPropagationError)
     def test__submission__424__propagation(self, *args):
         # with xform and right xml but not kernel propagation
@@ -197,7 +200,7 @@ class PostSubmissionTests(CustomTestCase):
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
             self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.content)
 
-    @mock.patch('aether.odk.api.views_collect.exec_request', side_effect=Exception)
+    @mock.patch('aether.odk.api.collect.views.exec_request', side_effect=Exception)
     def test__submission__post__with_error_on_check_previous_submission(self, mock_req):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
@@ -218,7 +221,7 @@ class PostSubmissionTests(CustomTestCase):
                 # there is going to be an unexpected response during submission post
                 return MockResponse(status_code=204)
 
-        with mock.patch('aether.odk.api.views_collect.exec_request',
+        with mock.patch('aether.odk.api.collect.views.exec_request',
                         side_effect=my_side_effect) as mock_req:
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
@@ -247,7 +250,7 @@ class PostSubmissionTests(CustomTestCase):
                 # there is going to be an unexpected error during attachment post
                 raise Exception
 
-        with mock.patch('aether.odk.api.views_collect.exec_request', side_effect=my_side_effect) as mock_req:
+        with mock.patch('aether.odk.api.collect.views.exec_request', side_effect=my_side_effect) as mock_req:
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
@@ -289,7 +292,7 @@ class PostSubmissionTests(CustomTestCase):
             else:
                 return MockResponse(status_code=500)
 
-        with mock.patch('aether.odk.api.views_collect.exec_request', side_effect=my_side_effect) as mock_req:
+        with mock.patch('aether.odk.api.collect.views.exec_request', side_effect=my_side_effect) as mock_req:
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
             self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR, response.content)
@@ -412,7 +415,7 @@ class PostSubmissionTests(CustomTestCase):
                 else:
                     return MockResponse(status_code=404)
 
-        with mock.patch('aether.odk.api.views_collect.exec_request', side_effect=my_side_effect) as mock_req:
+        with mock.patch('aether.odk.api.collect.views.exec_request', side_effect=my_side_effect) as mock_req:
             # there is going to be an error during second attachment post
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(
@@ -475,7 +478,7 @@ class PostSubmissionTests(CustomTestCase):
                 else:
                     raise Exception
 
-        with mock.patch('aether.odk.api.views_collect.exec_request', side_effect=my_side_effect) as mock_req:
+        with mock.patch('aether.odk.api.collect.views.exec_request', side_effect=my_side_effect) as mock_req:
             # there is going to be an error during second attachment post
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(

@@ -39,6 +39,8 @@ from .models import Project, XForm, MediaFile
 from .xform_utils import parse_xform_file, validate_xform
 from .surveyors_utils import get_surveyors, get_surveyor_group
 
+from .collect.auth_utils import save_partial_digest
+
 
 class MediaFileSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
@@ -123,28 +125,36 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         return value
 
     def create(self, validated_data):
-        password = validated_data.pop('password', None)
+        raw_password = validated_data.pop('password', None)
         instance = self.Meta.model(**validated_data)
-        instance.set_password(password)
-        self._save(instance)
+        instance.set_password(raw_password)
+        self._save(instance, raw_password)
 
         return instance
 
     def update(self, instance, validated_data):
+        raw_password = None
         for attr, value in validated_data.items():
             if attr == 'password':
                 if value != instance.password:
                     instance.set_password(value)
+                    raw_password = value
             else:
                 setattr(instance, attr, value)
-        self._save(instance)
+        self._save(instance, raw_password)
 
         return instance
 
-    def _save(self, instance):
+    def _save(self, instance, raw_password):
+        request = self.context['request']
+
         instance.save()
         instance.groups.add(get_surveyor_group())
-        add_user_to_realm(self.context['request'], instance)
+        add_user_to_realm(request, instance)
+
+        if raw_password is not None:
+            # (required by digest authentication)
+            save_partial_digest(request, instance, raw_password)
 
     class Meta:
         model = get_user_model()
