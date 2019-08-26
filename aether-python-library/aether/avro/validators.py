@@ -23,7 +23,7 @@ import gettext
 
 from spavro.schema import parse
 
-from .avro_tools import AvroValidator, format_validation_error
+from .tools import AvroValidator, format_validation_error
 
 _ = gettext.gettext
 

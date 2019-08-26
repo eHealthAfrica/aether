@@ -25,7 +25,7 @@ from unittest import TestCase
 from spavro.schema import parse as parse_schema
 
 from . import EXAMPLE_SCHEMA
-from ..avro_tools import (
+from ..tools import (
     # used in validation tests
     AvroValidationError as error,
     AvroValidationException,
