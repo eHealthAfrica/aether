@@ -31,6 +31,12 @@ git clone https://github.com/eHealthAfrica/aether-bootstrap.git
 
 cd aether-bootstrap
 ```
+This demo is specific to version 1.4, A new 1.5 demo will be coming soon...
+
+```
+git fetch && git fetch --tags
+git checkout 1.4.0
+```
 
 If you are starting Aether or Gather for the first time, you will need to create some docker resources (networks and volumes) and generate credentials for all applications:
 
