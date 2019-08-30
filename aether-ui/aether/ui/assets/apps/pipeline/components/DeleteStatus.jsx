@@ -65,7 +65,12 @@ class DeleteStatus extends Component {
     )
 
     return (
-      <Modal header={header} buttons={buttons}>
+      <Modal
+        buttons={buttons}
+        header={header}
+        onEnter={close}
+        onEscape={close}
+      >
         {
           !this.props.deleteStatus && (
             <label className='title-medium mt-4'>

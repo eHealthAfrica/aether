@@ -53,6 +53,8 @@ class PipelineInfoButton extends Component {
         {
           this.state.showInfo &&
             <Modal
+              onEnter={hide}
+              onEscape={hide}
               header={pipeline.name}
               buttons={
                 <button

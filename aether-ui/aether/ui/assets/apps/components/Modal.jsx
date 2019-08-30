@@ -25,7 +25,10 @@ import Portal from './Portal'
 export default class Modal extends Component {
   render () {
     return (
-      <Portal>
+      <Portal
+        onEnter={this.props.onEnter}
+        onEscape={this.props.onEscape}
+      >
         <div className='modal show'>
           <div className='modal-dialog'>
             <div className='modal-header'>

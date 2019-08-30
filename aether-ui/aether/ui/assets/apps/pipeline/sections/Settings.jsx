@@ -193,7 +193,12 @@ export class IdentityMapping extends Component {
     )
 
     return (
-      <Modal header={header} buttons={buttons}>
+      <Modal
+        header={header}
+        buttons={buttons}
+        onEscape={close}
+        onEnter={handleGenerateIdentityMapping}
+      >
         <FormattedMessage
           id='settings.identity.content.question'
           defaultMessage='Are you sure that you want to create an identity contract?'

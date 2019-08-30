@@ -146,6 +146,7 @@ class ContractPublishButton extends Component {
       event.stopPropagation()
       this.props.publishContract(contract.id)
     }
+    const closeOrPublish = (publishState && errors.length === 0) ? publish : close
 
     const buttons = (
       <>
@@ -189,7 +190,12 @@ class ContractPublishButton extends Component {
     )
 
     return (
-      <Modal header={header} buttons={buttons}>
+      <Modal
+        buttons={buttons}
+        header={header}
+        onEnter={closeOrPublish}
+        onEscape={close}
+      >
         <label className='form-label'>
           <FormattedMessage
             id='contract.publish.status'

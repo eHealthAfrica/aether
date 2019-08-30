@@ -50,6 +50,8 @@ class PipelineRename extends Component {
 
     return (
       <Modal
+        onEnter={onSubmit}
+        onEscape={this.props.onCancel}
         buttons={buttons}
         header={
           <FormattedHTMLMessage

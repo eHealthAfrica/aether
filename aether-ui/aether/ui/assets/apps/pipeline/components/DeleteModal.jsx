@@ -83,7 +83,12 @@ class DeleteModal extends Component {
     )
 
     return (
-      <Modal header={header} buttons={buttons}>
+      <Modal
+        header={header}
+        buttons={buttons}
+        onEnter={remove}
+        onEscape={this.props.onClose}
+      >
         <label className='title-medium mt-4'>
           <FormattedMessage
             id='delete.modal.message-2'

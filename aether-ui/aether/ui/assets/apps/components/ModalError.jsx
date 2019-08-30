@@ -52,6 +52,8 @@ export default class ModalError extends Component {
 
     return (
       <Modal
+        onEnter={close}
+        onEscape={close}
         header={
           <>
             <FormattedMessage
