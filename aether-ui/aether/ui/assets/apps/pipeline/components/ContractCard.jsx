@@ -25,41 +25,41 @@ import { FormattedMessage } from 'react-intl'
 import ContractPublishButton from './ContractPublishButton'
 
 import { selectContract, selectSection } from '../redux'
-import {
-  CONTRACT_SECTION_ENTITY_TYPES
-} from '../../utils/constants'
+import { CONTRACT_SECTION_ENTITY_TYPES } from '../../utils/constants'
 
 class ContractCard extends Component {
-  onContractSelected (contract) {
-    this.props.selectContract(contract.pipeline, contract.id)
-    this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES)
-    this.props.history.push(`/${contract.pipeline}/${contract.id}/${CONTRACT_SECTION_ENTITY_TYPES}`)
-  }
-
   render () {
     const { contract } = this.props
+
+    const handleSelectContract = (pipelineId, contractId) => {
+      this.props.selectContract(pipelineId, contractId)
+      this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES)
+      this.props.history.push(`/${pipelineId}/${contractId}/${CONTRACT_SECTION_ENTITY_TYPES}`)
+    }
 
     return (
       <div
         key={contract.id}
         className={`preview-contract ${contract.is_read_only ? 'pipeline-readonly' : ''}`}
-        onClick={this.onContractSelected.bind(this, contract)}>
-        { contract.is_read_only &&
-          <span className='tag'>
-            <FormattedMessage
-              id='contract.card.read-only'
-              defaultMessage='read-only'
-            />
-          </span>
+        onClick={() => { handleSelectContract(contract.pipeline, contract.id) }}
+      >
+        {
+          contract.is_read_only &&
+            <span className='tag'>
+              <FormattedMessage
+                id='contract.card.read-only'
+                defaultMessage='read-only'
+              />
+            </span>
         }
 
         <div className='contract-heading'>
-          <h2 className='contract-name'>{ contract.name }</h2>
+          <h2 className='contract-name'>{contract.name}</h2>
 
           <div className='contract-summaries'>
             <div className='summary-entity-types'>
               <span className='badge badge-c badge-big'>
-                { (contract.entity_types || []).length }
+                {(contract.entity_types || []).length}
               </span>
               <FormattedMessage
                 id='contract.card.entity.types'
@@ -68,10 +68,13 @@ class ContractCard extends Component {
             </div>
 
             <div className='summary-errors'>
-              <span className={
-                `badge badge-c badge-big ${(contract.mapping_errors || []).length ? 'error' : ''}`
-              }>
-                { (contract.mapping_errors || []).length }
+              <span
+                className={`
+                  badge badge-c badge-big
+                  ${(contract.mapping_errors || []).length ? 'error' : ''}
+                `}
+              >
+                {(contract.mapping_errors || []).length}
               </span>
               <FormattedMessage
                 id='contract.card.errors'
@@ -84,7 +87,8 @@ class ContractCard extends Component {
         <div className='contract-publish'>
           <ContractPublishButton
             contract={contract}
-            className='btn btn-d btn-publish' />
+            className='btn btn-d btn-publish'
+          />
         </div>
       </div>
     )

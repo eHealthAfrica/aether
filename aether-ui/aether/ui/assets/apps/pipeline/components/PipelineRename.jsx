@@ -6,10 +6,6 @@ const MESSAGES = defineMessages({
   namePlaceholder: {
     defaultMessage: 'Name of pipeline',
     id: 'rename.modal.name.placeholder'
-  },
-  header: {
-    defaultMessage: 'Rename pipeline <b>{name}</b>',
-    id: 'rename.modal.header'
   }
 })
 
@@ -35,7 +31,8 @@ class PipelineRename extends Component {
         <button
           data-qa='rename.modal.button.cancel'
           className='btn btn-w'
-          onClick={this.props.onCancel}>
+          onClick={this.props.onCancel}
+        >
           <FormattedMessage
             id='rename.modal.button.cancel'
             defaultMessage='Cancel'
@@ -56,14 +53,9 @@ class PipelineRename extends Component {
         buttons={buttons}
         header={
           <FormattedHTMLMessage
-            {
-            ...{
-              ...MESSAGES.header,
-              values: {
-                name: this.props.name
-              }
-            }
-            }
+            defaultMessage='Rename pipeline <b>{name}</b>'
+            id='rename.modal.header'
+            values={{ name: this.props.name }}
           />
         }
       >

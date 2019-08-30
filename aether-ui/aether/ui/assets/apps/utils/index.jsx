@@ -59,7 +59,6 @@ export const deepEqual = (a, b, ignoreNull = false) => {
 
   let ka = Object.keys(a)
   let kb = Object.keys(b)
-  let key, i
 
   // ignore null and undefined values
   if (ignoreNull) {
@@ -77,7 +76,7 @@ export const deepEqual = (a, b, ignoreNull = false) => {
   kb.sort()
 
   // cheap key test
-  for (i = ka.length - 1; i >= 0; i--) {
+  for (let i = ka.length - 1; i >= 0; i--) {
     if (ka[i] !== kb[i]) {
       return false
     }
@@ -85,8 +84,8 @@ export const deepEqual = (a, b, ignoreNull = false) => {
 
   // equivalent values for every corresponding key, and
   // possibly expensive deep test
-  for (i = ka.length - 1; i >= 0; i--) {
-    key = ka[i]
+  for (let i = ka.length - 1; i >= 0; i--) {
+    const key = ka[i]
     if (!deepEqual(a[key], b[key], ignoreNull)) {
       return false
     }

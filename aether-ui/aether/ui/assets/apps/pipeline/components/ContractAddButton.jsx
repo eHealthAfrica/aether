@@ -25,21 +25,23 @@ import { FormattedMessage } from 'react-intl'
 import { selectPipeline } from '../redux'
 
 class ContractAddButton extends Component {
-  createNewContract () {
-    const { id } = this.props.pipeline
-    this.props.selectPipeline(id)
-    this.props.history.push({
-      pathname: `/${id}`,
-      state: { isNewContract: true }
-    })
-  }
-
   render () {
+    const handleCreateNewContract = () => {
+      const { id } = this.props.pipeline
+
+      this.props.selectPipeline(id)
+      this.props.history.push({
+        pathname: `/${id}`,
+        state: { isNewContract: true }
+      })
+    }
+
     return (
       <button
         type='button'
         className={this.props.className || 'btn btn-c'}
-        onClick={this.createNewContract.bind(this)}>
+        onClick={handleCreateNewContract}
+      >
         <span className='details-title'>
           <FormattedMessage
             id='contract.add.button'

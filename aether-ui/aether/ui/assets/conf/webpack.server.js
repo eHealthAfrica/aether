@@ -25,7 +25,7 @@ const webpack = require('webpack')
 const buildConfig = require('./webpack.common')
 
 const WEBPACK_PORT = 3004
-const WEBPACK_URL = `http://aether.local`
+const WEBPACK_URL = 'http://aether.local'
 const WEBPACK_HMR_PATH = '/ui-assets/__webpack_hmr'
 
 const HMR_URL = 'webpack-hot-middleware/client?' +

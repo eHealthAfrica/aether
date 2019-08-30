@@ -74,10 +74,10 @@ class AvroSchemaViewer extends Component {
         <div className={this.props.className}>
           <div className='group'>
             <div data-qa={`group-title-${schema.name}`} className='title group-title'>
-              { schema.name }
+              {schema.name}
             </div>
             <div className='properties group-list'>
-              { schema.fields.map(f => this.renderField(clone(f), this.props.pathPrefix)) }
+              {schema.fields.map(f => this.renderField(clone(f), this.props.pathPrefix))}
             </div>
           </div>
         </div>
@@ -137,7 +137,7 @@ class AvroSchemaViewer extends Component {
             key={generateGUID()}
             className={(isUnion ? 'group-union' : 'group-list')}
           >
-            { children }
+            {children}
           </div>
         )
       }
@@ -145,14 +145,15 @@ class AvroSchemaViewer extends Component {
 
     return (
       <div data-qa={jsonPath} key={generateGUID()} className='group'>
-        { field.name &&
-          <div className={highlightedClassName + (children ? ' group-title' : ' field')}>
-            { isMasked(field) && <i className='fas fa-lock' /> }
-            <span className='name'>{ field.name }</span>
-            <span className='type'>{ type }</span>
-          </div>
+        {
+          field.name &&
+            <div className={highlightedClassName + (children ? ' group-title' : ' field')}>
+              {isMasked(field) && <i className='fas fa-lock' />}
+              <span className='name'>{field.name}</span>
+              <span className='type'>{type}</span>
+            </div>
         }
-        { children }
+        {children}
       </div>
     )
   }

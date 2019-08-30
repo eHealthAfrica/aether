@@ -23,18 +23,6 @@ import { FormattedMessage, FormattedHTMLMessage, injectIntl, defineMessages } fr
 import { Modal } from '../../components'
 
 const MESSAGES = defineMessages({
-  delete: {
-    id: 'modal.delete.text',
-    defaultMessage: 'Delete {obj} <b>{objName}</b>'
-  },
-  submissions: {
-    id: 'modal.delete.submissions.text',
-    defaultMessage: 'Data <b>submitted to</b> this pipeline (Submissions)'
-  },
-  entities: {
-    id: 'modal.delete.entities.text',
-    defaultMessage: 'Data <b>created by</b> this {obj} (Entities)'
-  },
   pipeline: {
     id: 'modal.delete.object.type.pipeline',
     defaultMessage: 'pipeline'
@@ -61,31 +49,31 @@ class DeleteModal extends Component {
     const header = (
       <span>
         <FormattedHTMLMessage
-          {...
-          { ...MESSAGES.delete,
-            values: {
-              obj: objType,
-              objName: this.props.obj.name
-            }
-          }
-          }
+          id='modal.delete.text'
+          defaultMessage='Delete {objType} <b>{objName}</b>'
+          values={{ objType, objName: this.props.obj.name }}
         />
       </span>
     )
+    const remove = () => { this.props.onDelete(this.state) }
 
     const buttons = (
       <div>
         <button
           data-qa='delete.modal.button.cancel'
           className='btn btn-w'
-          onClick={this.props.onClose}>
+          onClick={this.props.onClose}
+        >
           <FormattedMessage
             id='delete.modal.button.cancel'
             defaultMessage='Cancel'
           />
         </button>
 
-        <button className='btn btn-w btn-primary' onClick={() => this.props.onDelete(this.state)}>
+        <button
+          className='btn btn-w btn-primary'
+          onClick={remove}
+        >
           <FormattedMessage
             id='delete.modal.button.delete'
             defaultMessage='Delete'
@@ -104,25 +92,30 @@ class DeleteModal extends Component {
         </label>
         {
           this.props.objectType === 'pipeline' &&
-          <div className='check-default ml-4'>
-            <input type='checkbox' id='check1' checked={this.state.submissions}
-              onChange={(e) => {
-                this.setState({
-                  ...this.state, submissions: e.target.checked
-                })
-              }}
-            />
-            <label htmlFor='check1'>
-              <FormattedHTMLMessage
-                {...
-                { ...MESSAGES.submissions }
-                }
+            <div className='check-default ml-4'>
+              <input
+                type='checkbox'
+                id='check1'
+                checked={this.state.submissions}
+                onChange={(e) => {
+                  this.setState({
+                    ...this.state, submissions: e.target.checked
+                  })
+                }}
               />
-            </label>
-          </div>
+              <label htmlFor='check1'>
+                <FormattedHTMLMessage
+                  id='modal.delete.submissions.text'
+                  defaultMessage='Data <b>submitted to</b> this pipeline (Submissions)'
+                />
+              </label>
+            </div>
         }
         <div className='check-default ml-4'>
-          <input type='checkbox' id='check2' checked={this.state.schemas}
+          <input
+            type='checkbox'
+            id='check2'
+            checked={this.state.schemas}
             onChange={(e) => {
               this.setState({
                 ...this.state,
@@ -139,7 +132,10 @@ class DeleteModal extends Component {
           </label>
         </div>
         <div className='check-default ml-4 check-indent'>
-          <input type='checkbox' id='check3' checked={this.state.entities}
+          <input
+            type='checkbox'
+            id='check3'
+            checked={this.state.entities}
             onChange={(e) => {
               if (!e.target.checked) {
                 this.setState({
@@ -149,20 +145,17 @@ class DeleteModal extends Component {
                 })
               } else {
                 this.setState({
-                  ...this.state, entities: e.target.checked
+                  ...this.state,
+                  entities: e.target.checked
                 })
               }
             }}
           />
           <label htmlFor='check3'>
             <FormattedHTMLMessage
-              {...
-              { ...MESSAGES.entities,
-                values: {
-                  obj: objType
-                }
-              }
-              }
+              id='modal.delete.entities.text'
+              defaultMessage='Data <b>created by</b> this {objType} (Entities)'
+              values={{ objType }}
             />
           </label>
         </div>

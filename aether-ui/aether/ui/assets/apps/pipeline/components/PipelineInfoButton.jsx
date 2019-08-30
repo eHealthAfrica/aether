@@ -39,37 +39,40 @@ class PipelineInfoButton extends Component {
 
     const execute = (event, showInfo) => {
       event.stopPropagation()
-
       this.setState({ showInfo })
     }
+    const hide = (event) => { execute(event, false) }
 
     return (
-      <React.Fragment>
+      <>
         <i
           className='ml-1 fas fa-info-circle published-info-icon'
           onClick={(event) => { execute(event, true) }}
         />
 
-        { this.state.showInfo &&
-          <Modal
-            header={pipeline.name}
-            buttons={
-              <button
-                type='button'
-                className='btn btn-w btn-primary'
-                onClick={(event) => { execute(event, false) }}>
-                <FormattedMessage id='pipeline.info.modal.ok' defaultMessage='OK' />
-              </button>
-            }>
-            <div>
-              <SubmissionCard
-                mappingset={pipeline.mappingset}
-                inputData={pipeline.input}
-              />
-            </div>
-          </Modal>
+        {
+          this.state.showInfo &&
+            <Modal
+              header={pipeline.name}
+              buttons={
+                <button
+                  type='button'
+                  className='btn btn-w btn-primary'
+                  onClick={hide}
+                >
+                  <FormattedMessage id='pipeline.info.modal.ok' defaultMessage='OK' />
+                </button>
+              }
+            >
+              <div>
+                <SubmissionCard
+                  mappingset={pipeline.mappingset}
+                  inputData={pipeline.input}
+                />
+              </div>
+            </Modal>
         }
-      </React.Fragment>
+      </>
     )
   }
 }

@@ -30,23 +30,24 @@ class Output extends Component {
 
     return (
       <div className='section-body'>
-        { errors.length > 0 &&
-          <div className='pipeline-data pipeline-errors'>
-            <h3 className='title-medium'>
-              <FormattedMessage id='output.mapping.errors' defaultMessage='Mapping errors' />
-            </h3>
+        {
+          errors.length > 0 &&
+            <div className='pipeline-data pipeline-errors'>
+              <h3 className='title-medium'>
+                <FormattedMessage id='output.mapping.errors' defaultMessage='Mapping errors' />
+              </h3>
 
-            <ul>
-              { errors.map((error, index) => (
-                <li key={index}>
-                  <span className='error-description'>{ error.description }</span>
-                  { error.path &&
-                    <span className='error-path'>"{ error.path }"</span>
-                  }
-                </li>
-              )) }
-            </ul>
-          </div>
+              <ul>
+                {
+                  errors.map((error, index) => (
+                    <li key={index}>
+                      <span className='error-description'>{error.description}</span>
+                      {error.path && <span className='error-path'>"{error.path}"</span>}
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
         }
 
         <div className='pipeline-data'>
@@ -55,7 +56,7 @@ class Output extends Component {
           </h3>
 
           <code>
-            { objectToString(output) }
+            {objectToString(output)}
           </code>
         </div>
       </div>

@@ -43,17 +43,15 @@ class PipelineNew extends Component {
   }
 
   componentDidUpdate (prevProps) {
-    if (this.state.submitted) {
-      if (this.props.pipeline && prevProps.pipeline !== this.props.pipeline) {
-        this.props.history.push(`/${this.props.pipeline.id}`)
-      }
+    if (this.state.submitted && this.props.pipeline && prevProps.pipeline !== this.props.pipeline) {
+      this.props.history.push(`/${this.props.pipeline.id}`)
     }
   }
 
   render () {
     return (
       <div className='pipeline-new'>
-        { this.state.view === 'button' ? this.renderButton() : this.renderForm() }
+        {this.state.view === 'button' ? this.renderButton() : this.renderForm()}
       </div>
     )
   }
@@ -63,7 +61,8 @@ class PipelineNew extends Component {
       <button
         type='button'
         className='btn btn-c btn-big new-input'
-        onClick={() => { this.setState({ view: 'form' }) }}>
+        onClick={() => { this.setState({ view: 'form' }) }}
+      >
         <span className='details-title'>
           <FormattedMessage
             id='pipeline.new.button.new'
@@ -83,7 +82,9 @@ class PipelineNew extends Component {
 
       this.setState({
         submitted: true
-      }, () => this.props.addPipeline({ name: this.state.pipelineName }))
+      }, () => {
+        this.props.addPipeline({ name: this.state.pipelineName })
+      })
     }
 
     return (
@@ -99,14 +100,15 @@ class PipelineNew extends Component {
             onChange={event => { this.setState({ pipelineName: event.target.value }) }}
           />
           <label className='form-label'>
-            { formatMessage(MESSAGES.namePlaceholder) }
+            {formatMessage(MESSAGES.namePlaceholder)}
           </label>
         </div>
 
         <button
           type='button'
           className='btn btn-c btn-big btn-transparent'
-          onClick={() => { this.setState({ view: 'button', pipelineName: '' }) }}>
+          onClick={() => { this.setState({ view: 'button', pipelineName: '' }) }}
+        >
           <span className='details-title'>
             <FormattedMessage
               id='pipeline.new.button.cancel'
@@ -115,9 +117,7 @@ class PipelineNew extends Component {
           </span>
         </button>
 
-        <button
-          type='submit'
-          className='btn btn-c btn-big'>
+        <button type='submit' className='btn btn-c btn-big'>
           <span className='details-title'>
             <FormattedMessage
               id='pipeline.new.button.ok'

@@ -9,7 +9,10 @@ const PipelineActions = props => (
       delete={props.delete}
       rename={props.rename}
     />
-    <ContractAddButton pipeline={props.pipeline} history={props.history} />
+    <ContractAddButton
+      pipeline={props.pipeline}
+      history={props.history}
+    />
   </div>
 )
 

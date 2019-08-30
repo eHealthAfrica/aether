@@ -43,42 +43,47 @@ class ContractPublishButton extends Component {
     const { contract } = this.props
 
     return (
-      <React.Fragment>
-        { this.renderModal() }
+      <>
+        {this.renderModal()}
 
         <div>
-          { contract.published_on &&
-            <React.Fragment>
-              <FormattedMessage
-                id='contract.publish-status.published'
-                defaultMessage='Published on'
-              /> { moment(contract.published_on).format(DATE_FORMAT) }
-            </React.Fragment>
+          {
+            contract.published_on &&
+              <>
+                <FormattedMessage
+                  id='contract.publish-status.published'
+                  defaultMessage='Published on'
+                /> {moment(contract.published_on).format(DATE_FORMAT)}
+              </>
           }
 
-          { contract.created && !contract.published_on &&
-            <FormattedMessage
-              id='contract.publish-status.not-published'
-              defaultMessage='Not published yet'
-            />
+          {
+            contract.created && !contract.published_on &&
+              <FormattedMessage
+                id='contract.publish-status.not-published'
+                defaultMessage='Not published yet'
+              />
           }
         </div>
 
-        { contract.created && !contract.is_read_only &&
-          <button type='button'
-            className={this.props.className}
-            onClick={(event) => {
-              event.stopPropagation()
-              this.props.publishPreflightContract(contract.id)
-              this.setState({ showModal: true })
-            }}>
-            <FormattedMessage
-              id='contract.publish.button'
-              defaultMessage='Publish'
-            />
-          </button>
+        {
+          contract.created && !contract.is_read_only &&
+            <button
+              type='button'
+              className={this.props.className}
+              onClick={(event) => {
+                event.stopPropagation()
+                this.props.publishPreflightContract(contract.id)
+                this.setState({ showModal: true })
+              }}
+            >
+              <FormattedMessage
+                id='contract.publish.button'
+                defaultMessage='Publish'
+              />
+            </button>
         }
-      </React.Fragment>
+      </>
     )
   }
 
@@ -98,6 +103,7 @@ class ContractPublishButton extends Component {
     if (publishSuccess) {
       infos = [
         <FormattedMessage
+          key='contract.publish.status.success'
           id='contract.publish.status.success'
           defaultMessage='Contract published successfully'
         />
@@ -108,6 +114,7 @@ class ContractPublishButton extends Component {
     if (publishError) {
       errors = [
         <FormattedMessage
+          key='contract.publish.status.error'
           id='contract.publish.status.error'
           defaultMessage='An unexpected error produced while publishing'
         />,
@@ -123,51 +130,62 @@ class ContractPublishButton extends Component {
     }
 
     const header = (
-      <React.Fragment>
+      <>
         <FormattedMessage
           id='contract.publish.header'
           defaultMessage='Publish contract'
-        />: { contract.name }
-      </React.Fragment>
+        />: {contract.name}
+      </>
     )
 
+    const close = (event) => {
+      event.stopPropagation()
+      this.setState({ showModal: false })
+    }
+    const publish = (event) => {
+      event.stopPropagation()
+      this.props.publishContract(contract.id)
+    }
+
     const buttons = (
-      <React.Fragment>
+      <>
         <button
           type='button'
           className='btn btn-w'
-          onClick={(event) => {
-            event.stopPropagation()
-            this.setState({ showModal: false })
-          }}>
-          { publishSuccess
-            ? <FormattedMessage
-              id='contract.publish.button.close'
-              defaultMessage='Close'
-            />
-            : <FormattedMessage
-              id='contract.publish.button.cancel'
-              defaultMessage='Cancel'
-            />
+          onClick={close}
+        >
+          {
+            publishSuccess
+              ? (
+                <FormattedMessage
+                  id='contract.publish.button.close'
+                  defaultMessage='Close'
+                />
+              )
+              : (
+                <FormattedMessage
+                  id='contract.publish.button.cancel'
+                  defaultMessage='Cancel'
+                />
+              )
           }
         </button>
 
-        { /* show publish button only after publish preflight and without "errors" */ }
-        { publishState && errors.length === 0 &&
-          <button
-            type='button'
-            className='btn btn-primary btn-w'
-            onClick={(event) => {
-              event.stopPropagation()
-              this.props.publishContract(contract.id)
-            }}>
-            <FormattedMessage
-              id='contract.publish.button.ok'
-              defaultMessage='Publish'
-            />
-          </button>
+        {/* show publish button only after publish preflight and without "errors" */}
+        {
+          publishState && errors.length === 0 &&
+            <button
+              type='button'
+              className='btn btn-primary btn-w'
+              onClick={publish}
+            >
+              <FormattedMessage
+                id='contract.publish.button.ok'
+                defaultMessage='Publish'
+              />
+            </button>
         }
-      </React.Fragment>
+      </>
     )
 
     return (
@@ -177,26 +195,27 @@ class ContractPublishButton extends Component {
             id='contract.publish.status'
             defaultMessage='Publish status'
           />
-          { /* Executing a request */ }
-          { !publishSuccess && !publishError && !publishState &&
-            <i className='ml-5 fa fa-cog fa-spin' />
+          {/* Executing a request */}
+          {
+            !publishSuccess && !publishError && !publishState &&
+              <i className='ml-5 fa fa-cog fa-spin' />
           }
         </label>
 
         <ul>
           {
             errors.map((msg, index) => (
-              <li key={index} className='error'>{ msg }</li>
+              <li key={index} className='error'>{msg}</li>
             ))
           }
           {
             warnings.map((msg, index) => (
-              <li key={index} className='warning'>{ msg }</li>
+              <li key={index} className='warning'>{msg}</li>
             ))
           }
           {
             infos.map((msg, index) => (
-              <li key={index} className='success'>{ msg }</li>
+              <li key={index} className='success'>{msg}</li>
             ))
           }
         </ul>

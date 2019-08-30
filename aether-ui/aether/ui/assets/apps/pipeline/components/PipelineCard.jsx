@@ -32,67 +32,65 @@ import { selectPipeline, renamePipeline } from '../redux'
 class PipelineCard extends Component {
   constructor (props) {
     super(props)
+
     this.state = {
       isRenaming: false
     }
-
-    this.onRename = this.onRename.bind(this)
-    this.renameSave = this.renameSave.bind(this)
-  }
-
-  onPipelineSelect (pipeline) {
-    this.props.selectPipeline(pipeline.id)
-    this.props.history.push(`/${pipeline.id}/`)
-  }
-
-  onRename () {
-    this.setState({
-      isRenaming: true
-    })
-  }
-
-  renameSave (newName) {
-    this.props.renamePipeline(this.props.pipeline.id, newName)
-    this.setState({
-      isRenaming: false
-    })
   }
 
   render () {
     const { pipeline } = this.props
 
+    const handleRenameSave = (newName) => {
+      this.props.renamePipeline(this.props.pipeline.id, newName)
+      this.setState({
+        isRenaming: false
+      })
+    }
+
+    const handlePipelineSelect = (pipeline) => {
+      this.props.selectPipeline(pipeline.id)
+      this.props.history.push(`/${pipeline.id}/`)
+    }
+
     return (
       <div className='pipeline-preview'>
         <div className='preview-heading'>
           <span className='pipeline-name'>
-            // { pipeline.name }
+            // {pipeline.name}
           </span>
           {
             this.state.isRenaming
-              ? <PipelineRename
-                name={pipeline.name}
-                onCancel={() => this.setState({ isRenaming: false })}
-                onSave={this.renameSave}
-              />
-              : <PipelineActions
-                delete={this.props.delete}
-                rename={this.onRename}
-                pipeline={pipeline}
-                history={this.props.history}
-              />
+              ? (
+                <PipelineRename
+                  name={pipeline.name}
+                  onCancel={() => { this.setState({ isRenaming: false }) }}
+                  onSave={handleRenameSave}
+                />
+              )
+              : (
+                <PipelineActions
+                  delete={this.props.delete}
+                  rename={() => { this.setState({ isRenaming: true }) }}
+                  pipeline={pipeline}
+                  history={this.props.history}
+                />
+              )
           }
         </div>
 
         <div
           className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`}
-          onClick={this.onPipelineSelect.bind(this, pipeline)}>
-          { pipeline.isInputReadOnly &&
-            <span className='tag'>
-              <FormattedMessage
-                id='pipeline.card.read-only'
-                defaultMessage='read-only'
-              />
-            </span>
+          onClick={() => { handlePipelineSelect(pipeline) }}
+        >
+          {
+            pipeline.isInputReadOnly &&
+              <span className='tag'>
+                <FormattedMessage
+                  id='pipeline.card.read-only'
+                  defaultMessage='read-only'
+                />
+              </span>
           }
 
           <div className='input-heading'>
@@ -100,7 +98,7 @@ class PipelineCard extends Component {
               <i className='fas fa-file' />
             </span>
             <span className='input-name'>
-              { pipeline.name } { pipeline.mappingset && <PipelineInfoButton pipeline={pipeline} /> }
+              {pipeline.name} {pipeline.mappingset && <PipelineInfoButton pipeline={pipeline} />}
             </span>
           </div>
         </div>

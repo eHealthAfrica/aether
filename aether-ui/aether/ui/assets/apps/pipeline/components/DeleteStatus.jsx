@@ -31,8 +31,10 @@ class DeleteStatus extends Component {
   }
 
   componentDidUpdate () {
-    if (this.props.error || (this.props.deleteStatus &&
-      this.props.deleteStatus.not_published)) {
+    if (
+      this.props.error ||
+      (this.props.deleteStatus && this.props.deleteStatus.not_published)
+    ) {
       this.props.toggle()
     }
   }
@@ -43,18 +45,21 @@ class DeleteStatus extends Component {
     }
 
     const header = this.props.header
+    const close = () => { this.props.toggle() }
 
     const buttons = (
       <div className='modal-actions'>
-        { this.props.deleteStatus &&
-          <button
-            className='btn btn-primary btn-w'
-            onClick={() => { this.props.toggle() }}>
-            <FormattedMessage
-              id='delete.progress.modal.ok'
-              defaultMessage='Close'
-            />
-          </button>
+        {
+          this.props.deleteStatus &&
+            <button
+              className='btn btn-primary btn-w'
+              onClick={close}
+            >
+              <FormattedMessage
+                id='delete.progress.modal.ok'
+                defaultMessage='Close'
+              />
+            </button>
         }
       </div>
     )
@@ -76,10 +81,12 @@ class DeleteStatus extends Component {
         {
           this.props.deleteOptions.entities &&
           this.props.deleteStatus &&
-          Object.prototype.hasOwnProperty.call(this.props.deleteStatus, 'entities') && (
+          Object.prototype.hasOwnProperty.call(this.props.deleteStatus, 'entities') &&
             <div>
               <label className='form-label'>
-                <span className='badge badge-b'>{this.props.deleteStatus.entities.total}</span>
+                <span className='badge badge-b'>
+                  {this.props.deleteStatus.entities.total}
+                </span>
                 <FormattedMessage
                   id='delete.modal.entities.status'
                   defaultMessage='Entities deleted'
@@ -98,7 +105,6 @@ class DeleteStatus extends Component {
                 }
               </div>
             </div>
-          )
         }
 
         {
@@ -106,7 +112,9 @@ class DeleteStatus extends Component {
           this.props.deleteStatus.schemas && (
             <div>
               <label className='form-label mt-4'>
-                <span className='badge badge-b'>{Object.keys(this.props.deleteStatus.schemas).length}</span>
+                <span className='badge badge-b'>
+                  {Object.keys(this.props.deleteStatus.schemas).length}
+                </span>
                 <FormattedMessage
                   id='delete.modal.entity.types.status'
                   defaultMessage='Entity types deleted'
@@ -118,17 +126,21 @@ class DeleteStatus extends Component {
                     <div key={schema}>
                       <i className='fa fa-check mr-2' />
                       <label>
-                        { schema } :
+                        {schema} :
                         {
                           this.props.deleteStatus.schemas[schema].is_deleted
-                            ? <FormattedMessage
-                              id='delete.modal.entity.types.status.deleted'
-                              defaultMessage='Deleted'
-                            />
-                            : <FormattedMessage
-                              id='delete.modal.entity.types.status.not.deleted'
-                              defaultMessage='Not deleted, used by other mappings'
-                            />
+                            ? (
+                              <FormattedMessage
+                                id='delete.modal.entity.types.status.deleted'
+                                defaultMessage='Deleted'
+                              />
+                            )
+                            : (
+                              <FormattedMessage
+                                id='delete.modal.entity.types.status.not.deleted'
+                                defaultMessage='Not deleted, used by other mappings'
+                              />
+                            )
                         }
                       </label>
                     </div>
@@ -138,12 +150,12 @@ class DeleteStatus extends Component {
 
               {
                 Object.keys(this.props.deleteStatus.schemas).length === 0 &&
-                <label>
-                  <FormattedMessage
-                    id='delete.modal.entity.types.empty'
-                    defaultMessage='No entity types to delete'
-                  />
-                </label>
+                  <label>
+                    <FormattedMessage
+                      id='delete.modal.entity.types.empty'
+                      defaultMessage='No entity types to delete'
+                    />
+                  </label>
               }
             </div>
           )
@@ -152,7 +164,7 @@ class DeleteStatus extends Component {
         {
           this.props.deleteOptions.submissions &&
           this.props.deleteStatus &&
-          Object.prototype.hasOwnProperty.call(this.props.deleteStatus, 'submissions') && (
+          Object.prototype.hasOwnProperty.call(this.props.deleteStatus, 'submissions') &&
             <div>
               <label className='form-label mt-4'>
                 <span className='badge badge-b'>{this.props.deleteStatus.submissions}</span>
@@ -162,7 +174,6 @@ class DeleteStatus extends Component {
                 />
               </label>
             </div>
-          )
         }
       </Modal>
     )

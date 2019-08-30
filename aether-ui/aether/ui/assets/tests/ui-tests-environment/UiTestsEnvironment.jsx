@@ -41,7 +41,7 @@ class UiTestsEnvironment extends JSDOMEnvironment {
 
     // used to create random data
     // https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Array/from
-    this.global.range = (start, end) => Array.from({length: end - start}, (v, i) => i + start)
+    this.global.range = (start, end) => Array.from({ length: end - start }, (v, i) => i + start)
 
     // Locate a DOM element by its data-qa attribute
     this.global.findByDataQa = (component, dataQa) => component.find(`[data-qa="${dataQa}"]`)
