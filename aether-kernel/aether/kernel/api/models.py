@@ -34,7 +34,7 @@ from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.sdk.utils import json_prettified, get_file_content
 
 from .constants import NAMESPACE
-from .validators import (
+from aether.python.validators import (
     validate_avro_schema,
     validate_entity_payload,
     validate_mapping_definition,

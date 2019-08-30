@@ -31,10 +31,12 @@ from aether.sdk.multitenancy.serializers import (
     MtModelSerializer,
 )
 
-from .constants import MergeOptions as MERGE_OPTIONS
-from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
+from aether.python import utils, validators
+from aether.python.constants import MergeOptions as MERGE_OPTIONS
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
+from .entity_extractor import run_entity_extraction
 
-from . import models, utils, validators
+from . import models
 
 
 MERGE_CHOICES = (

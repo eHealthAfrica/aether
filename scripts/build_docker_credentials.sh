@@ -177,6 +177,10 @@ TEST_PARALLEL=
 # https://github.com/eHealthAfrica/aether-django-sdk-library
 SDK_PATH=../aether-django-sdk-library
 
+# to speed up development changes in the Aether Python library
+# https://github.com/eHealthAfrica/aether-python-library
+AETHER_PYTHON_PATH=../aether-python-library
+
 # Docker network
 NETWORK_NAME=aether_dev
 NETWORK_DOMAIN=aether.local
