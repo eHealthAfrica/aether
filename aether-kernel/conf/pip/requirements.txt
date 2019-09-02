@@ -15,8 +15,8 @@
 aether.sdk==1.1.7
 attrs==19.1.0
 autopep8==1.4.4
-boto3==1.9.219
-botocore==1.12.219
+boto3==1.9.220
+botocore==1.12.220
 cachetools==3.1.1
 certifi==2019.6.16
 chardet==3.0.4
@@ -24,7 +24,7 @@ coreapi==2.3.3
 coreschema==0.0.4
 coverage==4.5.4
 decorator==4.4.0
-Django==2.2.4
+Django==2.2.5
 django-autofixture==0.12.1
 django-cas-ng==3.6.0
 django-cors-headers==3.1.0
@@ -71,7 +71,7 @@ ply==3.11
 prometheus-client==0.7.1
 protobuf==3.9.1
 psycopg2-binary==2.8.3
-pyasn1==0.4.6
+pyasn1==0.4.7
 pyasn1-modules==0.2.6
 pycodestyle==2.5.0
 pyflakes==2.1.1
@@ -87,7 +87,7 @@ rsa==4.0
 ruamel.yaml==0.16.5
 ruamel.yaml.clib==0.1.2
 s3transfer==0.2.1
-sentry-sdk==0.11.1
+sentry-sdk==0.11.2
 six==1.12.0
 spavro==1.1.22
 sqlparse==0.3.0
