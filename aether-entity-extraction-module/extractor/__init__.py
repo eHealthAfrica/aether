@@ -28,3 +28,4 @@ def main():
         callback=extractor.add_to_queue,
         channel=SUBMISSION_CHANNEL
     )
+    return extractor

@@ -12,17 +12,16 @@
 #
 ################################################################################
 
-aether.sdk[test]
+aether.python
 
 redis
 requests
-
-# AVRO + JSON libraries
-eha_jsonpath
-jsonschema
-spavro
 
 
 # Test libraries
 pytest
 fakeredis
+coverage
+flake8
+flake8-quotes
+tblib

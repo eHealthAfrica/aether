@@ -17,11 +17,11 @@
 # under the License.
 
 import json
+from time import sleep
 import collections
-from rest_framework import status
-from aether.sdk.redis.task import TaskHelper
-from aether.sdk.utils import request
-from django.conf import settings
+import requests
+from aether.python.redis.task import TaskHelper
+from extractor import settings
 from typing import (
     Dict,
     NamedTuple,
@@ -29,6 +29,8 @@ from typing import (
 )
 
 EXTERNAL_APP_KERNEL = 'aether-kernel'
+SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
+SUBMISSION_PAYLOAD_FIELD = 'payload'
 CONSTANTS = collections.namedtuple(
     'CONSTANTS',
     'projects mappingsets mappings schemas single_schema \
@@ -57,6 +59,21 @@ def get_redis(redis):
     return TaskHelper(settings, redis) if redis else TaskHelper(settings)
 
 
+def request(*args, **kwargs):
+    count = 0
+    exception = None
+
+    while count < 3:
+        try:
+            return requests.request(*args, **kwargs)
+        except Exception as e:
+            exception = e
+        count += 1
+        sleep(1)
+
+    raise exception
+
+
 class Task(NamedTuple):
     id: str
     tenant: str
@@ -76,9 +93,6 @@ def kernel_data_request(url='', method='get', data=None, headers=None):
     )
 
     res.raise_for_status()
-
-    if res.status_code == status.HTTP_204_NO_CONTENT:
-        return None
     return json.loads(res.content.decode('utf-8'))
 
 
@@ -147,14 +161,3 @@ def redis_subscribe(callback, pattern, redis=None):
 def redis_stop(redis):
     redis = get_redis(redis)
     return redis.stop()
-
-
-def object_contains(test, obj):
-    # Recursive object comparison function.
-    if obj == test:
-        return True
-    if isinstance(obj, list):
-        return True in [object_contains(test, i) for i in obj]
-    elif isinstance(obj, dict):
-        return True in [object_contains(test, i) for i in obj.values()]
-    return False

@@ -120,6 +120,10 @@ if [[ $1 == "kernel" ]]; then
     start_exm_test
 fi
 
+if [[ $1 == "exm" ]]; then
+    $DC_TEST up -d redis-test
+fi
+
 if [[ $1 != "kernel" && $1 != "exm" ]]; then
     # rename kernel test database in each case
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")

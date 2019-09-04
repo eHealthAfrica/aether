@@ -29,14 +29,9 @@ def get_required(name):
 
 DEBUG = bool(os.environ.get('DEBUG'))
 TESTING = bool(os.environ.get('TESTING'))
-SECRET_KEY = get_required('DJANGO_SECRET_KEY')
 
 LANGUAGE_CODE = os.environ.get('LANGUAGE_CODE', 'en-us')
 TIME_ZONE = os.environ.get('TIME_ZONE', 'UTC')
-
-USE_I18N = True
-USE_L10N = True
-USE_TZ = True
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
 REDIS_PORT = os.environ.get('REDIS_PORT', 6379)

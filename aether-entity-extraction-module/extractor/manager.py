@@ -22,7 +22,7 @@ import concurrent.futures
 import threading
 import logging
 from django.utils.translation import ugettext as _
-from django.conf import settings
+from . import settings
 from .utils import (
     get_from_redis_or_kernel,
     KERNEL_ARTEFACT_NAMES,
@@ -32,15 +32,15 @@ from .utils import (
     get_redis_subcribed_message,
     redis_subscribe,
     redis_stop,
-    MAX_WORKERS
+    MAX_WORKERS,
+    SUBMISSION_EXTRACTION_FLAG,
+    SUBMISSION_PAYLOAD_FIELD,
 )
 
-from .entity_extractor import (
+from aether.python.entity.extractor import (
     extract_create_entities,
     ENTITY_EXTRACTION_ERRORS,
     ENTITY_EXTRACTION_ENRICHMENT,
-    SUBMISSION_EXTRACTION_FLAG,
-    SUBMISSION_PAYLOAD_FIELD,
 )
 
 PUSH_TO_KERNEL_INTERVAL = 0.05

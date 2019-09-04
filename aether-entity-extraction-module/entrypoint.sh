@@ -73,8 +73,6 @@ function test_all {
     after_test
 }
 
-export APP_MODULE=extractor
-export DJANGO_SETTINGS_MODULE="${APP_MODULE}.settings"
 
 case "$1" in
     bash )

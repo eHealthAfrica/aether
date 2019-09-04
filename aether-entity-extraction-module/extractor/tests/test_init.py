@@ -16,7 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-try:
-    __import__('pkg_resources').declare_namespace(__name__)
-except ImportError:
-    __path__ = __import__('pkgutil').extend_path(__path__, __name__)
+import collections
+from unittest import TestCase
+from .. import main
+
+
+class InitTests(TestCase):
+
+    def test_manager_setup(self):
+        container = main()
+        self.assertEqual(container.SUBMISSION_QUEUE, collections.deque())
+        self.assertEqual(container.PROCESSED_SUBMISSIONS, collections.deque())
+        self.assertEqual(container.PROCESSED_ENTITIES, collections.deque())
+        container.stop()

@@ -21,7 +21,6 @@ import json
 import uuid
 import copy
 import requests
-# import pytest
 from unittest import TestCase, mock
 from ..manager import ExtractionManager
 from . import MAPPINGS, MAPPINGSET, TENANT, SCHEMA_DECORATORS, SCHEMAS, SUBMISSION
