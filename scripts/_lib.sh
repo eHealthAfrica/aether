@@ -79,6 +79,20 @@ function build_container {
         $container
 }
 
+# build the container and tag it as local
+function build_local {
+    local container=$1
+    local APP_REVISION=`git rev-parse --abbrev-ref HEAD`
+    local DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
+
+    echo_message "Building local container $container"
+    $DC build \
+        --build-arg GIT_REVISION=$APP_REVISION \
+        --build-arg VERSION=local \
+        $container
+    docker tag aether-$container:latest aether-$container:local
+}
+
 # upgrade the dependencies of the indicated container
 function pip_freeze_container {
     local container=$1

@@ -103,6 +103,13 @@ class ProducerManager(object):
                 self.settings.get('KAFKA_SU_USER')
             kafka_settings['sasl.password'] = \
                 self.settings.get('KAFKA_SU_PW')
+        elif self.settings.get('kafka_security', '').lower() == 'sasl_ssl':
+            kafka_settings['security.protocol'] = 'SASL_SSL'
+            kafka_settings['sasl.mechanisms'] = 'PLAIN'
+            kafka_settings['sasl.username'] = \
+                self.settings.get('KAFKA_SU_USER')
+            kafka_settings['sasl.password'] = \
+                self.settings.get('KAFKA_SU_PW')
         self.kafka_admin_client = AdminClient(kafka_settings)
 
     def keep_alive_loop(self):
@@ -441,6 +448,13 @@ class TopicManager(object):
                 self.context.settings.get('KAFKA_SU_USER')
             self.kafka_settings['sasl.password'] = \
                 self.context.settings.get('KAFKA_SU_PW')
+        elif self.settings.get('kafka_security', '').lower() == 'sasl_ssl':
+            kafka_settings['security.protocol'] = 'SASL_SSL'
+            kafka_settings['sasl.mechanisms'] = 'PLAIN'
+            kafka_settings['sasl.username'] = \
+                self.settings.get('KAFKA_SU_USER')
+            kafka_settings['sasl.password'] = \
+                self.settings.get('KAFKA_SU_PW')
 
         self.producer = Producer(**self.kafka_settings)
 
