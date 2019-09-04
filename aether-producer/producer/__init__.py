@@ -37,7 +37,7 @@ import sys
 import traceback
 
 from confluent_kafka import Producer
-from confluent_kafka.admin import AdminClient
+from confluent_kafka.admin import AdminClient, NewTopic
 from flask import Flask, Response, request, jsonify
 import gevent
 from gevent.pool import Pool
@@ -59,6 +59,26 @@ class KafkaStatus(enum.Enum):
     SUBMISSION_PENDING = 1
     SUBMISSION_FAILURE = 2
     SUBMISSION_SUCCESS = 3
+
+
+def apply_kafka_security_settings(settings, kafka_settings, mode='SASL_PLAINTEXT'):
+    kafka_settings["bootstrap.servers"] = settings.get("kafka_url")
+    if mode.lower() == 'sasl_plaintext':
+        # Let Producer use Kafka SU to produce
+        kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
+        kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
+        kafka_settings['sasl.username'] = \
+            settings.get('KAFKA_SU_USER')
+        kafka_settings['sasl.password'] = \
+            settings.get('KAFKA_SU_PW')
+    elif mode.lower() == 'sasl_ssl':
+        kafka_settings['security.protocol'] = 'SASL_SSL'
+        kafka_settings['sasl.mechanisms'] = 'PLAIN'
+        kafka_settings['sasl.username'] = \
+            settings.get('KAFKA_SU_USER')
+        kafka_settings['sasl.password'] = \
+            settings.get('KAFKA_SU_PW')
+    return kafka_settings
 
 
 class ProducerManager(object):
@@ -93,23 +113,28 @@ class ProducerManager(object):
         self.run()
 
     def get_admin_client(self):
-        kafka_settings = {"bootstrap.servers": self.settings.get("kafka_url")}
-        if self.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
-            # Let Producer use Kafka SU to produce
-            self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
-            kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
-            kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
-            kafka_settings['sasl.username'] = \
-                self.settings.get('KAFKA_SU_USER')
-            kafka_settings['sasl.password'] = \
-                self.settings.get('KAFKA_SU_PW')
-        elif self.settings.get('kafka_security', '').lower() == 'sasl_ssl':
-            kafka_settings['security.protocol'] = 'SASL_SSL'
-            kafka_settings['sasl.mechanisms'] = 'PLAIN'
-            kafka_settings['sasl.username'] = \
-                self.settings.get('KAFKA_SU_USER')
-            kafka_settings['sasl.password'] = \
-                self.settings.get('KAFKA_SU_PW')
+        kafka_settings = apply_kafka_security_settings(
+            self.settings,
+            {},
+            self.settings.get('kafka_security'),
+        )
+        # kafka_settings = {"bootstrap.servers": self.settings.get("kafka_url")}
+        # if self.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
+        #     # Let Producer use Kafka SU to produce
+        #     self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
+        #     kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
+        #     kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
+        #     kafka_settings['sasl.username'] = \
+        #         self.settings.get('KAFKA_SU_USER')
+        #     kafka_settings['sasl.password'] = \
+        #         self.settings.get('KAFKA_SU_PW')
+        # elif self.settings.get('kafka_security', '').lower() == 'sasl_ssl':
+        #     kafka_settings['security.protocol'] = 'SASL_SSL'
+        #     kafka_settings['sasl.mechanisms'] = 'PLAIN'
+        #     kafka_settings['sasl.username'] = \
+        #         self.settings.get('KAFKA_SU_USER')
+        #     kafka_settings['sasl.password'] = \
+        #         self.settings.get('KAFKA_SU_PW')
         self.kafka_admin_client = AdminClient(kafka_settings)
 
     def keep_alive_loop(self):
@@ -353,10 +378,12 @@ class ProducerManager(object):
 
 
 class TopicStatus(enum.Enum):
+    INITIALIZING = 0  # Started by not yet operational
     PAUSED = 1  # Paused
     LOCKED = 2  # Paused by system and non-resumable via API until sys unlock
     REBUILDING = 3  # Topic is being rebuilt
     NORMAL = 4  # Topic is operating normally
+    ERROR = 5
 
 
 class TopicManager(object):
@@ -398,7 +425,7 @@ class TopicManager(object):
         self.name = schema['schema_name']
         self.realm = realm
         self.offset = ""
-        self.operating_status = TopicStatus.NORMAL
+        self.operating_status = TopicStatus.INITIALIZING
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
         self.status = {
             "last_errors_set": {},
@@ -431,30 +458,51 @@ class TopicManager(object):
         self.get_producer()
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
+        self.check_topic()
+
+    def check_topic(self):
+        metadata = self.producer.list_topics()
+        topics = [t for t in metadata.topics.keys()]
+        if self.name not in topics:
+            self.logger.debug(f'Topic {self.name} already exists.')
+            self.operating_status = TopicStatus.NORMAL
+            return
+        self.logger.debug(f'Topic {self.name} does not exist. current topics: {topics}')
+
+    def create_topic(self):
+        # kadmin = self.context.kafka_admin_client
+        pass
+        # fs = kadmin.delete_topics([self.name], operation_timeout=60)
+        # future = fs.get(self.name)
 
     def get_producer(self):
         kafka_settings = self.context.settings.get('kafka_settings')
-        # apply setting from root config to be able to use env variables
-        kafka_settings["bootstrap.servers"] = self.context.settings.get(
-            "kafka_url")
-        self.kafka_settings = kafka_settings
-        # check for SASL
-        if self.context.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
-            # Let Producer use Kafka SU to produce
-            self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
-            self.kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
-            self.kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
-            self.kafka_settings['sasl.username'] = \
-                self.context.settings.get('KAFKA_SU_USER')
-            self.kafka_settings['sasl.password'] = \
-                self.context.settings.get('KAFKA_SU_PW')
-        elif self.settings.get('kafka_security', '').lower() == 'sasl_ssl':
-            kafka_settings['security.protocol'] = 'SASL_SSL'
-            kafka_settings['sasl.mechanisms'] = 'PLAIN'
-            kafka_settings['sasl.username'] = \
-                self.settings.get('KAFKA_SU_USER')
-            kafka_settings['sasl.password'] = \
-                self.settings.get('KAFKA_SU_PW')
+        self.kafka_settings = apply_kafka_security_settings(
+            self.context.settings,
+            kafka_settings,
+            self.settings.get('kafka_security'),
+        )
+        # # apply setting from root config to be able to use env variables
+        # kafka_settings["bootstrap.servers"] = self.context.settings.get(
+        #     "kafka_url")
+        # self.kafka_settings = kafka_settings
+        # # check for SASL
+        # if self.context.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
+        #     # Let Producer use Kafka SU to produce
+        #     self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
+        #     self.kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
+        #     self.kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
+        #     self.kafka_settings['sasl.username'] = \
+        #         self.context.settings.get('KAFKA_SU_USER')
+        #     self.kafka_settings['sasl.password'] = \
+        #         self.context.settings.get('KAFKA_SU_PW')
+        # elif self.settings.get('kafka_security', '').lower() == 'sasl_ssl':
+        #     kafka_settings['security.protocol'] = 'SASL_SSL'
+        #     kafka_settings['sasl.mechanisms'] = 'PLAIN'
+        #     kafka_settings['sasl.username'] = \
+        #         self.settings.get('KAFKA_SU_USER')
+        #     kafka_settings['sasl.password'] = \
+        #         self.settings.get('KAFKA_SU_PW')
 
         self.producer = Producer(**self.kafka_settings)
 
@@ -668,7 +716,12 @@ class TopicManager(object):
         # Sends new messages to Kafka
         # Registers message callback (ok or fail) to TopicManager.kafka_callback
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
-
+        while self.operating_status is TopicStatus.INITIALIZING:
+            if self.context.killed:
+                return
+            self.logger.debug(f'Waiting for topic {self.name} to initialize...')
+            self.context.safe_sleep(self.wait_time)
+            pass
         while not self.context.killed:
             if self.operating_status is not TopicStatus.NORMAL:
                 self.logger.debug(
