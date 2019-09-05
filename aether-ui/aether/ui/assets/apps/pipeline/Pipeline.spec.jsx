@@ -49,13 +49,13 @@ describe('Pipeline Component', () => {
       <Provider store={store}>
         <Pipeline
           location={{ state: { isNewContract: true } }}
-          match={{ params: {} }} />
+          match={{ params: {} }}
+        />
       </Provider>
     )
-    const pipelineComponent = component.find('Pipeline')
 
-    const reduxState = component.state().store.getState().pipelines
-    const localState = pipelineComponent.state()
+    const reduxState = store.getState().pipelines
+    const localState = component.find('Pipeline').state()
 
     expect(reduxState.currentSection).toEqual(CONTRACT_SECTION_SETTINGS)
     expect(localState.isNew).toEqual(true)

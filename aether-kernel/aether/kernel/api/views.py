@@ -32,14 +32,13 @@ from rest_framework.decorators import (
 from rest_framework.renderers import JSONRenderer
 
 from aether.sdk.multitenancy.views import MtViewSetMixin
-
-from .avro_tools import extract_jsonpaths_and_docs
-from .constants import LINKED_DATA_MAX_DEPTH
-from .entity_extractor import (
+from aether.python.entity.extractor import (
     extract_create_entities,
-    run_entity_extraction,
     ENTITY_EXTRACTION_ERRORS,
 )
+from aether.python.avro.tools import extract_jsonpaths_and_docs
+from .constants import LINKED_DATA_MAX_DEPTH
+from .entity_extractor import run_entity_extraction
 from .exporter import ExporterViewSet
 from .mapping_validation import validate_mappings
 

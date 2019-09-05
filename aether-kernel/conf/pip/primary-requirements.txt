@@ -18,6 +18,9 @@
 # Aether Django SDK library with extras
 aether.sdk[cas,server,storage,test]
 
+# Aether Python library
+aether.python
+
 
 # Django specific
 django-filter
@@ -25,13 +28,6 @@ django-model-utils
 drf-yasg
 packaging  # missing dependency of drf-yasg
 python-dateutil
-
-
-# AVRO + JSON libraries
-eha_jsonpath
-jsonschema
-spavro
-
 
 # XLSX libraries
 openpyxl

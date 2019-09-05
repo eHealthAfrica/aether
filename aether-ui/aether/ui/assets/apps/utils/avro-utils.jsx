@@ -208,7 +208,7 @@ export const deriveMappingRules = (schema, schemaName = null) => {
   if (!schema.fields.find(field => field.name === FIELD_ID)) {
     rules.push({
       id: generateGUID(),
-      source: `#!uuid`,
+      source: '#!uuid',
       destination: `${schemaName || schema.name}.${FIELD_ID}`
     })
   }

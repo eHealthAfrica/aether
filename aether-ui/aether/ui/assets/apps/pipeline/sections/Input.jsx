@@ -150,13 +150,14 @@ class SchemaInput extends Component {
     return (
       <form onSubmit={this.notifyChange.bind(this)}>
         <div className='textarea-header'>
-          { this.state.error &&
-            <div className='hint error-message'>
-              <h4 className='hint-title'>
-                { this.state.errorHead }
-              </h4>
-              { this.state.error }
-            </div>
+          {
+            this.state.error &&
+              <div className='hint error-message'>
+                <h4 className='hint-title'>
+                  {this.state.errorHead}
+                </h4>
+                {this.state.error}
+              </div>
           }
         </div>
 
@@ -170,15 +171,20 @@ class SchemaInput extends Component {
           disabled={this.props.pipeline.isInputReadOnly}
         />
 
-        { !this.props.pipeline.isInputReadOnly &&
-          <button type='submit' className='btn btn-w btn-primary mt-3' disabled={!this.hasChanged()}>
-            <span className='details-title'>
-              <FormattedMessage
-                id='input.schema.button.add'
-                defaultMessage='Add to pipeline'
-              />
-            </span>
-          </button>
+        {
+          !this.props.pipeline.isInputReadOnly &&
+            <button
+              type='submit'
+              className='btn btn-w btn-primary mt-3'
+              disabled={!this.hasChanged()}
+            >
+              <span className='details-title'>
+                <FormattedMessage
+                  id='input.schema.button.add'
+                  defaultMessage='Add to pipeline'
+                />
+              </span>
+            </button>
         }
       </form>
     )
@@ -255,16 +261,17 @@ class DataInput extends Component {
     return (
       <form onSubmit={this.notifyChange.bind(this)}>
         <div className='textarea-header'>
-          { this.state.error &&
-            <div className='hint error-message'>
-              <h4 className='hint-title'>
-                <FormattedMessage
-                  id='input.data.invalid'
-                  defaultMessage='Not a valid JSON document.'
-                />
-              </h4>
-              { this.state.error }
-            </div>
+          {
+            this.state.error &&
+              <div className='hint error-message'>
+                <h4 className='hint-title'>
+                  <FormattedMessage
+                    id='input.data.invalid'
+                    defaultMessage='Not a valid JSON document.'
+                  />
+                </h4>
+                {this.state.error}
+              </div>
           }
         </div>
 
@@ -278,18 +285,20 @@ class DataInput extends Component {
           disabled={this.props.pipeline.isInputReadOnly}
         />
 
-        { !this.props.pipeline.isInputReadOnly &&
-          <button
-            type='submit'
-            className='btn btn-w btn-primary mt-3'
-            disabled={this.props.pipeline.isInputReadOnly || !this.hasChanged()}>
-            <span className='details-title'>
-              <FormattedMessage
-                id='input.data.button.add'
-                defaultMessage='Derive schema from data'
-              />
-            </span>
-          </button>
+        {
+          !this.props.pipeline.isInputReadOnly &&
+            <button
+              type='submit'
+              className='btn btn-w btn-primary mt-3'
+              disabled={this.props.pipeline.isInputReadOnly || !this.hasChanged()}
+            >
+              <span className='details-title'>
+                <FormattedMessage
+                  id='input.data.button.add'
+                  defaultMessage='Derive schema from data'
+                />
+              </span>
+            </button>
         }
       </form>
     )
@@ -305,10 +314,10 @@ class Input extends Component {
       view: DATA_VIEW
     }
 
-    this.toggleInputView = this.toggleInputView.bind(this)
+    this.handleToggleInputView = this.handleToggleInputView.bind(this)
   }
 
-  toggleInputView () {
+  handleToggleInputView () {
     if (this.state.view === DATA_VIEW) {
       this.setState({ view: SCHEMA_VIEW })
     } else {
@@ -340,7 +349,8 @@ class Input extends Component {
             <div className='tabs'>
               <button
                 className={`tab ${this.state.view === SCHEMA_VIEW ? 'selected' : ''}`}
-                onClick={this.toggleInputView}>
+                onClick={this.handleToggleInputView}
+              >
                 <FormattedMessage
                   id='input.toggle.schema'
                   defaultMessage='Avro schema'
@@ -349,7 +359,8 @@ class Input extends Component {
 
               <button
                 className={`tab ${this.state.view === DATA_VIEW ? 'selected' : ''}`}
-                onClick={this.toggleInputView}>
+                onClick={this.handleToggleInputView}
+              >
                 <FormattedMessage
                   id='input.toggle.data'
                   defaultMessage='JSON Data'
@@ -357,8 +368,8 @@ class Input extends Component {
               </button>
             </div>
 
-            { this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} /> }
-            { this.state.view === DATA_VIEW && <DataInput {...this.props} /> }
+            {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
+            {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
           </div>
         </div>
       </div>
