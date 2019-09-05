@@ -118,7 +118,7 @@ describe('Pipeline actions', () => {
 
   it('should get all pipelines and add to store', () => {
     nock('http://localhost')
-      .post(`/api/pipelines/fetch/`)
+      .post('/api/pipelines/fetch/')
       .reply(200, mockPipelines)
 
     expect(store.getState().pipelineList).toBeFalsy()
@@ -143,7 +143,7 @@ describe('Pipeline actions', () => {
 
   it('should fail on getting all pipelines and store error', () => {
     nock('http://localhost')
-      .post(`/api/pipelines/fetch/`)
+      .post('/api/pipelines/fetch/')
       .reply(404)
 
     return store.dispatch(getPipelines())
@@ -161,7 +161,7 @@ describe('Pipeline actions', () => {
     expect(selectPipeline(1)).toEqual(expectedAction)
 
     nock('http://localhost')
-      .post(`/api/pipelines/fetch/`)
+      .post('/api/pipelines/fetch/')
       .reply(200, mockPipelines)
 
     return store.dispatch(getPipelines())
@@ -186,7 +186,7 @@ describe('Pipeline actions', () => {
     expect(selectContract(2, '2-1')).toEqual(expectedAction)
 
     nock('http://localhost')
-      .post(`/api/pipelines/fetch/`)
+      .post('/api/pipelines/fetch/')
       .reply(200, mockPipelines)
 
     return store.dispatch(getPipelines())
@@ -213,11 +213,11 @@ describe('Pipeline actions', () => {
     }
 
     nock('http://localhost')
-      .post(`/api/pipelines/fetch/`)
+      .post('/api/pipelines/fetch/')
       .reply(200, mockPipelines)
 
     nock('http://localhost')
-      .put(`/api/pipelines/1/`)
+      .put('/api/pipelines/1/')
       .reply(200, pipeline)
 
     return store.dispatch(getPipelines())
@@ -253,7 +253,7 @@ describe('Pipeline actions', () => {
       ]
     }
     nock('http://localhost')
-      .put(`/api/pipelines/1/`)
+      .put('/api/pipelines/1/')
       .reply(200, pipeline)
 
     expect(store.getState().pipelineList).toBeFalsy()
@@ -278,7 +278,7 @@ describe('Pipeline actions', () => {
 
   it('should try updating pipeline with wrong id and fail', () => {
     nock('http://localhost')
-      .put(`/api/pipelines/4/`)
+      .put('/api/pipelines/4/')
       .reply(404)
 
     return store.dispatch(updatePipeline({ id: 4 }))
@@ -301,7 +301,7 @@ describe('Pipeline actions', () => {
     }
 
     nock('http://localhost')
-      .get(`/api/pipelines/3/`)
+      .get('/api/pipelines/3/')
       .reply(200, pipeline)
 
     return store.dispatch(getPipelineById(3))
@@ -324,11 +324,11 @@ describe('Pipeline actions', () => {
     }
 
     nock('http://localhost')
-      .get(`/api/pipelines/3/`)
+      .get('/api/pipelines/3/')
       .reply(200, pipeline)
 
     nock('http://localhost')
-      .post(`/api/contracts/3-1/publish/`)
+      .post('/api/contracts/3-1/publish/')
       .reply(200, pipeline.contracts[0])
 
     return store.dispatch(getPipelineById(3))
@@ -359,7 +359,7 @@ describe('Pipeline actions', () => {
     }
 
     nock('http://localhost')
-      .get(`/api/pipelines/3/`)
+      .get('/api/pipelines/3/')
       .reply(200, pipeline)
 
     nock('http://localhost')

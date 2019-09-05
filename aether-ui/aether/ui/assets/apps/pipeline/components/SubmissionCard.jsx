@@ -48,7 +48,7 @@ class SubmissionCard extends Component {
           />
         </label>
         <a className='submission-url' href={submissionUrl}>
-          { submissionUrl }
+          {submissionUrl}
         </a>
 
         <div className='mt-5'>
@@ -60,7 +60,7 @@ class SubmissionCard extends Component {
           </label>
           <div className='code'>
             <code>
-              { objectToString(sampleData) }
+              {objectToString(sampleData)}
             </code>
           </div>
         </div>
