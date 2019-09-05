@@ -38,7 +38,7 @@ import sys
 import traceback
 
 from confluent_kafka import Producer
-from confluent_kafka.admin import AdminClient, NewTopic, ConfigResource
+from confluent_kafka.admin import AdminClient, NewTopic
 from flask import Flask, Response, request, jsonify
 import gevent
 from gevent.pool import Pool
