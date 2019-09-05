@@ -43,27 +43,6 @@ class PipelineList extends Component {
       showDeleteProgress: false,
       deleteOptions: {}
     }
-
-    this.deletePipeline = this.deletePipeline.bind(this)
-    this.onDelete = this.onDelete.bind(this)
-    this.hideModalProgress = this.hideModalProgress.bind(this)
-  }
-
-  onDelete (pipeline) {
-    this.setState({ showDeleteModal: true })
-    this.props.pipelineChanged(pipeline)
-  }
-
-  deletePipeline (deleteOptions) {
-    this.setState({
-      deleteOptions,
-      showDeleteModal: false,
-      showDeleteProgress: true
-    })
-    this.props.deletePipeline(
-      this.props.pipeline.id,
-      deleteOptions
-    )
   }
 
   renderDeletionModal () {
@@ -73,8 +52,16 @@ class PipelineList extends Component {
 
     return (
       <DeleteModal
-        onClose={() => this.setState({ showDeleteModal: false })}
-        onDelete={(e) => this.deletePipeline(e)}
+        onClose={() => { this.setState({ showDeleteModal: false }) }}
+        onDelete={(deleteOptions) => {
+          this.setState({
+            deleteOptions,
+            showDeleteModal: false,
+            showDeleteProgress: true
+          }, () => {
+            this.props.deletePipeline(this.props.pipeline.id, deleteOptions)
+          })
+        }}
         objectType='pipeline'
         obj={this.props.pipeline}
       />
@@ -83,29 +70,29 @@ class PipelineList extends Component {
 
   renderDeleteProgressModal () {
     if (!this.state.showDeleteProgress) {
-      return null
+      return ''
     }
+
     return (
       <DeleteStatus
         header={
-          <FormattedMessage id='pipeline.list.delete.status.header' defaultMessage='Deleting pipeline ' />
+          <FormattedMessage
+            id='pipeline.list.delete.status.header'
+            defaultMessage='Deleting pipeline '
+          />
         }
         deleteOptions={this.state.deleteOptions}
-        toggle={this.hideModalProgress}
+        toggle={() => { this.setState({ showDeleteProgress: false }) }}
         showModal={this.state.showDeleteProgress}
       />
     )
   }
 
-  hideModalProgress () {
-    this.setState({ showDeleteProgress: false })
-  }
-
   render () {
     return (
       <div className='pipelines-container show-index'>
-        { this.props.loading && <LoadingSpinner /> }
-        { this.props.error && <ModalError error={this.props.error} /> }
+        {this.props.loading && <LoadingSpinner />}
+        {this.props.error && <ModalError error={this.props.error} />}
         <NavBar />
 
         <div className='pipelines'>
@@ -119,18 +106,24 @@ class PipelineList extends Component {
           <PipelineNew history={this.props.history} />
 
           <div className='pipeline-previews'>
-            { this.props.list.map(pipeline => (
-              <PipelineCard
-                key={pipeline.id}
-                pipeline={pipeline}
-                history={this.props.history}
-                delete={() => this.onDelete(pipeline)}
-              />
-            )) }
+            {
+              this.props.list.map(pipeline => (
+                <PipelineCard
+                  key={pipeline.id}
+                  pipeline={pipeline}
+                  history={this.props.history}
+                  delete={() => {
+                    this.setState({ showDeleteModal: true })
+                    this.props.pipelineChanged(pipeline)
+                  }}
+                />
+              ))
+            }
           </div>
         </div>
-        { this.renderDeletionModal() }
-        { this.renderDeleteProgressModal() }
+
+        {this.renderDeletionModal()}
+        {this.renderDeleteProgressModal()}
       </div>
     )
   }

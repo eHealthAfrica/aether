@@ -12,12 +12,12 @@
 #
 ################################################################################
 
-aether.python==1.0.4
+aether.python==1.0.5
 aether.sdk==1.1.7
 attrs==19.1.0
 autopep8==1.4.4
-boto3==1.9.221
-botocore==1.12.221
+boto3==1.9.222
+botocore==1.12.222
 cachetools==3.1.1
 certifi==2019.6.16
 chardet==3.0.4

@@ -298,7 +298,8 @@ const reducer = (state = INITIAL_STATE, action) => {
     }
 
     case types.CONTRACT_SELECT: {
-      const currentPipeline = (state.pipelineList || []).find(p => p.id === action.payload.pipeline) || state.currentPipeline
+      const currentPipeline = (state.pipelineList || [])
+        .find(p => p.id === action.payload.pipeline) || state.currentPipeline
       const currentContract = findContract(currentPipeline, action.payload.contract)
       const currentSection = !state.currentSection || state.currentSection === PIPELINE_SECTION_INPUT
         ? CONTRACT_SECTION_ENTITY_TYPES
@@ -365,7 +366,8 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.CONTRACT_ADD: {
       const currentContract = parseContract(action.payload)
-      const currentPipeline = (state.pipelineList || []).find(p => p.id === currentContract.pipeline) || state.currentPipeline
+      const currentPipeline = (state.pipelineList || [])
+        .find(p => p.id === currentContract.pipeline) || state.currentPipeline
       currentPipeline.contracts = [currentContract, ...currentPipeline.contracts]
 
       return {
@@ -422,7 +424,8 @@ const reducer = (state = INITIAL_STATE, action) => {
       }
     }
     case types.CONTRACT_PUBLISH_SUCCESS: {
-      const statePipeline = (state.pipelineList || []).find(p => p.id === action.payload.pipeline) || state.currentPipeline
+      const statePipeline = (state.pipelineList || [])
+        .find(p => p.id === action.payload.pipeline) || state.currentPipeline
       const currentContract = parseContract(action.payload)
       const currentPipeline = {
         ...statePipeline,

@@ -160,16 +160,17 @@ class EntityTypes extends Component {
             </label>
 
             <div className='textarea-header'>
-              { this.state.error &&
-                <div className='hint error-message'>
-                  <h4 className='hint-title'>
-                    <FormattedMessage
-                      id='entity.types.invalid'
-                      defaultMessage='You have provided invalid AVRO schemas.'
-                    />
-                  </h4>
-                  { this.state.error }
-                </div>
+              {
+                this.state.error &&
+                  <div className='hint error-message'>
+                    <h4 className='hint-title'>
+                      <FormattedMessage
+                        id='entity.types.invalid'
+                        defaultMessage='You have provided invalid AVRO schemas.'
+                      />
+                    </h4>
+                    {this.state.error}
+                  </div>
               }
             </div>
 
@@ -182,15 +183,20 @@ class EntityTypes extends Component {
               disabled={this.props.contract.is_read_only}
             />
 
-            { !this.props.contract.is_read_only &&
-              <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChanged()}>
-                <span className='details-title'>
-                  <FormattedMessage
-                    id='entity.types.button.ok'
-                    defaultMessage='Add to pipeline'
-                  />
-                </span>
-              </button>
+            {
+              !this.props.contract.is_read_only &&
+                <button
+                  type='submit'
+                  className='btn btn-d btn-primary mt-3'
+                  disabled={!this.hasChanged()}
+                >
+                  <span className='details-title'>
+                    <FormattedMessage
+                      id='entity.types.button.ok'
+                      defaultMessage='Add to pipeline'
+                    />
+                  </span>
+                </button>
             }
           </form>
         </div>
