@@ -20,19 +20,10 @@
 
   "kafka_failure_wait_time": 10,
   "kafka_url": "kafka:29092",
-  "kafka_bootstrap_servers": "kafka:29092",
   "kafka_settings": {
-    "acks": 1,
-    "max.in.flight.requests.per.connection": 1,
-    "retry.backoff.ms": 250,
     "default.topic.config": {
-      "linger.ms": 200,
-      "request.timeout.ms": 1000,
-      "message.timeout.ms": 5000
-    },
-    "message.send.max.retries": 9,
-    "queue.buffering.max.ms": 5000,
-    "socket.timeout.ms": 10000
+      "retention.ms": -1
+    }    
   },
   "server_port": 5005,
   "server_ip": "",

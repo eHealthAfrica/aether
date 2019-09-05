@@ -23,6 +23,7 @@ import psycogreen.gevent
 psycogreen.gevent.patch_psycopg()  # noqa
 
 import ast
+import concurrent
 from datetime import datetime
 import enum
 from functools import wraps
@@ -37,7 +38,7 @@ import sys
 import traceback
 
 from confluent_kafka import Producer
-from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka.admin import AdminClient, NewTopic, ConfigResource
 from flask import Flask, Response, request, jsonify
 import gevent
 from gevent.pool import Pool
@@ -118,23 +119,6 @@ class ProducerManager(object):
             {},
             self.settings.get('kafka_security'),
         )
-        # kafka_settings = {"bootstrap.servers": self.settings.get("kafka_url")}
-        # if self.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
-        #     # Let Producer use Kafka SU to produce
-        #     self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
-        #     kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
-        #     kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
-        #     kafka_settings['sasl.username'] = \
-        #         self.settings.get('KAFKA_SU_USER')
-        #     kafka_settings['sasl.password'] = \
-        #         self.settings.get('KAFKA_SU_PW')
-        # elif self.settings.get('kafka_security', '').lower() == 'sasl_ssl':
-        #     kafka_settings['security.protocol'] = 'SASL_SSL'
-        #     kafka_settings['sasl.mechanisms'] = 'PLAIN'
-        #     kafka_settings['sasl.username'] = \
-        #         self.settings.get('KAFKA_SU_USER')
-        #     kafka_settings['sasl.password'] = \
-        #         self.settings.get('KAFKA_SU_PW')
         self.kafka_admin_client = AdminClient(kafka_settings)
 
     def keep_alive_loop(self):
@@ -182,6 +166,34 @@ class ProducerManager(object):
             return False
         return True
 
+    def broker_info(self):
+        res = {'brokers': [], 'topics': []}
+        md = self.kafka_admin_client.list_topics(timeout=10)
+        for b in iter(md.brokers.values()):
+            if b.id == md.controller_id:
+                res['brokers'].append("  {}  (controller)".format(b))
+            else:
+                res['brokers'].append("  {}  (controller)".format(b))
+        for t in iter(md.topics.values()):
+            t_str = []
+            if t.error is not None:
+                errstr = ": {}".format(t.error)
+            else:
+                errstr = ""
+
+            t_str.append("{} with {} partition(s){}".format(t, len(t.partitions), errstr))
+
+            for p in iter(t.partitions.values()):
+                if p.error is not None:
+                    errstr = ": {}".format(p.error)
+                else:
+                    errstr = ""
+
+                t_str.append("partition {} leader: {}, replicas: {}, isrs: {}".format(
+                    p.id, p.leader, p.replicas, p.isrs, errstr))
+            res['topics'].append(t_str)
+        return res
+
     # Connect to sqlite
     def init_db(self):
         db.init()
@@ -209,7 +221,7 @@ class ProducerManager(object):
                 schema_name = f'{realm}.{_name}'
                 if schema_name not in self.topic_managers.keys():
                     self.logger.info(
-                        "New topic connected: %s" % schema_name)
+                        "Topic connected: %s" % schema_name)
                     self.topic_managers[schema_name] = TopicManager(
                         self, schema, realm)
                 else:
@@ -326,6 +338,7 @@ class ProducerManager(object):
         status = {
             "kernel_connected": self.kernel is not None,  # This is a real object
             "kafka_container_accessible": self.kafka_available(),
+            "kafka_broker_information": self.broker_info(),
             # This is just a status flag
             "kafka_submission_status": str(self.kafka),
             "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
@@ -455,56 +468,60 @@ class TopicManager(object):
             # so the configuration can be updated.
             sys.exit(1)
         self.update_schema(schema)
+        self.logger.debug(f'getting producer {self.topic_name}')
         self.get_producer()
         # Spawn worker and give to pool.
+        self.logger.debug(f'Spawning kafka update thread: {self.topic_name}')
         self.context.threads.append(gevent.spawn(self.update_kafka))
-        self.check_topic()
+        self.logger.debug(f'Checking for existence of topic {self.topic_name}')
+        while not self.check_topic():
+            if self.create_topic():
+                break
+            self.logger.debug(f'Waiting 30 seconds to retry creation of T:{self.topic_name}')
+            self.context.safe_sleep(30)
+        self.operating_status = TopicStatus.NORMAL
 
     def check_topic(self):
         metadata = self.producer.list_topics()
         topics = [t for t in metadata.topics.keys()]
-        if self.name not in topics:
-            self.logger.debug(f'Topic {self.name} already exists.')
-            self.operating_status = TopicStatus.NORMAL
-            return
+        if self.topic_name in topics:
+            self.logger.debug(f'Topic {self.topic_name} already exists.')
+            return True
         self.logger.debug(f'Topic {self.name} does not exist. current topics: {topics}')
+        return False
 
     def create_topic(self):
-        # kadmin = self.context.kafka_admin_client
-        pass
-        # fs = kadmin.delete_topics([self.name], operation_timeout=60)
-        # future = fs.get(self.name)
+        self.logger.debug(f'Trying to create topic {self.topic_name}')
+        kadmin = self.context.kafka_admin_client
+        topic_config = self.context.settings.get('kafka_settings', {}).get('default.topic.config')
+        self.logger.debug(f'topic settings: {topic_config}')
+
+        topic = NewTopic(
+            self.topic_name,
+            num_partitions=1,
+            replication_factor=1,
+            config=topic_config
+        )
+        fs = kadmin.create_topics([topic])
+        # future must return before timeout
+        for f in concurrent.futures.as_completed(iter(fs.values()), timeout=60):
+            e = f.exception()
+            if not e:
+                self.logger.info(f'Created topic {self.name}')
+                return True
+            else:
+                self.logger.critical(f'Topic {self.name} could not be created: {e}')
+                return False
 
     def get_producer(self):
-        kafka_settings = self.context.settings.get('kafka_settings')
         self.kafka_settings = apply_kafka_security_settings(
             self.context.settings,
-            kafka_settings,
-            self.settings.get('kafka_security'),
+            {},
+            self.context.settings.get('kafka_security'),
         )
-        # # apply setting from root config to be able to use env variables
-        # kafka_settings["bootstrap.servers"] = self.context.settings.get(
-        #     "kafka_url")
-        # self.kafka_settings = kafka_settings
-        # # check for SASL
-        # if self.context.settings.get('kafka_security', '').lower() == 'sasl_plaintext':
-        #     # Let Producer use Kafka SU to produce
-        #     self.logger.info(f'Using security protocol: SASL_PLAINTEXT')
-        #     self.kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
-        #     self.kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
-        #     self.kafka_settings['sasl.username'] = \
-        #         self.context.settings.get('KAFKA_SU_USER')
-        #     self.kafka_settings['sasl.password'] = \
-        #         self.context.settings.get('KAFKA_SU_PW')
-        # elif self.settings.get('kafka_security', '').lower() == 'sasl_ssl':
-        #     kafka_settings['security.protocol'] = 'SASL_SSL'
-        #     kafka_settings['sasl.mechanisms'] = 'PLAIN'
-        #     kafka_settings['sasl.username'] = \
-        #         self.settings.get('KAFKA_SU_USER')
-        #     kafka_settings['sasl.password'] = \
-        #         self.settings.get('KAFKA_SU_PW')
-
+        self.logger.debug(f'getting producer: {self.kafka_settings}')
         self.producer = Producer(**self.kafka_settings)
+        self.logger.debug(f'Producer for {self.name} started...')
 
     # API Calls to Control Topic
 
@@ -716,6 +733,7 @@ class TopicManager(object):
         # Sends new messages to Kafka
         # Registers message callback (ok or fail) to TopicManager.kafka_callback
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
+        self.logger.debug(f'Topic {self.name}: Initializing')
         while self.operating_status is TopicStatus.INITIALIZING:
             if self.context.killed:
                 return
