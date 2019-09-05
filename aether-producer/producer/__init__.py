@@ -64,7 +64,7 @@ class KafkaStatus(enum.Enum):
 
 def apply_kafka_security_settings(settings, kafka_settings, mode='SASL_PLAINTEXT'):
     kafka_settings["bootstrap.servers"] = settings.get("kafka_url")
-    if mode.lower() == 'sasl_plaintext':
+    if mode and mode.lower() == 'sasl_plaintext':
         # Let Producer use Kafka SU to produce
         kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
         kafka_settings['sasl.mechanisms'] = 'SCRAM-SHA-256'
@@ -72,7 +72,7 @@ def apply_kafka_security_settings(settings, kafka_settings, mode='SASL_PLAINTEXT
             settings.get('KAFKA_SU_USER')
         kafka_settings['sasl.password'] = \
             settings.get('KAFKA_SU_PW')
-    elif mode.lower() == 'sasl_ssl':
+    elif mode and mode.lower() == 'sasl_ssl':
         kafka_settings['security.protocol'] = 'SASL_SSL'
         kafka_settings['sasl.mechanisms'] = 'PLAIN'
         kafka_settings['sasl.username'] = \
@@ -172,9 +172,9 @@ class ProducerManager(object):
             md = self.kafka_admin_client.list_topics(timeout=10)
             for b in iter(md.brokers.values()):
                 if b.id == md.controller_id:
-                    res['brokers'].append("  {}  (controller)".format(b))
+                    res['brokers'].append("{}  (controller)".format(b))
                 else:
-                    res['brokers'].append("  {}  (controller)".format(b))
+                    res['brokers'].append("{}".format(b))
             for t in iter(md.topics.values()):
                 t_str = []
                 if t.error is not None:
