@@ -31,10 +31,12 @@ from aether.sdk.multitenancy.serializers import (
     MtModelSerializer,
 )
 
-from .constants import MergeOptions as MERGE_OPTIONS
-from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
+from aether.python import utils
+from aether.python.constants import MergeOptions as MERGE_OPTIONS
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
+from .entity_extractor import run_entity_extraction
 
-from . import models, utils, validators
+from . import models, validators
 
 
 MERGE_CHOICES = (
@@ -415,5 +417,5 @@ class MappingSetStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
 class MappingValidationSerializer(serializers.Serializer):
 
     submission_payload = serializers.JSONField()
-    mapping_definition = serializers.JSONField(validators=[validators.validate_mapping_definition])
-    schemas = serializers.JSONField(validators=[validators.validate_schemas])
+    mapping_definition = serializers.JSONField(validators=[validators.wrapper_validate_mapping_definition])
+    schemas = serializers.JSONField(validators=[validators.wrapper_validate_schemas])

@@ -21,7 +21,7 @@ import json
 from django.utils.translation import ugettext as _
 import spavro
 
-from .entity_extractor import find_by_jsonpath, ARRAY_ACCESSOR_REGEX
+from aether.python.entity.extractor import find_by_jsonpath, ARRAY_ACCESSOR_REGEX
 
 
 Success = collections.namedtuple('Success', ['path', 'result'])
