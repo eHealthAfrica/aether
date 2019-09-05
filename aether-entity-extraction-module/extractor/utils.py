@@ -17,10 +17,9 @@
 # under the License.
 
 import json
-from time import sleep
 import collections
-import requests
 from aether.python.redis.task import TaskHelper
+from aether.python.utils import request
 from extractor import settings
 from typing import (
     Dict,
@@ -56,22 +55,7 @@ REDIS_TASK = TaskHelper(settings, REDIS_INSTANCE)
 
 
 def get_redis(redis):
-    return TaskHelper(settings, redis) if redis else TaskHelper(settings)
-
-
-def request(*args, **kwargs):
-    count = 0
-    exception = None
-
-    while count < 3:
-        try:
-            return requests.request(*args, **kwargs)
-        except Exception as e:
-            exception = e
-        count += 1
-        sleep(1)
-
-    raise exception
+    return TaskHelper(settings, redis) if redis else REDIS_TASK
 
 
 class Task(NamedTuple):
@@ -160,4 +144,4 @@ def redis_subscribe(callback, pattern, redis=None):
 
 def redis_stop(redis):
     redis = get_redis(redis)
-    return redis.stop()
+    redis.stop()

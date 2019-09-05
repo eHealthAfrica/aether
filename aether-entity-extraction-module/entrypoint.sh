@@ -43,16 +43,9 @@ function test_flake8 {
     flake8 /code/. --config=/code/setup.cfg
 }
 
-function after_test {
+function test {
     rm -R /code/.coverage* 2>/dev/null || true
-    coverage run \
-        --concurrency=multiprocessing \
-        --parallel-mode \
-        test.py test \
-        --parallel \
-        --noinput \
-        "${@:1}"
-    coverage combine --append
+    coverage run -m pytest "${@:1}"
     coverage report
     coverage erase
     cat /code/conf/extras/good_job.txt
@@ -60,17 +53,14 @@ function after_test {
 
 function test_unit {
     pytest -m unit
-    after_test
 }
 
 function test_integration {
     pytest -m integration
-    after_test
 }
 
 function test_all {
-    pytest
-    after_test
+    test
 }
 
 
@@ -120,7 +110,7 @@ case "$1" in
         then
             test_all
         else
-            pytest "$2"
+            test "$2"
         fi
     ;;
 
