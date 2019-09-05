@@ -167,32 +167,35 @@ class ProducerManager(object):
         return True
 
     def broker_info(self):
-        res = {'brokers': [], 'topics': []}
-        md = self.kafka_admin_client.list_topics(timeout=10)
-        for b in iter(md.brokers.values()):
-            if b.id == md.controller_id:
-                res['brokers'].append("  {}  (controller)".format(b))
-            else:
-                res['brokers'].append("  {}  (controller)".format(b))
-        for t in iter(md.topics.values()):
-            t_str = []
-            if t.error is not None:
-                errstr = ": {}".format(t.error)
-            else:
-                errstr = ""
-
-            t_str.append("{} with {} partition(s){}".format(t, len(t.partitions), errstr))
-
-            for p in iter(t.partitions.values()):
-                if p.error is not None:
-                    errstr = ": {}".format(p.error)
+        try:
+            res = {'brokers': [], 'topics': []}
+            md = self.kafka_admin_client.list_topics(timeout=10)
+            for b in iter(md.brokers.values()):
+                if b.id == md.controller_id:
+                    res['brokers'].append("  {}  (controller)".format(b))
+                else:
+                    res['brokers'].append("  {}  (controller)".format(b))
+            for t in iter(md.topics.values()):
+                t_str = []
+                if t.error is not None:
+                    errstr = ": {}".format(t.error)
                 else:
                     errstr = ""
 
-                t_str.append("partition {} leader: {}, replicas: {}, isrs: {}".format(
-                    p.id, p.leader, p.replicas, p.isrs, errstr))
-            res['topics'].append(t_str)
-        return res
+                t_str.append("{} with {} partition(s){}".format(t, len(t.partitions), errstr))
+
+                for p in iter(t.partitions.values()):
+                    if p.error is not None:
+                        errstr = ": {}".format(p.error)
+                    else:
+                        errstr = ""
+
+                    t_str.append("partition {} leader: {}, replicas: {}, isrs: {}".format(
+                        p.id, p.leader, p.replicas, p.isrs, errstr))
+                res['topics'].append(t_str)
+            return res
+        except Exception as err:
+            return {'error': f'{err}'}
 
     # Connect to sqlite
     def init_db(self):
@@ -468,7 +471,6 @@ class TopicManager(object):
             # so the configuration can be updated.
             sys.exit(1)
         self.update_schema(schema)
-        self.logger.debug(f'getting producer {self.topic_name}')
         self.get_producer()
         # Spawn worker and give to pool.
         self.logger.debug(f'Spawning kafka update thread: {self.topic_name}')
@@ -494,8 +496,6 @@ class TopicManager(object):
         self.logger.debug(f'Trying to create topic {self.topic_name}')
         kadmin = self.context.kafka_admin_client
         topic_config = self.context.settings.get('kafka_settings', {}).get('default.topic.config')
-        self.logger.debug(f'topic settings: {topic_config}')
-
         topic = NewTopic(
             self.topic_name,
             num_partitions=1,
@@ -519,7 +519,6 @@ class TopicManager(object):
             {},
             self.context.settings.get('kafka_security'),
         )
-        self.logger.debug(f'getting producer: {self.kafka_settings}')
         self.producer = Producer(**self.kafka_settings)
         self.logger.debug(f'Producer for {self.name} started...')
 

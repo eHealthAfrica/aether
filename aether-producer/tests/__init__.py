@@ -31,6 +31,11 @@ USER = os.environ['PRODUCER_ADMIN_USER']
 PW = os.environ['PRODUCER_ADMIN_PW']
 
 
+class MockAdminInterface(object):
+    def list_topics(self, *args, **kwargs):
+        return {}
+
+
 class MockProducerManager(ProducerManager):
 
     def __init__(self, settings):
@@ -40,6 +45,7 @@ class MockProducerManager(ProducerManager):
         self.killed = False
         self.kernel = None
         self.kafka = False
+        self.kafka_admin_client = MockAdminInterface()
         self.logger = log
         self.topic_managers = {}
 
