@@ -14,8 +14,8 @@
 
 aether.sdk==1.1.7
 autopep8==1.4.4
-boto3==1.9.221
-botocore==1.12.221
+boto3==1.9.222
+botocore==1.12.222
 cachetools==3.1.1
 certifi==2019.6.16
 chardet==3.0.4
@@ -29,7 +29,7 @@ django-prometheus==1.0.15
 django-silk==3.0.2
 django-storages==1.7.1
 django-uwsgi==0.2.2
-djangorestframework==3.10.2
+djangorestframework==3.10.3
 docutils==0.15.2
 drf-dynamic-fields==0.3.1
 entrypoints==0.3

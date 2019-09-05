@@ -27,7 +27,7 @@ django-prometheus==1.0.15
 django-rq==2.1.0
 django-silk==3.0.2
 django-uwsgi==0.2.2
-djangorestframework==3.10.2
+djangorestframework==3.10.3
 drf-dynamic-fields==0.3.1
 entrypoints==0.3
 flake8==3.7.8
