@@ -151,6 +151,9 @@ services:
       # to speed up SDK development changes
       # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
 
+      # to speed up Aether Python Library development changes
+      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.7/site-packages/aether/python
+
       # static folder
       - ./.persistent_data/static/kernel:/var/www/static
       # temporary folder for Excel files

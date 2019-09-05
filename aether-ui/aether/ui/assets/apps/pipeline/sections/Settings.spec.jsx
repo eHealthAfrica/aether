@@ -131,7 +131,7 @@ describe('Pipeline Settings Component', () => {
 
   it('should render identity mapping warning', () => {
     nock('http://localhost')
-      .post(`/api/contracts/`)
+      .post('/api/contracts/')
       .reply(200, (_, reqBody) => {
         return reqBody
       })
@@ -196,18 +196,18 @@ describe('Pipeline Settings Component', () => {
     inputContractName.simulate('change', { target: { value: 'contract-updated' } })
 
     const settings = component.find('Settings').instance()
-    jest.spyOn(settings, 'performSave')
+    jest.spyOn(settings, 'handleSave')
     const saveButton = component.find('button[id="settings-contract-save"]')
     saveButton.simulate('click')
 
     expect(component.find('Modal').exists()).toBeFalsy()
-    expect(settings.performSave).toHaveBeenCalledWith(expectedContract)
+    expect(settings.handleSave).toHaveBeenCalledWith(expectedContract)
   })
 
   it('should save and close settings without warning on a new contract', () => {
     let expectedContract
     nock('http://localhost')
-      .post(`/api/contracts/`)
+      .post('/api/contracts/')
       .reply(200, (_, reqBody) => {
         expectedContract = reqBody
         return reqBody
@@ -229,12 +229,12 @@ describe('Pipeline Settings Component', () => {
     inputContractName.simulate('change', { target: { value: 'new-contract-updated' } })
 
     const settings = component.find('Settings').instance()
-    jest.spyOn(settings, 'performSave')
+    jest.spyOn(settings, 'handleSave')
     const saveButton = component.find('button[id="settings-contract-save"]')
     saveButton.simulate('click')
 
     expect(component.find('Modal').exists()).toBeFalsy()
-    expect(settings.performSave).toHaveBeenCalledWith(expectedContract)
+    expect(settings.handleSave).toHaveBeenCalledWith(expectedContract)
   })
 
   it('should create a new contract while an existing contract is selected', () => {
@@ -249,12 +249,9 @@ describe('Pipeline Settings Component', () => {
     )
     const settingInstance = component.find('Settings').instance()
     jest.spyOn(settingInstance, 'createNewContract')
-    component.setProps({ children: <Settings
-      onClose={onClose}
-      onSave={onSave}
-      onNew={onNew}
-      isNew
-    /> })
+    component.setProps({
+      children: <Settings onClose={onClose} onSave={onSave} onNew={onNew} isNew />
+    })
     expect(settingInstance.createNewContract).toBeCalled()
   })
 
