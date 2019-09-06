@@ -52,23 +52,27 @@ export default class ModalError extends Component {
 
     return (
       <Modal
+        onEnter={close}
+        onEscape={close}
         header={
-          <React.Fragment>
+          <>
             <FormattedMessage
               id='modal.error.header'
               defaultMessage='Error code'
-            /> { this.props.error.status }
-          </React.Fragment>
+            /> {this.props.error.status}
+          </>
         }
         buttons={
           <button
             type='button'
             className='btn btn-w btn-primary'
-            onClick={close}>
+            onClick={close}
+          >
             <FormattedMessage id='modal.error.ok' defaultMessage='OK' />
           </button>
-        }>
-        { this.props.error.message }
+        }
+      >
+        {this.props.error.message}
       </Modal>
     )
   }

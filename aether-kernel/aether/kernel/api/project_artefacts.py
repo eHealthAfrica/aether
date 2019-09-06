@@ -24,7 +24,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .constants import NAMESPACE
 from .models import Project, Schema, SchemaDecorator, MappingSet, Mapping
-from .avro_tools import avro_schema_to_passthrough_artefacts as parser
+from aether.python.avro.tools import avro_schema_to_passthrough_artefacts as parser
 
 
 def get_project_artefacts(project):

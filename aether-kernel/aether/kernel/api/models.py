@@ -22,6 +22,7 @@ import uuid
 from datetime import datetime
 from hashlib import md5
 
+from aether.python.exceptions import ValidationError as AetherValidationError
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
@@ -35,10 +36,12 @@ from aether.sdk.utils import json_prettified, get_file_content
 
 from .constants import NAMESPACE
 from .validators import (
+    wrapper_validate_schema_definition,
+    wrapper_validate_mapping_definition
+)
+from aether.python.validators import (
     validate_avro_schema,
     validate_entity_payload,
-    validate_mapping_definition,
-    validate_schema_definition,
 )
 
 
@@ -368,7 +371,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
 
     name = models.TextField(unique=True, verbose_name=_('name'))
     type = models.TextField(default=NAMESPACE, verbose_name=_('schema type'))
-    definition = JSONField(validators=[validate_schema_definition], verbose_name=_('AVRO schema'))
+    definition = JSONField(validators=[wrapper_validate_schema_definition], verbose_name=_('AVRO schema'))
 
     # this field is used to group different schemas created automatically
     # from different sources but that share a common structure
@@ -460,7 +463,10 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
     '''
 
-    definition = JSONField(validators=[validate_mapping_definition], verbose_name=_('mapping rules'))
+    definition = JSONField(
+        validators=[wrapper_validate_mapping_definition],
+        verbose_name=_('mapping rules')
+    )
     is_active = models.BooleanField(default=True, verbose_name=_('active?'))
     is_read_only = models.BooleanField(default=False, verbose_name=_('read only?'))
 
@@ -654,13 +660,13 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
                     schema_definition=self.schema.definition,
                     payload=self.payload,
                 )
-            except ValidationError as ve:
+            except AetherValidationError as ve:
                 raise ValidationError({'payload': [str(ve)]})
 
     def save(self, *args, **kwargs):
         try:
             self.full_clean()
-        except ValidationError as ve:
+        except Exception as ve:
             raise IntegrityError(ve)
 
         super(Entity, self).save(*args, **kwargs)

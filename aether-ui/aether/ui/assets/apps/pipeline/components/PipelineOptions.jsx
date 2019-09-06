@@ -32,15 +32,7 @@ class PipelineOptions extends Component {
   }
 
   handleClickOutside () {
-    this.setState({
-      show: false
-    })
-  }
-
-  toggle () {
-    this.setState({
-      show: !this.state.show
-    })
+    this.setState({ show: false })
   }
 
   render () {
@@ -49,27 +41,28 @@ class PipelineOptions extends Component {
         <button
           type='button'
           className='btn btn-c btn-square mr-2'
-          onClick={this.toggle.bind(this)}>
+          onClick={() => { this.setState({ show: !this.state.show }) }}
+        >
           <span className='details-title'>
             <i className='fas fa-ellipsis-h' />
           </span>
         </button>
         {
-          this.state.show && <ul
-            className='options'>
-            <li onClick={() => this.props.delete()}>
-              <FormattedMessage
-                id='pipeline.option.delete'
-                defaultMessage='Delete Pipeline'
-              />
-            </li>
-            <li onClick={() => this.props.rename()}>
-              <FormattedMessage
-                id='pipeline.option.rename'
-                defaultMessage='Rename Pipeline'
-              />
-            </li>
-          </ul>
+          this.state.show &&
+            <ul className='options'>
+              <li onClick={() => { this.props.delete() }}>
+                <FormattedMessage
+                  id='pipeline.option.delete'
+                  defaultMessage='Delete Pipeline'
+                />
+              </li>
+              <li onClick={() => { this.props.rename() }}>
+                <FormattedMessage
+                  id='pipeline.option.rename'
+                  defaultMessage='Rename Pipeline'
+                />
+              </li>
+            </ul>
         }
       </div>
     )

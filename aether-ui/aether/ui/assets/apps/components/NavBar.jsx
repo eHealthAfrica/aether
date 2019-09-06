@@ -38,7 +38,7 @@ class NavBar extends Component {
 
     return (
       <div data-qa='navbar' className='navbar top-nav'>
-        <a className='top-nav-logo' title='aether' onClick={this.props.cb}>
+        <a className='top-nav-logo' title='aether' onClick={this.props.onClick}>
           <div className='logo-container'>
             <div className='flipper'>
               <div className='front' />
@@ -48,15 +48,16 @@ class NavBar extends Component {
           <span data-app-name='app-name'><b>ae</b>ther</span>
         </a>
 
-        { this.props.showBreadcrumb &&
-          <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
-            { this.props.children }
-          </div>
+        {
+          this.props.showBreadcrumb &&
+            <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
+              {this.props.children}
+            </div>
         }
 
         <div data-qa='navbar-user' className='top-nav-user'>
           <span className='user-name'>
-            { user.name }
+            {user.name}
           </span>
           <span className='logout'>
             <a href={logoutUrl}>

@@ -20,8 +20,8 @@ import random
 
 from autofixture import AutoFixture
 
+from aether.python.avro.tools import random_avro
 from aether.kernel.api import models
-from aether.kernel.api.avro_tools import random_avro
 from aether.kernel.api.entity_extractor import run_entity_extraction
 
 MAPPINGS_COUNT_RANGE = (1, 3)

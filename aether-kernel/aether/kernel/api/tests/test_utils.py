@@ -24,7 +24,6 @@ from django.contrib.auth import get_user_model
 from aether.kernel.api import utils, models
 
 from . import (
-    EXAMPLE_NESTED_SOURCE_DATA,
     SAMPLE_LOCATION_SCHEMA_DEFINITION,
     SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
     EXAMPLE_FIELD_MAPPINGS,
@@ -105,52 +104,6 @@ class UtilsTests(TestCase):
     def tearDown(self):
         self.project.delete()
         self.client.logout()
-
-    def test_merge_objects(self):
-        source = {'a': 0, 'c': 3}
-        target = {'a': 1, 'b': 2}
-        self.assertEqual(utils.merge_objects(source, target, 'overwrite'),
-                         {'a': 1, 'b': 2})
-        self.assertEqual(source,
-                         {'a': 0, 'c': 3},
-                         'source content is not touched')
-        self.assertEqual(target,
-                         {'a': 1, 'b': 2},
-                         'target content is not touched')
-
-        source = {'a': 0, 'c': 3}
-        target = {'a': 1, 'b': 2}
-        self.assertEqual(utils.merge_objects(source, target, 'last_write_wins'),
-                         {'a': 1, 'b': 2, 'c': 3})
-        self.assertEqual(source,
-                         {'a': 1, 'b': 2, 'c': 3},
-                         'source content is replaced')
-        self.assertEqual(target,
-                         {'a': 1, 'b': 2},
-                         'target content is not touched')
-
-        source = {'a': 0, 'c': 3}
-        target = {'a': 1, 'b': 2}
-        self.assertEqual(utils.merge_objects(source, target, 'first_write_wins'),
-                         {'a': 0, 'b': 2, 'c': 3})
-        self.assertEqual(source,
-                         {'a': 0, 'c': 3},
-                         'source content is not touched')
-        self.assertEqual(target,
-                         {'a': 0, 'b': 2, 'c': 3},
-                         'target content is replaced')
-
-    def test_object_contains(self):
-        data = EXAMPLE_NESTED_SOURCE_DATA
-        source_house = data['data']['houses'][0]
-        other_house = data['data']['houses'][1]
-        test_person = source_house['people'][0]
-
-        is_included = utils.object_contains(test_person, source_house)
-        not_included = utils.object_contains(test_person, other_house)
-
-        self.assertTrue(is_included), 'Person should be found in this house.'
-        self.assertFalse(not_included, 'Person should not found in this house.')
 
     def test_get_unique_schemas_used(self):
         url = reverse('mapping-detail', kwargs={'pk': self.project_artefacts['mappings'][0]})
