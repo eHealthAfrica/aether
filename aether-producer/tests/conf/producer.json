@@ -16,6 +16,8 @@
   "kernel_admin_password": "",
   "kafka_failure_wait_time": 4,
   "kafka_url": "kafka-test:29092",
+  "kafka_default_topic_partitions": 1,
+  "kafka_default_topic_replicas": 1,
   "kafka_settings": {
     "default.topic.config": {
       "retention.ms": -1
