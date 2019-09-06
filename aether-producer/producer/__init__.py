@@ -496,10 +496,12 @@ class TopicManager(object):
         self.logger.debug(f'Trying to create topic {self.topic_name}')
         kadmin = self.context.kafka_admin_client
         topic_config = self.context.settings.get('kafka_settings', {}).get('default.topic.config')
+        partitions = int(self.context.settings.get('kafka_default_topic_partitions', 1))
+        replicas = int(self.context.settings.get('kafka_default_topic_replicas', 1))
         topic = NewTopic(
             self.topic_name,
-            num_partitions=1,
-            replication_factor=1,
+            num_partitions=partitions,
+            replication_factor=replicas,
             config=topic_config
         )
         fs = kadmin.create_topics([topic])
