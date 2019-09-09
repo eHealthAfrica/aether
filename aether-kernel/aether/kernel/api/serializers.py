@@ -305,12 +305,16 @@ class EntityListSerializer(serializers.ListSerializer):
             # reject ALL if ANY invalid entities are included
             raise(serializers.ValidationError(errors))
         # bulk database operation
-        created_entities = models.Entity.objects.bulk_create(entities)
-        if settings.WRITE_ENTITIES_TO_REDIS:
-            # send created entities to redis
-            for entity in entities:
-                utils.send_model_item_to_redis(entity)
-        return created_entities
+        try:
+            created_entities = models.Entity.objects.bulk_create(entities)
+            if settings.WRITE_ENTITIES_TO_REDIS:
+                # send created entities to redis
+                for entity in entities:
+                    utils.send_model_item_to_redis(entity)
+            return created_entities
+        except Exception as e:
+            print('ERRORS ', str(e))
+            raise(serializers.ValidationError(e))
 
 
 class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
@@ -382,6 +386,7 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         try:
             return super(EntitySerializer, self).create(validated_data)
         except Exception as e:
+            print('ERROR ', str(e))
             raise serializers.ValidationError(e)
 
     def update(self, instance, validated_data):
