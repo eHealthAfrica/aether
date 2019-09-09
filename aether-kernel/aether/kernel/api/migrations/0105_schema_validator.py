@@ -2,7 +2,7 @@
 
 import aether.kernel.api.validators
 import django.contrib.postgres.fields.jsonb
-from django.db import migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
@@ -27,5 +27,10 @@ class Migration(migrations.Migration):
                 validators=[aether.kernel.api.validators.wrapper_validate_mapping_definition],
                 verbose_name='mapping rules'
             ),
+        ),
+        migrations.AddField(
+            model_name='submission',
+            name='is_extracted',
+            field=models.BooleanField(default=False, verbose_name='entity extracted?'),
         ),
     ]

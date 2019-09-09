@@ -161,7 +161,7 @@ services:
     volumes:
       - ./aether-kernel:/code
       # to speed up SDK development changes
-      - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
 
       # to speed up Aether Python Library development changes
       # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.7/site-packages/aether/python
@@ -463,6 +463,7 @@ services:
       REDIS_PORT: 6379
     volumes:
       - ./aether-entity-extraction-module:/code
-      # to speed up SDK development changes
-      - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
+      # to speed up Aether Python Library development changes
+      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.7/site-packages/aether/python
+
     command: start
