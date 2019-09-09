@@ -70,7 +70,7 @@ services:
       # volumes in tests
       - ./tmp/test/kernel/static:/var/www/static
       - ./tmp/test/kernel/tmp:/tmp
-    command: start
+    command: start_dev
 
 
   # ---------------------------------
