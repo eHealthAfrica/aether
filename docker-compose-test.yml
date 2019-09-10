@@ -66,6 +66,7 @@ services:
       TESTING: "true"
       WEB_SERVER_PORT: 9100
       REDIS_HOST: redis-test
+      DEFAULT_REALM: test
     volumes:
       # volumes in tests
       - ./tmp/test/kernel/static:/var/www/static
@@ -259,6 +260,6 @@ services:
       LOGGING_LEVEL: DEBUG
       AETHER_KERNEL_URL: http://kernel-test:9100
       REDIS_HOST: redis-test
-      DEFAULT_REALM: 'test'
+      DEFAULT_REALM: test
 
     command: start
