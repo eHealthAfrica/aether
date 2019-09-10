@@ -201,7 +201,6 @@ class ExtractionManager():
 
     def push_to_kernel(self):
         logger.debug('Pushing to kernel')
-        print('Pushing to kernel')
         while self.PROCESSED_ENTITIES or self.PROCESSED_SUBMISSIONS or self.is_extracting:
             current_entity_size = len(self.PROCESSED_ENTITIES)
             current_submission_size = len(self.PROCESSED_SUBMISSIONS)
@@ -214,11 +213,9 @@ class ExtractionManager():
                         method='post',
                         data=entities,
                     )
-                    print(f'Pushed {len(entities)} entities')
                 except Exception as e:
                     # todo: find a way to handle unsubmitted entities
                     logger.debug(str(e))
-                    print(f'Entity Error {str(e)}: count > {len(entities)}')
 
             if current_submission_size:
                 submissions = [
@@ -240,7 +237,6 @@ class ExtractionManager():
                         method='patch',
                         data=submissions,
                     )
-                    print('SUBS Y', submissions)
                     # remove submissions from redis
                     for s in res:
                         remove_from_redis(
@@ -250,7 +246,6 @@ class ExtractionManager():
                             self.redis
                         )
                 except Exception as e:
-                    print('SUBS', str(e))
                     logger.debug(str(e))
 
             time.sleep(PUSH_TO_KERNEL_INTERVAL)

@@ -313,7 +313,6 @@ class EntityListSerializer(serializers.ListSerializer):
                     utils.send_model_item_to_redis(entity)
             return created_entities
         except Exception as e:
-            print('ERRORS ', str(e))
             raise(serializers.ValidationError(e))
 
 
@@ -386,7 +385,6 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         try:
             return super(EntitySerializer, self).create(validated_data)
         except Exception as e:
-            print('ERROR ', str(e))
             raise serializers.ValidationError(e)
 
     def update(self, instance, validated_data):

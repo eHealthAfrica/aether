@@ -114,6 +114,7 @@ services:
       TEST_PARALLEL: ${TEST_PARALLEL}
       TESTING: "true"
       WEB_SERVER_PORT: 9102
+      DEFAULT_REALM: test
     volumes:
       # volumes in tests
       - ./tmp/test/odk/static:/var/www/static
@@ -142,6 +143,7 @@ services:
       TEST_PARALLEL: ${TEST_PARALLEL}
       TESTING: "true"
       WEB_SERVER_PORT: 9106
+      DEFAULT_REALM: test
     command: test
 
 

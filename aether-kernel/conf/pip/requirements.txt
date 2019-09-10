@@ -12,12 +12,12 @@
 #
 ################################################################################
 
-aether.python==1.0.5
+aether.python==1.0.6
 aether.sdk==1.1.7
 attrs==19.1.0
 autopep8==1.4.4
-boto3==1.9.222
-botocore==1.12.222
+boto3==1.9.225
+botocore==1.12.225
 cachetools==3.1.1
 certifi==2019.6.16
 chardet==3.0.4
@@ -34,8 +34,8 @@ django-filter==2.2.0
 django-minio-storage==0.2.2
 django-model-utils==3.2.0
 django-prometheus==1.0.15
-django-silk==3.0.2
-django-storages==1.7.1
+django-silk==3.0.4
+django-storages==1.7.2
 django-uwsgi==0.2.2
 djangorestframework==3.10.3
 docutils==0.15.2
@@ -51,7 +51,7 @@ google-api-core==1.14.2
 google-auth==1.6.3
 google-cloud-core==1.0.3
 google-cloud-storage==1.19.0
-google-resumable-media==0.3.3
+google-resumable-media==0.4.0
 googleapis-common-protos==1.6.0
 gprof2dot==2017.9.19
 idna==2.8
@@ -83,8 +83,8 @@ python-cas==1.4.0
 python-dateutil==2.8.0
 python-json-logger==0.1.11
 pytz==2019.2
+redis==3.3.8
 requests==2.22.0
-redis==3.2.1
 rsa==4.0
 ruamel.yaml==0.16.5
 ruamel.yaml.clib==0.1.2

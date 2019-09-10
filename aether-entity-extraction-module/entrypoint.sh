@@ -34,8 +34,6 @@ function show_help {
 
     test              : run unit and integration tests.
     test_lint         : run flake8 tests
-    test_integration  : run integration tests
-    test_unit         : run unit tests
     """
 }
 
@@ -49,14 +47,6 @@ function test {
     coverage report
     coverage erase
     cat /code/conf/extras/good_job.txt
-}
-
-function test_unit {
-    pytest -m unit
-}
-
-function test_integration {
-    pytest -m integration
 }
 
 function test_all {
@@ -94,14 +84,6 @@ case "$1" in
 
     test_lint )
         test_flake8
-    ;;
-
-    test_unit )
-        test_unit
-    ;;
-
-    test_integration )
-        test_integration
     ;;
 
     test )

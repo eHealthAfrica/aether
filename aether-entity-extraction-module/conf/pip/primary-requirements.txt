@@ -14,14 +14,9 @@
 
 aether.python
 
-redis
-requests
-
-
 # Test libraries
-pytest
-fakeredis
 coverage
-flake8
+fakeredis
 flake8-quotes
+pytest
 tblib

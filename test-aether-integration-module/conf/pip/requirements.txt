@@ -6,7 +6,6 @@
 
 aet.consumer
 aether.client
-aether.python
 
 flake8
 pytest

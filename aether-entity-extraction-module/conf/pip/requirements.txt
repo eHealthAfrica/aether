@@ -22,11 +22,11 @@ decorator==4.4.0
 Django==2.2.5
 eha-jsonpath==0.5.1
 entrypoints==0.3
-fakeredis==1.0.4
+fakeredis==1.0.5
 flake8==3.7.8
 flake8-quotes==2.1.0
 idna==2.8
-importlib-metadata==0.20
+importlib-metadata==0.21
 jsonpath-ng==1.4.3
 jsonschema==3.0.2
 mccabe==0.6.1
