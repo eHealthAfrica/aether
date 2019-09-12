@@ -398,9 +398,7 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
             )
 
         mappingset = get_object_or_404(models.MappingSet.objects.all(), pk=mappingset_id)
-        x = is_accessible_by_realm(request, mappingset)
-        print('X', x)
-        if not x:
+        if not is_accessible_by_realm(request, mappingset):
             raise PermissionDenied(_('Not accessible by this realm'))
         mappings = mappingset.mappings.all()
         result = {
