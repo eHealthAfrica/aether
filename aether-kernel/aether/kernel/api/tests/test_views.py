@@ -878,6 +878,21 @@ class ViewsTest(TestCase):
         self.assertEqual(len(response_data[ENTITY_EXTRACTION_ERRORS]), 0)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        with mock.patch(
+            'aether.kernel.api.views.SubmissionViewSet.check_realm_permission',
+            mock.MagicMock(return_value=False)
+        ):
+            response = self.client.post(
+                url,
+                data=data,
+                content_type='application/json'
+            )
+            response_data = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn('detail', response_data)
+        self.assertEqual('Not accessible by this realm', response_data['detail'])
+
         del PAYLOAD['facility_name']
         data['payload'] = PAYLOAD
         response = self.client.post(

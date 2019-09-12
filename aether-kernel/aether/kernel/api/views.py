@@ -361,6 +361,9 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
     filter_class = filters.SubmissionFilter
     mt_field = 'project'
 
+    def check_realm_permission(self, request, mappingset):
+        return is_accessible_by_realm(request, mappingset)
+
     @action(detail=False, methods=['post'])
     def validate(self, request, *args, **kwargs):
         '''
@@ -398,7 +401,7 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
             )
 
         mappingset = get_object_or_404(models.MappingSet.objects.all(), pk=mappingset_id)
-        if not is_accessible_by_realm(request, mappingset):
+        if not self.check_realm_permission(request, mappingset):
             raise PermissionDenied(_('Not accessible by this realm'))
         mappings = mappingset.mappings.all()
         result = {
@@ -407,16 +410,17 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
             ENTITY_EXTRACTION_ERRORS: []
         }
         for mapping in mappings:
-            schemas = {}
-            for sd in mapping.schemadecorators.all():
-                schemas[sd.name] = sd.schema.definition
+            schemas = {
+                sd.name: sd.schema.definition
+                for sd in mapping.schemadecorators.all()
+            }
             try:
                 submission_data, entities = extract_create_entities(
                     submission_payload=payload,
                     mapping_definition=mapping.definition,
                     schemas=schemas,
                 )
-                if ENTITY_EXTRACTION_ERRORS in submission_data and len(submission_data[ENTITY_EXTRACTION_ERRORS]):
+                if submission_data.get(ENTITY_EXTRACTION_ERRORS):
                     result['is_valid'] = False
                     result[ENTITY_EXTRACTION_ERRORS] += submission_data[ENTITY_EXTRACTION_ERRORS]
                 else:
