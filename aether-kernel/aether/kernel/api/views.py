@@ -20,7 +20,8 @@ from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
 from django.utils.translation import ugettext as _
 from django.shortcuts import get_object_or_404
-from aether.sdk.multitenancy.utils import filter_by_realm
+from aether.sdk.multitenancy.utils import filter_by_realm, is_accessible_by_realm
+from rest_framework.exceptions import PermissionDenied
 
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
@@ -396,7 +397,12 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        mappings = models.MappingSet.objects.get(pk=mappingset_id).mappings.all()
+        mappingset = get_object_or_404(models.MappingSet.objects.all(), pk=mappingset_id)
+        x = is_accessible_by_realm(request, mappingset)
+        print('X', x)
+        if not x:
+            raise PermissionDenied(_('Not accessible by this realm'))
+        mappings = mappingset.mappings.all()
         result = {
             'is_valid': True,
             'entities': [],
