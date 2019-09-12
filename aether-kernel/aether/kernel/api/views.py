@@ -18,6 +18,7 @@
 
 from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
+from django.utils.translation import ugettext as _
 from django.shortcuts import get_object_or_404
 from aether.sdk.multitenancy.utils import filter_by_realm
 
@@ -358,6 +359,72 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
     mt_field = 'project'
+
+    @action(detail=False, methods=['post'])
+    def validate(self, request, *args, **kwargs):
+        '''
+        Validates a submission payload using the provided mappingset id
+
+        Reachable at ``POST /submissions/validate/``
+
+        expected body:
+
+            {
+                'mappingset': 'uuid',
+                'payload': {}
+            }
+
+        expected response:
+
+        {
+            #   Bool indicating if the submission is valid or not
+            'is_valid': True|False,
+
+            #   list of entities successfully generated from the submitted payload
+            'entities': [],
+
+            # list of encountered errors
+            aether_errors: []
+        }
+        '''
+
+        mappingset_id = request.data.get('mappingset')
+        payload = request.data.get('payload')
+        if mappingset_id is None or payload is None:
+            return Response(
+                _('A mappingset id and payload must be provided'),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        mappings = models.MappingSet.objects.get(pk=mappingset_id).mappings.all()
+        result = {
+            'is_valid': True,
+            'entities': [],
+            ENTITY_EXTRACTION_ERRORS: []
+        }
+        for mapping in mappings:
+            schemas = {}
+            for sd in mapping.schemadecorators.all():
+                schemas[sd.name] = sd.schema.definition
+            try:
+                submission_data, entities = extract_create_entities(
+                    submission_payload=payload,
+                    mapping_definition=mapping.definition,
+                    schemas=schemas,
+                )
+                if ENTITY_EXTRACTION_ERRORS in submission_data and len(submission_data[ENTITY_EXTRACTION_ERRORS]):
+                    result['is_valid'] = False
+                    result[ENTITY_EXTRACTION_ERRORS] += submission_data[ENTITY_EXTRACTION_ERRORS]
+                else:
+                    result['entities'] += entities
+            except Exception as e:  # pragma: no cover
+                result['is_valid'] = False
+                result[ENTITY_EXTRACTION_ERRORS].append(str(e))
+                return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if result['is_valid']:
+            return Response(result)
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['patch'])
     def extract(self, request, pk, *args, **kwargs):

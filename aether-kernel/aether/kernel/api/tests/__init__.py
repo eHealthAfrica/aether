@@ -465,3 +465,248 @@ SAMPLE_HOUSEHOLD_DATA = {
     'id': 'bdc639fe-b142-4587-b2e9-4dc1a51f9a5c',
     'locationID': '00f3f1ae-abab-448b-b12f-f9c1839465ab',
 }
+
+PAYLOAD = {
+    'id': 'a5336669-605c-4a65-ab4c-c0318e28115b',
+    'staff': {
+        'nurse': 40,
+        'doctor': 15
+    },
+    'patient': {
+        'name': 'Nancy William',
+        'patient_id': 'c55021d0-cc34-46ba-ac5b-4cd5bcbde3f9'
+    },
+    'opening_hour': '7AM working days',
+    'facility_name': 'Primary Health Care Abuja'
+}
+MAPPINGSET = {
+    'name': 'Dummy-test',
+    'schema': {
+        'name': 'Dummy',
+        'type': 'record',
+        'fields': [
+            {
+                'name': 'id',
+                'type': 'string'
+            },
+            {
+                'name': 'facility_name',
+                'type': 'string'
+            },
+            {
+                'name': 'staff',
+                'type': {
+                    'name': 'Auto_1',
+                    'type': 'record',
+                    'fields': [
+                        {
+                            'name': 'doctor',
+                            'type': 'int'
+                        },
+                        {
+                            'name': 'nurse',
+                            'type': 'int'
+                        }
+                    ]
+                }
+            },
+            {
+                'name': 'opening_hour',
+                'type': 'string'
+            },
+            {
+                'name': 'patient',
+                'type': {
+                    'name': 'Auto_2',
+                    'type': 'record',
+                    'fields': [
+                        {
+                            'name': 'patient_id',
+                            'type': 'string'
+                        },
+                        {
+                            'name': 'name',
+                            'type': 'string'
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    'input': PAYLOAD
+}
+
+MAPPINGS = [
+    {
+        'name': 'passthrough',
+        'definition': {
+            'mapping': [
+                [
+                    '$.id',
+                    'Passthrough.id'
+                ],
+                [
+                    '$.facility_name',
+                    'Passthrough.facility_name'
+                ],
+                [
+                    '$.staff',
+                    'Passthrough.staff'
+                ],
+                [
+                    '$.opening_hour',
+                    'Passthrough.opening_hour'
+                ],
+                [
+                    '$.patient',
+                    'Passthrough.patient'
+                ]
+            ]
+        }
+    },
+    {
+        'revision': '1',
+        'name': 'crossthrough',
+        'definition': {
+            'mapping': [
+                [
+                    '#!uuid',
+                    'Facility.id'
+                ],
+                [
+                    '$.patient.patient_id',
+                    'Patient.id'
+                ],
+                [
+                    '$.patient.name',
+                    'Patient.name'
+                ],
+                [
+                    '$.facility_name',
+                    'Facility.name'
+                ],
+                [
+                    '$.staff.doctor + $.staff.nurse',
+                    'Facility.staff'
+                ]
+            ]
+        }
+    }
+]
+
+SCHEMAS = [
+    {
+        'name': 'Passthrough',
+        'definition': {
+            'name': 'Passthrough',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'id',
+                    'type': 'string'
+                },
+                {
+                    'name': 'facility_name',
+                    'type': 'string'
+                },
+                {
+                    'name': 'staff',
+                    'type': [
+                        'null',
+                        {
+                            'name': 'Auto_1',
+                            'type': 'record',
+                            'fields': [
+                                {
+                                    'name': 'doctor',
+                                    'type': 'int'
+                                },
+                                {
+                                    'name': 'nurse',
+                                    'type': 'int'
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    'name': 'opening_hour',
+                    'type': [
+                        'null',
+                        'string'
+                    ]
+                },
+                {
+                    'name': 'patient',
+                    'type': [
+                        'null',
+                        {
+                            'name': 'Auto_2',
+                            'type': 'record',
+                            'fields': [
+                                {
+                                    'name': 'patient_id',
+                                    'type': 'string'
+                                },
+                                {
+                                    'name': 'name',
+                                    'type': 'string'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        'family': None
+    },
+    {
+        'name': 'Patient',
+        'definition': {
+            'name': 'Patient',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'id',
+                    'type': 'string'
+                },
+                {
+                    'name': 'name',
+                    'type': [
+                        'null',
+                        'string'
+                    ]
+                }
+            ]
+        },
+        'family': None
+    },
+    {
+        'name': 'Facility',
+        'definition': {
+            'name': 'Facility',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'id',
+                    'type': 'string'
+                },
+                {
+                    'name': 'name',
+                    'type': [
+                        'null',
+                        'string'
+                    ]
+                },
+                {
+                    'name': 'staff',
+                    'type': [
+                        'null',
+                        'int'
+                    ]
+                }
+            ]
+        },
+        'family': None
+    }
+]
