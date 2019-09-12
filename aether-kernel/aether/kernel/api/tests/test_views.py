@@ -878,15 +878,6 @@ class ViewsTest(TestCase):
         self.assertEqual(len(response_data[ENTITY_EXTRACTION_ERRORS]), 0)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        with mock.patch('aether.sdk.multitenancy.utils.is_accessible_by_realm', side_effects=False):
-            response = self.client.post(
-                url,
-                data=data,
-                content_type='application/json'
-            )
-            response_data = response.json()
-            print(response)
-
         del PAYLOAD['facility_name']
         data['payload'] = PAYLOAD
         response = self.client.post(
