@@ -25,6 +25,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 
 from rest_framework import status
 
@@ -39,6 +40,10 @@ from . import (
     SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
     SAMPLE_LOCATION_DATA,
     SAMPLE_LOCATION_SCHEMA_DEFINITION,
+    SCHEMAS,
+    MAPPINGS,
+    MAPPINGSET,
+    PAYLOAD,
 )
 
 WAIT_FOR_ENTITY_EXTRACTION = 1
@@ -715,3 +720,88 @@ class ViewsTest(TestCase):
         response = self.client.delete(url + '?cascade=true')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(models.Entity.objects.count(), 0)
+
+    def test_submission_validate(self):
+        sd_list = []
+        for schema in SCHEMAS:
+            test_schema = models.Schema.objects.create(
+                name=schema['name'],
+                definition=schema['definition']
+            )
+            sd_list.append(models.SchemaDecorator.objects.create(
+                name=schema['name'],
+                project=self.project,
+                schema=test_schema,
+            ))
+
+        test_mappingset = models.MappingSet.objects.create(
+            project=self.project,
+            name=MAPPINGSET['name'],
+            input=MAPPINGSET['input'],
+            schema=MAPPINGSET['schema'],
+        )
+        mapping_entities = {}
+        for sd in sd_list:
+            mapping_entities[sd.name] = str(sd.pk)
+
+        for mapping in MAPPINGS:
+            test_mapping_definition = dict(mapping['definition'])
+            test_mapping_definition['entities'] = mapping_entities
+            models.Mapping.objects.create(
+                name=mapping['name'],
+                definition=test_mapping_definition,
+                mappingset=test_mappingset,
+            )
+
+        url = reverse('submission-validate')
+        data = {
+            'mappingset': str(test_mappingset.id),
+            'payload': PAYLOAD
+        }
+        response = self.client.post(
+            url,
+            data=data,
+            content_type='application/json'
+        )
+        response_data = response.json()
+        self.assertEqual(len(response_data['entities']), 3)
+        self.assertEqual(len(response_data[ENTITY_EXTRACTION_ERRORS]), 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        with mock.patch(
+            'aether.kernel.api.views.SubmissionViewSet.check_realm_permission',
+            mock.MagicMock(return_value=False)
+        ):
+            response = self.client.post(
+                url,
+                data=data,
+                content_type='application/json'
+            )
+            response_data = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn('detail', response_data)
+        self.assertEqual('Not accessible by this realm', response_data['detail'])
+
+        del PAYLOAD['facility_name']
+        data['payload'] = PAYLOAD
+        response = self.client.post(
+            url,
+            data=data,
+            content_type='application/json'
+        )
+        response_data = response.json()
+        self.assertEqual(len(response_data['entities']), 2)
+        self.assertEqual(len(response_data[ENTITY_EXTRACTION_ERRORS]), 1)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Passthrough.facility_name', response_data[ENTITY_EXTRACTION_ERRORS][0]['description'])
+
+        del data['mappingset']
+        response = self.client.post(
+            url,
+            data=data,
+            content_type='application/json'
+        )
+
+        response_data = response.json()
+        self.assertEqual('A mappingset id and payload must be provided', response_data)
