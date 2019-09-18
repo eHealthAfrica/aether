@@ -12,14 +12,14 @@
 #
 ################################################################################
 
-aether.python==1.0.6
+aether.python==1.0.7
 aether.sdk==1.1.7
 attrs==19.1.0
 autopep8==1.4.4
-boto3==1.9.225
-botocore==1.12.225
+boto3==1.9.230
+botocore==1.12.230
 cachetools==3.1.1
-certifi==2019.6.16
+certifi==2019.9.11
 chardet==3.0.4
 coreapi==2.3.3
 coreschema==0.0.4
@@ -50,8 +50,8 @@ future==0.17.1
 google-api-core==1.14.2
 google-auth==1.6.3
 google-cloud-core==1.0.3
-google-cloud-storage==1.19.0
-google-resumable-media==0.4.0
+google-cloud-storage==1.19.1
+google-resumable-media==0.4.1
 googleapis-common-protos==1.6.0
 gprof2dot==2017.9.19
 idna==2.8
@@ -65,7 +65,7 @@ jsonschema==3.0.2
 lxml==4.4.1
 MarkupSafe==1.1.1
 mccabe==0.6.1
-minio==4.0.21
+minio==5.0.0
 openpyxl==2.6.3
 packaging==19.1
 ply==3.11
@@ -89,7 +89,7 @@ rsa==4.0
 ruamel.yaml==0.16.5
 ruamel.yaml.clib==0.1.2
 s3transfer==0.2.1
-sentry-sdk==0.11.2
+sentry-sdk==0.12.0
 six==1.12.0
 spavro==1.1.22
 sqlparse==0.3.0
