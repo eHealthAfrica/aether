@@ -30,7 +30,7 @@ jsonpath-ng==1.4.3
 jsonschema==3.0.2
 mccabe==0.6.1
 more-itertools==7.2.0
-packaging==19.1
+packaging==19.2
 pluggy==0.13.0
 ply==3.11
 py==1.8.0
@@ -45,6 +45,6 @@ six==1.12.0
 sortedcontainers==2.1.0
 spavro==1.1.22
 tblib==1.4.0
-urllib3==1.25.3
+urllib3==1.25.5
 wcwidth==0.1.7
 zipp==0.6.0
