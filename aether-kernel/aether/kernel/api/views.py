@@ -419,7 +419,14 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        mappingset = get_object_or_404(models.MappingSet.objects.all(), pk=mappingset_id)
+        try:
+            mappingset = get_object_or_404(models.MappingSet.objects.all(), pk=mappingset_id)
+        except Exception as e:
+            return Response(
+                str(e),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if not self.check_realm_permission(request, mappingset):
             raise PermissionDenied(_('Not accessible by this realm'))
         mappings = mappingset.mappings.all()

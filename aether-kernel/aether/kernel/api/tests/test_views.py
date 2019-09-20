@@ -805,3 +805,16 @@ class ViewsTest(TestCase):
 
         response_data = response.json()
         self.assertEqual('A mappingset id and payload must be provided', response_data)
+
+        data = {
+            'mappingset': 'wrong-uuid',
+            'payload': PAYLOAD
+        }
+        response = self.client.post(
+            url,
+            data=data,
+            content_type='application/json'
+        )
+        response_data = response.json()
+
+        self.assertIn('is not a valid UUID', response_data)
