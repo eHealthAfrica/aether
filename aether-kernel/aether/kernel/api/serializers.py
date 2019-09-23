@@ -34,6 +34,7 @@ from aether.sdk.multitenancy.serializers import (
 )
 
 from .constants import MAX_WORKERS
+from .utils import send_model_item_to_redis
 from aether.python import utils
 from aether.python.constants import MergeOptions as MERGE_OPTIONS
 
@@ -170,7 +171,7 @@ class SubmissionListSerializer(serializers.ListSerializer):
         submission_list = list(submissions)
         with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             while submission_list:
-                executor.submit(utils.send_model_item_to_redis, submission_list.pop())
+                executor.submit(send_model_item_to_redis, submission_list.pop())
         return results
 
 
@@ -310,7 +311,7 @@ class EntityListSerializer(serializers.ListSerializer):
             if settings.WRITE_ENTITIES_TO_REDIS:
                 # send created entities to redis
                 for entity in entities:
-                    utils.send_model_item_to_redis(entity)
+                    send_model_item_to_redis(entity)
             return created_entities
         except Exception as e:
             raise(serializers.ValidationError(e))

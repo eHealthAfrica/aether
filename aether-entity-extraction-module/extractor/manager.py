@@ -18,10 +18,10 @@
 
 import collections
 import time
+import gettext
 import concurrent.futures
 import threading
 import logging
-from django.utils.translation import ugettext as _
 from . import settings
 from .utils import (
     get_from_redis_or_kernel,
@@ -46,6 +46,7 @@ from aether.python.entity.extractor import (
 PUSH_TO_KERNEL_INTERVAL = 0.05
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
+_ = gettext.gettext
 
 
 class ExtractionManager():
