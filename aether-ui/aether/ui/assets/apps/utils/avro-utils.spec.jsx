@@ -123,8 +123,8 @@ describe('AVRO utils', () => {
   describe('parseSchema', () => {
     it('calls avro.parse()', () => {
       avro.parse = jest.fn()
-      utils.parseSchema();
-      expect(avro.parse).toHaveBeenCalledTimes(1);
+      utils.parseSchema()
+      expect(avro.parse).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -143,11 +143,11 @@ describe('AVRO utils', () => {
       avro.parse = jest.fn(() => {
         return { random: jest.fn(() => { return { id: null } }) }
       })
-      const result = utils.randomInput(schema);
-      expect(result.id).toBeTruthy();
+      const result = utils.randomInput(schema)
+      expect(result.id).toBeTruthy()
     })
   })
-  
+
   describe('generateSchemaName', () => {
     it('should generate valid schema names', () => {
       const prefix = 'TestPrefix'
