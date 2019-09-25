@@ -14,8 +14,8 @@
 
 aether.sdk==1.1.7
 autopep8==1.4.4
-boto3==1.9.234
-botocore==1.12.234
+boto3==1.9.235
+botocore==1.12.235
 cachetools==3.1.1
 certifi==2019.9.11
 chardet==3.0.4
@@ -76,6 +76,6 @@ tblib==1.4.0
 traceback2==1.4.0
 unicodecsv==0.14.1
 unittest2==1.1.0
-urllib3==1.25.5
+urllib3==1.25.6
 uWSGI==2.0.18
 xlrd==1.2.0
