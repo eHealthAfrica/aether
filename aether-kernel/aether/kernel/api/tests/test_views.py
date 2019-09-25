@@ -20,6 +20,7 @@ import dateutil.parser
 import json
 from unittest import mock
 import uuid
+import random
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -31,6 +32,7 @@ from rest_framework import status
 
 from aether.kernel.api import models
 from aether.kernel.api.entity_extractor import run_entity_extraction
+from aether.kernel.api.tests.utils.generators import generate_project
 
 from . import (
     EXAMPLE_MAPPING,
@@ -928,3 +930,22 @@ class ViewsTest(TestCase):
         response_data = response.json()
 
         self.assertIn('is not a valid UUID', response_data)
+
+    def test_delete_by_filters(self):
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        entity_count = models.Entity.objects.count()
+        mapping = models.Mapping.objects.first()
+        filtered_count = models.Entity.objects.filter(mapping=mapping.pk).count()
+        url = f'{reverse("entity-filtered-delete")}?mapping={str(mapping.id)}'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(
+            models.Entity.objects.count(),
+            (entity_count - filtered_count)
+        )
+
+        # delete created records
+        models.Project.objects.all().delete()
+        models.Schema.objects.all().delete()
