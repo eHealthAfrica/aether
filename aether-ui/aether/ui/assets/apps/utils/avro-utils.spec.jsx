@@ -18,7 +18,7 @@
  * under the License.
  */
 
-/* global describe, expect, it */
+/* global describe, expect, it, jest */
 
 import * as utils from './avro-utils'
 import avro from 'avsc'
