@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.db import transaction
 from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
 from django.utils.translation import ugettext as _
@@ -54,6 +55,7 @@ from . import (
 
 
 class FilteredMixin(object):
+    @transaction.atomic
     @action(detail=False, methods=['delete'], url_path='filtered-delete')
     def filtered_delete(self, request, *args, **kwargs):
         qs = super(FilteredMixin, self).get_queryset()
