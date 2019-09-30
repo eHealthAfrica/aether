@@ -632,7 +632,7 @@ class SubmissionStatsMixin(MtViewSetMixin):
 class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectStatsSerializer
-    entities_field = 'entities'
+    # entities_field = 'entities'
 
 
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
