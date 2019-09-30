@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.db import transaction
 from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
 from django.utils.translation import ugettext as _
@@ -35,6 +34,7 @@ from rest_framework.decorators import (
 from rest_framework.renderers import JSONRenderer
 
 from aether.sdk.multitenancy.views import MtViewSetMixin
+from aether.sdk.drf.views import FilteredMixin
 from aether.python.entity.extractor import (
     extract_create_entities,
     ENTITY_EXTRACTION_ERRORS,
@@ -52,23 +52,6 @@ from . import (
     serializers,
     utils
 )
-
-
-class FilteredMixin(object):
-    @transaction.atomic
-    @action(detail=False, methods=['delete'], url_path='filtered-delete')
-    def filtered_delete(self, request, *args, **kwargs):
-        qs = super(FilteredMixin, self).get_queryset()
-        filter_class = self.filter_class
-        try:
-            filtered_projects = filter_class(self.request.GET, queryset=qs)
-            filtered_projects.qs.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:  # pragma: no cover
-            return Response(
-                str(e),
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
 
 class ProjectViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
