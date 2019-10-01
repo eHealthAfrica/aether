@@ -20,6 +20,7 @@ import dateutil.parser
 import json
 from unittest import mock
 import uuid
+import random
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -31,6 +32,7 @@ from rest_framework import status
 
 from aether.kernel.api import models
 from aether.kernel.api.entity_extractor import run_entity_extraction
+from aether.kernel.api.tests.utils.generators import generate_project
 
 from . import (
     EXAMPLE_MAPPING,
@@ -928,3 +930,72 @@ class ViewsTest(TestCase):
         response_data = response.json()
 
         self.assertIn('is not a valid UUID', response_data)
+
+    def test_delete_by_filters(self):
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        entity_count = models.Entity.objects.count()
+        mapping = models.Mapping.objects.first()
+        filtered_count = models.Entity.objects.filter(mapping=mapping.pk).count()
+        url = f'{reverse("entity-filtered-delete")}?mapping={str(mapping.id)}'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(
+            models.Entity.objects.count(),
+            (entity_count - filtered_count)
+        )
+
+        self.assertNotEqual(models.Entity.objects.count(), 0)
+        url = f'{reverse("entity-filtered-delete")}'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(models.Entity.objects.count(), 0)
+
+    def test_update_by_filters(self):
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        update_fields = {
+            'revision': '2',
+            'status': 'Pending Approval'
+        }
+        mapping = models.Mapping.objects.first()
+        filtered_count = models.Entity.objects.filter(mapping=mapping.pk).count()
+        url = f'{reverse("entity-filtered-partial-update")}?mapping={str(mapping.id)}'
+        response = self.client.patch(
+            url,
+            data=update_fields,
+            content_type='application/json'
+        )
+        response_data = response.json()
+        print(response_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        filtered_list = models.Entity.objects.filter(mapping=mapping.pk)
+        self.assertEqual(filtered_count, response_data['updated'])
+
+        for i in filtered_list:
+            self.assertEqual(i.revision, '2')
+            self.assertEqual(i.status, 'Pending Approval')
+
+        update_fields = {
+            'revision': '2',
+            'status': 'Wrong Status'
+        }
+        response = self.client.patch(
+            url,
+            data=update_fields,
+            content_type='application/json'
+        )
+        response_data = response.json()
+        filtered_list = models.Entity.objects.filter(mapping=mapping.pk)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('is not a valid choice', response_data)
+
+        response = self.client.patch(
+            url,
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual('No values to update', response.json())

@@ -34,6 +34,7 @@ from rest_framework.decorators import (
 from rest_framework.renderers import JSONRenderer
 
 from aether.sdk.multitenancy.views import MtViewSetMixin
+from aether.sdk.drf.views import FilteredMixin
 from aether.python.entity.extractor import (
     extract_create_entities,
     ENTITY_EXTRACTION_ERRORS,
@@ -53,7 +54,7 @@ from . import (
 )
 
 
-class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
+class ProjectViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
@@ -307,7 +308,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         return Response(data=results)
 
 
-class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
+class MappingSetViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetSerializer
     filter_class = filters.MappingSetFilter
@@ -328,7 +329,7 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             )
 
 
-class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
+class MappingViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
@@ -355,7 +356,7 @@ class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         return Response(topics)
 
 
-class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
+class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
@@ -482,7 +483,7 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
         return super(SubmissionViewSet, self).destroy(request, pk, *args, **kwargs)
 
 
-class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
+class AttachmentViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
@@ -494,7 +495,7 @@ class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         return attachment.get_content()
 
 
-class SchemaViewSet(viewsets.ModelViewSet):
+class SchemaViewSet(FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Schema.objects.all()
     serializer_class = serializers.SchemaSerializer
     filter_class = filters.SchemaFilter
@@ -563,7 +564,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
             return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class SchemaDecoratorViewSet(MtViewSetMixin, viewsets.ModelViewSet):
+class SchemaDecoratorViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.SchemaDecorator.objects.all()
     serializer_class = serializers.SchemaDecoratorSerializer
     filter_class = filters.SchemaDecoratorFilter
@@ -596,7 +597,7 @@ class SchemaDecoratorViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         })
 
 
-class EntityViewSet(MtViewSetMixin, ExporterViewSet):
+class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
