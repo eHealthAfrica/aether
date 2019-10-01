@@ -725,7 +725,7 @@ class SubmissionStatsMixin(MtViewSetMixin):
             #    GROUP BY D.x, D.y, D.z, A.a, B.b, C.c
             #
             # WORKAROUND: remove "group by" columns list
-            def _get_group_by_cols(*args):
+            def _get_group_by_cols(*args):  # pragma: no cover
                 return []
 
             entities_sq = db_models.Subquery(

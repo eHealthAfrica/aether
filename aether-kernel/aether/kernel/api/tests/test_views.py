@@ -234,6 +234,45 @@ class ViewsTest(TestCase):
         self.assertEqual(data['submissions_count'], 0)
         self.assertEqual(data['entities_count'], entities_count)
 
+    def test_project_stats_view_fields(self):
+        url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
+
+        response = self.client.get(url)
+        data = response.json()
+        self.assertIn('first_submission', data)
+        self.assertIn('last_submission', data)
+        self.assertIn('submissions_count', data)
+        self.assertIn('entities_count', data)
+
+        response = self.client.get(
+            url,
+            {'omit': 'first_submission,last_submission,submissions_count,entities_count'}
+        )
+        data = response.json()
+        self.assertNotIn('first_submission', data)
+        self.assertNotIn('last_submission', data)
+        self.assertNotIn('submissions_count', data)
+        self.assertNotIn('entities_count', data)
+
+        response = self.client.get(url, {'fields': 'entities_count'})
+        data = response.json()
+        self.assertNotIn('first_submission', data)
+        self.assertNotIn('last_submission', data)
+        self.assertNotIn('submissions_count', data)
+        self.assertIn('entities_count', data)
+
+        response = self.client.get(
+            url,
+            {
+                'fields': 'entities_count,submissions_count',
+                'omit': 'submissions_count'
+            })
+        data = response.json()
+        self.assertNotIn('first_submission', data)
+        self.assertNotIn('last_submission', data)
+        self.assertNotIn('submissions_count', data)
+        self.assertIn('entities_count', data)
+
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})
         response = self.client.get(url)
