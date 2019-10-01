@@ -190,72 +190,72 @@ class ViewsTest(TestCase):
         url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        json = response.json()
-        self.assertEqual(json['id'], str(self.project.pk))
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertEqual(json['entities_count'], entities_count)
+        data = response.json()
+        self.assertEqual(data['id'], str(self.project.pk))
+        self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertEqual(data['entities_count'], entities_count)
         self.assertLessEqual(
-            dateutil.parser.parse(json['first_submission']),
-            dateutil.parser.parse(json['last_submission']),
+            dateutil.parser.parse(data['first_submission']),
+            dateutil.parser.parse(data['last_submission']),
         )
 
         # let's try with the family filter
         response = self.client.get(f'{url}?family=Person')
-        json = response.json()
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEqual(json['entities_count'], family_person_entities_count)
+        data = response.json()
+        self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertNotEqual(data['entities_count'], entities_count)
+        self.assertEqual(data['entities_count'], family_person_entities_count)
 
         # let's try again but with an unexistent family
         response = self.client.get(f'{url}?family=unknown')
-        json = response.json()
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertEqual(json['entities_count'], 0, 'No entities in this family')
+        data = response.json()
+        self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertEqual(data['entities_count'], 0, 'No entities in this family')
 
         # let's try with using the project id
         response = self.client.get(f'{url}?family={str(self.project.pk)}')
-        json = response.json()
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEqual(json['entities_count'], passthrough_entities_count)
+        data = response.json()
+        self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertNotEqual(data['entities_count'], entities_count)
+        self.assertEqual(data['entities_count'], passthrough_entities_count)
 
         # let's try with the passthrough filter
         response = self.client.get(f'{url}?passthrough=true')
-        json = response.json()
-        self.assertEqual(json['submissions_count'], submissions_count)
-        self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEqual(json['entities_count'], passthrough_entities_count)
+        data = response.json()
+        self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertNotEqual(data['entities_count'], entities_count)
+        self.assertEqual(data['entities_count'], passthrough_entities_count)
 
         # delete the submissions and check the entities
         models.Submission.objects.all().delete()
         self.assertEqual(models.Submission.objects.count(), 0)
         response = self.client.get(url)
-        json = response.json()
-        self.assertEqual(json['submissions_count'], 0)
-        self.assertEqual(json['entities_count'], entities_count)
+        data = response.json()
+        self.assertEqual(data['submissions_count'], 0)
+        self.assertEqual(data['entities_count'], entities_count)
 
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        json = response.json()
-        self.assertEqual(json['id'], str(self.mappingset.pk))
+        data = response.json()
+        self.assertEqual(data['id'], str(self.mappingset.pk))
         submissions_count = models.Submission.objects.filter(mappingset=self.mappingset.pk).count()
-        self.assertEqual(json['submissions_count'], submissions_count)
+        self.assertEqual(data['submissions_count'], submissions_count)
         entities_count = models.Entity.objects.filter(submission__mappingset=self.mappingset.pk).count()
-        self.assertEqual(json['entities_count'], entities_count)
+        self.assertEqual(data['entities_count'], entities_count)
         self.assertLessEqual(
-            dateutil.parser.parse(json['first_submission']),
-            dateutil.parser.parse(json['last_submission']),
+            dateutil.parser.parse(data['first_submission']),
+            dateutil.parser.parse(data['last_submission']),
         )
 
         # delete the submissions and check the count
         models.Submission.objects.all().delete()
         self.assertEqual(models.Submission.objects.count(), 0)
         response = self.client.get(url)
-        json = response.json()
-        self.assertEqual(json['submissions_count'], 0)
-        self.assertEqual(json['entities_count'], 0)
+        data = response.json()
+        self.assertEqual(data['submissions_count'], 0)
+        self.assertEqual(data['entities_count'], 0)
 
     def test_validate_mappings__success(self):
         '''
@@ -583,8 +583,8 @@ class ViewsTest(TestCase):
         url = reverse('project-skeleton', kwargs={'pk': self.project.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual(json, {
+        data = response.json()
+        self.assertEqual(data, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             'name': 'a project name-Person',
@@ -594,8 +594,8 @@ class ViewsTest(TestCase):
         # try with family parameter
         response = self.client.get(f'{url}?family=Person')
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual(json, {
+        data = response.json()
+        self.assertEqual(data, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             'name': 'a project name-Person',
@@ -604,8 +604,8 @@ class ViewsTest(TestCase):
 
         response = self.client.get(f'{url}?family=City')
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual(json, {
+        data = response.json()
+        self.assertEqual(data, {
             'jsonpaths': [],
             'docs': {},
             'name': 'a project name',
@@ -615,8 +615,8 @@ class ViewsTest(TestCase):
         # try with passthrough parameter
         response = self.client.get(f'{url}?passthrough=true')
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual(json, {
+        data = response.json()
+        self.assertEqual(data, {
             'jsonpaths': [],
             'docs': {},
             'name': 'a project name',
@@ -644,8 +644,8 @@ class ViewsTest(TestCase):
         )
         response = self.client.get(f'{url}?passthrough=true')
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual(json, {
+        data = response.json()
+        self.assertEqual(data, {
             'jsonpaths': ['one'],
             'docs': {},  # "one" field does not have "doc"
             'name': 'a project name-passthrough',
@@ -659,8 +659,8 @@ class ViewsTest(TestCase):
         project = models.Project.objects.create(name='Alone')
         response = self.client.get(reverse('project-skeleton', kwargs={'pk': project.pk}))
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual(json, {
+        data = response.json()
+        self.assertEqual(data, {
             'jsonpaths': [],
             'docs': {},
             'name': 'Alone',
@@ -679,8 +679,8 @@ class ViewsTest(TestCase):
         )
         response = self.client.get(reverse('project-skeleton', kwargs={'pk': project.pk}))
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual(json, {
+        data = response.json()
+        self.assertEqual(data, {
             'jsonpaths': [],
             'docs': {},
             'name': 'Alone-Second',
@@ -693,8 +693,8 @@ class ViewsTest(TestCase):
 
         response = self.client.get(reverse('schema-skeleton', kwargs={'pk': self.schema.pk}))
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual(json, {
+        data = response.json()
+        self.assertEqual(data, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             'name': 'Person',
@@ -706,8 +706,8 @@ class ViewsTest(TestCase):
 
         response = self.client.get(reverse('schemadecorator-skeleton', kwargs={'pk': self.schemadecorator.pk}))
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual(json, {
+        data = response.json()
+        self.assertEqual(data, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             'name': 'a project name-Person',
