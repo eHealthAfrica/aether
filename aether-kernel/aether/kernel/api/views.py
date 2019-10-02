@@ -732,6 +732,7 @@ class SubmissionStatsMixin(MtViewSetMixin):
                 queryset=entities_sq,
                 output_field=db_models.IntegerField(),
             )
+            entities_sq.contains_aggregate = True  # indicates that includes an aggregated value
             entities_sq.get_group_by_cols = _get_group_by_cols  # apply workaround
 
             qs = qs.annotate(entities_count=Coalesce(entities_sq, 0))
