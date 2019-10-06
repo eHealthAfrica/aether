@@ -69,6 +69,7 @@ VISUALIZATION_KEY = '@aether_default_visualization'
 # Parser methods
 # ------------------------------------------------------------------------------
 
+
 def parse_xform_file(filename, content):
     '''
     Depending on the file extension parses file content into an XML string.
