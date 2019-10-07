@@ -12,12 +12,12 @@
 #
 ################################################################################
 
-aether.python==1.0.7
-aether.sdk==1.1.7
+aether.python==1.0.11
+aether.sdk==1.1.8
 attrs==19.1.0
 autopep8==1.4.4
-boto3==1.9.230
-botocore==1.12.230
+boto3==1.9.239
+botocore==1.12.239
 cachetools==3.1.1
 certifi==2019.9.11
 chardet==3.0.4
@@ -25,15 +25,19 @@ coreapi==2.3.3
 coreschema==0.0.4
 coverage==4.5.4
 decorator==4.4.0
-Django==2.2.5
+Django==2.2.6
 django-autofixture==0.12.1
 django-cas-ng==3.6.0
-django-cors-headers==3.1.0
+django-cors-headers==3.1.1
 django-debug-toolbar==2.0
 django-filter==2.2.0
 django-minio-storage==0.2.2
 django-model-utils==3.2.0
+<<<<<<< HEAD
 django-prometheus==1.0.15
+=======
+django-prometheus==1.1.0
+>>>>>>> 56c54a13244d34ecfbdf9685cc5f7c053de07939
 django-silk==3.0.4
 django-storages==1.7.2
 django-uwsgi==0.2.2
@@ -50,7 +54,11 @@ future==0.17.1
 google-api-core==1.14.2
 google-auth==1.6.3
 google-cloud-core==1.0.3
+<<<<<<< HEAD
 google-cloud-storage==1.19.1
+=======
+google-cloud-storage==1.20.0
+>>>>>>> 56c54a13244d34ecfbdf9685cc5f7c053de07939
 google-resumable-media==0.4.1
 googleapis-common-protos==1.6.0
 gprof2dot==2017.9.19
@@ -65,12 +73,18 @@ jsonschema==3.0.2
 lxml==4.4.1
 MarkupSafe==1.1.1
 mccabe==0.6.1
+<<<<<<< HEAD
 minio==5.0.0
 openpyxl==2.6.3
 packaging==19.1
+=======
+minio==5.0.1
+openpyxl==3.0.0
+packaging==19.2
+>>>>>>> 56c54a13244d34ecfbdf9685cc5f7c053de07939
 ply==3.11
 prometheus-client==0.7.1
-protobuf==3.9.1
+protobuf==3.9.2
 psycopg2-binary==2.8.3
 pyasn1==0.4.7
 pyasn1-modules==0.2.6
@@ -87,13 +101,17 @@ redis==3.3.8
 requests==2.22.0
 rsa==4.0
 ruamel.yaml==0.16.5
-ruamel.yaml.clib==0.1.2
+ruamel.yaml.clib==0.2.0
 s3transfer==0.2.1
+<<<<<<< HEAD
 sentry-sdk==0.12.0
+=======
+sentry-sdk==0.12.2
+>>>>>>> 56c54a13244d34ecfbdf9685cc5f7c053de07939
 six==1.12.0
 spavro==1.1.22
 sqlparse==0.3.0
 tblib==1.4.0
 uritemplate==3.0.0
-urllib3==1.25.3
+urllib3==1.25.6
 uWSGI==2.0.18

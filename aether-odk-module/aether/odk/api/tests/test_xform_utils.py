@@ -325,11 +325,14 @@ class XFormUtilsAvroTests(CustomTestCase):
     def test__get_all_paths(self):
         self.assertEqual(get_paths({}), [])
         self.assertEqual(get_paths({'@a': 0}), [])
-        self.assertEqual(get_paths({'a': 0}), [('/a', False)])
-        self.assertEqual(get_paths({'a': {'b': 0}}), [('/a', True), ('/a/b', False)])
+        self.assertEqual(get_paths({'a': 0}), [('/a', False, None)])
+        self.assertEqual(get_paths({'a': {'b': 0}}), [('/a', True, None), ('/a/b', False, None)])
+        self.assertEqual(
+            get_paths({'a': {'@aether_default_visualization': 'pie', 'c': 0}}),
+            [('/a', True, 'pie'), ('/a/c', False, None)])
         self.assertEqual(
             get_paths({'a': {'b': 0, 'c': 0}}),
-            [('/a', True), ('/a/b', False), ('/a/c', False)])
+            [('/a', True, None), ('/a/b', False, None), ('/a/c', False, None)])
 
     def test__get_avro_type__not_required(self):
         # avro types
