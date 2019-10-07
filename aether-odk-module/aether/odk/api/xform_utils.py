@@ -63,10 +63,12 @@ SELECT_TAGS = ('select', 'select1', 'odk:rank')
 
 SELECT_CHOICES_CUTOFF = 20
 
+VISUALIZATION_KEY = '@aether_default_visualization'
 
 # ------------------------------------------------------------------------------
 # Parser methods
 # ------------------------------------------------------------------------------
+
 
 def parse_xform_file(filename, content):
     '''
@@ -297,6 +299,7 @@ def parse_xform_to_avro_schema(
         current_name = xpath.split('/')[-1]
         current_doc = definition.get('label')
         current_choices = definition.get('choices')
+        current_visualizer = definition.get('visualizer')
 
         parent_path = '/'.join(xpath.split('/')[:-1])
         parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
@@ -311,8 +314,8 @@ def parse_xform_to_avro_schema(
             '@aether_extended_type': current_type,
         }
 
-        if current_choices:
-            current_field['@aether_lookup'] = current_choices
+        current_field['@aether_lookup'] = current_choices
+        current_field[VISUALIZATION_KEY] = current_visualizer
 
         # get AVRO valid name
         clean_current_name = __clean_odk_name(current_name)
@@ -649,12 +652,13 @@ def __get_xform_instance_skeleton(xml_definition):
     # this contains the data skeleton
     # take all the xpaths and rest of meaningful data from here
     instance = __get_xform_instance(xform_dict, with_root=True)
-    for xpath, has_children in __get_all_paths(instance):
+    for xpath, has_children, visualizer in __get_all_paths(instance):
         schema[xpath] = {
             'xpath': xpath,
             'type': 'group' if has_children else 'string',
             'required': False,
             'label': __get_xform_label(xform_dict, xpath, itexts),
+            'visualizer': visualizer
         }
 
     for entries in __find_in_dict(xform_dict, 'bind'):
@@ -955,12 +959,14 @@ def __get_all_paths(dictionary):
     '''
     def walk(obj, parent_keys=[]):
         for k, v in obj.items():
+            is_dict = isinstance(v, dict)
             if k.startswith('@'):  # ignore attributes
                 continue
             keys = parent_keys + [k]
             xpath = '/' + '/'.join(keys)
-            paths.append((xpath, isinstance(v, dict)))
-            if isinstance(v, dict):
+            visualizer = v.get(VISUALIZATION_KEY) if is_dict else None
+            paths.append((xpath, isinstance(v, dict), visualizer))
+            if is_dict:
                 walk(v, keys)
 
     paths = []

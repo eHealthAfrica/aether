@@ -51,6 +51,7 @@
       "namespace": "TestProject",
       "doc": "Country",
       "@aether_extended_type": "select1",
+      "@aether_default_visualization": "bar",
       "@aether_lookup": [
         {"label": "Cameroon", "value": "CM"},
         {"label": "Nigeria", "value": "NG"}
@@ -83,6 +84,7 @@
       "namespace": "TestProject",
       "doc": "Collect your GPS coordinates",
       "@aether_extended_type": "geopoint",
+      "@aether_default_visualization": "line",
       "type": [
         "null",
         {
@@ -90,6 +92,7 @@
           "namespace": "TestProject",
           "doc": "Collect your GPS coordinates",
           "@aether_extended_type": "geopoint",
+          "@aether_default_visualization": "line",
           "type": "record",
           "fields": [
             {
@@ -320,6 +323,7 @@
               "namespace": "TestProject.option-a",
               "doc": "Choice A",
               "@aether_extended_type": "string",
+              "@aether_default_visualization": "pie",
               "type": [ "null", "string" ]
             }
           ]
