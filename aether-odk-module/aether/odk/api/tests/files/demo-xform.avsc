@@ -7,84 +7,126 @@
       "name": "_id",
       "namespace": "TestProject",
       "doc": "xForm ID",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "_version",
       "namespace": "TestProject",
       "doc": "xForm version",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "_surveyor",
       "namespace": "TestProject",
       "doc": "Surveyor",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "_submitted_at",
       "namespace": "TestProject",
       "doc": "Submitted at",
       "@aether_extended_type": "dateTime",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "starttime",
       "namespace": "TestProject",
       "@aether_extended_type": "dateTime",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "endtime",
       "namespace": "TestProject",
       "@aether_extended_type": "dateTime",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "deviceid",
       "namespace": "TestProject",
       "@aether_extended_type": "string",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "country",
       "namespace": "TestProject",
       "doc": "Country",
       "@aether_extended_type": "select1",
+      "type": [
+        "null",
+        "string"
+      ],
       "@aether_default_visualization": "bar",
+      "@aether_emit_level": "0",
       "@aether_lookup": [
-        {"label": "Cameroon", "value": "CM"},
-        {"label": "Nigeria", "value": "NG"}
-    ],
-      "type": [ "null", "string" ]
+        {
+          "label": "Cameroon",
+          "value": "CM"
+        },
+        {
+          "label": "Nigeria",
+          "value": "NG"
+        }
+      ]
     },
     {
       "name": "region",
       "namespace": "TestProject",
       "doc": "Region",
+      "@aether_emit_level": "1",
       "@aether_extended_type": "select1",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "city",
       "namespace": "TestProject",
       "doc": "City",
+      "@aether_emit_level": "2",
       "@aether_extended_type": "string",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "name",
       "namespace": "TestProject",
       "doc": "What is your name?",
       "@aether_extended_type": "string",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "location",
       "namespace": "TestProject",
       "doc": "Collect your GPS coordinates",
-      "@aether_extended_type": "geopoint",
       "@aether_default_visualization": "line",
+      "@aether_extended_type": "geopoint",
       "type": [
         "null",
         {
@@ -99,25 +141,37 @@
               "name": "latitude",
               "namespace": "TestProject.location",
               "doc": "latitude",
-              "type": [ "null", "float" ]
+              "type": [
+                "null",
+                "float"
+              ]
             },
             {
               "name": "longitude",
               "namespace": "TestProject.location",
               "doc": "longitude",
-              "type": [ "null", "float" ]
+              "type": [
+                "null",
+                "float"
+              ]
             },
             {
               "name": "altitude",
               "namespace": "TestProject.location",
               "doc": "altitude",
-              "type": [ "null", "float" ]
+              "type": [
+                "null",
+                "float"
+              ]
             },
             {
               "name": "accuracy",
               "namespace": "TestProject.location",
               "doc": "accuracy",
-              "type": [ "null", "float" ]
+              "type": [
+                "null",
+                "float"
+              ]
             }
           ]
         }
@@ -141,25 +195,37 @@
               "name": "latitude",
               "namespace": "TestProject.location_none",
               "doc": "latitude",
-              "type": [ "null", "float" ]
+              "type": [
+                "null",
+                "float"
+              ]
             },
             {
               "name": "longitude",
               "namespace": "TestProject.location_none",
               "doc": "longitude",
-              "type": [ "null", "float" ]
+              "type": [
+                "null",
+                "float"
+              ]
             },
             {
               "name": "altitude",
               "namespace": "TestProject.location_none",
               "doc": "altitude",
-              "type": [ "null", "float" ]
+              "type": [
+                "null",
+                "float"
+              ]
             },
             {
               "name": "accuracy",
               "namespace": "TestProject.location_none",
               "doc": "accuracy",
-              "type": [ "null", "float" ]
+              "type": [
+                "null",
+                "float"
+              ]
             }
           ]
         }
@@ -185,25 +251,37 @@
                 "name": "latitude",
                 "namespace": "TestProject.track",
                 "doc": "latitude",
-                "type": [ "null", "float" ]
+                "type": [
+                  "null",
+                  "float"
+                ]
               },
               {
                 "name": "longitude",
                 "namespace": "TestProject.track",
                 "doc": "longitude",
-                "type": [ "null", "float" ]
+                "type": [
+                  "null",
+                  "float"
+                ]
               },
               {
                 "name": "altitude",
                 "namespace": "TestProject.track",
                 "doc": "altitude",
-                "type": [ "null", "float" ]
+                "type": [
+                  "null",
+                  "float"
+                ]
               },
               {
                 "name": "accuracy",
                 "namespace": "TestProject.track",
                 "doc": "accuracy",
-                "type": [ "null", "float" ]
+                "type": [
+                  "null",
+                  "float"
+                ]
               }
             ]
           }
@@ -230,25 +308,37 @@
                 "name": "latitude",
                 "namespace": "TestProject.polygon",
                 "doc": "latitude",
-                "type": [ "null", "float" ]
+                "type": [
+                  "null",
+                  "float"
+                ]
               },
               {
                 "name": "longitude",
                 "namespace": "TestProject.polygon",
                 "doc": "longitude",
-                "type": [ "null", "float" ]
+                "type": [
+                  "null",
+                  "float"
+                ]
               },
               {
                 "name": "altitude",
                 "namespace": "TestProject.polygon",
                 "doc": "altitude",
-                "type": [ "null", "float" ]
+                "type": [
+                  "null",
+                  "float"
+                ]
               },
               {
                 "name": "accuracy",
                 "namespace": "TestProject.polygon",
                 "doc": "accuracy",
-                "type": [ "null", "float" ]
+                "type": [
+                  "null",
+                  "float"
+                ]
               }
             ]
           }
@@ -260,35 +350,51 @@
       "namespace": "TestProject",
       "doc": "Take a picture",
       "@aether_extended_type": "binary",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "number",
       "namespace": "TestProject",
       "doc": "How many?",
       "@aether_extended_type": "int",
-      "type": [ "null", "int" ]
+      "type": [
+        "null",
+        "int"
+      ]
     },
     {
       "name": "number2",
       "namespace": "TestProject",
       "doc": "Percentage",
       "@aether_extended_type": "decimal",
-      "type": [ "null", "double" ]
+      "@aether_emit_level": "4",
+      "type": [
+        "null",
+        "double"
+      ]
     },
     {
       "name": "date",
       "namespace": "TestProject",
       "doc": "When?",
       "@aether_extended_type": "date",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "datetime",
       "namespace": "TestProject",
       "doc": "At?",
       "@aether_extended_type": "dateTime",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "option",
@@ -296,14 +402,26 @@
       "doc": "Choice (A/B)",
       "@aether_extended_type": "select1",
       "@aether_lookup": [
-        {"label": "Option A", "value": "a"},
-        {"label": "Option B", "value": "b"}
+        {
+          "label": "Option A",
+          "value": "a"
+        },
+        {
+          "label": "Option B",
+          "value": "b"
+        }
       ],
-      "type": [ "null", "string" ]
+      "@aether_emit_level": "3",
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "option__a",
-      "aliases": ["option-a"],
+      "aliases": [
+        "option-a"
+      ],
       "namespace": "TestProject",
       "doc": "Option A",
       "@aether_extended_type": "group",
@@ -311,7 +429,9 @@
         "null",
         {
           "name": "option__a",
-          "aliases": ["option-a"],
+          "aliases": [
+            "option-a"
+          ],
           "namespace": "TestProject",
           "doc": "Option A",
           "@aether_extended_type": "group",
@@ -319,12 +439,17 @@
           "fields": [
             {
               "name": "choice__a",
-              "aliases": ["choice.a"],
+              "aliases": [
+                "choice.a"
+              ],
               "namespace": "TestProject.option-a",
               "doc": "Choice A",
               "@aether_extended_type": "string",
               "@aether_default_visualization": "pie",
-              "type": [ "null", "string" ]
+              "type": [
+                "null",
+                "string"
+              ]
             }
           ]
         }
@@ -332,7 +457,9 @@
     },
     {
       "name": "option__b",
-      "aliases": ["option-b"],
+      "aliases": [
+        "option-b"
+      ],
       "namespace": "TestProject",
       "doc": "Option B",
       "@aether_extended_type": "group",
@@ -340,7 +467,9 @@
         "null",
         {
           "name": "option__b",
-          "aliases": ["option-b"],
+          "aliases": [
+            "option-b"
+          ],
           "namespace": "TestProject",
           "doc": "Option B",
           "@aether_extended_type": "group",
@@ -348,11 +477,16 @@
           "fields": [
             {
               "name": "choice__b",
-              "aliases": ["choice.b"],
+              "aliases": [
+                "choice.b"
+              ],
               "namespace": "TestProject.option-b",
               "doc": "Choice B",
               "@aether_extended_type": "string",
-              "type": [ "null", "string" ]
+              "type": [
+                "null",
+                "string"
+              ]
             }
           ]
         }
@@ -364,11 +498,26 @@
       "doc": "Spoken languages",
       "@aether_extended_type": "select",
       "@aether_lookup": [
-        {"label": "English", "value": "EN"},
-        {"label": "French", "value": "FR"},
-        {"label": "German", "value": "GE"}
+        {
+          "label": "English",
+          "value": "EN"
+        },
+        {
+          "label": "French",
+          "value": "FR"
+        },
+        {
+          "label": "German",
+          "value": "GE"
+        }
       ],
-      "type": [ "null", { "type": "array", "items": "string" } ]
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": "string"
+        }
+      ]
     },
     {
       "name": "ranking_lang",
@@ -376,11 +525,26 @@
       "doc": "Ranking of languages",
       "@aether_extended_type": "odk:rank",
       "@aether_lookup": [
-        {"label": "English", "value": "EN"},
-        {"label": "French", "value": "FR"},
-        {"label": "German", "value": "GE"}
+        {
+          "label": "English",
+          "value": "EN"
+        },
+        {
+          "label": "French",
+          "value": "FR"
+        },
+        {
+          "label": "German",
+          "value": "GE"
+        }
       ],
-      "type": [ "null", { "type": "array", "items": "string" } ]
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": "string"
+        }
+      ]
     },
     {
       "name": "iterate",
@@ -403,14 +567,20 @@
                 "namespace": "TestProject.iterate",
                 "doc": "Index",
                 "@aether_extended_type": "int",
-                "type": [ "null", "int" ]
+                "type": [
+                  "null",
+                  "int"
+                ]
               },
               {
                 "name": "value",
                 "namespace": "TestProject.iterate",
                 "doc": "Value",
                 "@aether_extended_type": "string",
-                "type": [ "null", "string" ]
+                "type": [
+                  "null",
+                  "string"
+                ]
               }
             ]
           }
@@ -435,11 +605,16 @@
             "fields": [
               {
                 "name": "it__em",
-                "aliases": ["it.em"],
+                "aliases": [
+                  "it.em"
+                ],
                 "namespace": "TestProject.iterate_one",
                 "doc": "Item",
                 "@aether_extended_type": "string",
-                "type": [ "null", "string" ]
+                "type": [
+                  "null",
+                  "string"
+                ]
               }
             ]
           }
@@ -467,7 +642,10 @@
                 "namespace": "TestProject.iterate_none",
                 "doc": "None",
                 "@aether_extended_type": "string",
-                "type": [ "null", "string" ]
+                "type": [
+                  "null",
+                  "string"
+                ]
               }
             ]
           }
@@ -479,7 +657,10 @@
       "namespace": "TestProject",
       "doc": "Dup value",
       "@aether_extended_type": "string",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "dup_group",
@@ -500,7 +681,10 @@
               "namespace": "TestProject.dup_group",
               "doc": "Nested dup value",
               "@aether_extended_type": "string",
-              "type": [ "null", "string" ]
+              "type": [
+                "null",
+                "string"
+              ]
             }
           ]
         }
@@ -511,7 +695,10 @@
       "namespace": "TestProject",
       "doc": "That's all folks!",
       "@aether_extended_type": "string",
-      "type": [ "null", "string" ]
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "meta",
@@ -529,13 +716,19 @@
               "name": "instanceID",
               "namespace": "TestProject.meta",
               "@aether_extended_type": "string",
-              "type": [ "null", "string" ]
+              "type": [
+                "null",
+                "string"
+              ]
             },
             {
               "name": "instanceName",
               "namespace": "TestProject.meta",
               "@aether_extended_type": "string",
-              "type": [ "null", "string" ]
+              "type": [
+                "null",
+                "string"
+              ]
             }
           ]
         }
