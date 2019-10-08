@@ -124,6 +124,129 @@ class ViewsTest(TestCase):
             self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
         return response
 
+    def test_project_stats_view(self):
+        # cleaning data
+        models.Submission.objects.all().delete()
+        self.assertEqual(models.Submission.objects.count(), 0)
+        models.Entity.objects.all().delete()
+        self.assertEqual(models.Entity.objects.count(), 0)
+
+        schemadecorator_2 = models.SchemaDecorator.objects.create(
+            name='a schema decorator with stats',
+            project=self.project,
+            schema=models.Schema.objects.create(
+                name='another schema',
+                type='eha.test.schemas',
+                family=str(self.project.pk),  # identifies passthrough schemas
+                definition={
+                    'name': 'Person',
+                    'type': 'record',
+                    'fields': [{'name': 'id', 'type': 'string'}]
+                },
+                revision='a sample revision',
+            ),
+        )
+        models.Mapping.objects.create(
+            name='a read only mapping with stats',
+            definition={
+                'entities': {'Person': str(schemadecorator_2.pk)},
+                'mapping': [['#!uuid', 'Person.id']],
+            },
+            mappingset=self.mappingset,
+            is_read_only=True,
+        )
+
+        for _ in range(4):
+            for __ in range(5):
+                # this will not trigger the entities extraction
+                self.helper_create_object('submission-list', {
+                    'payload': EXAMPLE_SOURCE_DATA,
+                    'mappingset': str(self.mappingset.pk),
+                })
+
+        submissions_count = models.Submission \
+                                  .objects \
+                                  .filter(mappingset__project=self.project) \
+                                  .count()
+        self.assertEqual(submissions_count, 20)
+
+        url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(data['id'], str(self.project.pk))
+        self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertLessEqual(
+            dateutil.parser.parse(data['first_submission']),
+            dateutil.parser.parse(data['last_submission']),
+        )
+
+        # let's try with the family filter
+        response = self.client.get(f'{url}?family=Person')
+        data = response.json()
+        self.assertEqual(data['submissions_count'], submissions_count)
+
+        # let's try again but with an unexistent family
+        response = self.client.get(f'{url}?family=unknown')
+        data = response.json()
+        self.assertEqual(data['submissions_count'], submissions_count)
+
+        # let's try with using the project id
+        response = self.client.get(f'{url}?family={str(self.project.pk)}')
+        data = response.json()
+        self.assertEqual(data['submissions_count'], submissions_count)
+
+        # let's try with the passthrough filter
+        response = self.client.get(f'{url}?passthrough=true')
+        data = response.json()
+        self.assertEqual(data['submissions_count'], submissions_count)
+
+        # delete the submissions and check the entities
+        models.Submission.objects.all().delete()
+        self.assertEqual(models.Submission.objects.count(), 0)
+        response = self.client.get(url)
+        data = response.json()
+        self.assertEqual(data['submissions_count'], 0)
+
+    def test_project_stats_view_fields(self):
+        url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
+
+        response = self.client.get(url)
+        data = response.json()
+        self.assertIn('first_submission', data)
+        self.assertIn('last_submission', data)
+        self.assertIn('submissions_count', data)
+        self.assertIn('entities_count', data)
+
+        response = self.client.get(
+            url,
+            {'omit': 'first_submission,last_submission,submissions_count,entities_count'}
+        )
+        data = response.json()
+        self.assertNotIn('first_submission', data)
+        self.assertNotIn('last_submission', data)
+        self.assertNotIn('submissions_count', data)
+        self.assertNotIn('entities_count', data)
+
+        response = self.client.get(url, {'fields': 'entities_count'})
+        data = response.json()
+        self.assertNotIn('first_submission', data)
+        self.assertNotIn('last_submission', data)
+        self.assertNotIn('submissions_count', data)
+        self.assertIn('entities_count', data)
+
+        response = self.client.get(
+            url,
+            {
+                'fields': 'entities_count,submissions_count',
+                'omit': 'submissions_count'
+            })
+        data = response.json()
+        self.assertNotIn('first_submission', data)
+        self.assertNotIn('last_submission', data)
+        self.assertNotIn('submissions_count', data)
+        self.assertIn('entities_count', data)
+
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})
         response = self.client.get(url)
