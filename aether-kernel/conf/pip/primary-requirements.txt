@@ -26,7 +26,6 @@ aether.python
 django-filter
 django-model-utils
 drf-yasg
-packaging  # missing dependency of drf-yasg
 python-dateutil
 
 # XLSX libraries
