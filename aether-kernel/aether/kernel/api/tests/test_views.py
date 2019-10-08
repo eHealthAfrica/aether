@@ -146,7 +146,7 @@ class ViewsTest(TestCase):
                 revision='a sample revision',
             ),
         )
-        mapping_2 = models.Mapping.objects.create(
+        models.Mapping.objects.create(
             name='a read only mapping with stats',
             definition={
                 'entities': {'Person': str(schemadecorator_2.pk)},
@@ -158,8 +158,7 @@ class ViewsTest(TestCase):
 
         for _ in range(4):
             for __ in range(5):
-                # this will also trigger the entities extraction
-                # (4 entities per submission -> 3 for self.schemadecorator + 1 for schemadecorator_2)
+                # this will not trigger the entities extraction
                 self.helper_create_object('submission-list', {
                     'payload': EXAMPLE_SOURCE_DATA,
                     'mappingset': str(self.mappingset.pk),
@@ -171,31 +170,12 @@ class ViewsTest(TestCase):
                                   .count()
         self.assertEqual(submissions_count, 20)
 
-        entities_count = models.Entity \
-                               .objects \
-                               .filter(submission__mappingset__project=self.project) \
-                               .count()
-        self.assertEqual(entities_count, 80)
-
-        family_person_entities_count = models.Entity \
-                                             .objects \
-                                             .filter(mapping=self.mapping) \
-                                             .count()
-        self.assertEqual(family_person_entities_count, 60)
-
-        passthrough_entities_count = models.Entity \
-                                           .objects \
-                                           .filter(mapping=mapping_2) \
-                                           .count()
-        self.assertEqual(passthrough_entities_count, 20)
-
         url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertEqual(data['id'], str(self.project.pk))
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertEqual(data['entities_count'], entities_count)
         self.assertLessEqual(
             dateutil.parser.parse(data['first_submission']),
             dateutil.parser.parse(data['last_submission']),
@@ -205,28 +185,21 @@ class ViewsTest(TestCase):
         response = self.client.get(f'{url}?family=Person')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertNotEqual(data['entities_count'], entities_count)
-        self.assertEqual(data['entities_count'], family_person_entities_count)
 
         # let's try again but with an unexistent family
         response = self.client.get(f'{url}?family=unknown')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertEqual(data['entities_count'], 0, 'No entities in this family')
 
         # let's try with using the project id
         response = self.client.get(f'{url}?family={str(self.project.pk)}')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertNotEqual(data['entities_count'], entities_count)
-        self.assertEqual(data['entities_count'], passthrough_entities_count)
 
         # let's try with the passthrough filter
         response = self.client.get(f'{url}?passthrough=true')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertNotEqual(data['entities_count'], entities_count)
-        self.assertEqual(data['entities_count'], passthrough_entities_count)
 
         # delete the submissions and check the entities
         models.Submission.objects.all().delete()
@@ -234,7 +207,6 @@ class ViewsTest(TestCase):
         response = self.client.get(url)
         data = response.json()
         self.assertEqual(data['submissions_count'], 0)
-        self.assertEqual(data['entities_count'], entities_count)
 
     def test_project_stats_view_fields(self):
         url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
