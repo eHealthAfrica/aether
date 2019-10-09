@@ -1,5 +1,13 @@
 
-<h:html xmlns="http://www.w3.org/2002/xforms" xmlns:aet="http://ehealthafrica.org/xform" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:h="http://www.w3.org/1999/xhtml" xmlns:jr="http://openrosa.org/javarosa" xmlns:odk="http://www.opendatakit.org/xforms" xmlns:orx="http://openrosa.org/xforms" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<h:html
+        xmlns="http://www.w3.org/2002/xforms"
+        xmlns:aet="http://ehealthafrica.org/xform"
+        xmlns:ev="http://www.w3.org/2001/xml-events"
+        xmlns:h="http://www.w3.org/1999/xhtml"
+        xmlns:jr="http://openrosa.org/javarosa"
+        xmlns:odk="http://www.opendatakit.org/xforms"
+        xmlns:orx="http://openrosa.org/xforms"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <h:head>
     <h:title>My Test Form</h:title>
     <model>
@@ -152,9 +160,27 @@
           </item>
         </root>
       </instance>
-      <bind jr:preload="timestamp" jr:preloadParams="start" jr:requiredMsg="start" nodeset="/Something_that_is_not_None/starttime" required="true()" type="dateTime"/>
-      <bind jr:preload="timestamp" jr:preloadParams="end" jr:requiredMsg="end" nodeset="/Something_that_is_not_None/endtime" required="true()" type="dateTime"/>
-      <bind jr:preload="property" jr:preloadParams="deviceid" jr:requiredMsg="device" nodeset="/Something_that_is_not_None/deviceid" required="true()" type="string"/>
+      <bind
+              jr:preload="timestamp"
+              jr:preloadParams="start"
+              jr:requiredMsg="start"
+              nodeset="/Something_that_is_not_None/starttime"
+              required="true()"
+              type="dateTime"/>
+      <bind
+              jr:preload="timestamp"
+              jr:preloadParams="end"
+              jr:requiredMsg="end"
+              nodeset="/Something_that_is_not_None/endtime"
+              required="true()"
+              type="dateTime"/>
+      <bind
+              jr:preload="property"
+              jr:preloadParams="deviceid"
+              jr:requiredMsg="device"
+              nodeset="/Something_that_is_not_None/deviceid"
+              required="true()"
+              type="string"/>
       <bind aet="{'emit_level': '0', 'default_visualization': 'bar'}" nodeset="/Something_that_is_not_None/country" required="false()" type="select1"/>
       <bind aet="{'emit_level': '1'}" nodeset="/Something_that_is_not_None/region" required="false()" type="select1"/>
       <bind aet="{'emit_level': '2'}" nodeset="/Something_that_is_not_None/city" required="false()" type="string"/>
@@ -182,8 +208,15 @@
       <bind nodeset="/Something_that_is_not_None/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/dup_group/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/note_end" readonly="true()" required="false()" type="string"/>
-      <bind jr:preload="uid" nodeset="/Something_that_is_not_None/meta/instanceID" readonly="true()" type="string"/>
-      <bind calculate="Something_that_is_not_None" nodeset="/Something_that_is_not_None/meta/instanceName" type="string"/>
+      <bind
+              jr:preload="uid"
+              nodeset="/Something_that_is_not_None/meta/instanceID"
+              readonly="true()"
+              type="string"/>
+      <bind
+              calculate="Something_that_is_not_None"
+              nodeset="/Something_that_is_not_None/meta/instanceName"
+              type="string"/>
     </model>
   </h:head>
   <h:body>
