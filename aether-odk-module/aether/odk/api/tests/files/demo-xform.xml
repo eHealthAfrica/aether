@@ -326,7 +326,8 @@
     </odk:rank>
     <group ref="/Something_that_is_not_None/iterate">
       <label>Indicate loop elements</label>
-      <repeat nodeset="/Something_that_is_not_None/iterate">
+      <repeat 
+                nodeset="/Something_that_is_not_None/iterate">
         <input ref="/Something_that_is_not_None/iterate/index">
           <label>Index</label>
         </input>
