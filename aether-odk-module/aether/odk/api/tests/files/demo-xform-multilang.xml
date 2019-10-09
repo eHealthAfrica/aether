@@ -332,11 +332,11 @@
           <starttime/>
           <endtime/>
           <deviceid/>
-          <country aether_default_visualization="bar"/>
+          <country/>
           <region/>
           <city/>
           <name/>
-          <location aether_default_visualization="line"/>
+          <location/>
           <location_none/>
           <track/>
           <polygon/>
@@ -347,7 +347,7 @@
           <datetime/>
           <option/>
           <option-a>
-            <choice.a aether_default_visualization="pie"/>
+            <choice.a/>
           </option-a>
           <option-b>
             <choice.b/>
@@ -460,23 +460,22 @@
             nodeset="/Something_that_is_not_None/deviceid"
             required="true()"
             type="string"/>
-      <bind nodeset="/Something_that_is_not_None/country" required="false()" type="select1"/>
-      <bind nodeset="/Something_that_is_not_None/region" required="false()" type="select1"/>
-      <bind nodeset="/Something_that_is_not_None/city" required="false()" type="string"/>
+      <bind aet="{'emit_level': '0', 'default_visualization': 'bar'}" nodeset="/Something_that_is_not_None/country" required="false()" type="select1"/>
+      <bind aet="{'emit_level': '1'}" nodeset="/Something_that_is_not_None/region" required="false()" type="select1"/>
+      <bind aet="{'emit_level': '2'}" nodeset="/Something_that_is_not_None/city" required="false()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/name" required="false()" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/location" required="false()" type="geopoint"/>
+      <bind aet="{'default_visualization': 'line'}" nodeset="/Something_that_is_not_None/location" required="false()" type="geopoint"/>
       <bind nodeset="/Something_that_is_not_None/location_none" required="false()" type="geopoint"/>
       <bind nodeset="/Something_that_is_not_None/track" required="false()" type="geotrace"/>
       <bind nodeset="/Something_that_is_not_None/polygon" required="false()" type="geoshape"/>
       <bind nodeset="/Something_that_is_not_None/image" required="false()" type="binary"/>
       <bind nodeset="/Something_that_is_not_None/number" required="false()" type="int"/>
-      <bind nodeset="/Something_that_is_not_None/number2" required="false()" type="decimal"/>
+      <bind aet="{'emit_level': '4'}" nodeset="/Something_that_is_not_None/number2" required="false()" type="decimal"/>
       <bind nodeset="/Something_that_is_not_None/date" required="false()" type="date"/>
       <bind nodeset="/Something_that_is_not_None/datetime" required="false()" type="dateTime"/>
-      <bind jr:requiredMsg="Choice" nodeset="/Something_that_is_not_None/option" required="true()" type="select1"/>
+      <bind aet="{'emit_level': '3'}" jr:requiredMsg="Choice" nodeset="/Something_that_is_not_None/option" required="true()" type="select1"/>
       <bind nodeset="/Something_that_is_not_None/option-a" relevant=" /Something_that_is_not_None/option ='a'"/>
-      <bind nodeset="/Something_that_is_not_None/option-a/choice.a" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/option-b" relevant=" /Something_that_is_not_None/option ='b'"/>
+      <bind aet="{'default_visualization': 'pie'}" nodeset="/Something_that_is_not_None/option-a/choice.a" type="string"/>
       <bind nodeset="/Something_that_is_not_None/option-b/choice.b" type="string"/>
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
       <bind nodeset="/Something_that_is_not_None/ranking_lang" type="odk:rank"/>
