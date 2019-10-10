@@ -17,7 +17,7 @@ flask
 gevent
 psycogreen
 psycopg2-binary
-requests
+requests[security]
 spavro
 sqlalchemy
 
