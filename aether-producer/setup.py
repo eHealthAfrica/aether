@@ -40,7 +40,7 @@ setup(
     setup_requires=['pytest'],
     tests_require=[
         'pytest',
-        'requests',
+        'requests[security]',
         'sqlalchemy',
     ],
 )

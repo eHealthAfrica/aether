@@ -446,7 +446,7 @@ services:
   # ---------------------------------
 
   exm-base:
-    image: aether-entity-extractor
+    image: aether-exm
     build: ./aether-entity-extraction-module
     stdin_open: true
     tty: true
