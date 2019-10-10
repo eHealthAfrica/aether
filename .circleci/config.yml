@@ -68,11 +68,8 @@ jobs:
           when: on_fail
 # deploy if tests successful
   deploy:
-    requires:
-      - test-core
-      - test-modules
-      - test-ui
-      - test-integration
+    working_directory: ~/aether
+    executor: python-371
     steps:
       - checkout
       - run:
