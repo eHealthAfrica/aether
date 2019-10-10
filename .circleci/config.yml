@@ -1,0 +1,91 @@
+version: 2.1
+
+executors:
+  python-371:
+    docker:
+      - image: circleci/python:3.7.1
+jobs:
+# Running core tests
+  test-core:
+    working_directory: ~/aether
+    executor: python-371
+    environment:
+      TEST_MODE: core
+    steps:
+      - checkout
+      - run:
+          name: Aether CORE tests (Kernel, Client)
+          command: ./scripts/test_travis.sh $TEST_MODE
+      - run:
+          name: Upload Failed Tests
+          command: ./scripts/test_travis_failure.sh $TEST_MODE
+          when: on_fail
+# Running module test
+  test-modules:
+    working_directory: ~/aether
+    executor: python-371
+    environment:
+      TEST_MODE: modules
+    steps:
+      - checkout
+      - run:
+          name: Aether modules tests (ODK and CouchDB-Sync)
+          command: ./scripts/test_travis.sh $TEST_MODE
+      - run:
+          name: Upload Failed Tests
+          command: ./scripts/test_travis_failure.sh $TEST_MODE
+          when: on_fail
+# running ci test
+  test-ui:
+    working_directory: ~/aether
+    executor: python-371
+    environment:
+      TEST_MODE: ui
+    steps:
+      - checkout
+      - run:
+          name: Aether UI tests (UI Module)
+          command: ./scripts/test_travis.sh $TEST_MODE
+      - run:
+          name: Upload Failed Tests
+          command: ./scripts/test_travis_failure.sh $TEST_MODE
+          when: on_fail
+
+# runing integration tests
+  test-integration:
+    working_directory: ~/aether
+    executor: python-371
+    environment:
+      TEST_MODE: integration
+    steps:
+      - checkout
+      - run:
+          name: Aether UI tests (UI Module)
+          command: ./scripts/test_travis.sh $TEST_MODE
+      - run:
+          name: Upload Failed Tests
+          command: ./scripts/test_travis_failure.sh $TEST_MODE
+          when: on_fail
+# deploy if tests successful
+  deploy:
+    requires:
+      - test-core
+      - test-modules
+      - test-ui
+      - test-integration
+    steps:
+      - checkout
+      - run:
+          name: Aether release
+          command: ./scripts/release.sh
+
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test-core
+      - test-modules
+      - test-ui
+      - test-integration
+      - deploy
