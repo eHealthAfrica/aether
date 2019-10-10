@@ -279,8 +279,8 @@ class XFormUtilsParsersTests(CustomTestCase):
             xml_content = parse_xform_file('xform.xml', fp)
 
         self.assertEqual(
-            parse_xml_to_dict(xls_content),
-            parse_xml_to_dict(xml_content),
+            json.dumps(parse_xml_to_dict(xls_content), sort_keys=True),
+            json.dumps(parse_xml_to_dict(xml_content), sort_keys=True),
             'The XLS form and the XML form should define both the same form'
         )
 
@@ -325,14 +325,14 @@ class XFormUtilsAvroTests(CustomTestCase):
     def test__get_all_paths(self):
         self.assertEqual(get_paths({}), [])
         self.assertEqual(get_paths({'@a': 0}), [])
-        self.assertEqual(get_paths({'a': 0}), [('/a', False, None)])
-        self.assertEqual(get_paths({'a': {'b': 0}}), [('/a', True, None), ('/a/b', False, None)])
+        self.assertEqual(get_paths({'a': 0}), [('/a', False)])
+        self.assertEqual(get_paths({'a': {'b': 0}}), [('/a', True), ('/a/b', False)])
         self.assertEqual(
             get_paths({'a': {'@aether_default_visualization': 'pie', 'c': 0}}),
-            [('/a', True, 'pie'), ('/a/c', False, None)])
+            [('/a', True), ('/a/c', False)])
         self.assertEqual(
             get_paths({'a': {'b': 0, 'c': 0}}),
-            [('/a', True, None), ('/a/b', False, None), ('/a/c', False, None)])
+            [('/a', True), ('/a/b', False), ('/a/c', False)])
 
     def test__get_avro_type__not_required(self):
         # avro types
@@ -682,7 +682,10 @@ class XFormUtilsAvroTests(CustomTestCase):
         )
 
         # the same fields
-        self.assertEqual(schema['fields'], schema_i18n['fields'])
+        self.assertEqual(
+            json.dumps(schema['fields'], sort_keys=True),
+            json.dumps(schema_i18n['fields'], sort_keys=True)
+        )
 
     def test__parse_xform_to_avro_schema__nested_repeats(self):
         xml_definition = '''
