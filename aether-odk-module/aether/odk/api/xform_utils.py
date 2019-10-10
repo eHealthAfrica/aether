@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from ast import literal_eval
 import json
 import re
 
@@ -63,7 +64,8 @@ SELECT_TAGS = ('select', 'select1', 'odk:rank')
 
 SELECT_CHOICES_CUTOFF = 20
 
-VISUALIZATION_KEY = '@aether_default_visualization'
+AETHER__XML_NAMESPACE = 'aet'
+AETHER_SCHEMA_ANNOTATION_PREFIX = '@aether'
 
 # ------------------------------------------------------------------------------
 # Parser methods
@@ -299,7 +301,6 @@ def parse_xform_to_avro_schema(
         current_name = xpath.split('/')[-1]
         current_doc = definition.get('label')
         current_choices = definition.get('choices')
-        current_visualizer = definition.get('visualizer')
 
         parent_path = '/'.join(xpath.split('/')[:-1])
         parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
@@ -315,7 +316,9 @@ def parse_xform_to_avro_schema(
         }
 
         current_field['@aether_lookup'] = current_choices
-        current_field[VISUALIZATION_KEY] = current_visualizer
+        for pair in definition.get('annotations', []):
+            key, value = pair
+            current_field[key] = value
 
         # get AVRO valid name
         clean_current_name = __clean_odk_name(current_name)
@@ -565,6 +568,19 @@ def __parse_xlsform(fp):
     return survey.xml().toprettyxml(indent='  ')
 
 
+def __parse_annotations(obj):
+    '''
+    annotations with namespace matching AETHER__XML_NAMESPACE are unpacked and
+    renamed using AETHER_SCHEMA_ANNOTATION_PREFIX
+    '''
+
+    annotations = []
+    for k, v in obj.items():
+        name = f'{AETHER_SCHEMA_ANNOTATION_PREFIX}_{k}'
+        annotations.append(tuple([name, v]))
+    return annotations
+
+
 def __parse_xmlform(fp):
     '''
     Parses XML file content into an XML string. Checking that the content is a
@@ -652,15 +668,14 @@ def __get_xform_instance_skeleton(xml_definition):
     # this contains the data skeleton
     # take all the xpaths and rest of meaningful data from here
     instance = __get_xform_instance(xform_dict, with_root=True)
-    for xpath, has_children, visualizer in __get_all_paths(instance):
+    for xpath, has_children in __get_all_paths(instance):
         schema[xpath] = {
             'xpath': xpath,
             'type': 'group' if has_children else 'string',
             'required': False,
-            'label': __get_xform_label(xform_dict, xpath, itexts),
-            'visualizer': visualizer
+            'label': __get_xform_label(xform_dict, xpath, itexts)
         }
-
+    AET_TAG = f'@{AETHER__XML_NAMESPACE}'
     for entries in __find_in_dict(xform_dict, 'bind'):
         entries = __wrap_as_list(entries)
         for bind_entry in entries:
@@ -673,6 +688,10 @@ def __get_xform_instance_skeleton(xml_definition):
                     select_options = __get_xform_choices(xform_dict, xpath, itexts)
                     if select_options:
                         schema[xpath]['choices'] = select_options
+            if AET_TAG in bind_entry:
+                xpath = bind_entry.get('@nodeset')
+                annotations = literal_eval(bind_entry.get(AET_TAG, '[]'))
+                schema[xpath]['annotations'] = __parse_annotations(annotations)
 
     # search in body all the repeat entries
     for entries in __find_in_dict(xform_dict, 'repeat'):
@@ -964,8 +983,7 @@ def __get_all_paths(dictionary):
                 continue
             keys = parent_keys + [k]
             xpath = '/' + '/'.join(keys)
-            visualizer = v.get(VISUALIZATION_KEY) if is_dict else None
-            paths.append((xpath, isinstance(v, dict), visualizer))
+            paths.append((xpath, isinstance(v, dict)))
             if is_dict:
                 walk(v, keys)
 
