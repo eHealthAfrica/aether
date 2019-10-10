@@ -4,15 +4,16 @@ executors:
   python-371:
     docker:
       - image: circleci/python:3.7.1
+    working_directory: ~/aether
 jobs:
 # Running core tests
   test-core:
-    working_directory: ~/aether
     executor: python-371
     environment:
       TEST_MODE: core
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Aether CORE tests (Kernel, Client)
           command: ./scripts/test_travis.sh $TEST_MODE
@@ -22,12 +23,12 @@ jobs:
           when: on_fail
 # Running module test
   test-modules:
-    working_directory: ~/aether
     executor: python-371
     environment:
       TEST_MODE: modules
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Aether modules tests (ODK and CouchDB-Sync)
           command: ./scripts/test_travis.sh $TEST_MODE
@@ -37,12 +38,12 @@ jobs:
           when: on_fail
 # running ci test
   test-ui:
-    working_directory: ~/aether
     executor: python-371
     environment:
       TEST_MODE: ui
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Aether UI tests (UI Module)
           command: ./scripts/test_travis.sh $TEST_MODE
@@ -53,12 +54,12 @@ jobs:
 
 # runing integration tests
   test-integration:
-    working_directory: ~/aether
     executor: python-371
     environment:
       TEST_MODE: integration
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Aether UI tests (UI Module)
           command: ./scripts/test_travis.sh $TEST_MODE
@@ -67,14 +68,14 @@ jobs:
           command: ./scripts/test_travis_failure.sh $TEST_MODE
           when: on_fail
 # deploy if tests successful
-  deploy:
-    working_directory: ~/aether
-    executor: python-371
-    steps:
-      - checkout
-      - run:
-          name: Aether release
-          command: ./scripts/release.sh
+#  deploy:
+#    working_directory: ~/aether
+#    executor: python-371
+#    steps:
+#      - checkout
+#      - run:
+#          name: Aether release
+#          command: ./scripts/release.sh
 
 
 workflows:
@@ -85,4 +86,4 @@ workflows:
       - test-modules
       - test-ui
       - test-integration
-      - deploy
+#      - deploy
