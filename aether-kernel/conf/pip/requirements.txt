@@ -13,20 +13,12 @@
 ################################################################################
 
 aether.python==1.0.11
-<<<<<<< HEAD
 aether.sdk==1.1.9
 asn1crypto==1.0.1
 attrs==19.2.0
 autopep8==1.4.4
 boto3==1.9.246
 botocore==1.12.246
-=======
-aether.sdk==1.1.8
-attrs==19.2.0
-autopep8==1.4.4
-boto3==1.9.244
-botocore==1.12.244
->>>>>>> 49cbe574e7ced1ae9c1754c314bd7e2ff48e97d6
 cachetools==3.1.1
 certifi==2019.9.11
 cffi==1.12.3
@@ -57,11 +49,7 @@ entrypoints==0.3
 et-xmlfile==1.0.1
 flake8==3.7.8
 flake8-quotes==2.1.0
-<<<<<<< HEAD
 future==0.18.0
-=======
-future==0.17.1
->>>>>>> 49cbe574e7ced1ae9c1754c314bd7e2ff48e97d6
 google-api-core==1.14.3
 google-auth==1.6.3
 google-cloud-core==1.0.3

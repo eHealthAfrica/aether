@@ -47,11 +47,7 @@ pytest==5.2.1
 requests==2.22.0
 six==1.12.0
 spavro==1.1.22
-<<<<<<< HEAD
 SQLAlchemy==1.3.10
-=======
-SQLAlchemy==1.3.9
->>>>>>> 49cbe574e7ced1ae9c1754c314bd7e2ff48e97d6
 urllib3==1.25.6
 wcwidth==0.1.7
 Werkzeug==0.16.0
