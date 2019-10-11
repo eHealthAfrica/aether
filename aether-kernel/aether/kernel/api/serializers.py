@@ -302,12 +302,12 @@ class EntityListSerializer(serializers.ListSerializer):
         # bulk database operation
         try:
             created_entities = models.Entity.objects.bulk_create(entities)
-            if settings.WRITE_ENTITIES_TO_REDIS:  # pragma: no cover
+            if settings.WRITE_ENTITIES_TO_REDIS:  # pragma: no cover : .env setting
                 # send created entities to redis
                 for entity in entities:
                     send_model_item_to_redis(entity)
             return created_entities
-        except Exception as e:  # pragma: no cover
+        except Exception as e:  # pragma: no cover : happens only when redis is offline
             raise(serializers.ValidationError(e))
 
 

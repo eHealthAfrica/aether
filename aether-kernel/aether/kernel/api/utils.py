@@ -167,7 +167,7 @@ def send_model_item_to_redis(model_item):
         and model_item.get_realm() else settings.DEFAULT_REALM
 
     if model_name is models.Entity._meta.default_related_name:
-        if settings.WRITE_ENTITIES_TO_REDIS:    # pragma: no cover
+        if settings.WRITE_ENTITIES_TO_REDIS:    # pragma: no cover : .env settings
             REDIS_TASK.add(obj, model_name, realm)
     elif model_name is models.Submission._meta.default_related_name:
         if not model_item.is_extracted:
