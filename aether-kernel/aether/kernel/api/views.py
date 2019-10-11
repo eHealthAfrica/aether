@@ -368,7 +368,24 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
         return super(SubmissionViewSet, self).get_serializer(*args, **kwargs)
 
     @action(detail=False, methods=['patch'])
-    def bulk_update(self, request, *args, **kwargs):
+    def bulk_update_extracted(self, request, *args, **kwargs):
+        '''
+        Updates `is_extracted`, and `payload` for the supplied subbmissions,
+
+        Reachable at ``PATCH /submissions/bulk-update-extracted/``
+
+        expected body:
+
+        [
+            {
+                'id': 'uuid',
+                'payload': {},
+                'is_extracted': True|False
+
+            },
+            ...
+        ]
+        '''
         try:
             result = utils.submissions_flag_extracted(request.data)
             return Response(

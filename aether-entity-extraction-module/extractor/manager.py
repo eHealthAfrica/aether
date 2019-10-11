@@ -234,7 +234,7 @@ class ExtractionManager():
                 # post to kernel submissions
                 try:
                     res = kernel_data_request(
-                        url=f'submissions/bulk_update/',
+                        url=f'submissions/bulk_update_extracted/',
                         method='patch',
                         data=submissions,
                     )
