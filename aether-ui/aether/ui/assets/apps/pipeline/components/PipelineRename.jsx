@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { defineMessages, injectIntl, FormattedMessage, FormattedHTMLMessage } from 'react-intl'
+import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 import { Modal } from '../../components'
 
 const MESSAGES = defineMessages({
@@ -54,10 +54,10 @@ class PipelineRename extends Component {
         onEscape={this.props.onCancel}
         buttons={buttons}
         header={
-          <FormattedHTMLMessage
-            defaultMessage='Rename pipeline <b>{name}</b>'
+          <FormattedMessage
+            defaultMessage='Rename pipeline {name}'
             id='rename.modal.header'
-            values={{ name: this.props.name }}
+            values={{ name: <b>{this.props.name}</b> }}
           />
         }
       >

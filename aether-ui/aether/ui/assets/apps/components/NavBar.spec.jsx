@@ -21,7 +21,7 @@
 /* global describe, it, expect, beforeEach */
 
 import React from 'react'
-import { mountWithIntl } from 'enzyme-react-intl'
+import { mountWithIntl } from '../../tests/enzyme-helpers'
 import { MemoryRouter } from 'react-router'
 
 import NavBar from './NavBar'
