@@ -1011,3 +1011,69 @@ class ViewsTest(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual('No values to update', response.json())
+
+    def test_entity_update(self):
+        entity = self.submission.entities.first()
+        url = reverse('entity-detail', kwargs={'pk': entity.pk})
+        response = self.client.patch(
+            url,
+            content_type='application/json',
+            data={
+                'payload': {'test': 'test-name'}
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.patch(
+            url,
+            content_type='application/json',
+            data={},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_submission_without_extraction(self):
+        url = reverse('submission-list')
+        res = self.client.post(
+            url,
+            data={
+                'payload': EXAMPLE_SOURCE_DATA,
+                'mappingset': str(self.mappingset.pk),
+                'is_extracted': True,
+            },
+            content_type='application/json',
+        )
+
+        self.assertTrue(res.json()['is_extracted'])
+
+    def test_submission_bulk_update(self):
+        url = reverse('submission-list')
+        submissions = []
+        for _ in range(5):
+            res = self.client.post(
+                url,
+                data={
+                    'payload': EXAMPLE_SOURCE_DATA,
+                    'mappingset': str(self.mappingset.pk),
+                },
+                content_type='application/json',
+            )
+            submissions.append(res.json())
+
+        url = reverse('submission-bulk-update-extracted')
+        for s in submissions:
+            s['is_extracted'] = True
+        res = self.client.patch(
+            url,
+            data=submissions,
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.json()), len(submissions))
+
+        submissions[0]['id'] = None
+
+        res = self.client.patch(
+            url,
+            data=submissions,
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

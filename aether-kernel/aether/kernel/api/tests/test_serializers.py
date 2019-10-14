@@ -319,3 +319,42 @@ class SerializersTests(TestCase):
         )
         self.assertTrue(bulk_entities.is_valid(), bulk_entities.errors)
         bulk_entities.save()
+
+        submissions = []
+        [
+            submissions.append({
+                'mappingset': mappingset.data['id'],
+                'project': project.data['id'],
+                'payload': EXAMPLE_SOURCE_DATA,
+            })
+            for _ in range(10)
+        ]
+        bulk_submissions = serializers.SubmissionSerializer(
+            data=submissions,
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertTrue(bulk_submissions.is_valid(), bulk_submissions.errors)
+        bulk_submissions.save()
+
+        submissions.append({
+            'mappingset': 'wrong-id',
+            'project': project.data['id'],
+            'payload': EXAMPLE_SOURCE_DATA,
+        })
+        bulk_submissions = serializers.SubmissionSerializer(
+            data=submissions,
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertFalse(bulk_submissions.is_valid(), bulk_submissions.errors)
+
+        submissions.append({
+            'payload': EXAMPLE_SOURCE_DATA,
+        })
+        bulk_submissions = serializers.SubmissionSerializer(
+            data=submissions,
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertFalse(bulk_submissions.is_valid(), bulk_submissions.errors)
