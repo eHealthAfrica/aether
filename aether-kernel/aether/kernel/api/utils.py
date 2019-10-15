@@ -21,48 +21,12 @@ from django.db.models import Count
 from django.conf import settings
 from django.forms.models import model_to_dict
 from aether.python.redis.task import TaskHelper
-from aether.python.constants import MergeOptions as MERGE_OPTIONS
 
 from .constants import SUBMISSION_BULK_UPDATEABLE_FIELDS
 from . import models
 
 
 REDIS_TASK = TaskHelper(settings)
-
-
-def object_contains(test, obj):
-    # Recursive object comparison function.
-    if obj == test:
-        return True
-    if isinstance(obj, list):
-        return True in [object_contains(test, i) for i in obj]
-    elif isinstance(obj, dict):
-        return True in [object_contains(test, i) for i in obj.values()]
-    return False
-
-
-def merge_objects(source, target, direction):
-    # Merge 2 objects
-    #
-    # Default merge operation is prefer_new
-    # Params <source='Original object'>, <target='New object'>,
-    # <direction='Direction of merge, determins primacy:
-    # use constants.MergeOptions.[prefer_new, prefer_existing]'>
-    # # direction Options:
-    # prefer_new > (Target to Source) Target takes primacy,
-    # prefer_existing > (Source to Target) Source takes primacy
-    result = {}
-    if direction == MERGE_OPTIONS.fww.value:
-        for key in source:
-            target[key] = source[key]
-        result = target
-    elif direction == MERGE_OPTIONS.lww.value:
-        for key in target:
-            source[key] = target[key]
-        result = source
-    else:
-        result = target
-    return result
 
 
 def get_unique_schemas_used(mappings_ids):
@@ -203,7 +167,7 @@ def send_model_item_to_redis(model_item):
         and model_item.get_realm() else settings.DEFAULT_REALM
 
     if model_name is models.Entity._meta.default_related_name:
-        if settings.WRITE_ENTITIES_TO_REDIS:
+        if settings.WRITE_ENTITIES_TO_REDIS:    # pragma: no cover : .env settings
             REDIS_TASK.add(obj, model_name, realm)
     elif model_name is models.Submission._meta.default_related_name:
         if not model_item.is_extracted:
