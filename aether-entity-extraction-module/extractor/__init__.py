@@ -17,6 +17,7 @@
 # under the License.
 
 from .manager import ExtractionManager
+from .web_app import WebApp
 
 SUBMISSION_CHANNEL = '_submissions*'
 
@@ -28,4 +29,5 @@ def main():
         callback=extractor.add_to_queue,
         channel=SUBMISSION_CHANNEL
     )
+    WebApp()
     return extractor

@@ -131,6 +131,11 @@ case $app in
         SETUP_CONTAINERS=(kernel couchdb-sync exm)
     ;;
 
+    exm)
+        PRE_CONTAINERS=(redis)
+        SETUP_CONTAINERS=(exm)
+    ;;
+
     *)
         app=
 
