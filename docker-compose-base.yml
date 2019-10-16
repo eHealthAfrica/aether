@@ -461,6 +461,8 @@ services:
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
+
+      SERVER_PORT: 5007
     volumes:
       - ./aether-entity-extraction-module:/code
       # to speed up Aether Python Library development changes

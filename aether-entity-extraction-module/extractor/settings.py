@@ -43,3 +43,5 @@ KERNEL_URL = os.environ.get('AETHER_KERNEL_URL', '')
 DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
 
 LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
+WEB_SERVER_PORT = os.environ.get('SERVER_PORT', 5007)
+HOST = os.environ.get('HOST', '0.0.0.0')

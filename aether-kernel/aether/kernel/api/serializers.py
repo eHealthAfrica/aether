@@ -155,16 +155,10 @@ class AttachmentSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 class SubmissionListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
-        errors = []
         submissions = [models.Submission(**s) for s in validated_data]
         for submission in submissions:
-            if not submission.mappingset:
-                errors.append((submission.id, _('Mappingset must be provided on initial submission')))
-            else:
-                submission.project = submission.mappingset.project
-        if errors:
-            # reject ALL if ANY invalid submissions are included
-            raise(serializers.ValidationError(errors))
+            submission.project = submission.mappingset.project
+
         # bulk database operation
         results = models.Submission.objects.bulk_create(submissions)
         #  send to redis
@@ -308,12 +302,12 @@ class EntityListSerializer(serializers.ListSerializer):
         # bulk database operation
         try:
             created_entities = models.Entity.objects.bulk_create(entities)
-            if settings.WRITE_ENTITIES_TO_REDIS:
+            if settings.WRITE_ENTITIES_TO_REDIS:  # pragma: no cover : .env setting
                 # send created entities to redis
                 for entity in entities:
                     send_model_item_to_redis(entity)
             return created_entities
-        except Exception as e:
+        except Exception as e:  # pragma: no cover : happens only when redis is offline
             raise(serializers.ValidationError(e))
 
 
