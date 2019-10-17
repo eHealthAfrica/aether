@@ -14,14 +14,14 @@
 
 aether.python==1.0.11
 aether.sdk==1.1.9
-asn1crypto==1.0.1
-attrs==19.2.0
+asn1crypto==1.2.0
+attrs==19.3.0
 autopep8==1.4.4
-boto3==1.9.246
-botocore==1.12.246
+boto3==1.9.251
+botocore==1.12.251
 cachetools==3.1.1
 certifi==2019.9.11
-cffi==1.12.3
+cffi==1.13.0
 chardet==3.0.4
 coreapi==2.3.3
 coreschema==0.0.4
@@ -90,7 +90,7 @@ python-cas==1.4.0
 python-dateutil==2.8.0
 python-json-logger==0.1.11
 pytz==2019.3
-redis==3.3.8
+redis==3.3.11
 requests==2.22.0
 rsa==4.0
 ruamel.yaml==0.16.5

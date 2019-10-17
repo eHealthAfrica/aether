@@ -23,7 +23,7 @@
 import React from 'react'
 import { createStore, applyMiddleware } from 'redux'
 import { Provider } from 'react-redux'
-import { mountWithIntl } from 'enzyme-react-intl'
+import { mountWithIntl } from '../../../tests/enzyme-helpers'
 import nock from 'nock'
 
 import Settings from './Settings'
