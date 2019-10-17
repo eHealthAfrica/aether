@@ -40,14 +40,14 @@ class WebApp():
         self.register('healthcheck', self.request_healthcheck)
 
     def register(self, route_name, fn):
-        self.app.add_url_rule('/%s' % route_name, route_name, view_func=fn)
+        self.app.add_url_rule('/exm/%s' % route_name, route_name, view_func=fn)
 
     def serve(self):
         if settings.LOGGING_LEVEL == 'DEBUG':
             self.app.debug = True
         self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
         self.http = WSGIServer(
-            (settings.HOST, settings.WEB_SERVER_PORT),
+            (settings.HOST, int(settings.WEB_SERVER_PORT)),
             self.app,
             spawn=Pool(3)
         )
