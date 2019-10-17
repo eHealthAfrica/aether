@@ -61,7 +61,7 @@ class Client(SwaggerClient):
         keycloak_url=None,
         auth_type='oauth',
         # used to specify gateway endpoint ({realm}/{endpoint_name})
-        endpoint_name='kernel'
+        endpoint_name='kernel',
     ):
         if auth_type not in Client.AUTH_METHODS:
             raise ValueError(f'allowed auth_types are {Client.AUTH_METHODS}')
@@ -80,8 +80,13 @@ class Client(SwaggerClient):
 
         if auth_type == 'basic':
             LOG.debug(f'Using basic auth on {server}')
-            auth = basic_auth.BasicRealmAuthenticator(server, realm, user, pw)
-            http_client = basic_auth.BasicRealmClient(auth)
+            http_client = basic_auth.BasicRealmClient()
+            http_client.set_realm_basic_auth(
+                host=url_info.netloc,
+                username=user,
+                password=pw,
+                realm=realm,
+            )
             loader = Loader(http_client, request_headers=None)
             try:
                 LOG.debug(f'Loading schema from: {spec_url}')
