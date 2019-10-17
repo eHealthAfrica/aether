@@ -42,7 +42,7 @@ matrix:
 install: true
 
 before_install:
-  - openssl aes-256-cbc -K $encrypted_0a6446eb3ae3_key -iv $encrypted_0a6446eb3ae3_iv -in gcs_key.json.enc -out gcs_key.json -d
+  - openssl aes-256-cbc -K $encrypted_17d8de6bf835_key -iv $encrypted_17d8de6bf835_iv -in gcs_key.json.enc -out gcs_key.json -d
 
 script:
   - ./scripts/test_travis.sh $TEST_MODE
