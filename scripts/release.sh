@@ -67,6 +67,8 @@ function release_process {
 
     IMAGE_REPO='ehealthafrica'
     RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
+    RELEASE_BUCKET='aether-releases'
+    GCS_JSON_FILE='gcs_key.json'
 
     echo "${LINE}"
     echo "Release version:   $VERSION"
@@ -82,6 +84,13 @@ function release_process {
         release_app $APP $VERSION
         release_app $APP $TRAVIS_COMMIT
     done
+
+    if ["$VERSION" == "alpha"]
+    then
+        python ./scripts/push_version.py --version $TRAVIS_COMMIT --projects alpha
+    else
+        python ./scripts/push_version.py --version $VERSION --projects eha-data
+    fi
 }
 
 # Usage: increment_version <version> [<position>]
