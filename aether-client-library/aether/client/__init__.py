@@ -28,10 +28,9 @@ from . import oidc
 from .logger import LOG
 
 # monkey patch so that bulk insertion works
-from . import patches
-bravado_core.marshal.marshal_model = patches.marshal_model  # noqa
-bravado_core.marshal.marshal_object = patches.marshal_object  # noqa
-bravado_core.unmarshal.unmarshal_model = patches.unmarshal_model  # noqa
+from patches import patched__marshal_object, patched__unmarshal_object
+bravado_core.marshal._marshal_object = patched__marshal_object  # noqa
+bravado_core.unmarshal._unmarshal_object = patched__unmarshal_object  # noqa
 
 import bravado
 
