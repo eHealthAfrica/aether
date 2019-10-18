@@ -38,9 +38,10 @@ from .exceptions import AetherAPIException
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 KEYCLOAK_AETHER_CLIENT = os.environ.get('KEYCLOAK_AETHER_CLIENT', 'aether')
-TOKEN_HEADER_KEY = os.environ.get('OAUTH_TOKEN_HEADER_KEY', 'X-CSRFToken')
-TOKEN_COOKIE_KEY = os.environ.get('OAUTH_TOKEN_COOKIE_KEY', 'csrftoken')
 TOKEN_URL = '{auth_url}/realms/{realm}/protocol/openid-connect/token'
+
+CSRF_HEADER_KEY = os.environ.get('CSRF_TOKEN_HEADER_KEY', 'X-CSRFToken')
+CSRF_COOKIE_KEY = os.environ.get('CSRF_TOKEN_COOKIE_KEY', 'csrftoken')
 
 
 class OauthAuthenticator(Authenticator):
@@ -68,7 +69,7 @@ class OauthAuthenticator(Authenticator):
 
     def get_spec(self, spec_url):
         res = self.session.get(spec_url)
-        self.csrf = res.cookies.get(TOKEN_COOKIE_KEY)
+        self.csrf = res.cookies.get(CSRF_COOKIE_KEY)
         LOG.debug(f'Set CSRFToken: {self.csrf}')
 
         spec = res.json()
@@ -85,7 +86,7 @@ class OauthAuthenticator(Authenticator):
 
     def apply(self, request):
         # add CSRF Token
-        request.headers[TOKEN_HEADER_KEY] = self.csrf
+        request.headers[CSRF_HEADER_KEY] = self.csrf
         return request
 
 
