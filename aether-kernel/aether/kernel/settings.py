@@ -87,11 +87,12 @@ if PROFILING_ENABLED:
 
 # Swagger workaround
 # ------------------------------------------------------------------------------
-# The ``bravado``` lib in ``aether.client`` cannot deal with JSON fields handled
+# The ``bravado`` lib in ``aether.client`` cannot deal with JSON fields handled
 # as objects, so we need to remove the ``JSONFieldInspector`` class
 # and continue using the ``StringDefaultFieldInspector`` one for them.
 
 SWAGGER_SETTINGS = {
+    # https://drf-yasg.readthedocs.io/en/stable/settings.html#default-field-inspectors
     'DEFAULT_FIELD_INSPECTORS': [
         'drf_yasg.inspectors.CamelCaseJSONFilter',
         'drf_yasg.inspectors.ReferencingSerializerInspector',
