@@ -21,19 +21,13 @@ from oauthlib import oauth2
 from time import sleep
 from urllib.parse import urlparse
 
-import bravado_core
-from .exceptions import AetherAPIException
-from . import basic_auth
-from . import oidc
-from .logger import LOG
-
 # monkey patch so that bulk insertion works
-from patches import patched__marshal_object, patched__unmarshal_object
+from .patches import patched__marshal_object, patched__unmarshal_object
+import bravado_core
 bravado_core.marshal._marshal_object = patched__marshal_object  # noqa
 bravado_core.unmarshal._unmarshal_object = patched__unmarshal_object  # noqa
 
 import bravado
-
 from bravado.client import (
     SwaggerClient,
     ResourceDecorator,
@@ -42,6 +36,13 @@ from bravado.client import (
 )
 from bravado.config import bravado_config_from_config_dict
 from bravado.swagger_model import Loader
+
+from .exceptions import AetherAPIException
+from .basic_auth import BasicRealmClient
+from .oidc import OauthClient
+from .logger import LOG
+
+_SPEC_URL = '{}/v1/schema/?format=openapi'
 
 
 class Client(SwaggerClient):
@@ -75,11 +76,10 @@ class Client(SwaggerClient):
         }
         url_info = urlparse(url)
         server = f'{url_info.scheme}://{url_info.netloc}'
-        spec_url = '%s/v1/schema/?format=openapi' % url
 
         if auth_type == 'basic':
             LOG.debug(f'Using basic auth on {server}')
-            http_client = basic_auth.BasicRealmClient()
+            http_client = BasicRealmClient()
             http_client.set_realm_basic_auth(
                 host=url_info.netloc,
                 username=user,
@@ -88,6 +88,7 @@ class Client(SwaggerClient):
             )
             loader = Loader(http_client, request_headers=None)
             try:
+                spec_url = _SPEC_URL.format(url)
                 LOG.debug(f'Loading schema from: {spec_url}')
                 spec_dict = loader.load_spec(spec_url)
             except bravado.exception.HTTPForbidden as forb:
@@ -99,13 +100,16 @@ class Client(SwaggerClient):
             ) as bgwe:
                 LOG.error('Server Unavailable')
                 raise bgwe
+
         else:
             LOG.debug(f'getting OIDC session on realm {realm}')
-            auth = oidc.OauthAuthenticator(
-                server, realm, user, pw,
-                keycloak_url, offline_token, endpoint_name)
-            spec_dict = auth.get_spec(spec_url)
-            http_client = oidc.OauthClient(auth)
+            http_client = OauthClient()
+            http_client.set_oauth(
+                url_info.netloc,
+                keycloak_url or f'{server}/auth', realm,
+                user, pw, offline_token, endpoint_name)
+            spec_url = _SPEC_URL.format(f'{server}/{realm}/{endpoint_name}')
+            spec_dict = http_client.authenticator.get_spec(spec_url)
 
         # We take this from the from_url class method of SwaggerClient
         # Apply bravado config defaults
