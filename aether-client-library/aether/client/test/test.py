@@ -16,8 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from .test_fixtures import *  # noqa
 import bravado
+
+from . import *  # noqa
 
 
 def test_1_check_fixture_creation(client, project, schemas, schemadecorators, mapping):
@@ -45,7 +46,7 @@ def test_4_iterate_schemas(client, schemas):
     assert(len(_schemas) == len(schemas))
 
 
-def test_5_make_entites(client, single_entities, bulk_entities):
+def test_5_make_entities(client, single_entities, bulk_entities):
     single = single_entities(1)
     assert(single is not None)
     many = bulk_entities(10)
@@ -53,7 +54,8 @@ def test_5_make_entites(client, single_entities, bulk_entities):
     entities = client.entities.paginated('list')
     i = 0
     for e in entities:
-        print(e)
+        if LOG_LEVEL == 'DEBUG':
+            print(e)
         i += 1
     assert(i == 11)
 
