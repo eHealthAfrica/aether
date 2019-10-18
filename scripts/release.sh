@@ -80,9 +80,9 @@ function release_process {
     prepare_dependencies
 
     for APP in "${RELEASE_APPS[@]}"; do
-      build_app $APP
-      release_app $APP $VERSION
-      release_app $APP $TRAVIS_COMMIT
+        build_app $APP
+        release_app $APP $VERSION
+        release_app $APP $TRAVIS_COMMIT
     done
 
     if ["$VERSION" == "alpha"]
