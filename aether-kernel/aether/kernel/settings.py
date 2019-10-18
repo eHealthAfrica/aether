@@ -83,3 +83,28 @@ if PROFILING_ENABLED:
         return request.method != 'POST' or '/entities' not in request.path
 
     SILKY_INTERCEPT_FUNC = ignore_entities_post
+
+
+# Swagger workaround
+# ------------------------------------------------------------------------------
+# The ``bravado``` lib in ``aether.client`` cannot deal with JSON fields handled
+# as objects, so we need to remove the ``JSONFieldInspector`` class
+# and continue using the ``StringDefaultFieldInspector`` one for them.
+
+SWAGGER_SETTINGS = {
+    'DEFAULT_FIELD_INSPECTORS': [
+        'drf_yasg.inspectors.CamelCaseJSONFilter',
+        'drf_yasg.inspectors.ReferencingSerializerInspector',
+        'drf_yasg.inspectors.RelatedFieldInspector',
+        'drf_yasg.inspectors.ChoiceFieldInspector',
+        'drf_yasg.inspectors.FileFieldInspector',
+        'drf_yasg.inspectors.DictFieldInspector',
+        # Remove JSONFieldInspector
+        # 'drf_yasg.inspectors.JSONFieldInspector',
+        'drf_yasg.inspectors.HiddenFieldInspector',
+        'drf_yasg.inspectors.RecursiveFieldInspector',
+        'drf_yasg.inspectors.SerializerMethodFieldInspector',
+        'drf_yasg.inspectors.SimpleFieldInspector',
+        'drf_yasg.inspectors.StringDefaultFieldInspector',
+    ],
+}
