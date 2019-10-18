@@ -89,7 +89,7 @@ function release_process {
     then
         python ./scripts/push_version.py --version $TRAVIS_COMMIT --projects alpha
     else
-        pyhon ./scripts/push_version.py --version $VERSION --projects eha-data
+        python ./scripts/push_version.py --version $VERSION --projects eha-data
     fi
 }
 
