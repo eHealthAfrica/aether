@@ -87,9 +87,9 @@ function release_process {
 
     if ["$VERSION" == "alpha"]
     then
-            python ./scripts/push_version.py --version $TRAVIS_COMMIT --projects alpha
+        python ./scripts/push_version.py --version $TRAVIS_COMMIT --projects alpha
     else
-            pyhon ./scripts/push_version.py --version $VERSION --projects eha-data
+        pyhon ./scripts/push_version.py --version $VERSION --projects eha-data
     fi
 }
 
