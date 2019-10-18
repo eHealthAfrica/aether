@@ -33,7 +33,7 @@ parser.add_argument('--version', required=True)
 def setup():
     client = storage.Client()
     bucket_name = os.getenv('RELEASE_BUCKET')
-    client.from_service_account_json(os.getenv('GCS_JSON_FILE'))
+    client.from_service_account_json(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
     bucket = client.get_bucket(bucket_name)
     if not bucket.exists():
         raise ValueError('Bucket: {} does not exist or \

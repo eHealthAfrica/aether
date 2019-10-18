@@ -67,8 +67,8 @@ function release_process {
 
     IMAGE_REPO='ehealthafrica'
     RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
-    RELEASE_BUCKET='aether-releases'
-    GCS_JSON_FILE='gcs_key.json'
+    export RELEASE_BUCKET='aether-releases'
+    export GOOGLE_APPLICATION_CREDENTIALS='gcs_key.json'
 
     echo "${LINE}"
     echo "Release version:   $VERSION"
