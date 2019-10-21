@@ -1,10 +1,13 @@
 version: 2.1
 
+orbs:
+  docker: circleci/docker@0.5.13
+
 jobs:
 
   # Running core tests
   test-core:
-    machine: true
+    executor: docker/machine
     environment:
       TEST_MODE: core
     steps:
@@ -20,7 +23,7 @@ jobs:
 
   # Running module tests
   test-modules:
-    machine: true
+    executor: docker/machine
     environment:
       TEST_MODE: modules
     steps:
@@ -36,7 +39,7 @@ jobs:
 
   # running UI tests
   test-ui:
-    machine: true
+    executor: docker/machine
     environment:
       TEST_MODE: ui
     steps:
@@ -52,7 +55,7 @@ jobs:
 
   # runing integration tests
   test-integration:
-    machine: true
+    executor: docker/machine
     environment:
       TEST_MODE: integration
     steps:
