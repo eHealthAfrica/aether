@@ -1,14 +1,10 @@
 version: 2.1
 
-executors:
-  python-371:
-    docker:
-      - image: circleci/python:3.7.1
-    working_directory: ~/aether
 jobs:
-# Running core tests
+  machine: true
+
+  # Running core tests
   test-core:
-    executor: python-371
     environment:
       TEST_MODE: core
     steps:
@@ -21,9 +17,9 @@ jobs:
           name: Upload Failed Tests
           command: ./scripts/test_travis_failure.sh $TEST_MODE
           when: on_fail
-# Running module test
+
+  # Running module tests
   test-modules:
-    executor: python-371
     environment:
       TEST_MODE: modules
     steps:
@@ -36,9 +32,9 @@ jobs:
           name: Upload Failed Tests
           command: ./scripts/test_travis_failure.sh $TEST_MODE
           when: on_fail
-# running ci test
+
+  # running UI tests
   test-ui:
-    executor: python-371
     environment:
       TEST_MODE: ui
     steps:
@@ -52,9 +48,8 @@ jobs:
           command: ./scripts/test_travis_failure.sh $TEST_MODE
           when: on_fail
 
-# runing integration tests
+  # runing integration tests
   test-integration:
-    executor: python-371
     environment:
       TEST_MODE: integration
     steps:
@@ -67,7 +62,8 @@ jobs:
           name: Upload Failed Tests
           command: ./scripts/test_travis_failure.sh $TEST_MODE
           when: on_fail
-# deploy if tests successful
+
+#  # deploy if tests successful
 #  deploy:
 #    working_directory: ~/aether
 #    executor: python-371
