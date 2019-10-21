@@ -278,7 +278,7 @@ class XFormUtilsParsersTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as fp:
             xml_content = parse_xform_file('xform.xml', fp)
 
-        self.assertEqual(
+        self.assertDictEqual(
             parse_xml_to_dict(xls_content),
             parse_xml_to_dict(xml_content),
             'The XLS form and the XML form should define both the same form'
@@ -327,6 +327,9 @@ class XFormUtilsAvroTests(CustomTestCase):
         self.assertEqual(get_paths({'@a': 0}), [])
         self.assertEqual(get_paths({'a': 0}), [('/a', False)])
         self.assertEqual(get_paths({'a': {'b': 0}}), [('/a', True), ('/a/b', False)])
+        self.assertEqual(
+            get_paths({'a': {'@aether_default_visualization': 'pie', 'c': 0}}),
+            [('/a', True), ('/a/c', False)])
         self.assertEqual(
             get_paths({'a': {'b': 0, 'c': 0}}),
             [('/a', True), ('/a/b', False), ('/a/c', False)])

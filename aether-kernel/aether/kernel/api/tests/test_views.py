@@ -1008,7 +1008,6 @@ class ViewsTest(TestCase):
             content_type='application/json'
         )
         response_data = response.json()
-        print(response_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         filtered_list = models.Entity.objects.filter(mapping=mapping.pk)
         self.assertEqual(filtered_count, response_data['updated'])

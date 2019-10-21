@@ -1,5 +1,7 @@
+
 <h:html
         xmlns="http://www.w3.org/2002/xforms"
+        xmlns:aet="http://ehealthafrica.org/xform"
         xmlns:ev="http://www.w3.org/2001/xml-events"
         xmlns:h="http://www.w3.org/1999/xhtml"
         xmlns:jr="http://openrosa.org/javarosa"
@@ -159,42 +161,42 @@
         </root>
       </instance>
       <bind
-            jr:preload="timestamp"
-            jr:preloadParams="start"
-            jr:requiredMsg="start"
-            nodeset="/Something_that_is_not_None/starttime"
-            required="true()"
-            type="dateTime"/>
+              jr:preload="timestamp"
+              jr:preloadParams="start"
+              jr:requiredMsg="start"
+              nodeset="/Something_that_is_not_None/starttime"
+              required="true()"
+              type="dateTime"/>
       <bind
-            jr:preload="timestamp"
-            jr:preloadParams="end"
-            jr:requiredMsg="end"
-            nodeset="/Something_that_is_not_None/endtime"
-            required="true()"
-            type="dateTime"/>
+              jr:preload="timestamp"
+              jr:preloadParams="end"
+              jr:requiredMsg="end"
+              nodeset="/Something_that_is_not_None/endtime"
+              required="true()"
+              type="dateTime"/>
       <bind
-            jr:preload="property"
-            jr:preloadParams="deviceid"
-            jr:requiredMsg="device"
-            nodeset="/Something_that_is_not_None/deviceid"
-            required="true()"
-            type="string"/>
-      <bind nodeset="/Something_that_is_not_None/country" required="false()" type="select1"/>
-      <bind nodeset="/Something_that_is_not_None/region" required="false()" type="select1"/>
-      <bind nodeset="/Something_that_is_not_None/city" required="false()" type="string"/>
+              jr:preload="property"
+              jr:preloadParams="deviceid"
+              jr:requiredMsg="device"
+              nodeset="/Something_that_is_not_None/deviceid"
+              required="true()"
+              type="string"/>
+      <bind aet="{'emit_level': '0', 'default_visualization': 'bar'}" nodeset="/Something_that_is_not_None/country" required="false()" type="select1"/>
+      <bind aet="{'emit_level': '1'}" nodeset="/Something_that_is_not_None/region" required="false()" type="select1"/>
+      <bind aet="{'emit_level': '2'}" nodeset="/Something_that_is_not_None/city" required="false()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/name" required="false()" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/location" required="false()" type="geopoint"/>
+      <bind aet="{'default_visualization': 'line'}" nodeset="/Something_that_is_not_None/location" required="false()" type="geopoint"/>
       <bind nodeset="/Something_that_is_not_None/location_none" required="false()" type="geopoint"/>
       <bind nodeset="/Something_that_is_not_None/track" required="false()" type="geotrace"/>
       <bind nodeset="/Something_that_is_not_None/polygon" required="false()" type="geoshape"/>
       <bind nodeset="/Something_that_is_not_None/image" required="false()" type="binary"/>
       <bind nodeset="/Something_that_is_not_None/number" required="false()" type="int"/>
-      <bind nodeset="/Something_that_is_not_None/number2" required="false()" type="decimal"/>
+      <bind aet="{'emit_level': '4'}" nodeset="/Something_that_is_not_None/number2" required="false()" type="decimal"/>
       <bind nodeset="/Something_that_is_not_None/date" required="false()" type="date"/>
       <bind nodeset="/Something_that_is_not_None/datetime" required="false()" type="dateTime"/>
-      <bind jr:requiredMsg="Choice" nodeset="/Something_that_is_not_None/option" required="true()" type="select1"/>
+      <bind aet="{'emit_level': '3'}" jr:requiredMsg="Choice" nodeset="/Something_that_is_not_None/option" required="true()" type="select1"/>
       <bind nodeset="/Something_that_is_not_None/option-a" relevant=" /Something_that_is_not_None/option ='a'"/>
-      <bind nodeset="/Something_that_is_not_None/option-a/choice.a" type="string"/>
+      <bind aet="{'default_visualization': 'pie'}" nodeset="/Something_that_is_not_None/option-a/choice.a" type="string"/>
       <bind nodeset="/Something_that_is_not_None/option-b" relevant=" /Something_that_is_not_None/option ='b'"/>
       <bind nodeset="/Something_that_is_not_None/option-b/choice.b" type="string"/>
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
@@ -207,14 +209,14 @@
       <bind nodeset="/Something_that_is_not_None/dup_group/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/note_end" readonly="true()" required="false()" type="string"/>
       <bind
-            jr:preload="uid"
-            nodeset="/Something_that_is_not_None/meta/instanceID"
-            readonly="true()"
-            type="string"/>
+              jr:preload="uid"
+              nodeset="/Something_that_is_not_None/meta/instanceID"
+              readonly="true()"
+              type="string"/>
       <bind
-            calculate="Something_that_is_not_None"
-            nodeset="/Something_that_is_not_None/meta/instanceName"
-            type="string"/>
+              calculate="Something_that_is_not_None"
+              nodeset="/Something_that_is_not_None/meta/instanceName"
+              type="string"/>
     </model>
   </h:head>
   <h:body>
@@ -236,7 +238,7 @@
         <label ref="jr:itext(itextId)"/>
       </itemset>
     </select1>
-    <input ref="/Something_that_is_not_None/city" query="instance('cities')/root/item[country =  /Something_that_is_not_None/country  and region =  /Something_that_is_not_None/region ]">
+    <input query="instance('cities')/root/item[country =  /Something_that_is_not_None/country  and region =  /Something_that_is_not_None/region ]" ref="/Something_that_is_not_None/city">
       <label>City</label>
     </input>
     <input ref="/Something_that_is_not_None/name">
@@ -324,8 +326,8 @@
     </odk:rank>
     <group ref="/Something_that_is_not_None/iterate">
       <label>Indicate loop elements</label>
-      <repeat
-              nodeset="/Something_that_is_not_None/iterate">
+      <repeat 
+                nodeset="/Something_that_is_not_None/iterate">
         <input ref="/Something_that_is_not_None/iterate/index">
           <label>Index</label>
         </input>
