@@ -43,7 +43,7 @@ django-uwsgi==0.2.2
 djangorestframework==3.10.3
 docutils==0.15.2
 drf-dynamic-fields==0.3.1
-drf-yasg==1.16.1
+drf-yasg==1.17.0
 eha-jsonpath==0.5.1
 entrypoints==0.3
 et-xmlfile==1.0.1
