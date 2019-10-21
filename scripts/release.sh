@@ -64,7 +64,7 @@ function release_app {
 function release_gcs {
     # notify to Google Cloud Storage the new image
     export RELEASE_BUCKET="aether-releases"
-    export GCS_JSON_FILE="gcs_key.json"
+    export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
 
     if [ -z "$TRAVIS_TAG" ]; then
         GCS_VERSION=$TRAVIS_COMMIT
