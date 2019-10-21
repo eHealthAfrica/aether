@@ -1,10 +1,10 @@
 version: 2.1
 
 jobs:
-  machine: true
 
   # Running core tests
   test-core:
+    machine: true
     environment:
       TEST_MODE: core
     steps:
@@ -20,6 +20,7 @@ jobs:
 
   # Running module tests
   test-modules:
+    machine: true
     environment:
       TEST_MODE: modules
     steps:
@@ -35,6 +36,7 @@ jobs:
 
   # running UI tests
   test-ui:
+    machine: true
     environment:
       TEST_MODE: ui
     steps:
@@ -50,6 +52,7 @@ jobs:
 
   # runing integration tests
   test-integration:
+    machine: true
     environment:
       TEST_MODE: integration
     steps:
