@@ -21,63 +21,60 @@ jobs:
           command: ./scripts/test_travis_failure.sh $TEST_MODE
           when: on_fail
 
-#   # Running module tests
-#   test-modules:
-#     executor: docker/machine
-#     environment:
-#       TEST_MODE: modules
-#     steps:
-#       - checkout
-#       - setup_remote_docker
-#       - run:
-#           name: Aether modules tests (ODK and CouchDB-Sync)
-#           command: ./scripts/test_travis.sh $TEST_MODE
-#       - run:
-#           name: Upload Failed Tests
-#           command: ./scripts/test_travis_failure.sh $TEST_MODE
-#           when: on_fail
+  # Running module tests
+  test-modules:
+    executor: docker/machine
+    environment:
+      TEST_MODE: modules
+    steps:
+      - checkout
+      - run:
+          name: Aether modules tests (ODK and CouchDB-Sync)
+          command: ./scripts/test_travis.sh $TEST_MODE
+      - run:
+          name: Upload Failed Tests
+          command: ./scripts/test_travis_failure.sh $TEST_MODE
+          when: on_fail
 
-#   # running UI tests
-#   test-ui:
-#     executor: docker/machine
-#     environment:
-#       TEST_MODE: ui
-#     steps:
-#       - checkout
-#       - setup_remote_docker
-#       - run:
-#           name: Aether UI tests (UI Module)
-#           command: ./scripts/test_travis.sh $TEST_MODE
-#       - run:
-#           name: Upload Failed Tests
-#           command: ./scripts/test_travis_failure.sh $TEST_MODE
-#           when: on_fail
+  # running UI tests
+  test-ui:
+    executor: docker/machine
+    environment:
+      TEST_MODE: ui
+    steps:
+      - checkout
+      - run:
+          name: Aether UI tests (UI Module)
+          command: ./scripts/test_travis.sh $TEST_MODE
+      - run:
+          name: Upload Failed Tests
+          command: ./scripts/test_travis_failure.sh $TEST_MODE
+          when: on_fail
 
-#   # runing integration tests
-#   test-integration:
-#     executor: docker/machine
-#     environment:
-#       TEST_MODE: integration
-#     steps:
-#       - checkout
-#       - setup_remote_docker
-#       - run:
-#           name: Aether UI tests (UI Module)
-#           command: ./scripts/test_travis.sh $TEST_MODE
-#       - run:
-#           name: Upload Failed Tests
-#           command: ./scripts/test_travis_failure.sh $TEST_MODE
-#           when: on_fail
+  # runing integration tests
+  test-integration:
+    executor: docker/machine
+    environment:
+      TEST_MODE: integration
+    steps:
+      - checkout
+      - run:
+          name: Aether UI tests (UI Module)
+          command: ./scripts/test_travis.sh $TEST_MODE
+      - run:
+          name: Upload Failed Tests
+          command: ./scripts/test_travis_failure.sh $TEST_MODE
+          when: on_fail
 
-# #  # deploy if tests successful
-# #  deploy:
-# #    working_directory: ~/aether
-# #    executor: python-371
-# #    steps:
-# #      - checkout
-# #      - run:
-# #          name: Aether release
-# #          command: ./scripts/release.sh
+  # # deploy if tests successful
+  # deploy:
+  #   working_directory: ~/aether
+  #   executor: python-371
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Aether release
+  #         command: ./scripts/release.sh
 
 
 workflows:
@@ -85,7 +82,7 @@ workflows:
   build_and_test:
     jobs:
       - test-core
-#       - test-modules
-#       - test-ui
-#       - test-integration
-# #      - deploy
+      - test-modules
+      - test-ui
+      - test-integration
+      # - deploy
