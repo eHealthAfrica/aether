@@ -50,6 +50,7 @@ def setup():
 def push_release(version, projects):
     bucket = setup()
     for project in projects:
+        print(f'Pushing new version "{version}" for project "{project}"...')
         try:
             blob = bucket.blob(f'{project}/version')
             blob.upload_from_string(version, content_type='text/plain')
