@@ -61,14 +61,32 @@ function release_app {
     echo "${LINE}"
 }
 
+function release_gcs {
+    # notify to Google Cloud Storage the new image
+    export RELEASE_BUCKET="aether-releases"
+    export GCS_JSON_FILE="gcs_key.json"
+
+    if [ -z "$TRAVIS_TAG" ]; then
+        GCS_VERSION=$TRAVIS_COMMIT
+    else
+        GCS_VERSION=$VERSION
+    fi
+
+    if ["$VERSION" == "alpha"]; then
+        GCS_PROJECTS="alpha"
+    else
+        GCS_PROJECTS="eha-data"
+    fi
+
+    python ./scripts/push_version.py --version $GCS_VERSION --projects $GCS_PROJECTS
+}
+
 function release_process {
     # Login in dockerhub with write permissions (repos are public)
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
-    IMAGE_REPO='ehealthafrica'
+    IMAGE_REPO="ehealthafrica"
     RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
-    export RELEASE_BUCKET='aether-releases'
-    export GOOGLE_APPLICATION_CREDENTIALS='gcs_key.json'
 
     echo "${LINE}"
     echo "Release version:   $VERSION"
@@ -82,15 +100,14 @@ function release_process {
     for APP in "${RELEASE_APPS[@]}"; do
         build_app $APP
         release_app $APP $VERSION
-        release_app $APP $TRAVIS_COMMIT
+
+        if [ -z "$TRAVIS_TAG" ]; then
+            # develop branch or release candidate
+            release_app $APP $TRAVIS_COMMIT
+        fi
     done
 
-    if ["$VERSION" == "alpha"]
-    then
-        python ./scripts/push_version.py --version $TRAVIS_COMMIT --projects alpha
-    else
-        python ./scripts/push_version.py --version $VERSION --projects eha-data
-    fi
+    release_gcs
 }
 
 # Usage: increment_version <version> [<position>]
@@ -259,7 +276,7 @@ elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
 
 elif [[ $TRAVIS_BRANCH = "develop" ]]; then
 
-    VERSION='alpha'
+    VERSION="alpha"
     release_process
 
 fi

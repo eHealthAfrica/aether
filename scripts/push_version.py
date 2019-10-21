@@ -36,8 +36,7 @@ def setup():
     client.from_service_account_json(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
     bucket = client.get_bucket(bucket_name)
     if not bucket.exists():
-        raise ValueError('Bucket: {} does not exist or \
-                          is not accessible.'.format(bucket_name))
+        raise ValueError(f'Bucket: {bucket_name} does not exist or is not accessible.')
     return bucket
 
 
