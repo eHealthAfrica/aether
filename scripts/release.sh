@@ -72,7 +72,7 @@ function release_gcs {
         GCS_VERSION=$VERSION
     fi
 
-    if ["$VERSION" == "alpha"]; then
+    if [ "$VERSION" == "alpha" ]; then
         GCS_PROJECTS="alpha"
     else
         GCS_PROJECTS="eha-data"
@@ -87,8 +87,6 @@ function release_process {
 
     IMAGE_REPO="ehealthafrica"
     RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
-    export RELEASE_BUCKET="aether-releases"
-    export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
 
     echo "${LINE}"
     echo "Release version:   $VERSION"
