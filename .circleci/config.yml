@@ -7,11 +7,12 @@ jobs:
 
   # Running core tests
   test-core:
+    executor: docker/machine
     environment:
       TEST_MODE: core
     steps:
       - checkout
-      - setup_remote_docker
+      # - setup_remote_docker
       - run:
           name: Aether CORE tests (Kernel, Client)
           command: ./scripts/test_travis.sh $TEST_MODE
