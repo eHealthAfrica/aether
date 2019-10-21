@@ -38,8 +38,8 @@ function prepare_dependencies {
 }
 
 function build_app {
-    APP_NAME=$1
-    DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
+    local APP_NAME=$1
+    local DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
 
     echo "Building Docker container $APP_NAME"
     $DC build \
@@ -50,10 +50,21 @@ function build_app {
     echo "${LINE}"
 }
 
+function build_containers {
+    local APPS=( kernel odk couchdb-sync ui producer integration-test )
+
+    prepare_dependencies
+    for APP in "${APPS[@]}"; do
+        echo "Building Docker image ${APP}"
+        build_app $APP
+    done
+}
+
 function release_app {
-    APP_NAME=$1
-    APP_TAG=$2
-    AETHER_APP="aether-${APP_NAME}"
+    local IMAGE_REPO=$1
+    local APP_NAME=$2
+    local APP_TAG=$3
+    local AETHER_APP="aether-${APP_NAME}"
 
     echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${APP_TAG}"
     docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${APP_TAG}"
@@ -61,53 +72,80 @@ function release_app {
     echo "${LINE}"
 }
 
-function release_gcs {
-    # notify to Google Cloud Storage the new image
-    export RELEASE_BUCKET="aether-releases"
-    export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
+function release_docker_hub {
+    local IMAGE_REPO="ehealthafrica"
+    local RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
+
+    # Login in dockerhub with write permissions (repos are public)
+    docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+    for APP in "${RELEASE_APPS[@]}"; do
+        release_app $IMAGE_REPO $APP $VERSION
+    done
+    docker logout
+}
+
+function release_google_cloud {
+    local GC_SECRETS="gcs_key.json"
+    local GC_SERVER="https://eu.gcr.io"
+    local GC_REPO="eu.gcr.io"
+    local GC_PROJECT_ALPHA="alpha"
+    local GC_PROJECT_PROD="eha-data"
 
     if [ -z "$TRAVIS_TAG" ]; then
-        GCS_VERSION=$TRAVIS_COMMIT
+        local GC_VERSION="$VERSION-$TRAVIS_COMMIT"
     else
-        GCS_VERSION=$VERSION
+        local GC_VERSION=$VERSION
     fi
 
     if [ "$VERSION" == "alpha" ]; then
-        GCS_PROJECTS="alpha"
+        local GC_PROJECT="$GC_PROJECT_ALPHA"
     else
-        GCS_PROJECTS="eha-data"
+        local GC_PROJECT="$GC_PROJECT_PROD"
     fi
 
-    python ./scripts/push_version.py --version $GCS_VERSION --projects $GCS_PROJECTS
+    local RELEASE_APPS=( kernel odk ui producer )
+
+    openssl aes-256-cbc \
+        -K $encrypted_9112fb2807d4_key \
+        -iv $encrypted_9112fb2807d4_iv \
+        -in "${GC_SECRETS}.enc" -out ${GC_SECRETS} -d
+
+    # Login in GC with write permissions
+    docker login -u _json_key -p "$(cat ${GC_SECRETS})" $GC_SERVER
+    for APP in "${RELEASE_APPS[@]}"; do
+        release_app "${GC_REPO}/${GCS_PROJECT}" $APP $GCS_VERSION
+    done
+    docker logout $GC_SERVER
+
+    # notify to Google Cloud the new image
+    export RELEASE_BUCKET="aether-releases"
+    export GOOGLE_APPLICATION_CREDENTIALS=${GC_SECRETS}
+    python ./scripts/push_version.py --version $GCS_VERSION --projects $GCS_PROJECT
 }
 
 function release_process {
-    # Login in dockerhub with write permissions (repos are public)
-    docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
-
-    IMAGE_REPO="ehealthafrica"
-    RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
-
     echo "${LINE}"
     echo "Release version:   $VERSION"
     echo "Release revision:  $TRAVIS_COMMIT"
-    echo "Images repository: $IMAGE_REPO"
-    echo "Images:            ${RELEASE_APPS[@]}"
     echo "${LINE}"
+    echo ""
+    echo "Building containers..."
 
-    prepare_dependencies
+    build_containers
 
-    for APP in "${RELEASE_APPS[@]}"; do
-        build_app $APP
-        release_app $APP $VERSION
+    echo "${LINE}"
+    echo ""
+    echo "Pushing containers to docker hub..."
 
-        if [ -z "$TRAVIS_TAG" ]; then
-            # develop branch or release candidate
-            release_app $APP $TRAVIS_COMMIT
-        fi
-    done
+    release_docker_hub
 
-    release_gcs
+    echo "${LINE}"
+    echo ""
+    echo "Pushing containers to google cloud..."
+
+    release_google_cloud
+
+    echo "${LINE}"
 }
 
 # Usage: increment_version <version> [<position>]
