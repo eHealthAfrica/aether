@@ -72,7 +72,7 @@ function release_gcs {
         GCS_VERSION=$VERSION
     fi
 
-    if ["$VERSION" == "alpha"]; then
+    if [ "$VERSION" == "alpha" ]; then
         GCS_PROJECTS="alpha"
     else
         GCS_PROJECTS="eha-data"
