@@ -54,9 +54,9 @@ export RELEASE_BUCKET="aether-releases"
 export GOOGLE_APPLICATION_CREDENTIALS="./.circleci/gcs_key.json"
 
 if [ -z "$GIT_TAG" ]; then
-    GCS_VERSION="${VERSION}--${GIT_COMMIT}"
-else
     GCS_VERSION=$VERSION
+else
+    GCS_VERSION="${VERSION}--${GIT_COMMIT}"
 fi
 
 if [ "$VERSION" == "alpha" ]; then
@@ -74,15 +74,15 @@ echo "$LINE"
 echo "Deploying ${GCS_VERSION} release"
 echo "$LINE"
 
-openssl aes-256-cbc \
-    -K $encrypted_9112fb2807d4_key \
-    -iv $encrypted_9112fb2807d4_iv \
-    -in ./.circleci/gcs_key.json.enc \
-    -out "${GOOGLE_APPLICATION_CREDENTIALS}" \
-    -d
+# openssl aes-256-cbc \
+#     -K $encrypted_9112fb2807d4_key \
+#     -iv $encrypted_9112fb2807d4_iv \
+#     -in ./.circleci/gcs_key.json.enc \
+#     -out "${GOOGLE_APPLICATION_CREDENTIALS}" \
+#     -d
 
-pip install --user -q google-cloud-storage
+# pip install --user -q google-cloud-storage
 
-python ./.circleci/push_version.py \
-    --version $GCS_VERSION \
-    --projects $GCS_PROJECTS
+# python ./.circleci/push_version.py \
+#     --version $GCS_VERSION \
+#     --projects $GCS_PROJECTS
