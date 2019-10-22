@@ -90,7 +90,7 @@ workflows:
       - test-ui
       - test-integration
 
-      - deploy
+      - deploy:
         requires:
         - test-core
         - test-modules
