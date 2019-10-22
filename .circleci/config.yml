@@ -5,74 +5,63 @@ orbs:
 
 commands:
   test-container:
-    description: Run container tests
+    description: "Run container tests"
     parameters:
       container:
+        description: "Container to test"
         type: string
-        default: kernel
     steps:
       - checkout
       - run:
-          name: Run tests
+          name: tests
           command: ./.circleci/test_ci.sh << parameters.container >>
       - run:
-          name: Failed tests
+          name: failure
           command: ./.circleci/test_ci_failure.sh << parameters.container >>
           when: on_fail
 
 jobs:
-
-  # Running core tests
   test-core:
+    description: "Aether CORE tests (Kernel, Client)"
     executor: docker/machine
-    environment:
-      TEST_MODE: core
     steps:
       - test-container:
-          container: $TEST_MODE
+          container: core
 
-  # Running module tests
   test-modules:
+    description: "Aether modules tests (ODK and CouchDB-Sync)"
     executor: docker/machine
-    environment:
-      TEST_MODE: modules
     steps:
       - test-container:
-          container: $TEST_MODE
+          container: modules
 
-  # Running UI tests
   test-ui:
+    description: "Aether UI tests (UI Module)"
     executor: docker/machine
-    environment:
-      TEST_MODE: ui
     steps:
       - test-container:
-          container: $TEST_MODE
+          container: ui
 
-  # Runing integration tests
   test-integration:
+    description: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
     executor: docker/machine
-    environment:
-      TEST_MODE: integration
     steps:
       - test-container:
-          container: $TEST_MODE
+          container: integration
 
   release:
+    description: "Push images to Docker Hub"
     executor: docker/machine
     steps:
       - checkout
-      - run:
-          name: Push images to Docker Hub
-          command: ./.circleci/release.sh
+      - run: ./.circleci/release.sh
 
   deploy:
+    description: "Push images to Google Cloud"
     executor: docker/machine
     steps:
       - checkout
-      - run:
-          name: Push images to Google Cloud
-          command: ./.circleci/deploy.sh
+      - run: ./.circleci/deploy.sh
 
 workflows:
   version: 2
