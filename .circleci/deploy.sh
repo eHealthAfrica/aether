@@ -21,7 +21,7 @@
 
 set -Eo pipefail
 
-LINE="-------------------------------------------------------------------------"
+LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /-}`
 
 GIT_COMMIT=$CIRCLE_SHA1
 GIT_BRANCH=$CIRCLE_BRANCH
