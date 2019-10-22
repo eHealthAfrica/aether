@@ -3,6 +3,23 @@ version: 2.1
 orbs:
   docker: circleci/docker@0.5.13
 
+commands:
+  test-container:
+    description: Run container tests
+    parameters:
+      container:
+        type: string
+        default: kernel
+    steps:
+      - checkout
+      - run:
+          name: Run tests
+          command: ./.circleci/test_ci.sh << parameters.container >>
+      - run:
+          name: Failed tests
+          command: ./.circleci/test_ci_failure.sh << parameters.container >>
+          when: on_fail
+
 jobs:
 
   # Running core tests
@@ -11,14 +28,8 @@ jobs:
     environment:
       TEST_MODE: core
     steps:
-      - checkout
-      - run:
-          name: Aether CORE tests (Kernel, Client)
-          command: ./.circleci/test_ci.sh $TEST_MODE
-      - run:
-          name: Upload Failed Tests
-          command: ./.circleci/test_ci_failure.sh $TEST_MODE
-          when: on_fail
+      - test-container:
+          container: $TEST_MODE
 
   # Running module tests
   test-modules:
@@ -26,14 +37,8 @@ jobs:
     environment:
       TEST_MODE: modules
     steps:
-      - checkout
-      - run:
-          name: Aether modules tests (ODK and CouchDB-Sync)
-          command: ./.circleci/test_ci.sh $TEST_MODE
-      - run:
-          name: Upload Failed Tests
-          command: ./.circleci/test_ci_failure.sh $TEST_MODE
-          when: on_fail
+      - test-container:
+          container: $TEST_MODE
 
   # Running UI tests
   test-ui:
@@ -41,14 +46,8 @@ jobs:
     environment:
       TEST_MODE: ui
     steps:
-      - checkout
-      - run:
-          name: Aether UI tests (UI Module)
-          command: ./.circleci/test_ci.sh $TEST_MODE
-      - run:
-          name: Upload Failed Tests
-          command: ./.circleci/test_ci_failure.sh $TEST_MODE
-          when: on_fail
+      - test-container:
+          container: $TEST_MODE
 
   # Runing integration tests
   test-integration:
@@ -56,14 +55,8 @@ jobs:
     environment:
       TEST_MODE: integration
     steps:
-      - checkout
-      - run:
-          name: Integration tests
-          command: ./.circleci/test_ci.sh $TEST_MODE
-      - run:
-          name: Upload Failed Tests
-          command: ./.circleci/test_ci_failure.sh $TEST_MODE
-          when: on_fail
+      - test-container:
+          container: $TEST_MODE
 
   release:
     executor: docker/machine
