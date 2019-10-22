@@ -41,10 +41,11 @@ elif [[ $GIT_BRANCH = "develop" ]]; then
 
     VERSION="alpha"
 
-# else
+else
 
-#     echo "Not permitted"
-#     exit 1
+    echo "Not permitted"
+    #exit 1
+    VERSION="no-no-no"
 
 fi
 
@@ -63,9 +64,6 @@ if [ "$VERSION" == "alpha" ]; then
 else
     GCS_PROJECTS="eha-data"
 fi
-
-GCS_VERSION="alpha"
-GCS_PROJECTS="alpha"
 
 echo "$LINE"
 echo "Github repo:    $GIT_REPO"
