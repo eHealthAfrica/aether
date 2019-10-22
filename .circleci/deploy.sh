@@ -48,15 +48,6 @@ elif [[ $GIT_BRANCH = "develop" ]]; then
 
 fi
 
-openssl aes-256-cbc \
-    -K $encrypted_9112fb2807d4_key \
-    -iv $encrypted_9112fb2807d4_iv \
-    -in ./.circleci/gcs_key.json.enc \
-    -out ./.circleci/gcs_key.json \
-    -d
-
-pip install --user -q google-cloud-storage
-
 # notify to Google Cloud Storage the new image
 export RELEASE_BUCKET="aether-releases"
 export GOOGLE_APPLICATION_CREDENTIALS="./.circleci/gcs_key.json"
@@ -73,18 +64,26 @@ else
     GCS_PROJECTS="eha-data"
 fi
 
+GCS_VERSION="alpha"
+GCS_PROJECTS="alpha"
+
 echo "$LINE"
 echo "Github repo:    $GIT_REPO"
 echo "Github commit:  $GIT_COMMIT"
 echo "Github branch:  $GIT_BRANCH"
 echo "Github tag:     $GIT_TAG"
 echo "$LINE"
-echo "Deploying ${VERSION} release"
+echo "Deploying ${GCS_VERSION} release"
 echo "$LINE"
 
+openssl aes-256-cbc \
+    -K $encrypted_9112fb2807d4_key \
+    -iv $encrypted_9112fb2807d4_iv \
+    -in ./.circleci/gcs_key.json.enc \
+    -out "${GOOGLE_APPLICATION_CREDENTIALS}" \
+    -d
 
-VERSION="alpha"
-GCS_PROJECTS="alpha"
+pip install --user -q google-cloud-storage
 
 python ./.circleci/push_version.py \
     --version $GCS_VERSION \
