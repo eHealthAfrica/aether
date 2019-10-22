@@ -113,8 +113,8 @@ def create_db(engine, url):
     root = url.replace(db_name, 'postgres')
     temp_engine = create_engine(root)
     conn = temp_engine.connect()
-    conn.execute("commit")
-    conn.execute("create database %s" % db_name)
+    conn.execute('commit')
+    conn.execute('create database %s' % db_name)
     conn.close()
 
 
@@ -180,7 +180,7 @@ class Offset(Base):
     @classmethod
     def update(cls, name, offset_value):
         # Update or Create if not existing
-        call = "Offset-SET"
+        call = 'Offset-SET'
         try:
             promise = OFFSET_DB.request_connection(0, call)  # Highest Priority
             conn = promise.get()
@@ -201,7 +201,7 @@ class Offset(Base):
 
     @classmethod
     def get_offset(cls, name):
-        call = "Offset-GET"
+        call = 'Offset-GET'
         try:
             promise = OFFSET_DB.request_connection(1, call)  # Lower Priority than set
             conn = promise.get()
@@ -330,7 +330,6 @@ class PriorityDatabasePool(object):
 
 # KernelDB
 pg_requires = ['user', 'dbname', 'port', 'host', 'password']
-pg_creds = {key: SETTINGS.get(
-    "postgres_%s" % key) for key in pg_requires}
+pg_creds = {key: SETTINGS.get('postgres_%s' % key) for key in pg_requires}
 kernel_db_pool_size = SETTINGS.get('kernel_db_pool_size', 6)
 KERNEL_DB = PriorityDatabasePool(pg_creds, 'KernelDB', kernel_db_pool_size)  # imported from here

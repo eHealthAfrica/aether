@@ -43,8 +43,8 @@ class BasicRealmAuthenticator(BasicAuthenticator):
 
 
 class BasicRealmClient(RequestsClient):
-    """Synchronous HTTP client implementation.
-    """
+    '''Synchronous HTTP client implementation.
+    '''
 
     def set_realm_basic_auth(
         self,

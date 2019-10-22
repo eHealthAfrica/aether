@@ -8,5 +8,6 @@ aet.consumer==1.0.0
 aether.client
 
 flake8
+flake8-quotes
 pytest
 pytest-runner
