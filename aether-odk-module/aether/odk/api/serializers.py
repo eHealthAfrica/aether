@@ -120,19 +120,32 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     username = UsernameField()
     password = serializers.CharField(style={'input_type': 'password'})
 
+    projects = MtPrimaryKeyRelatedField(
+        many=True,
+        queryset=Project.objects.all(),
+    )
+    project_names = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='name',
+        source='projects',
+    )
+
     def validate_password(self, value):
         validate_pwd(value)
         return value
 
     def create(self, validated_data):
+        projects = validated_data.pop('projects', [])
         raw_password = validated_data.pop('password', None)
         instance = self.Meta.model(**validated_data)
         instance.set_password(raw_password)
-        self._save(instance, raw_password)
+        self._save(instance, raw_password, projects)
 
         return instance
 
     def update(self, instance, validated_data):
+        projects = validated_data.pop('projects', [])
         raw_password = None
         for attr, value in validated_data.items():
             if attr == 'password':
@@ -141,14 +154,15 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
                     raw_password = value
             else:
                 setattr(instance, attr, value)
-        self._save(instance, raw_password)
+        self._save(instance, raw_password, projects)
 
         return instance
 
-    def _save(self, instance, raw_password):
+    def _save(self, instance, raw_password, projects):
         request = self.context['request']
 
         instance.save()
+        instance.projects.set(projects)
         instance.groups.add(get_surveyor_group())
         add_user_to_realm(request, instance)
 
@@ -158,7 +172,7 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'password', )
+        fields = ('id', 'username', 'password', 'projects', 'project_names',)
 
 
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
