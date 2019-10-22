@@ -21,7 +21,7 @@
 
 set -Eo pipefail
 
-LINE=`-------------------------------------------------------------------------`
+LINE="-------------------------------------------------------------------------"
 
 GIT_COMMIT=$CIRCLE_SHA1
 GIT_BRANCH=$CIRCLE_BRANCH
@@ -55,7 +55,7 @@ openssl aes-256-cbc \
     -out ./.circleci/gcs_key.json \
     -d
 
-pip install -q google-cloud-storage
+pip install --user -q google-cloud-storage
 
 # notify to Google Cloud Storage the new image
 export RELEASE_BUCKET="aether-releases"
@@ -73,13 +73,13 @@ else
     GCS_PROJECTS="eha-data"
 fi
 
-echo "${LINE}"
+echo "$LINE"
 echo "Github repo:    $GIT_REPO"
 echo "Github commit:  $GIT_COMMIT"
 echo "Github branch:  $GIT_BRANCH"
 echo "Github tag:     $GIT_TAG"
-echo "${LINE}"
+echo "$LINE"
 echo "Deploying ${VERSION} release"
-echo "${LINE}"
+echo "$LINE"
 
 python ./.circleci/push_version.py --version $GCS_VERSION --projects $GCS_PROJECTS

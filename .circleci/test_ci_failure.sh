@@ -21,60 +21,60 @@
 set -Eeuo pipefail
 
 DC="docker-compose -f docker-compose-test.yml logs -t --tail=all"
-LINE=`+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++`
+LINE="+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
 case "$1" in
     core)
         $DC db-test
-        echo "${LINE}"
+        echo "$LINE"
 
         $DC kernel-test
-        echo "${LINE}"
+        echo "$LINE"
         $DC client-test
-        echo "${LINE}"
+        echo "$LINE"
     ;;
 
     modules)
         $DC db-test
-        echo "${LINE}"
+        echo "$LINE"
         $DC couchdb-test
-        echo "${LINE}"
+        echo "$LINE"
         $DC redis-test
-        echo "${LINE}"
+        echo "$LINE"
 
         $DC kernel-test
-        echo "${LINE}"
+        echo "$LINE"
         $DC odk-test
-        echo "${LINE}"
+        echo "$LINE"
         $DC couchdb-sync-test
-        echo "${LINE}"
+        echo "$LINE"
     ;;
 
     integration)
         $DC db-test
-        echo "${LINE}"
+        echo "$LINE"
 
         $DC kafka-test
-        echo "${LINE}"
+        echo "$LINE"
         $DC zookeeper-test
-        echo "${LINE}"
+        echo "$LINE"
 
         $DC kernel-test
-        echo "${LINE}"
+        echo "$LINE"
         $DC producer-test
-        echo "${LINE}"
+        echo "$LINE"
         $DC integration-test
-        echo "${LINE}"
+        echo "$LINE"
     ;;
 
     ui)
         $DC db-test
-        echo "${LINE}"
+        echo "$LINE"
 
         $DC kernel-test
-        echo "${LINE}"
+        echo "$LINE"
         $DC ui-test
-        echo "${LINE}"
+        echo "$LINE"
     ;;
 
     *)

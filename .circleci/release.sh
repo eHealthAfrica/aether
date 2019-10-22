@@ -47,7 +47,7 @@ function build_app {
         --build-arg GIT_REVISION=$GIT_COMMIT \
         --build-arg VERSION=$VERSION \
         $APP_NAME
-    echo "${LINE}"
+    echo "$LINE"
 }
 
 function release_app {
@@ -58,7 +58,7 @@ function release_app {
     echo "Pushing Docker image ${DOCKER_NAMESPACE}/${AETHER_APP}:${APP_TAG}"
     docker tag ${AETHER_APP} "${DOCKER_NAMESPACE}/${AETHER_APP}:${APP_TAG}"
     docker push "${DOCKER_NAMESPACE}/${AETHER_APP}:${APP_TAG}"
-    echo "${LINE}"
+    echo "$LINE"
 }
 
 function release_process {
@@ -216,7 +216,7 @@ function git_branch_commit_and_tag {
     fi
 }
 
-LINE=`#########################################################################`
+LINE="#########################################################################"
 
 GIT_COMMIT=$CIRCLE_SHA1
 GIT_BRANCH=$CIRCLE_BRANCH
