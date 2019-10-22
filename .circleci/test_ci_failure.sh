@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 DC="docker-compose -f docker-compose-test.yml logs -t --tail=all"
-LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /+}`
+LINE=`+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++`
 
 case "$1" in
     core)

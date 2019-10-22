@@ -22,8 +22,6 @@ set -Eeuo pipefail
 
 source ./scripts/_lib.sh
 
-export BUILD_OPTIONS="--no-cache --force-rm --pull"
-
 create_credentials
 create_docker_assets
 

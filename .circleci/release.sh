@@ -216,7 +216,7 @@ function git_branch_commit_and_tag {
     fi
 }
 
-LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /#}`
+LINE=`#########################################################################`
 
 GIT_COMMIT=$CIRCLE_SHA1
 GIT_BRANCH=$CIRCLE_BRANCH
@@ -254,6 +254,11 @@ elif [[ ${GIT_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
 elif [[ $GIT_BRANCH = "develop" ]]; then
 
     VERSION="alpha"
+
+else
+
+    echo "Not permitted"
+    exit 1
 
 fi
 
