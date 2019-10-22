@@ -64,7 +64,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="./.circleci/gcs_key.json"
 if [ -z "$GIT_TAG" ]; then
     GCS_VERSION="${VERSION}--${GIT_COMMIT}"
 else
-    GCS_VERSION="alpha"
+    GCS_VERSION=$VERSION
 fi
 
 if [ "$VERSION" == "alpha" ]; then
@@ -82,4 +82,10 @@ echo "$LINE"
 echo "Deploying ${VERSION} release"
 echo "$LINE"
 
-python ./.circleci/push_version.py --version $GCS_VERSION --projects $GCS_PROJECTS
+
+VERSION="alpha"
+GCS_PROJECTS="alpha"
+
+python ./.circleci/push_version.py \
+    --version $GCS_VERSION \
+    --projects $GCS_PROJECTS
