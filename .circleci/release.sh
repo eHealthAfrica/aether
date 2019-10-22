@@ -38,8 +38,8 @@ function prepare_dependencies {
 }
 
 function build_app {
-    APP_NAME=$1
-    DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
+    local APP_NAME=$1
+    local DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
 
     echo "Building Docker container $APP_NAME"
     $DC build \
@@ -51,63 +51,34 @@ function build_app {
 }
 
 function release_app {
-    APP_NAME=$1
-    APP_TAG=$2
-    AETHER_APP="aether-${APP_NAME}"
+    local APP_NAME=$1
+    local APP_TAG=$2
+    local AETHER_APP="aether-${APP_NAME}"
 
-    echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${APP_TAG}"
-    docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${APP_TAG}"
-    docker push "${IMAGE_REPO}/${AETHER_APP}:${APP_TAG}"
+    echo "Pushing Docker image ${DOCKER_NAMESPACE}/${AETHER_APP}:${APP_TAG}"
+    docker tag ${AETHER_APP} "${DOCKER_NAMESPACE}/${AETHER_APP}:${APP_TAG}"
+    docker push "${DOCKER_NAMESPACE}/${AETHER_APP}:${APP_TAG}"
     echo "${LINE}"
-}
-
-function release_gcs {
-    # notify to Google Cloud Storage the new image
-    export RELEASE_BUCKET="aether-releases"
-    export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
-
-    if [ -z "$GIT_TAG" ]; then
-        GCS_VERSION=$GIT_COMMIT
-    else
-        GCS_VERSION=$VERSION
-    fi
-
-    if [ "$VERSION" == "alpha" ]; then
-        GCS_PROJECTS="alpha"
-    else
-        GCS_PROJECTS="eha-data"
-    fi
-
-    python ./scripts/push_version.py --version $GCS_VERSION --projects $GCS_PROJECTS
 }
 
 function release_process {
     # Login in dockerhub with write permissions (repos are public)
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
-    IMAGE_REPO="ehealthafrica"
-    RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
-
-    echo "${LINE}"
-    echo "Release version:   $VERSION"
-    echo "Release revision:  $GIT_COMMIT"
-    echo "Images repository: $IMAGE_REPO"
-    echo "Images:            ${RELEASE_APPS[@]}"
-    echo "${LINE}"
-
     prepare_dependencies
-
     for APP in "${RELEASE_APPS[@]}"; do
         build_app $APP
         release_app $APP $VERSION
-
-        if [ -z "$GIT_TAG" ]; then
-            # develop branch or release candidate
-            release_app $APP $GIT_COMMIT
-        fi
     done
 
-    release_gcs
+    # develop branch or release candidate
+    if [ -z "$GIT_TAG" ]; then
+        for APP in "${DEPLOY_APPS[@]}"; do
+            release_app $APP "${VERSION}--${GIT_COMMIT}"
+        done
+    fi
+
+    docker logout
 }
 
 # Usage: increment_version <version> [<position>]
@@ -252,6 +223,9 @@ GIT_BRANCH=$CIRCLE_BRANCH
 GIT_TAG=$CIRCLE_TAG
 GIT_REPO="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
 
+DOCKER_NAMESPACE="ehealthafrica"
+RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
+DEPLOY_APPS=( kernel odk ui producer )
 
 TAG_INCREASED_VERSION="0.0.0"
 VERSION=
@@ -283,12 +257,19 @@ elif [[ $GIT_BRANCH = "develop" ]]; then
 
 fi
 
-echo "${LINE}"
-echo "Github repo:    $GIT_REPO"
-echo "Github commit:  $GIT_COMMIT"
-echo "Github branch:  $GIT_BRANCH"
-echo "Github tag:     $GIT_TAG"
-echo "${LINE}"
+echo "$LINE"
+echo "Github repo:         $GIT_REPO"
+echo "Github commit:       $GIT_COMMIT"
+echo "Github branch:       $GIT_BRANCH"
+echo "Github tag:          $GIT_TAG"
+echo "$LINE"
+echo "Release version:     $VERSION"
+echo "Release revision:    $GIT_COMMIT"
+echo "Images namespace:    $DOCKER_NAMESPACE"
+echo "Release images:      ${RELEASE_APPS[@]}"
+echo "Deploy images:       ${DEPLOY_APPS[@]}"
+echo "$LINE"
 echo "Starting version ${VERSION} release"
-echo "${LINE}"
+echo "$LINE"
+
 release_process
