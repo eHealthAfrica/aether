@@ -64,7 +64,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="./.circleci/gcs_key.json"
 if [ -z "$GIT_TAG" ]; then
     GCS_VERSION="${VERSION}--${GIT_COMMIT}"
 else
-    GCS_VERSION=$VERSION
+    GCS_VERSION="alpha"
 fi
 
 if [ "$VERSION" == "alpha" ]; then
