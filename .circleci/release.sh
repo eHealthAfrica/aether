@@ -44,7 +44,7 @@ function build_app {
     echo "Building Docker container $APP_NAME"
     $DC build \
         --no-cache --force-rm --pull \
-        --build-arg GIT_REVISION=$TRAVIS_COMMIT \
+        --build-arg GIT_REVISION=$GIT_COMMIT \
         --build-arg VERSION=$VERSION \
         $APP_NAME
     echo "${LINE}"
@@ -66,8 +66,8 @@ function release_gcs {
     export RELEASE_BUCKET="aether-releases"
     export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
 
-    if [ -z "$TRAVIS_TAG" ]; then
-        GCS_VERSION=$TRAVIS_COMMIT
+    if [ -z "$GIT_TAG" ]; then
+        GCS_VERSION=$GIT_COMMIT
     else
         GCS_VERSION=$VERSION
     fi
@@ -90,7 +90,7 @@ function release_process {
 
     echo "${LINE}"
     echo "Release version:   $VERSION"
-    echo "Release revision:  $TRAVIS_COMMIT"
+    echo "Release revision:  $GIT_COMMIT"
     echo "Images repository: $IMAGE_REPO"
     echo "Images:            ${RELEASE_APPS[@]}"
     echo "${LINE}"
@@ -101,9 +101,9 @@ function release_process {
         build_app $APP
         release_app $APP $VERSION
 
-        if [ -z "$TRAVIS_TAG" ]; then
+        if [ -z "$GIT_TAG" ]; then
             # develop branch or release candidate
-            release_app $APP $TRAVIS_COMMIT
+            release_app $APP $GIT_COMMIT
         fi
     done
 
@@ -162,19 +162,19 @@ function version_compare {
     return 0
 }
 
-function git_branch_commit_and_release {
+function git_branch_commit_and_tag {
     # Evaluates the VERSION file, increases the version value if its a tag and commit changes to base branch
     # Expected Args:
     ## <VERSION_ON_FILE> <VERSION_FROM_BRANCH/TAG> <BRANCH_TYPE> <IS_RC>
     ### VERSION_ON_FILE : The version value read from the VERSION file
-    ### VERSION_FROM_BRANCH/TAG : version value retrieved from the branch name (TRAVIS_TAG / TRAVIS_BRANCH)
+    ### VERSION_FROM_BRANCH/TAG : version value retrieved from the branch name (GIT_TAG / GIT_BRANCH)
     ### BRANCH_TYPE : branch type (options: "branch", "tag")
     ### IS_RC: (optional) if a release candidate should be released (options : "rc")
 
     local BRANCH_OR_TAG_VALUE=$2
-    local REMOTE=origin COMMIT_BRANCH=$TRAVIS_BRANCH
+    local REMOTE=origin COMMIT_BRANCH=$GIT_BRANCH
     if [[ $GITHUB_TOKEN ]]; then
-        REMOTE=https://$GITHUB_TOKEN@github.com/$TRAVIS_REPO_SLUG
+        REMOTE="https://${GITHUB_TOKEN}@github.com/${GIT_REPO}"
     else
         echo "Missing environment variable GITHUB_TOKEN=[GitHub Personal Access Token]"
         exit 1
@@ -196,14 +196,14 @@ function git_branch_commit_and_release {
             echo "No VERSION file found, creating one and setting value to ${BRANCH_OR_TAG_VALUE}"
             VERSION=$BRANCH_OR_TAG_VALUE
 
-            git checkout $TRAVIS_BRANCH
+            git checkout $GIT_BRANCH
             echo ${BRANCH_OR_TAG_VALUE} > VERSION
             git add VERSION
             # make Travis CI skip this build
             COMMIT_MESSAGE="chore: Create VERSION file ${BRANCH_OR_TAG_VALUE} [ci skip]"
             git commit -m "${COMMIT_MESSAGE}"
             if ! git push --quiet --follow-tags ${REMOTE} ${COMMIT_BRANCH} > /dev/null 2>&1; then
-                echo "Failed to push git changes to" $TRAVIS_BRANCH
+                echo "Failed to push git changes to" $GIT_BRANCH
                 exit 1
             fi
         fi
@@ -218,24 +218,24 @@ function git_branch_commit_and_release {
             minor="${BASH_REMATCH[2]}"
         fi
 
-        TRAVIS_BRANCH="release-${major}.${minor}"
-        git fetch ${REMOTE} $TRAVIS_BRANCH
-        git branch $TRAVIS_BRANCH FETCH_HEAD
+        CURRENT_BRANCH="release-${major}.${minor}"
+        git fetch ${REMOTE} $CURRENT_BRANCH
+        git branch $CURRENT_BRANCH FETCH_HEAD
         COMMIT_BRANCH=HEAD
 
         increment_version $BRANCH_OR_TAG_VALUE 3
         BRANCH_OR_TAG_VALUE=$TAG_INCREASED_VERSION
 
-        echo "VERSION file set to ${BRANCH_OR_TAG_VALUE} on ${TRAVIS_BRANCH} branch"
+        echo "VERSION file set to ${BRANCH_OR_TAG_VALUE} on ${CURRENT_BRANCH} branch"
 
-        git checkout $TRAVIS_BRANCH
+        git checkout $CURRENT_BRANCH
         echo ${BRANCH_OR_TAG_VALUE} > VERSION
         git add VERSION
         # make Travis CI skip this build
-        COMMIT_MESSAGE="chore: Update VERSION file to ${BRANCH_OR_TAG_VALUE} [ci skip]"
+        local COMMIT_MESSAGE="chore: Update VERSION file to ${BRANCH_OR_TAG_VALUE} [ci skip]"
         git commit -m "${COMMIT_MESSAGE}"
         if ! git push --quiet --follow-tags ${REMOTE} ${COMMIT_BRANCH} > /dev/null 2>&1; then
-            echo "Failed to push git changes to" $TRAVIS_BRANCH
+            echo "Failed to push git changes to" $CURRENT_BRANCH
             exit 1
         fi
     fi
@@ -243,12 +243,15 @@ function git_branch_commit_and_release {
     if [ ! -z $4 ]; then
         VERSION=${BRANCH_OR_TAG_VALUE}-$4
     fi
-
-    echo "Starting version" ${VERSION} "release"
-    release_process
 }
 
 LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /#}`
+
+GIT_COMMIT=$CIRCLE_SHA1
+GIT_BRANCH=$CIRCLE_BRANCH
+GIT_TAG=$CIRCLE_TAG
+GIT_REPO="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+
 
 TAG_INCREASED_VERSION="0.0.0"
 VERSION=
@@ -260,23 +263,32 @@ else
 fi
 
 
-# release version depending on TRAVIS_BRANCH (develop | release-#.#) / TRAVIS_TAG (#.#.#)
-if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
+# release version depending on GIT_BRANCH (develop | release-#.#) / GIT_TAG (#.#.#)
+if [[ ${GIT_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
 
-    VERSION=$TRAVIS_TAG
+    VERSION=$GIT_TAG
     # Release with unified branch and file versions
-    git_branch_commit_and_release ${FILE_VERSION} $TRAVIS_TAG tag
+    git_branch_commit_and_tag ${FILE_VERSION} $GIT_TAG tag
 
-elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
+elif [[ ${GIT_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
 
-    IFS=- read -a ver_number <<< "$TRAVIS_BRANCH"
+    IFS=- read -a ver_number <<< "$GIT_BRANCH"
     BRANCH_VERSION=${ver_number[1]}
     # Release with unified branch and file versions
-    git_branch_commit_and_release ${FILE_VERSION} ${BRANCH_VERSION} branch rc
+    git_branch_commit_and_tag ${FILE_VERSION} ${BRANCH_VERSION} branch rc
 
-elif [[ $TRAVIS_BRANCH = "develop" ]]; then
+elif [[ $GIT_BRANCH = "develop" ]]; then
 
     VERSION="alpha"
-    release_process
 
 fi
+
+echo "${LINE}"
+echo "Github repo:    $GIT_REPO"
+echo "Github commit:  $GIT_COMMIT"
+echo "Github branch:  $GIT_BRANCH"
+echo "Github tag:     $GIT_TAG"
+echo "${LINE}"
+echo "Starting version ${VERSION} release"
+echo "${LINE}"
+release_process
