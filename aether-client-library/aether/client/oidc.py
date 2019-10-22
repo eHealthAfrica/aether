@@ -104,19 +104,19 @@ class PreparableOauth2Session(OAuth2Session):
         execute=True,
         **kwargs
     ):
-        """Intercept all requests and add the OAuth 2 token if present."""
+        '''Intercept all requests and add the OAuth 2 token if present.'''
         if not is_secure_transport(url):
             raise InsecureTransportError()
         if self.token and not withhold_token:
             LOG.debug(
-                "Invoking %d protected resource request hooks.",
-                len(self.compliance_hook["protected_request"]),
+                'Invoking %d protected resource request hooks.',
+                len(self.compliance_hook['protected_request']),
             )
-            for hook in self.compliance_hook["protected_request"]:
-                LOG.debug("Invoking hook %s.", hook)
+            for hook in self.compliance_hook['protected_request']:
+                LOG.debug('Invoking hook %s.', hook)
                 url, headers, data = hook(url, headers, data)
 
-            LOG.debug("Adding token %s to request.", self.token)
+            LOG.debug('Adding token %s to request.', self.token)
             try:
                 url, headers, data = self._client.add_token(
                     url, http_method=method, body=data, headers=headers
@@ -125,12 +125,12 @@ class PreparableOauth2Session(OAuth2Session):
             except TokenExpiredError:
                 if self.auto_refresh_url:
                     LOG.debug(
-                        "Auto refresh is set, attempting to refresh at %s.",
+                        'Auto refresh is set, attempting to refresh at %s.',
                         self.auto_refresh_url,
                     )
 
                     # We mustn't pass auth twice.
-                    auth = kwargs.pop("auth", None)
+                    auth = kwargs.pop('auth', None)
                     if client_id and client_secret and (auth is None):
                         LOG.debug(
                             f'Encoding client_id "{client_id}" with'
@@ -154,9 +154,9 @@ class PreparableOauth2Session(OAuth2Session):
                         raise TokenUpdated(token)
                 else:
                     raise
-        LOG.debug("Requesting url %s using method %s.", url, method)
-        LOG.debug("Supplying headers %s and data %s", headers, data)
-        LOG.debug("Passing through key word arguments %s.", kwargs)
+        LOG.debug('Requesting url %s using method %s.', url, method)
+        LOG.debug('Supplying headers %s and data %s', headers, data)
+        LOG.debug('Passing through key word arguments %s.', kwargs)
         if execute:
             return super(OAuth2Session, self).request(
                 method, url, headers=headers, data=data, **kwargs
@@ -173,8 +173,8 @@ class PreparableOauth2Session(OAuth2Session):
 
 
 class OauthClient(RequestsClient):
-    """Synchronous HTTP client implementation.
-    """
+    '''Synchronous HTTP client implementation.
+    '''
 
     def set_oauth(
         self,

@@ -33,7 +33,7 @@ function show_help {
 }
 
 function test_flake8 {
-    flake8 /code/. --config=/code/setup.cfg
+    flake8
 }
 
 function test_python {

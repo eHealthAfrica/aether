@@ -63,7 +63,7 @@ class KafkaStatus(enum.Enum):
 
 
 def apply_kafka_security_settings(settings, kafka_settings, mode='SASL_PLAINTEXT'):
-    kafka_settings["bootstrap.servers"] = settings.get("kafka_url")
+    kafka_settings['bootstrap.servers'] = settings.get('kafka_url')
     if mode and mode.lower() == 'sasl_plaintext':
         # Let Producer use Kafka SU to produce
         kafka_settings['security.protocol'] = 'SASL_PLAINTEXT'
@@ -152,7 +152,7 @@ class ProducerManager(object):
 
     # see if kafka's port is available
     def kafka_available(self):
-        kafka_ip, kafka_port = self.settings["kafka_url"].split(":")
+        kafka_ip, kafka_port = self.settings['kafka_url'].split(':')
         kafka_port = int(kafka_port)
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -161,8 +161,8 @@ class ProducerManager(object):
                 ConnectionRefusedError,
                 socket.gaierror) as rce:
             self.logger.debug(
-                "Could not connect to Kafka on url: %s:%s" % (kafka_ip, kafka_port))
-            self.logger.debug("Connection problem: %s" % rce)
+                'Could not connect to Kafka on url: %s:%s' % (kafka_ip, kafka_port))
+            self.logger.debug('Connection problem: %s' % rce)
             return False
         return True
 
@@ -172,25 +172,25 @@ class ProducerManager(object):
             md = self.kafka_admin_client.list_topics(timeout=10)
             for b in iter(md.brokers.values()):
                 if b.id == md.controller_id:
-                    res['brokers'].append("{}  (controller)".format(b))
+                    res['brokers'].append('{}  (controller)'.format(b))
                 else:
-                    res['brokers'].append("{}".format(b))
+                    res['brokers'].append('{}'.format(b))
             for t in iter(md.topics.values()):
                 t_str = []
                 if t.error is not None:
-                    errstr = ": {}".format(t.error)
+                    errstr = ': {}'.format(t.error)
                 else:
-                    errstr = ""
+                    errstr = ''
 
-                t_str.append("{} with {} partition(s){}".format(t, len(t.partitions), errstr))
+                t_str.append('{} with {} partition(s){}'.format(t, len(t.partitions), errstr))
 
                 for p in iter(t.partitions.values()):
                     if p.error is not None:
-                        errstr = ": {}".format(p.error)
+                        errstr = ': {}'.format(p.error)
                     else:
-                        errstr = ""
+                        errstr = ''
 
-                    t_str.append("partition {} leader: {}, replicas: {}, isrs: {}".format(
+                    t_str.append('partition {} leader: {}, replicas: {}, isrs: {}'.format(
                         p.id, p.leader, p.replicas, p.isrs, errstr))
                 res['topics'].append(t_str)
             return res
@@ -200,7 +200,7 @@ class ProducerManager(object):
     # Connect to sqlite
     def init_db(self):
         db.init()
-        self.logger.info("OffsetDB initialized")
+        self.logger.info('OffsetDB initialized')
 
     # Main Schema Loop
     # Spawns TopicManagers for new schemas, updates schemas for workers on change.
@@ -224,7 +224,7 @@ class ProducerManager(object):
                 schema_name = f'{realm}.{_name}'
                 if schema_name not in self.topic_managers.keys():
                     self.logger.info(
-                        "Topic connected: %s" % schema_name)
+                        'Topic connected: %s' % schema_name)
                     self.topic_managers[schema_name] = TopicManager(
                         self, schema, realm)
                 else:
@@ -232,10 +232,10 @@ class ProducerManager(object):
                     if topic_manager.schema_changed(schema):
                         topic_manager.update_schema(schema)
                         self.logger.debug(
-                            "Schema %s updated" % schema_name)
+                            'Schema %s updated' % schema_name)
                     else:
                         self.logger.debug(
-                            "Schema %s unchanged" % schema_name)
+                            'Schema %s unchanged' % schema_name)
             # Time between checks for schema change
             self.safe_sleep(self.settings['sleep_time'])
         self.logger.debug('No longer checking schemas')
@@ -293,7 +293,7 @@ class ProducerManager(object):
                                          .get('log_level', 'DEBUG'))
         self.logger.setLevel(log_level)
         # self.logger.setLevel(logging.INFO)
-        if log_level == "DEBUG":
+        if log_level == 'DEBUG':
             self.app.debug = True
         self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings \
             .get('flask_settings', {}) \
@@ -302,7 +302,7 @@ class ProducerManager(object):
             .get('flask_settings', {}) \
             .get('max_connections', 3)
         server_ip = self.settings \
-            .get('server_ip', "")
+            .get('server_ip', '')
         server_port = int(self.settings
                           .get('server_port', 9005))
         self.worker_pool = Pool(pool_size)
@@ -334,17 +334,17 @@ class ProducerManager(object):
 
     def request_healthcheck(self):
         with self.app.app_context():
-            return Response({"healthy": True})
+            return Response({'healthy': True})
 
     @requires_auth
     def request_status(self):
         status = {
-            "kernel_connected": self.kernel is not None,  # This is a real object
-            "kafka_container_accessible": self.kafka_available(),
-            "kafka_broker_information": self.broker_info(),
+            'kernel_connected': self.kernel is not None,  # This is a real object
+            'kafka_container_accessible': self.kafka_available(),
+            'kafka_broker_information': self.broker_info(),
             # This is just a status flag
-            "kafka_submission_status": str(self.kafka),
-            "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
+            'kafka_submission_status': str(self.kafka),
+            'topics': {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
             return jsonify(**status)
@@ -440,12 +440,12 @@ class TopicManager(object):
         self.logger = self.context.logger
         self.name = schema['schema_name']
         self.realm = realm
-        self.offset = ""
+        self.offset = ''
         self.operating_status = TopicStatus.INITIALIZING
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
         self.status = {
-            "last_errors_set": {},
-            "last_changeset_status": {}
+            'last_errors_set': {},
+            'last_changeset_status': {}
         }
         self.change_set = {}
         self.successful_changes = []
@@ -454,19 +454,19 @@ class TopicManager(object):
         self.window_size_sec = self.context.settings.get('window_size_sec', 3)
         pg_requires = ['user', 'dbname', 'port', 'host', 'password']
         self.pg_creds = {key: self.context.settings.get(
-            "postgres_%s" % key) for key in pg_requires}
+            'postgres_%s' % key) for key in pg_requires}
         self.kafka_failure_wait_time = self.context.settings.get(
             'kafka_failure_wait_time', 10)
         try:
             topic_base = self.context.settings \
                 .get('topic_settings', {}) \
-                .get('name_modifier', "%s") \
+                .get('name_modifier', '%s') \
                 % self.name
             self.topic_name = f'{self.realm}.{topic_base}'
         except Exception:  # Bad Name
-            self.logger.critical(("invalid name_modifier using topic name for topic: %s."
-                                  " Update configuration for"
-                                  " topic_settings.name_modifier") % self.name)
+            self.logger.critical(('invalid name_modifier using topic name for topic: %s.'
+                                  ' Update configuration for'
+                                  ' topic_settings.name_modifier') % self.name)
             # This is a failure which could cause topics to collide. We'll kill the producer
             # so the configuration can be updated.
             sys.exit(1)
@@ -570,7 +570,7 @@ class TopicManager(object):
             self.operating_status = TopicStatus.LOCKED
             return
         self.logger.warn(f'{tag} Resetting Offset.')
-        self.set_offset("")
+        self.set_offset('')
         self.logger.info(f'{tag} Rebuilding Topic Producer')
         self.producer = Producer(**self.kafka_settings)
         self.logger.warn(f'{tag} Wipe Complete. /resume to complete operation.')
@@ -593,7 +593,7 @@ class TopicManager(object):
 
     def updates_available(self):
 
-        modified = "" if not self.offset else self.offset  # "" evals to < all strings
+        modified = '' if not self.offset else self.offset  # "" evals to < all strings
         query = sql.SQL(TopicManager.NEW_STR).format(
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
@@ -631,15 +631,15 @@ class TopicManager(object):
             elif lag_time < -30.0:
                 # Sometimes fractional negatives show up. More than 30 seconds is an issue though.
                 self.logger.critical(
-                    "INVALID LAG INTERVAL: %s. Check time settings on server." % lag_time)
+                    'INVALID LAG INTERVAL: %s. Check time settings on server.' % lag_time)
             _id = row.get('id')
-            self.logger.debug("WINDOW EXCLUDE: ID: %s, LAG: %s" %
+            self.logger.debug('WINDOW EXCLUDE: ID: %s, LAG: %s' %
                               (_id, lag_time))
             return False
         return fn
 
     def get_db_updates(self):
-        modified = "" if not self.offset else self.offset  # "" evals to < all strings
+        modified = '' if not self.offset else self.offset  # "" evals to < all strings
         query = sql.SQL(TopicManager.QUERY_STR).format(
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
@@ -717,13 +717,13 @@ class TopicManager(object):
             obj.write(msg.value())
             reader = DataFileReader(obj, DatumReader())
             for message in reader:
-                _id = message.get("id")
+                _id = message.get('id')
                 if err:
-                    self.logger.debug("NO-SAVE: %s in topic %s | err %s" %
+                    self.logger.debug('NO-SAVE: %s in topic %s | err %s' %
                                       (_id, self.topic_name, err.name()))
                     self.failed_changes[_id] = err
                 else:
-                    self.logger.debug("SAVE: %s in topic %s" %
+                    self.logger.debug('SAVE: %s in topic %s' %
                                       (_id, self.topic_name))
                     self.successful_changes.append(_id)
 
@@ -760,7 +760,7 @@ class TopicManager(object):
                 self.context.safe_sleep(self.wait_time)
                 continue
             try:
-                self.logger.debug("Getting Changeset for %s" % self.name)
+                self.logger.debug('Getting Changeset for %s' % self.name)
                 self.change_set = {}
                 new_rows = self.get_db_updates()
                 if not new_rows:
@@ -780,12 +780,12 @@ class TopicManager(object):
 
                     for row in new_rows:
                         _id = row['id']
-                        msg = row.get("payload")
-                        modified = row.get("modified")
+                        msg = row.get('payload')
+                        modified = row.get('modified')
                         if validate(self.schema, msg):
                             # Message validates against current schema
                             self.logger.debug(
-                                "ENQUEUE MSG TOPIC: %s, ID: %s, MOD: %s" % (
+                                'ENQUEUE MSG TOPIC: %s, ID: %s, MOD: %s' % (
                                     self.name,
                                     _id,
                                     modified
@@ -795,7 +795,7 @@ class TopicManager(object):
                         else:
                             # Message doesn't have the proper format for the current schema.
                             self.logger.critical(
-                                "SCHEMA_MISMATCH:NOT SAVED! TOPIC:%s, ID:%s" % (self.name, _id))
+                                'SCHEMA_MISMATCH:NOT SAVED! TOPIC:%s, ID:%s' % (self.name, _id))
 
                     writer.flush()
                     raw_bytes = bytes_writer.getvalue()
@@ -861,11 +861,11 @@ class TopicManager(object):
 
         # Timeout reached or all messages returned ( and not all failed )
 
-        self.status["last_changeset_status"] = {
-            "changes": change_set_size,
-            "failed": len(self.failed_changes),
-            "succeeded": len(self.successful_changes),
-            "timestamp": datetime.now().isoformat()
+        self.status['last_changeset_status'] = {
+            'changes': change_set_size,
+            'failed': len(self.failed_changes),
+            'succeeded': len(self.successful_changes),
+            'timestamp': datetime.now().isoformat()
         }
         if errors:
             self.handle_kafka_errors(change_set_size, all_failed=False)
@@ -885,10 +885,10 @@ class TopicManager(object):
             errors[error_type] = errors.get(error_type, 0) + 1
 
         last_error_set = {
-            "changes": change_set_size,
-            "errors": errors,
-            "outcome": "RETRY",
-            "timestamp": datetime.now().isoformat()
+            'changes': change_set_size,
+            'errors': errors,
+            'outcome': 'RETRY',
+            'timestamp': datetime.now().isoformat()
         }
 
         if not all_failed:
@@ -897,12 +897,12 @@ class TopicManager(object):
                 self.logger.critical('PRODUCER_FAILURE: T: %s ID %s , ERR_MSG %s' % (
                     self.name, _id, err.name()))
             dropped_messages = change_set_size - len(self.successful_changes)
-            errors["NO_REPLY"] = dropped_messages - len(self.failed_changes)
-            last_error_set["failed"] = len(self.failed_changes),
-            last_error_set["succeeded"] = len(self.successful_changes),
-            last_error_set["outcome"] = "MSGS_DROPPED : %s" % dropped_messages,
+            errors['NO_REPLY'] = dropped_messages - len(self.failed_changes)
+            last_error_set['failed'] = len(self.failed_changes),
+            last_error_set['succeeded'] = len(self.successful_changes),
+            last_error_set['outcome'] = 'MSGS_DROPPED : %s' % dropped_messages,
 
-        self.status["last_errors_set"] = last_error_set
+        self.status['last_errors_set'] = last_error_set
         if all_failed:
             self.context.kafka = KafkaStatus.SUBMISSION_FAILURE
         return
@@ -916,7 +916,7 @@ class TopicManager(object):
         # Get current offset from Database
         offset = Offset.get_offset(self.name)
         if offset:
-            self.logger.debug("Got offset for %s | %s" %
+            self.logger.debug('Got offset for %s | %s' %
                               (self.name, offset))
             return offset
         else:
@@ -928,7 +928,7 @@ class TopicManager(object):
     def set_offset(self, offset):
         # Set a new offset in the database
         new_offset = Offset.update(self.name, offset)
-        self.logger.debug("new offset for %s | %s" %
+        self.logger.debug('new offset for %s | %s' %
                           (self.name, new_offset))
         self.status['offset'] = new_offset
 

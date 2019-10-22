@@ -270,7 +270,7 @@ class XFormUtilsParsersTests(CustomTestCase):
                 ]
             }
         }
-        self.assertEqual(parse_xml_to_dict(xml_str), expected)
+        self.assertDictEqual(parse_xml_to_dict(xml_str), expected)
 
     def test__parse_xform_file(self):
         with open(self.samples['xform']['file-xls'], 'rb') as fp:
@@ -299,7 +299,7 @@ class XFormUtilsParsersTests(CustomTestCase):
         submission = parse_submission(data, self.samples['xform']['raw-xml'])
         self.assertNotEqual(list(submission.keys())[0], 'Something_that_is_not_None', submission.keys())
 
-        self.assertEqual(submission, expected, json.dumps(submission, indent=2))
+        self.assertDictEqual(submission, expected, json.dumps(submission, indent=2))
 
     def test__parse_submission__with_multilanguage(self):
         with open(self.samples['submission']['file-ok'], 'rb') as xml:
@@ -317,7 +317,7 @@ class XFormUtilsParsersTests(CustomTestCase):
         submission = parse_submission(data, self.samples['xform']['raw-xml-i18n'])
         self.assertNotEqual(list(submission.keys())[0], 'Something_that_is_not_None', submission.keys())
 
-        self.assertEqual(submission, expected, json.dumps(submission, indent=2))
+        self.assertDictEqual(submission, expected, json.dumps(submission, indent=2))
 
 
 class XFormUtilsAvroTests(CustomTestCase):
