@@ -118,7 +118,13 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     username = UsernameField()
-    password = serializers.CharField(style={'input_type': 'password'})
+    password = serializers.CharField(
+        allow_null=True,
+        default=None,
+        required=False,
+        style={'input_type': 'password'},
+        write_only=True,
+    )
 
     projects = MtPrimaryKeyRelatedField(
         allow_null=True,
@@ -135,28 +141,27 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     )
 
     def validate_password(self, value):
-        validate_pwd(value)
+        if value:
+            validate_pwd(value)
         return value
 
     def create(self, validated_data):
         projects = validated_data.pop('projects', None)
         raw_password = validated_data.pop('password', None)
+        if raw_password is None:
+            # password is mandatory to create the surveyor but not to update it
+            raise serializers.ValidationError({'password': [_('This field is mandatory')]})
+
         instance = self.Meta.model(**validated_data)
-        instance.set_password(raw_password)
         self._save(instance, raw_password, projects)
 
         return instance
 
     def update(self, instance, validated_data):
         projects = validated_data.pop('projects', None)
-        raw_password = None
+        raw_password = validated_data.pop('password', None)
         for attr, value in validated_data.items():
-            if attr == 'password':
-                if value != instance.password:
-                    instance.set_password(value)
-                    raw_password = value
-            else:
-                setattr(instance, attr, value)
+            setattr(instance, attr, value)
         self._save(instance, raw_password, projects)
 
         return instance
@@ -164,7 +169,10 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     def _save(self, instance, raw_password, projects):
         request = self.context['request']
 
+        if raw_password is not None and raw_password != instance.password:
+            instance.set_password(raw_password)
         instance.save()
+
         if projects is not None:
             instance.projects.set(projects)
         instance.groups.add(get_surveyor_group())
