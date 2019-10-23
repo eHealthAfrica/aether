@@ -157,7 +157,7 @@ class ExtractionManagerTests(TestCase):
         mock_response.status_code = 500
         mock_kernel_data_request.return_value = mock_response
         manager = ExtractionManager()
-        manager.PROCESSED_ENTITIES.appendleft({'name': 'test entity'})
+        manager.PROCESSED_ENTITIES.appendleft({'name': 'test entity', 'submission': 'id_1'})
         manager.PROCESSED_SUBMISSIONS.appendleft({
             'name': 'test submission',
             'tenant': TENANT,
