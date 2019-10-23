@@ -94,6 +94,6 @@ workflows:
       #           - feature/AET-557-travisci-to-circleci
       #           - /^release\-[0-9]+\.[0-9]+$/
 
-      - deploy:
+      - deploy
           # requires:
           #   - release
