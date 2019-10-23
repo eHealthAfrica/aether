@@ -42,9 +42,9 @@ elif [[ $GIT_BRANCH = "develop" ]]; then
     VERSION="alpha"
 
 else
-    VERSION="circleci"
-    # echo "Not permitted"
-    # exit 1
+
+    echo "Not permitted"
+    exit 1
 
 fi
 
@@ -75,7 +75,7 @@ echo "$LINE"
 
 pip install --user -q google-cloud-storage
 
-echo -n $GCS_KEY > ./.circleci/gcs_key.json
+echo -n $GCS_KEY > "$GOOGLE_APPLICATION_CREDENTIALS"
 
 python ./.circleci/push_version.py \
     --version $GCS_VERSION \
