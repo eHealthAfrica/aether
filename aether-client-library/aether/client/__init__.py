@@ -24,7 +24,7 @@ from urllib.parse import urlparse
 # monkey patch so that bulk insertion works
 from .patches import patched__marshal_object, patched__unmarshal_object
 import bravado_core
-bravado_core.marshal._marshal_object = patched__marshal_object  # noqa
+bravado_core.marshal._marshal_object = patched__marshal_object        # noqa
 bravado_core.unmarshal._unmarshal_object = patched__unmarshal_object  # noqa
 
 import bravado
@@ -165,7 +165,7 @@ spec and an error would be produced.
 
 def mockParam(name, op, swagger_spec):
     param_spec = {'name': name, 'in': 'query',
-                  'description': "", 'required': False, 'type': 'string'}
+                  'description': '', 'required': False, 'type': 'string'}
     return bravado_core.param.Param(swagger_spec, op, param_spec)
 
 
@@ -228,7 +228,7 @@ class AetherDecorator(ResourceDecorator):
                     )
                     break
                 except tuple(self.retry_exceptions) as err:
-                    LOG.debug("error %s in connection to client" % (err))
+                    LOG.debug('error %s in connection to client' % (err))
                     if x == dropped_retries - 1:
                         LOG.error('failed after %s connections to %s' %
                                   (x, future.operation.operation_id))
@@ -258,7 +258,7 @@ class AetherDecorator(ResourceDecorator):
 
     def _get_full_name(self, name):
         # Allows us to use for example 'entities.create' instead of 'entities.entities_create'
-        return "%s_%s" % (self.name, name)
+        return '%s_%s' % (self.name, name)
 
     def _verify_param(self, name, param_name):
         operation = getattr(self.resource, self._get_full_name(name))
@@ -268,7 +268,7 @@ class AetherDecorator(ResourceDecorator):
             operation.params[param_name] = mockParam(param_name, operation, self.swagger_spec)
             return True
         if param_name not in operation.params:
-            raise ValueError("%s has no parameter %s" % (name, param_name))
+            raise ValueError('%s has no parameter %s' % (name, param_name))
         return True
 
     def _verify_params(self, name, params):
@@ -276,7 +276,7 @@ class AetherDecorator(ResourceDecorator):
 
     def __iter__(self):
         # show available rpc calls
-        return iter([i.lstrip("%s_" % self.name) for i in self.__dir__()])
+        return iter([i.lstrip('%s_' % self.name) for i in self.__dir__()])
 
     def paginated(self, remote_function, start_page=1, ordering='modified', **kwargs):
         fn = getattr(self, remote_function)

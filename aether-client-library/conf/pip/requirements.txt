@@ -10,5 +10,6 @@ requests_oauthlib
 
 # Test libraries
 flake8
+flake8-quotes
 pytest
 pytest-runner
