@@ -270,7 +270,7 @@ class XFormUtilsParsersTests(CustomTestCase):
                 ]
             }
         }
-        self.assertDictEqual(parse_xml_to_dict(xml_str), expected)
+        self.assertEqual(parse_xml_to_dict(xml_str), expected)
 
     def test__parse_xform_file(self):
         with open(self.samples['xform']['file-xls'], 'rb') as fp:
@@ -278,7 +278,7 @@ class XFormUtilsParsersTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as fp:
             xml_content = parse_xform_file('xform.xml', fp)
 
-        self.assertDictEqual(
+        self.assertEqual(
             parse_xml_to_dict(xls_content),
             parse_xml_to_dict(xml_content),
             'The XLS form and the XML form should define both the same form'
@@ -299,7 +299,7 @@ class XFormUtilsParsersTests(CustomTestCase):
         submission = parse_submission(data, self.samples['xform']['raw-xml'])
         self.assertNotEqual(list(submission.keys())[0], 'Something_that_is_not_None', submission.keys())
 
-        self.assertDictEqual(submission, expected, json.dumps(submission, indent=2))
+        self.assertEqual(submission, expected, json.dumps(submission, indent=2))
 
     def test__parse_submission__with_multilanguage(self):
         with open(self.samples['submission']['file-ok'], 'rb') as xml:
@@ -317,7 +317,7 @@ class XFormUtilsParsersTests(CustomTestCase):
         submission = parse_submission(data, self.samples['xform']['raw-xml-i18n'])
         self.assertNotEqual(list(submission.keys())[0], 'Something_that_is_not_None', submission.keys())
 
-        self.assertDictEqual(submission, expected, json.dumps(submission, indent=2))
+        self.assertEqual(submission, expected, json.dumps(submission, indent=2))
 
 
 class XFormUtilsAvroTests(CustomTestCase):
