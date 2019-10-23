@@ -42,9 +42,9 @@ elif [[ $GIT_BRANCH = "develop" ]]; then
     VERSION="alpha"
 
 else
-
-    echo "Not permitted"
-    exit 1
+    VERSION="circleci"
+    # echo "Not permitted"
+    # exit 1
 
 fi
 
