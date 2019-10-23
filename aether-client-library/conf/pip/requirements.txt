@@ -4,12 +4,12 @@
 #                                                                              #
 ################################################################################
 
-bravado<=10.4.1       # breaking change
-bravado-core<=5.12.1  # breaks the the custom patches.py file
+bravado
 requests[security]
 requests_oauthlib
 
 # Test libraries
 flake8
+flake8-quotes
 pytest
 pytest-runner

@@ -48,26 +48,6 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
 
-# Profiling workaround
-# ------------------------------------------------------------------------------
-#
-# Issue: The entities bulk creation is failing with Silk enabled.
-# The reported bug, https://github.com/jazzband/django-silk/issues/348,
-# In the meantime we will disable silk for those requests.
-
-
-def silk_ignore_bulk_request(request):
-    if request.method in ('POST', 'PATCH',) and PROFILING_ENABLED:
-        try:
-            return 'record_requests' in request.session
-        except Exception:
-            return False
-    else:
-        return True
-
-
-SILKY_INTERCEPT_FUNC = silk_ignore_bulk_request
-
 # Upload files
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-DATA_UPLOAD_MAX_MEMORY_SIZE
@@ -97,3 +77,40 @@ REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
 REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
 WRITE_ENTITIES_TO_REDIS = os.environ.get('WRITE_ENTITIES_TO_REDIS', False)
+
+#
+# Issue: The entities bulk creation is failing with Silk enabled.
+# The reported bug, https://github.com/jazzband/django-silk/issues/348,
+# In the meantime we will disable silk for those requests.
+
+if PROFILING_ENABLED:
+    def ignore_entities_post(request):
+        return request.method != 'POST' or '/entities' not in request.path
+
+    SILKY_INTERCEPT_FUNC = ignore_entities_post
+
+
+# Swagger workaround
+# ------------------------------------------------------------------------------
+# The ``bravado`` lib in ``aether.client`` cannot deal with JSON fields handled
+# as objects, so we need to remove the ``JSONFieldInspector`` class
+# and continue using the ``StringDefaultFieldInspector`` one for them.
+
+SWAGGER_SETTINGS = {
+    # https://drf-yasg.readthedocs.io/en/stable/settings.html#default-field-inspectors
+    'DEFAULT_FIELD_INSPECTORS': [
+        'drf_yasg.inspectors.CamelCaseJSONFilter',
+        'drf_yasg.inspectors.ReferencingSerializerInspector',
+        'drf_yasg.inspectors.RelatedFieldInspector',
+        'drf_yasg.inspectors.ChoiceFieldInspector',
+        'drf_yasg.inspectors.FileFieldInspector',
+        'drf_yasg.inspectors.DictFieldInspector',
+        # Remove JSONFieldInspector
+        # 'drf_yasg.inspectors.JSONFieldInspector',
+        'drf_yasg.inspectors.HiddenFieldInspector',
+        'drf_yasg.inspectors.RecursiveFieldInspector',
+        'drf_yasg.inspectors.SerializerMethodFieldInspector',
+        'drf_yasg.inspectors.SimpleFieldInspector',
+        'drf_yasg.inspectors.StringDefaultFieldInspector',
+    ],
+}
