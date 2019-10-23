@@ -141,7 +141,7 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     )
 
     def validate_password(self, value):
-        if value:
+        if value is not None:
             validate_pwd(value)
         return value
 

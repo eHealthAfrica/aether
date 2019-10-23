@@ -239,7 +239,6 @@ class SerializersTests(CustomTestCase):
         updated_user_2.save()
         user_obj.refresh_from_db()
 
-        self.assertEqual(updated_user_2.data['username'], 'test2')
         self.assertEqual(user_obj.username, 'test2')
         self.assertEqual(user_obj.password, hashed_password_1)
 
@@ -256,8 +255,24 @@ class SerializersTests(CustomTestCase):
         updated_user_3.save()
         user_obj.refresh_from_db()
 
-        self.assertEqual(updated_user_3.data['username'], 'test3')
         self.assertEqual(user_obj.username, 'test3')
+        self.assertEqual(user_obj.password, hashed_password_1)
+
+        # update with a null password does not change the password
+        updated_user_4 = SurveyorSerializer(
+            user_obj,
+            data={
+                'username': 'test4',
+                'password': None,
+            },
+            context={'request': self.request},
+        )
+
+        self.assertTrue(updated_user_4.is_valid(), updated_user_4.errors)
+        updated_user_4.save()
+        user_obj.refresh_from_db()
+
+        self.assertEqual(user_obj.username, 'test4')
         self.assertEqual(user_obj.password, hashed_password_1)
 
     def test_surveyor_serializer__projects(self):
