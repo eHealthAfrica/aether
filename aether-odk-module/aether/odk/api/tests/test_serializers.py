@@ -20,6 +20,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, override_settings
 
+from rest_framework.serializers import ValidationError
+
 from . import CustomTestCase
 from ..serializers import SurveyorSerializer, XFormSerializer, MediaFileSerializer
 
@@ -151,10 +153,12 @@ class SerializersTests(CustomTestCase):
             },
             context={'request': self.request},
         )
-        self.assertFalse(user.is_valid(), user.errors)
-        self.assertEqual(user.errors['password'][0].code, 'blank')
-        self.assertEqual(str(user.errors['password'][0]),
-                         'This field is required.')
+        self.assertTrue(user.is_valid(), user.errors)
+        with self.assertRaises(ValidationError) as ve:
+            user.save()
+
+        self.assertIsNotNone(ve)
+        self.assertIn('This field is required.', str(ve.exception), ve)
 
     def test_surveyor_serializer__empty_password(self):
         user = SurveyorSerializer(
