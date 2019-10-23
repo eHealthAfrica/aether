@@ -17,8 +17,9 @@
 # under the License.
 
 import collections
+import requests
 from unittest import TestCase
-from .. import main
+from .. import main, start_web_server
 
 
 class InitTests(TestCase):
@@ -29,3 +30,9 @@ class InitTests(TestCase):
         self.assertEqual(container.PROCESSED_SUBMISSIONS, collections.deque())
         self.assertEqual(container.PROCESSED_ENTITIES, collections.deque())
         container.stop()
+
+    def test_web_server_setup(self):
+        ws = start_web_server()
+        response = requests.get('http://localhost:5007/exm/healthcheck')
+        self.assertTrue(response.json()['healthy'])
+        ws.stop()

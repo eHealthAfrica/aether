@@ -18,6 +18,7 @@
 
 import logging
 import json
+from threading import Thread
 from flask import Flask, Response
 from gevent.pool import Pool
 from gevent.pywsgi import WSGIServer
@@ -33,7 +34,11 @@ class WebApp():
         # Start endpoints
         self.app = Flask(__name__)  # pylint: disable=invalid-name
         self.add_endpoints()
-        self.serve()
+        self.web_thread = Thread(target=self.serve, daemon=True)
+        self.web_thread.start()
+
+    def stop(self):
+        self.http.stop()
 
     def add_endpoints(self):
         # URLS configured here

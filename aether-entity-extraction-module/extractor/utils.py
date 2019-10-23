@@ -21,7 +21,6 @@ import collections
 import logging
 from aether.python.redis.task import TaskHelper
 from aether.python.utils import request
-from base64 import b64encode
 from extractor import settings
 from typing import (
     Dict,
@@ -92,7 +91,7 @@ def kernel_data_request(url='', method='get', data=None, headers=None, realm=Non
     return json.loads(res.content.decode('utf-8'))
 
 
-def get_from_redis_or_kernel(id, _type, tenant, redis=None):
+def get_from_redis_or_kernel(id, model_type, tenant, redis=None):
     '''
     Get resource from redis by key or fetch from kernel and cache in redis.
 
@@ -107,23 +106,23 @@ def get_from_redis_or_kernel(id, _type, tenant, redis=None):
 
     try:
         # Get from redis
-        return redis.get(id, _type, tenant)
+        return redis.get(id, model_type, tenant)
     except Exception:
         # get from kernel
-        url = f'{_type}/{id}/'
+        url = f'{model_type}/{id}/'
         try:
             resource = kernel_data_request(url, realm=tenant)
             # cache on redis
-            redis.add(task=resource, type=_type, tenant=tenant)
+            redis.add(task=resource, type=model_type, tenant=tenant)
             return resource
         except Exception as e:
             logger.error(str(e))
             return None
 
 
-def remove_from_redis(id, _type, tenant, redis=None):
+def remove_from_redis(id, model_type, tenant, redis=None):
     redis = get_redis(redis)
-    return redis.remove(id, _type, tenant)
+    return redis.remove(id, model_type, tenant)
 
 
 def get_redis_keys_by_pattern(pattern, redis=None):

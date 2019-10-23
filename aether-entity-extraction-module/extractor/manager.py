@@ -242,9 +242,10 @@ class ExtractionManager():
                 entities_by_realm = {}
                 for entity in entities:
                     realm = submission_tenant[entity['submission']]
-                    if realm not in entities_by_realm:
-                        entities_by_realm[realm] = []
-                    entities_by_realm[realm].append(entity)
+                    try:
+                        entities_by_realm[realm].append(entity)
+                    except KeyError:
+                        entities_by_realm[realm] = [entity]
                 # post entities to kernel per realm
                 for r in entities_by_realm:
                     try:

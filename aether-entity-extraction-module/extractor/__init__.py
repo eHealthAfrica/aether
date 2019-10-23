@@ -29,5 +29,9 @@ def main():
         callback=extractor.add_to_queue,
         channel=SUBMISSION_CHANNEL
     )
-    WebApp()
     return extractor
+
+
+def start_web_server():
+    web_server = WebApp()
+    return web_server
