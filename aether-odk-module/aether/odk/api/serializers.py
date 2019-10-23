@@ -150,7 +150,7 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         raw_password = validated_data.pop('password', None)
         if raw_password is None:
             # password is mandatory to create the surveyor but not to update it
-            raise serializers.ValidationError({'password': [_('This field is mandatory')]})
+            raise serializers.ValidationError({'password': [_('This field is required.')]})
 
         instance = self.Meta.model(**validated_data)
         self._save(instance, raw_password, projects)

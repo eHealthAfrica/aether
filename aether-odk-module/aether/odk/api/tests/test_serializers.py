@@ -144,6 +144,18 @@ class SerializersTests(CustomTestCase):
         self.assertEqual(media_file.data['name'], 'audio.wav', 'take name from file')
         self.assertEqual(media_file.data['md5sum'], '900150983cd24fb0d6963f7d28e17f72')
 
+    def test_surveyor_serializer__no_password(self):
+        user = SurveyorSerializer(
+            data={
+                'username': 'test',
+            },
+            context={'request': self.request},
+        )
+        self.assertFalse(user.is_valid(), user.errors)
+        self.assertEqual(user.errors['password'][0].code, 'blank')
+        self.assertEqual(str(user.errors['password'][0]),
+                         'This field is required.')
+
     def test_surveyor_serializer__empty_password(self):
         user = SurveyorSerializer(
             data={
