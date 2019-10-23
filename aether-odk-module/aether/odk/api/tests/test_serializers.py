@@ -242,3 +242,56 @@ class SerializersTests(CustomTestCase):
         self.assertEqual(updated_user_2_obj.username, updated_user_2.data['username'])
         self.assertEqual(updated_user_2_obj.password, updated_user_obj.password)
         self.assertIn(self.surveyor_group, updated_user_2_obj.groups.all())
+
+    def test_surveyor_serializer__projects(self):
+        project_id = self.helper_create_uuid()
+        project = self.helper_create_project(project_id=project_id)
+
+        password = '~t]:vS3Q>e{2k]CE'
+        user = SurveyorSerializer(
+            data={
+                'username': 'test',
+                'password': password,
+                'projects': [],
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(user.is_valid(), user.errors)
+        user.save()
+
+        user_obj = get_user_model().objects.get(pk=user.data['id'])
+
+        self.assertEqual(user_obj.projects.count(), 0)
+
+        # add projects to the surveyors
+        updated_user = SurveyorSerializer(
+            user_obj,
+            data={
+                'username': 'test',
+                'password': password,
+                'projects': [project_id],
+            },
+            context={'request': self.request},
+        )
+
+        self.assertTrue(updated_user.is_valid(), updated_user.errors)
+        updated_user.save()
+
+        user_obj.refresh_from_db()
+        self.assertIn(project, user_obj.projects.all())
+
+        # check that if projects are not included they are not affected
+        updated_user_2 = SurveyorSerializer(
+            user_obj,
+            data={
+                'username': 'test',
+                'password': password,
+            },
+            context={'request': self.request},
+        )
+
+        self.assertTrue(updated_user_2.is_valid(), updated_user_2.errors)
+        updated_user_2.save()
+
+        user_obj.refresh_from_db()
+        self.assertIn(project, user_obj.projects.all())

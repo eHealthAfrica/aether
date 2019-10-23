@@ -121,8 +121,11 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     password = serializers.CharField(style={'input_type': 'password'})
 
     projects = MtPrimaryKeyRelatedField(
+        allow_null=True,
+        default=None,
         many=True,
         queryset=Project.objects.all(),
+        required=False,
     )
     project_names = serializers.SlugRelatedField(
         many=True,
@@ -136,7 +139,7 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         return value
 
     def create(self, validated_data):
-        projects = validated_data.pop('projects', [])
+        projects = validated_data.pop('projects', None)
         raw_password = validated_data.pop('password', None)
         instance = self.Meta.model(**validated_data)
         instance.set_password(raw_password)
@@ -145,7 +148,7 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        projects = validated_data.pop('projects', [])
+        projects = validated_data.pop('projects', None)
         raw_password = None
         for attr, value in validated_data.items():
             if attr == 'password':
@@ -162,7 +165,8 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         request = self.context['request']
 
         instance.save()
-        instance.projects.set(projects)
+        if projects is not None:
+            instance.projects.set(projects)
         instance.groups.add(get_surveyor_group())
         add_user_to_realm(request, instance)
 
