@@ -75,7 +75,7 @@ echo "$LINE"
 
 pip install --user -q google-cloud-storage
 
-echo -n $GCS_KEY > ./circleci/gcs_key.json
+echo -n $GCS_KEY > ./.circleci/gcs_key.json
 
 python ./.circleci/push_version.py \
     --version $GCS_VERSION \
