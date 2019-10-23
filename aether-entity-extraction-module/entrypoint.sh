@@ -48,7 +48,7 @@ function test {
     coverage erase
     cat /code/conf/extras/good_job.txt
     rm -R .pytest_cache
-    rm -rf tests/__pycache__
+    rm -rf extractor/tests/__pycache__
 }
 
 function test_all {
