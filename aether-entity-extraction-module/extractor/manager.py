@@ -224,7 +224,6 @@ class ExtractionManager():
                         url=f'submissions/bulk_update_extracted/',
                         method='patch',
                         data=submissions,
-                        is_bulk=True,
                     )
                     # remove submissions from redis
                     for s in res:
@@ -253,7 +252,6 @@ class ExtractionManager():
                             url='entities/',
                             method='post',
                             data=entities_by_realm[r],
-                            is_bulk=True,
                             realm=r
                         )
                     except Exception as e:

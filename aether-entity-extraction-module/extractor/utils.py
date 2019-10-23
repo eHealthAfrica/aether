@@ -69,7 +69,7 @@ class Task(NamedTuple):
     data: Union[Dict, None] = None
 
 
-def kernel_data_request(url='', method='get', data=None, headers=None, realm=None, is_bulk=False):
+def kernel_data_request(url='', method='get', data=None, headers=None, realm=None):
     '''
     Handle request calls to the kernel server
     '''
@@ -80,17 +80,6 @@ def kernel_data_request(url='', method='get', data=None, headers=None, realm=Non
     _realm = realm if realm else settings.GATEWAY_PUBLIC_REALM
 
     headers[settings.REALM_COOKIE] = _realm
-
-    if settings.GATEWAY_ENABLED:
-        kernel_url = settings.KERNEL_URL.format(realm=_realm)
-        username = settings.GATEWAY_USERNAME
-        password = settings.GATEWAY_PASSWORD
-        user_pass = b64encode(bytes(f'{username}:{password}', encoding='utf-8')).decode('ascii')
-        headers['Authorization'] = f'Basic {user_pass}'
-
-    if is_bulk:
-        kernel_url = settings.KERNEL_URL_INTERNAL
-        headers['Authorization'] = f'Token {settings.KERNEL_TOKEN}'
 
     res = request(
         method=method,
