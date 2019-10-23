@@ -18,8 +18,10 @@
 
 import json
 import collections
+import logging
 from aether.python.redis.task import TaskHelper
 from aether.python.utils import request
+from base64 import b64encode
 from extractor import settings
 from typing import (
     Dict,
@@ -52,6 +54,8 @@ MAX_WORKERS = 10
 REDIS_INSTANCE = None
 
 REDIS_TASK = TaskHelper(settings, REDIS_INSTANCE)
+logger = logging.getLogger(__name__)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 
 def get_redis(redis):
@@ -65,22 +69,41 @@ class Task(NamedTuple):
     data: Union[Dict, None] = None
 
 
-def kernel_data_request(url='', method='get', data=None, headers=None):
+def kernel_data_request(url='', method='get', data=None, headers=None, realm=None, is_bulk=False):
     '''
     Handle request calls to the kernel server
     '''
+
+    kernel_url = settings.KERNEL_URL
+    headers = headers or {}
+    headers['Authorization'] = f'Token {settings.KERNEL_TOKEN}'
+    _realm = realm if realm else settings.GATEWAY_PUBLIC_REALM
+
+    headers[settings.REALM_COOKIE] = _realm
+
+    if settings.GATEWAY_ENABLED:
+        kernel_url = settings.KERNEL_URL.format(realm=_realm)
+        username = settings.GATEWAY_USERNAME
+        password = settings.GATEWAY_PASSWORD
+        user_pass = b64encode(bytes(f'{username}:{password}', encoding='utf-8')).decode('ascii')
+        headers['Authorization'] = f'Basic {user_pass}'
+
+    if is_bulk:
+        kernel_url = settings.KERNEL_URL_INTERNAL
+        headers['Authorization'] = f'Token {settings.KERNEL_TOKEN}'
+
     res = request(
         method=method,
-        url=f'{settings.KERNEL_URL}/{url}',
+        url=f'{kernel_url}/{url}',
         json=data or {},
-        headers={'Authorization': f'Token {settings.KERNEL_TOKEN}'},
+        headers=headers,
     )
 
     res.raise_for_status()
     return json.loads(res.content.decode('utf-8'))
 
 
-def get_from_redis_or_kernel(id, type, tenant, redis=None):
+def get_from_redis_or_kernel(id, _type, tenant, redis=None):
     '''
     Get resource from redis by key or fetch from kernel and cache in redis.
 
@@ -95,22 +118,23 @@ def get_from_redis_or_kernel(id, type, tenant, redis=None):
 
     try:
         # Get from redis
-        return redis.get(id, type, tenant)
+        return redis.get(id, _type, tenant)
     except Exception:
         # get from kernel
-        url = f'{type}/{id}/'
+        url = f'{_type}/{id}/'
         try:
-            resource = kernel_data_request(url)
+            resource = kernel_data_request(url, realm=tenant)
             # cache on redis
-            redis.add(task=resource, type=type, tenant=tenant)
+            redis.add(task=resource, type=_type, tenant=tenant)
             return resource
-        except Exception:
+        except Exception as e:
+            logger.error(str(e))
             return None
 
 
-def remove_from_redis(id, type, tenant, redis=None):
+def remove_from_redis(id, _type, tenant, redis=None):
     redis = get_redis(redis)
-    return redis.remove(id, type, tenant)
+    return redis.remove(id, _type, tenant)
 
 
 def get_redis_keys_by_pattern(pattern, redis=None):

@@ -452,10 +452,12 @@ services:
     tty: true
     environment:
       DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
+      MULTITENANCY: ${MULTITENANCY}
 
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
       AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
-      DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
+      AETHER_KERNEL_URL_INTERNAL: http://kernel:8100
 
       REDIS_DB: 0
       REDIS_HOST: redis

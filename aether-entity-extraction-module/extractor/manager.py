@@ -205,19 +205,7 @@ class ExtractionManager():
         while self.PROCESSED_ENTITIES or self.PROCESSED_SUBMISSIONS or self.is_extracting:
             current_entity_size = len(self.PROCESSED_ENTITIES)
             current_submission_size = len(self.PROCESSED_SUBMISSIONS)
-            if current_entity_size:
-                entities = [self.PROCESSED_ENTITIES.pop() for _ in range(current_entity_size)]
-                # post to kernel entity
-                try:
-                    res = kernel_data_request(
-                        url='entities/',
-                        method='post',
-                        data=entities,
-                    )
-                except Exception as e:
-                    # todo: find a way to handle unsubmitted entities
-                    logger.debug(str(e))
-
+            submission_tenant = {}
             if current_submission_size:
                 submissions = [
                     self.PROCESSED_SUBMISSIONS.pop()
@@ -225,7 +213,6 @@ class ExtractionManager():
                 ]
 
                 # remove helper property
-                submission_tenant = {}
                 for submission in submissions:
                     submission_tenant[submission['id']] = submission['tenant']
                     submission.pop('tenant')
@@ -237,6 +224,7 @@ class ExtractionManager():
                         url=f'submissions/bulk_update_extracted/',
                         method='patch',
                         data=submissions,
+                        is_bulk=True,
                     )
                     # remove submissions from redis
                     for s in res:
@@ -247,7 +235,30 @@ class ExtractionManager():
                             self.redis
                         )
                 except Exception as e:
-                    logger.debug(str(e))
+                    logger.error(str(e))
+
+            if current_entity_size:
+                entities = [self.PROCESSED_ENTITIES.pop() for _ in range(current_entity_size)]
+                # group entities by realm
+                entities_by_realm = {}
+                for entity in entities:
+                    realm = submission_tenant[entity['submission']]
+                    if realm not in entities_by_realm:
+                        entities_by_realm[realm] = []
+                    entities_by_realm[realm].append(entity)
+                # post entities to kernel per realm
+                for r in entities_by_realm:
+                    try:
+                        res = kernel_data_request(
+                            url='entities/',
+                            method='post',
+                            data=entities_by_realm[r],
+                            is_bulk=True,
+                            realm=r
+                        )
+                    except Exception as e:
+                        # todo: find a way to handle unsubmitted entities
+                        logger.error(str(e))
 
             time.sleep(PUSH_TO_KERNEL_INTERVAL)
         self.is_pushing_to_kernel = False
