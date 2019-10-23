@@ -3,7 +3,8 @@ FROM python:3.7-slim-stretch
 ARG VERSION
 
 WORKDIR /code
-COPY ./ /code
+
+COPY ./conf/pip /code/conf/pip
 
 RUN apt-get update -qq && \
     apt-get -qq \
@@ -16,5 +17,7 @@ RUN apt-get update -qq && \
     pip install -q -r /code/conf/pip/requirements.txt && \
     mkdir -p /var/tmp && \
     echo $VERSION > /var/tmp/VERSION
+
+COPY ./ /code
 
 ENTRYPOINT ["/code/entrypoint.sh"]

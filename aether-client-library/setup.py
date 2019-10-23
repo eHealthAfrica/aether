@@ -39,8 +39,7 @@ setup(
     license='Apache2 License',
 
     install_requires=[
-        'bravado<=10.4.1',
-        'bravado-core<=5.12.1',
+        'bravado',
         'requests[security]',
         'requests_oauthlib'
     ],

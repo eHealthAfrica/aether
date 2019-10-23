@@ -21,20 +21,13 @@ from oauthlib import oauth2
 from time import sleep
 from urllib.parse import urlparse
 
-import bravado_core
-from .exceptions import AetherAPIException
-from . import basic_auth
-from . import oidc
-from .logger import LOG
-
 # monkey patch so that bulk insertion works
-from . import patches
-bravado_core.marshal.marshal_model = patches.marshal_model  # noqa
-bravado_core.marshal.marshal_object = patches.marshal_object  # noqa
-bravado_core.unmarshal.unmarshal_model = patches.unmarshal_model  # noqa
+from .patches import patched__marshal_object, patched__unmarshal_object
+import bravado_core
+bravado_core.marshal._marshal_object = patched__marshal_object        # noqa
+bravado_core.unmarshal._unmarshal_object = patched__unmarshal_object  # noqa
 
 import bravado
-
 from bravado.client import (
     SwaggerClient,
     ResourceDecorator,
@@ -43,6 +36,13 @@ from bravado.client import (
 )
 from bravado.config import bravado_config_from_config_dict
 from bravado.swagger_model import Loader
+
+from .exceptions import AetherAPIException
+from .basic_auth import BasicRealmClient
+from .oidc import OauthClient
+from .logger import LOG
+
+_SPEC_URL = '{}/v1/schema/?format=openapi'
 
 
 class Client(SwaggerClient):
@@ -61,7 +61,7 @@ class Client(SwaggerClient):
         keycloak_url=None,
         auth_type='oauth',
         # used to specify gateway endpoint ({realm}/{endpoint_name})
-        endpoint_name='kernel'
+        endpoint_name='kernel',
     ):
         if auth_type not in Client.AUTH_METHODS:
             raise ValueError(f'allowed auth_types are {Client.AUTH_METHODS}')
@@ -76,14 +76,19 @@ class Client(SwaggerClient):
         }
         url_info = urlparse(url)
         server = f'{url_info.scheme}://{url_info.netloc}'
-        spec_url = '%s/v1/schema/?format=openapi' % url
 
         if auth_type == 'basic':
             LOG.debug(f'Using basic auth on {server}')
-            auth = basic_auth.BasicRealmAuthenticator(server, realm, user, pw)
-            http_client = basic_auth.BasicRealmClient(auth)
+            http_client = BasicRealmClient()
+            http_client.set_realm_basic_auth(
+                host=url_info.netloc,
+                username=user,
+                password=pw,
+                realm=realm,
+            )
             loader = Loader(http_client, request_headers=None)
             try:
+                spec_url = _SPEC_URL.format(url)
                 LOG.debug(f'Loading schema from: {spec_url}')
                 spec_dict = loader.load_spec(spec_url)
             except bravado.exception.HTTPForbidden as forb:
@@ -95,13 +100,16 @@ class Client(SwaggerClient):
             ) as bgwe:
                 LOG.error('Server Unavailable')
                 raise bgwe
+
         else:
             LOG.debug(f'getting OIDC session on realm {realm}')
-            auth = oidc.OauthAuthenticator(
-                server, realm, user, pw,
-                keycloak_url, offline_token, endpoint_name)
-            spec_dict = auth.get_spec(spec_url)
-            http_client = oidc.OauthClient(auth)
+            http_client = OauthClient()
+            http_client.set_oauth(
+                url_info.netloc,
+                keycloak_url or f'{server}/auth', realm,
+                user, pw, offline_token, endpoint_name)
+            spec_url = _SPEC_URL.format(f'{server}/{realm}/{endpoint_name}')
+            spec_dict = http_client.authenticator.get_spec(spec_url)
 
         # We take this from the from_url class method of SwaggerClient
         # Apply bravado config defaults
@@ -157,7 +165,7 @@ spec and an error would be produced.
 
 def mockParam(name, op, swagger_spec):
     param_spec = {'name': name, 'in': 'query',
-                  'description': "", 'required': False, 'type': 'string'}
+                  'description': '', 'required': False, 'type': 'string'}
     return bravado_core.param.Param(swagger_spec, op, param_spec)
 
 
@@ -220,7 +228,7 @@ class AetherDecorator(ResourceDecorator):
                     )
                     break
                 except tuple(self.retry_exceptions) as err:
-                    LOG.debug("error %s in connection to client" % (err))
+                    LOG.debug('error %s in connection to client' % (err))
                     if x == dropped_retries - 1:
                         LOG.error('failed after %s connections to %s' %
                                   (x, future.operation.operation_id))
@@ -250,7 +258,7 @@ class AetherDecorator(ResourceDecorator):
 
     def _get_full_name(self, name):
         # Allows us to use for example 'entities.create' instead of 'entities.entities_create'
-        return "%s_%s" % (self.name, name)
+        return '%s_%s' % (self.name, name)
 
     def _verify_param(self, name, param_name):
         operation = getattr(self.resource, self._get_full_name(name))
@@ -260,7 +268,7 @@ class AetherDecorator(ResourceDecorator):
             operation.params[param_name] = mockParam(param_name, operation, self.swagger_spec)
             return True
         if param_name not in operation.params:
-            raise ValueError("%s has no parameter %s" % (name, param_name))
+            raise ValueError('%s has no parameter %s' % (name, param_name))
         return True
 
     def _verify_params(self, name, params):
@@ -268,7 +276,7 @@ class AetherDecorator(ResourceDecorator):
 
     def __iter__(self):
         # show available rpc calls
-        return iter([i.lstrip("%s_" % self.name) for i in self.__dir__()])
+        return iter([i.lstrip('%s_' % self.name) for i in self.__dir__()])
 
     def paginated(self, remote_function, start_page=1, ordering='modified', **kwargs):
         fn = getattr(self, remote_function)

@@ -22,7 +22,7 @@ import logging
 import pytest
 
 from .timeout import timeout as Timeout  # noqa
-from producer import *
+from producer import *  # noqa
 Offset = db.Offset
 
 log = logging.getLogger()

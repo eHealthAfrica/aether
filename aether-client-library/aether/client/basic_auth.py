@@ -17,50 +17,48 @@
 # under the License.
 
 import os
-import requests
 
-from bravado.requests_client import Authenticator, RequestsClient
-from requests.auth import HTTPBasicAuth
-from urllib.parse import urlparse
+from bravado.requests_client import BasicAuthenticator, RequestsClient
 
 
-class BasicRealmClient(RequestsClient):
-    """Synchronous HTTP client implementation.
-    """
-
-    def __init__(self, authenticator, ssl_verify=True, ssl_cert=None):
-        """
-        :param ssl_verify: Set to False to disable SSL certificate validation.
-            Provide the path to a CA bundle if you need to use a custom one.
-        :param ssl_cert: Provide a client-side certificate to use. Either a
-            sequence of strings pointing to the certificate (1) and the private
-             key (2), or a string pointing to the combined certificate and key.
-        """
-        self.session = requests.Session()
-        self.authenticator = authenticator
-        self.ssl_verify = ssl_verify
-        self.ssl_cert = ssl_cert
-
-    def apply_authentication(self, request):
-        return self.authenticator.apply(request)
-
-
-class BasicRealmAuthenticator(Authenticator):
+class BasicRealmAuthenticator(BasicAuthenticator):
 
     def __init__(
         self,
-        server,
-        realm,
-        user=None,
-        pw=None
+        host,
+        username,
+        password,
+        realm=None,
     ):
+        super(BasicRealmAuthenticator, self).__init__(host, username, password)
         self.realm = realm
-        self.auth = HTTPBasicAuth(user, pw)
-        self.host = urlparse(server).netloc
 
-    def apply(self, req):
-        req.auth = self.auth
+    def apply(self, request):
+        request = super(BasicRealmAuthenticator, self).apply(request)
+
         if self.realm:
             header = os.environ['KERNEL_REALM_HEADER']
-            req.headers[header] = self.realm
-        return req
+            request.headers[header] = self.realm
+        return request
+
+
+class BasicRealmClient(RequestsClient):
+    '''Synchronous HTTP client implementation.
+    '''
+
+    def set_realm_basic_auth(
+        self,
+        host,
+        username,
+        password,
+        realm=None,
+    ):
+        self.authenticator = BasicRealmAuthenticator(
+            host=host,
+            username=username,
+            password=password,
+            realm=realm,
+        )
+
+    def apply_authentication(self, request):
+        return self.authenticator.apply(request)
