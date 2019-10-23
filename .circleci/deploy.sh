@@ -73,13 +73,6 @@ echo "$LINE"
 echo "Deploying ${GCS_VERSION} release"
 echo "$LINE"
 
-openssl aes-256-cbc \
-    -K $encrypted_9112fb2807d4_key \
-    -iv $encrypted_9112fb2807d4_iv \
-    -in ./.circleci/gcs_key.json.enc \
-    -out "${GOOGLE_APPLICATION_CREDENTIALS}" \
-    -d
-
 pip install --user -q google-cloud-storage
 
 echo -n $GCS_KEY > ./circleci/gcs_key.json
