@@ -521,7 +521,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
             # this will call the fields validators in our case
             # `wrapper_validate_mapping_definition`
             self.full_clean()
-        except Exception as ve:
+        except ValidationError as ve:
             raise IntegrityError(ve)
 
         self.project = self.mappingset.project
