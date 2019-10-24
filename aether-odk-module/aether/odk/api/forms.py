@@ -18,6 +18,7 @@
 
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
 
 from .models import Project, XForm
@@ -73,10 +74,19 @@ class XFormForm(forms.ModelForm):
         xml_data = cleaned_data.get('xml_data')
 
         if not (xml_file or xml_data):
-            raise forms.ValidationError(
+            raise ValidationError(
                 _('Please upload an XLS Form or an XML File, or enter the XML data.'),
                 code='required',
             )
+
+    def validate_unique(self):
+        try:
+            # the default method exclude `form_id` and `version`
+            # because they are not in the form fields list
+            # (are calculated from `xml_data` value)
+            self.instance.validate_unique()
+        except ValidationError as e:
+            self._update_errors(e)
 
     class Meta:
         model = XForm
