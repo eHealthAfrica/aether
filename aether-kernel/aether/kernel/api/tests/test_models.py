@@ -70,11 +70,40 @@ class ModelsTests(TransactionTestCase):
         self.assertFalse(schemadecorator.is_accessible(REALM))
         self.assertIsNone(schemadecorator.get_realm())
 
+        with self.assertRaises(IntegrityError) as err:
+            models.MappingSet.objects.create(
+                revision='a sample revision',
+                name='a sample mapping set',
+                schema=EXAMPLE_SCHEMA,
+                input=EXAMPLE_SOURCE_DATA,
+                project=project,
+            )
+            self.assertIn('Input does not conform to schema', str(err.exception))
+
+        with self.assertRaises(IntegrityError) as err:
+            models.MappingSet.objects.create(
+                revision='a sample revision',
+                name='a sample mapping set',
+                schema={
+                    'name': 'TEST',
+                    'type': 'record',
+                },
+                input={},
+                project=project,
+            )
+            self.assertIn('Record schema requires a non-empty fields property.', str(err.exception))
+
         mappingset = models.MappingSet.objects.create(
             revision='a sample revision',
             name='a sample mapping set',
-            schema=EXAMPLE_SCHEMA,
-            input=EXAMPLE_SOURCE_DATA,
+            schema={
+                'name': 'TEST',
+                'type': 'record',
+                'fields': [
+                    {'name': 'name', 'type': 'string'},
+                ],
+            },
+            input={'name': 'a'},
             project=project,
         )
         self.assertEqual(str(mappingset), mappingset.name)
@@ -109,8 +138,7 @@ class ModelsTests(TransactionTestCase):
         mapping.definition = {'entities': {'a': str(uuid.uuid4())}}
         with self.assertRaises(IntegrityError) as err:
             mapping.save()
-        message = str(err.exception)
-        self.assertIn('is not valid under any of the given schemas', message)
+            self.assertIn('is not valid under any of the given schemas', str(err.exception))
 
         submission = models.Submission.objects.create(
             revision='a sample revision',
@@ -163,8 +191,8 @@ class ModelsTests(TransactionTestCase):
                 status='Publishable',
                 schemadecorator=schemadecorator,
             )
-        message = str(err.exception)
-        self.assertIn('Extracted record did not conform to registered schema', message)
+            self.assertIn('Extracted record did not conform to registered schema',
+                          str(err.exception))
 
         entity = models.Entity.objects.create(
             revision='a sample revision',
@@ -199,10 +227,8 @@ class ModelsTests(TransactionTestCase):
         entity.schemadecorator = schemadecorator_2
         with self.assertRaises(IntegrityError) as ie:
             entity.save()
-
-        self.assertIsNotNone(ie)
-        self.assertIn('Submission, Mapping and Schema Decorator MUST belong to the same Project',
-                      str(ie.exception))
+            self.assertIn('Submission, Mapping and Schema Decorator MUST belong to the same Project',
+                          str(ie.exception))
 
         # it works without submission
         entity.submission = None
@@ -279,9 +305,7 @@ class ModelsTests(TransactionTestCase):
         # it's trying to create a new schema (not replacing the current one)
         with self.assertRaises(IntegrityError) as ie:
             schema.save()
-
-        self.assertIsNotNone(ie)
-        self.assertIn('Key (name)=(a first schema name) already exists.', str(ie.exception))
+            self.assertIn('Key (name)=(a first schema name) already exists.', str(ie.exception))
 
         # if we change the name we'll end up with two schemas
         schema.name = 'a second schema name'
@@ -323,8 +347,10 @@ class ModelsTests(TransactionTestCase):
         # delete the schema decorator will delete one of the entities
         schemadecorator.delete()
 
-        self.assertFalse(models.Entity.objects.filter(pk=entity.pk).exists(), 'schema decorator CASCADE action')
-        self.assertTrue(models.Entity.objects.filter(pk=entity_2.pk).exists(), 'Not linked to the schema decorator')
+        self.assertFalse(models.Entity.objects.filter(pk=entity.pk).exists(),
+                         'schema decorator CASCADE action')
+        self.assertTrue(models.Entity.objects.filter(pk=entity_2.pk).exists(),
+                        'Not linked to the schema decorator')
 
         # create again the deleted instances
         schemadecorator = models.SchemaDecorator.objects.create(

@@ -74,7 +74,8 @@ class XFormForm(forms.ModelForm):
 
         if not (xml_file or xml_data):
             raise forms.ValidationError(
-                _('Please upload an XLS Form or an XML File, or enter the XML data.')
+                _('Please upload an XLS Form or an XML File, or enter the XML data.'),
+                code='required',
             )
 
     class Meta:

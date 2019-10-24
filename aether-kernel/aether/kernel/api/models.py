@@ -22,7 +22,6 @@ import uuid
 from datetime import datetime
 from hashlib import md5
 
-from aether.python.exceptions import ValidationError as AetherValidationError
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
@@ -34,14 +33,14 @@ from model_utils.models import TimeStampedModel
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.sdk.utils import json_prettified, get_file_content
 
+from aether.python.exceptions import ValidationError as AetherValidationError
+from aether.python.validators import validate_entity_payload
+
 from .constants import NAMESPACE
 from .validators import (
+    wrapper_validate_avro_schema,
     wrapper_validate_schema_definition,
     wrapper_validate_mapping_definition
-)
-from aether.python.validators import (
-    validate_avro_schema,
-    validate_entity_payload,
 )
 
 
@@ -207,7 +206,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     schema = JSONField(
         null=True,
         blank=True,
-        validators=[validate_avro_schema],
+        validators=[wrapper_validate_avro_schema],
         verbose_name=_('AVRO schema'),
     )
     input = JSONField(null=True, blank=True, verbose_name=_('input sample'))
@@ -221,6 +220,28 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     @property
     def schema_prettified(self):
         return json_prettified(self.schema)
+
+    def clean(self, *args, **kwargs):
+        super(MappingSet, self).clean(*args, **kwargs)
+
+        if self.schema and self.input:
+            try:
+                validate_entity_payload(
+                    schema_definition=self.schema,
+                    payload=self.input,
+                )
+            except AetherValidationError:
+                raise ValidationError({'input': _('Input does not conform to schema')})
+
+    def save(self, *args, **kwargs):
+        try:
+            # this will call the fields validators in our case
+            # `wrapper_validate_avro_schema`
+            self.full_clean()
+        except ValidationError as ve:
+            raise IntegrityError(ve)
+
+        super(MappingSet, self).save(*args, **kwargs)
 
     class Meta:
         default_related_name = 'mappingsets'
@@ -465,7 +486,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
     definition = JSONField(
         validators=[wrapper_validate_mapping_definition],
-        verbose_name=_('mapping rules')
+        verbose_name=_('mapping rules'),
     )
     is_active = models.BooleanField(default=True, verbose_name=_('active?'))
     is_read_only = models.BooleanField(default=False, verbose_name=_('read only?'))
@@ -496,22 +517,20 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
         return json_prettified(self.definition)
 
     def save(self, *args, **kwargs):
-        self.project = self.mappingset.project
-
         try:
-            # this will call the fields validators in our case `validate_mapping_definition`
+            # this will call the fields validators in our case
+            # `wrapper_validate_mapping_definition`
             self.full_clean()
-        except ValidationError as ve:
+        except Exception as ve:
             raise IntegrityError(ve)
 
+        self.project = self.mappingset.project
         super(Mapping, self).save(*args, **kwargs)
 
-        self.schemadecorators.clear()
-        entities = self.definition.get('entities', {})
-        sd_list = []
-        for entity_pk in entities.values():
-            sd_list.append(SchemaDecorator.objects.get(pk=entity_pk, project=self.project))
-        self.schemadecorators.add(*sd_list)
+        self.schemadecorators.set([
+            SchemaDecorator.objects.get(pk=entity_pk, project=self.project)
+            for entity_pk in self.definition.get('entities', {}).values()
+        ])
 
     def get_mt_instance(self):
         # because project can be null we need to override the method

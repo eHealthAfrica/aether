@@ -182,7 +182,7 @@ class SerializersTests(TestCase):
 
         with self.assertRaises(ValidationError) as ve:
             submission.save()
-        self.assertIn('Mappingset must be provided on initial submission',
+        self.assertIn('Mapping set must be provided on initial submission',
                       str(ve.exception))
 
         # check the submission with entity extraction errors
@@ -299,9 +299,11 @@ class SerializersTests(TestCase):
         self.assertTrue(bad_bulk.is_valid(), bad_bulk.errors)
         try:
             bad_bulk.save()
-            self.assertTrue(False), 'This should have raised a ValidationError'
+            self.assertTrue(False)  # This should have raised a ValidationError
         except ValidationError:
             self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)  # This should have raised a ValidationError
 
         # good bulk
 
