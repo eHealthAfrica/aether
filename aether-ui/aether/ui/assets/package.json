@@ -16,8 +16,8 @@
     "test-js": "jest --expand",
     "test-js-verbose": "TERM=dumb && jest --expand --colors --maxWorkers=1",
     "test": "npm run test-lint && npm run test-js",
-    "webpack": "webpack --config ./conf/webpack.prod.js",
-    "webpack-server": "node ./conf/webpack.server.js"
+    "build": "webpack --config ./conf/webpack.prod.js",
+    "start": "node ./conf/webpack.server.js"
   },
   "dependencies": {
     "avsc": "~5.4.0",
