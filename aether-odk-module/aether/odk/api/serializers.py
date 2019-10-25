@@ -108,6 +108,10 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
                 raise serializers.ValidationError({'xml_file': str(e)})
         value.pop('xml_file')
 
+        # check unique together
+        _instance = XForm(**{k: v for k, v in value.items() if k != 'surveyors'})
+        _instance.full_clean()
+
         return super(XFormSerializer, self).validate(value)
 
     class Meta:

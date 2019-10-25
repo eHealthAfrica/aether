@@ -9,6 +9,7 @@ def migrate__update_submissions(apps, schema_editor):
     for submission in Submissions.objects.all():
         submission.save() # ensures project from mappingset is linked to submission
 
+
 class Migration(migrations.Migration):
 
     dependencies = [

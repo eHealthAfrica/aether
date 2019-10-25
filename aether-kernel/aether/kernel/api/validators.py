@@ -20,6 +20,13 @@ from django.core.exceptions import ValidationError
 from aether.python import exceptions, validators
 
 
+def wrapper_validate_avro_schema(data):
+    try:
+        return validators.validate_avro_schema(data)
+    except exceptions.ValidationError as ve:
+        raise ValidationError(ve.message)
+
+
 def wrapper_validate_schemas(data):
     try:
         return validators.validate_schemas(data)
