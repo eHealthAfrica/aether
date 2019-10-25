@@ -3,10 +3,12 @@
 import django.contrib.postgres.fields.jsonb
 from django.db import migrations
 
+
 def migrate__update_schemadecorator(apps, schema_editor):
     SchemaDecorator = apps.get_model('kernel', 'SchemaDecorator')
     for sd in SchemaDecorator.objects.all():
         sd.save()  # default topic to { name: [schemadecorator.name] }
+
 
 class Migration(migrations.Migration):
 
