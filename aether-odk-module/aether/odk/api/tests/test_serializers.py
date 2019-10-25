@@ -53,6 +53,34 @@ class SerializersTests(CustomTestCase):
         self.assertIn('<h:head>', xform.data['xml_data'])
         self.assertIn('<h:body>', xform.data['xml_data'])
 
+    def test_xform_serializer__no_unique(self):
+        project_id = self.helper_create_uuid()
+        self.helper_create_project(project_id=project_id)
+
+        xform_1 = XFormSerializer(
+            data={
+                'project': project_id,
+                'description': 'test xml data',
+                'xml_data': self.samples['xform']['raw-xml'],
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(xform_1.is_valid(), xform_1.errors)
+        xform_1.save()
+
+        # create the same xForm again
+        xform_2 = XFormSerializer(
+            data={
+                'project': project_id,
+                'description': 'test xml data',
+                'xml_data': self.samples['xform']['raw-xml'],
+            },
+            context={'request': self.request},
+        )
+        self.assertFalse(xform_2.is_valid(), xform_2.errors)
+        self.assertIn('Xform with this Project, XForm ID and XForm version already exists.',
+                      xform_2.errors['__all__'])
+
     def test_xform_serializer__with_xml_file(self):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
             content = SimpleUploadedFile('xform.xml', data.read())

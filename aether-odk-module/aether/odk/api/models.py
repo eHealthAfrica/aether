@@ -229,17 +229,16 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         else:
             return ''
 
-    def save(self, *args, **kwargs):
-        try:
-            self.full_clean()
-        except ValidationError as ve:
-            raise IntegrityError(ve)
+    def clean_fields(self, *args, **kwargs):
+        super(XForm, self).clean_fields(*args, **kwargs)
 
         if not self.xml_data:
-            raise IntegrityError({'xml_data': [_('This field is required.')]})
+            raise ValidationError({'xml_data': [_('This field is required.')]})
 
         title, form_id, version = get_xform_data_from_xml(self.xml_data)
 
+        # to check uniqueness these fields must be set in this method
+        # or `full_clean` will not catch it.
         self.title = title
         self.form_id = form_id
         if version:
@@ -247,6 +246,12 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
             self.version = version
 
         self.update_hash(increase_version=version is None)
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+        except ValidationError as ve:
+            raise IntegrityError(ve)
 
         new_avro_schema = parse_xform_to_avro_schema(
             self.xml_data,
