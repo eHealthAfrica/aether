@@ -182,3 +182,31 @@ class ViewsTests(CustomTestCase):
         self.assertIn(self.formIdXml,
                       response.content.decode(),
                       'current user is granted surveyor')
+
+    def test__inactive(self):
+        self.xform.surveyors.add(self.surveyor)
+        self.xform.active = False
+        self.xform.save()
+
+        response = self.client.get(self.url_list, **self.headers_surveyor)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(self.formIdXml,
+                         response.content.decode(),
+                         'current user is granted surveyor but the xform is not active')
+
+        response = self.client.get(self.url_get_form, **self.headers_surveyor)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn(f'This xForm &quot;{self.xform.form_id}&quot; is no longer active.',
+                      response.content.decode())
+        self.assertEqual(response['User'], self.surveyor.username)
+        self.assertEqual(response['X-OpenRosa-Version'], '1.0')
+
+        response = self.client.get(self.url_get_media, **self.headers_surveyor)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn(f'This xForm &quot;{self.xform.form_id}&quot; is no longer active.',
+                      response.content.decode())
+
+        response = self.client.get(self.url_get_media_content, **self.headers_surveyor)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn(f'This xForm &quot;{self.xform.form_id}&quot; is no longer active.',
+                      response.content.decode())

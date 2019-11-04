@@ -99,6 +99,9 @@ class Project(ExportModelOperationsMixin('odk_project'), MtModelAbstract):
         help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'),
     )
 
+    def is_active(self):
+        return self.active
+
     def __str__(self):
         return f'{self.project_id} - {self.name}'
 
@@ -234,6 +237,9 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         else:
             return ''
 
+    def is_active(self):
+        return self.active and self.project.is_active()
+
     def clean_fields(self, *args, **kwargs):
         super(XForm, self).clean_fields(*args, **kwargs)
 
@@ -336,6 +342,9 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
     @property
     def download_url(self):
         return reverse('media-file-get-content', kwargs={'pk': self.pk})
+
+    def is_active(self):
+        return self.xform.is_active()
 
     def save(self, *args, **kwargs):
         # calculate hash
