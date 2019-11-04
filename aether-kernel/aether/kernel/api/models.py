@@ -57,12 +57,13 @@ Data model schema:
 | Project          |       | MappingSet       |       | Submission       |       | Attachment          |
 +==================+       +==================+       +==================+       +=====================+
 | Base fields      |<---+  | Base fields      |<---+  | Base fields      |<---+  | Base fields         |
-| salad_schema     |    |  | input            |    |  | payload          |    |  | attachment_file     |
-| jsonld_context   |    |  | schema           |    |  +::::::::::::::::::+    |  | md5sum              |
-| rdf_definition   |    |  +::::::::::::::::::+    +-<| mappingset       |    |  +:::::::::::::::::::::+
-+::::::::::::::::::+    +-<| project          |    |  | project(**)      |    +-<| submission          |
-| organizations(*) |    |  +------------------+    |  +------------------+    |  | submission_revision |
-+------------------+    |                          |                          |  +---------------------+
+| active           |    |  | input            |    |  | payload          |    |  | attachment_file     |
+| salad_schema     |    |  | schema           |    |  +::::::::::::::::::+    |  | md5sum              |
+| jsonld_context   |    |  +::::::::::::::::::+    +-<| mappingset       |    |  +:::::::::::::::::::::+
+| rdf_definition   |    +-<| project          |    |  | project(**)      |    +-<| submission          |
++::::::::::::::::::+    |  +------------------+    |  +------------------+    |  | submission_revision |
+| organizations(*) |    |                          |                          |  +---------------------+
++------------------+    |                          |                          |
                         |                          |                          |
 +------------------+    |  +------------------+    |  +------------------+    |  +------------------+
 | Schema           |    |  | SchemaDecorator  |    |  | Mapping          |    |  | Entity           |
@@ -115,6 +116,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
     .. note:: Extends from :class:`aether.sdk.multitenancy.models.MultitenancyBaseAbstract`
 
+    :ivar bool      active:          Active. Defaults to ``True``.
     :ivar text      salad_schema:    Salad schema (optional).
         Semantic Annotations for Linked Avro Data (SALAD)
         https://www.commonwl.org/draft-3/SchemaSalad.html
@@ -127,6 +129,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
 
     '''
 
+    active = models.BooleanField(default=True, verbose_name=_('active'))
     salad_schema = models.TextField(
         null=True,
         blank=True,

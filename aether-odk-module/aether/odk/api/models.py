@@ -46,13 +46,14 @@ Data model schema:
 | Project          |     | XForm            |     | MediaFile        |
 +==================+     +==================+     +==================+
 | project_id       |<-+  | id               |<-+  | id               |
-| name             |  |  | created_at       |  |  | name             |
-+::::::::::::::::::+  |  | modified_at      |  |  | media_file       |
-| surveyors (User) |  |  | description      |  |  +~~~~~~~~~~~~~~~~~~+
-+------------------+  |  | xml_data         |  |  | md5sum           |
-                      |  +~~~~~~~~~~~~~~~~~~+  |  +::::::::::::::::::+
-                      |  | title            |  +-<| xform            |
-                      |  | form_id          |     +------------------+
+| name             |  |  | active           |  |  | name             |
+| active           |  |  | created_at       |  |  | media_file       |
++::::::::::::::::::+  |  | modified_at      |  |  +~~~~~~~~~~~~~~~~~~+
+| surveyors (User) |  |  | description      |  |  | md5sum           |
++------------------+  |  | xml_data         |  |  +::::::::::::::::::+
+                      |  +~~~~~~~~~~~~~~~~~~+  +-<| xform            |
+                      |  | title            |     +------------------+
+                      |  | form_id          |
                       |  | version          |
                       |  | md5sum           |
                       |  | avro_schema      |
@@ -73,6 +74,7 @@ class Project(ExportModelOperationsMixin('odk_project'), MtModelAbstract):
 
     :ivar UUID  project_id:  Aether Kernel project ID (primary key).
     :ivar text  name:        Project name (might match the linked Kernel project name).
+    :ivar bool  active:      Active. Defaults to ``True``.
     :ivar User  surveyors:   List of granted surveyors (user with the group "surveyor").
         EVERYONE will be able to access this project xForms if none is indicated.
     '''
@@ -87,6 +89,7 @@ class Project(ExportModelOperationsMixin('odk_project'), MtModelAbstract):
     )
 
     name = models.TextField(null=True, blank=True, default='', verbose_name=_('name'))
+    active = models.BooleanField(default=True, verbose_name=_('active'))
 
     # the list of granted surveyors
     surveyors = models.ManyToManyField(
@@ -133,6 +136,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
 
     :ivar integer   id:           ID (primary key).
+    :ivar bool      active:       Active. Defaults to ``True``.
     :ivar datetime  created_at:   Creation timestamp.
     :ivar datetime  modified_at:  Last update timestamp.
     :ivar text      description:  Description.
@@ -151,6 +155,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
     '''
 
+    active = models.BooleanField(default=True, verbose_name=_('active'))
     created_at = models.DateTimeField(default=timezone.now, editable=False, verbose_name=_('created at'))
     modified_at = models.DateTimeField(default=timezone.now, verbose_name=_('modified at'))
     description = models.TextField(default='', null=True, blank=True, verbose_name=_('xForm description'))

@@ -38,8 +38,8 @@ Data model schema:
 +==================+     +==================+     +==================+
 | project_id       |<-+  | id               |<-+  | id               |
 | name             |  |  | created          |  |  | created          |
-+------------------+  |  | modified         |  |  | modified         |
-                      |  | name             |  |  | name             |
+| active           |  |  | modified         |  |  | modified         |
++------------------+  |  | name             |  |  | name             |
                       |  | schema           |  |  | entity_types     |
                       |  | input            |  |  | mapping_rules    |
                       |  +~~~~~~~~~~~~~~~~~~+  |  | mapping_errors   |
@@ -61,6 +61,7 @@ class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel, MtMode
 
     :ivar UUID  project_id:  Aether Kernel project ID (primary key).
     :ivar text  name:        Project name (might match the linked Kernel project name).
+    :ivar bool  active:      Active. Defaults to ``True``.
     '''
 
     # This is needed to submit data to kernel
@@ -72,6 +73,7 @@ class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel, MtMode
         help_text=_('This ID corresponds to an Aether Kernel project ID.'),
     )
     name = models.TextField(null=True, blank=True, default='', verbose_name=_('name'))
+    active = models.BooleanField(default=True, verbose_name=_('active'))
     is_default = models.BooleanField(
         default=False,
         editable=False,

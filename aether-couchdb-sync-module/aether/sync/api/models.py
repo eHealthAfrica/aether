@@ -40,8 +40,8 @@ Data model schema:
 +==================+     +==================+
 | project_id       |<-+  | id               |
 | name             |  |  | name             |
-+------------------+  |  | avro_schema      |
-                      |  +~~~~~~~~~~~~~~~~~~+
+| active           |  |  | avro_schema      |
++------------------+  |  +~~~~~~~~~~~~~~~~~~+
                       |  | kernel_id        |
                       |  +::::::::::::::::::+
                       +-<| project          |
@@ -69,6 +69,7 @@ class Project(ExportModelOperationsMixin('couchdbsync_project'), MtModelAbstract
 
     :ivar UUID  project_id:  Aether Kernel project ID (primary key).
     :ivar text  name:        Project name (might match the linked Kernel project name).
+    :ivar bool  active:      Active. Defaults to ``True``.
     '''
 
     # This is needed to submit data to kernel
@@ -81,6 +82,7 @@ class Project(ExportModelOperationsMixin('couchdbsync_project'), MtModelAbstract
     )
 
     name = models.TextField(null=True, blank=True, default='', verbose_name=_('name'))
+    active = models.BooleanField(default=True, verbose_name=_('active'))
 
     def __str__(self):
         return '{} - {}'.format(str(self.project_id), self.name)
