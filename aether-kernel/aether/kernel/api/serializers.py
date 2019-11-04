@@ -32,7 +32,6 @@ from aether.sdk.multitenancy.serializers import (
     MtModelSerializer,
 )
 
-from .constants import MAX_WORKERS
 from .utils import send_model_item_to_redis
 from aether.python import utils
 from aether.python.constants import MergeOptions as MERGE_OPTIONS

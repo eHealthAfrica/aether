@@ -25,7 +25,6 @@ from aether.sdk.conf.settings_aether import *  # noqa
 from aether.sdk.conf.settings_aether import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
-    PROFILING_ENABLED,
     REST_FRAMEWORK,
 )
 
