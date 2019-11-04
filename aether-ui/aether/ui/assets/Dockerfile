@@ -1,12 +1,11 @@
 FROM node:lts-slim
 
-RUN apt-get update -qq && \
-    apt-get -qq \
-        --yes \
-        --allow-downgrades \
-        --allow-remove-essential \
-        --allow-change-held-packages \
-        install git mercurial
+ARG VERSION
+ARG GIT_REVISION
+
+RUN mkdir -p /var/tmp && \
+    echo $VERSION > /var/tmp/VERSION && \
+    echo $GIT_REVISION > /var/tmp/REVISION
 
 WORKDIR /code/
 

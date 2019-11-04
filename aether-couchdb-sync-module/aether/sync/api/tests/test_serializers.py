@@ -123,5 +123,4 @@ class SerializersTests(TestCase):
         with self.assertRaises(ValidationError) as ve:
             user1_upd.save()
 
-        self.assertIsNotNone(ve)
-        self.assertIn('email field cannot be changed.', str(ve.exception))
+            self.assertIn('email field cannot be changed.', str(ve.exception))

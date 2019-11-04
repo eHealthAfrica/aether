@@ -20,6 +20,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, override_settings
 
+from rest_framework.serializers import ValidationError
+
 from . import CustomTestCase
 from ..serializers import SurveyorSerializer, XFormSerializer, MediaFileSerializer
 
@@ -50,6 +52,34 @@ class SerializersTests(CustomTestCase):
         self.assertIn('<h:html', xform.data['xml_data'])
         self.assertIn('<h:head>', xform.data['xml_data'])
         self.assertIn('<h:body>', xform.data['xml_data'])
+
+    def test_xform_serializer__no_unique(self):
+        project_id = self.helper_create_uuid()
+        self.helper_create_project(project_id=project_id)
+
+        xform_1 = XFormSerializer(
+            data={
+                'project': project_id,
+                'description': 'test xml data',
+                'xml_data': self.samples['xform']['raw-xml'],
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(xform_1.is_valid(), xform_1.errors)
+        xform_1.save()
+
+        # create the same xForm again
+        xform_2 = XFormSerializer(
+            data={
+                'project': project_id,
+                'description': 'test xml data',
+                'xml_data': self.samples['xform']['raw-xml'],
+            },
+            context={'request': self.request},
+        )
+        self.assertFalse(xform_2.is_valid(), xform_2.errors)
+        self.assertIn('Xform with this Project, XForm ID and XForm version already exists.',
+                      xform_2.errors['__all__'])
 
     def test_xform_serializer__with_xml_file(self):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
@@ -144,6 +174,20 @@ class SerializersTests(CustomTestCase):
         self.assertEqual(media_file.data['name'], 'audio.wav', 'take name from file')
         self.assertEqual(media_file.data['md5sum'], '900150983cd24fb0d6963f7d28e17f72')
 
+    def test_surveyor_serializer__no_password(self):
+        user = SurveyorSerializer(
+            data={
+                'username': 'test',
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(user.is_valid(), user.errors)
+        with self.assertRaises(ValidationError) as ve:
+            user.save()
+
+        self.assertIsNotNone(ve)
+        self.assertIn('This field is required.', str(ve.exception), ve)
+
     def test_surveyor_serializer__empty_password(self):
         user = SurveyorSerializer(
             data={
@@ -188,21 +232,24 @@ class SerializersTests(CustomTestCase):
             context={'request': self.request},
         )
         self.assertTrue(user.is_valid(), user.errors)
+        user.save()
+        self.assertNotIn(
+            'password', user.data,
+            'Password is not included within the serializer data')
 
     def test_surveyor_serializer__create_and_update(self):
-        password = '~t]:vS3Q>e{2k]CE'
         user = SurveyorSerializer(
             data={
                 'username': 'test',
-                'password': password,
+                'password': '~t]:vS3Q>e{2k]CE',
             },
             context={'request': self.request},
         )
         self.assertTrue(user.is_valid(), user.errors)
         user.save()
         user_obj = get_user_model().objects.get(pk=user.data['id'])
+        hashed_password = user_obj.password
 
-        self.assertNotEqual(user.data['password'], password, 'no raw password')
         self.assertIn(self.surveyor_group, user_obj.groups.all(), 'has the group "surveyor"')
 
         updated_user = SurveyorSerializer(
@@ -216,29 +263,108 @@ class SerializersTests(CustomTestCase):
 
         self.assertTrue(updated_user.is_valid(), updated_user.errors)
         updated_user.save()
-        updated_user_obj = get_user_model().objects.get(pk=updated_user.data['id'])
 
-        self.assertNotEqual(updated_user.data['password'], user.data['password'])
-        self.assertEqual(updated_user_obj.password, user_obj.password)
-        self.assertIn(self.surveyor_group, updated_user_obj.groups.all())
+        user_obj.refresh_from_db()
+        hashed_password_1 = user_obj.password
+
+        self.assertNotEqual(hashed_password_1, hashed_password)
 
         # update with the hashed password does not change the password
         updated_user_2 = SurveyorSerializer(
-            updated_user_obj,
+            user_obj,
             data={
                 'username': 'test2',
-                'password': updated_user_obj.password,
+                'password': hashed_password_1,
             },
             context={'request': self.request},
         )
 
         self.assertTrue(updated_user_2.is_valid(), updated_user_2.errors)
         updated_user_2.save()
-        updated_user_2_obj = get_user_model().objects.get(pk=updated_user_2.data['id'])
+        user_obj.refresh_from_db()
 
-        self.assertEqual(updated_user_2.data['username'], 'test2')
-        self.assertEqual(updated_user_2.data['password'], updated_user.data['password'])
+        self.assertEqual(user_obj.username, 'test2')
+        self.assertEqual(user_obj.password, hashed_password_1)
 
-        self.assertEqual(updated_user_2_obj.username, updated_user_2.data['username'])
-        self.assertEqual(updated_user_2_obj.password, updated_user_obj.password)
-        self.assertIn(self.surveyor_group, updated_user_2_obj.groups.all())
+        # update without password does not change the password
+        updated_user_3 = SurveyorSerializer(
+            user_obj,
+            data={
+                'username': 'test3',
+            },
+            context={'request': self.request},
+        )
+
+        self.assertTrue(updated_user_3.is_valid(), updated_user_3.errors)
+        updated_user_3.save()
+        user_obj.refresh_from_db()
+
+        self.assertEqual(user_obj.username, 'test3')
+        self.assertEqual(user_obj.password, hashed_password_1)
+
+        # update with a null password does not change the password
+        updated_user_4 = SurveyorSerializer(
+            user_obj,
+            data={
+                'username': 'test4',
+                'password': None,
+            },
+            context={'request': self.request},
+        )
+
+        self.assertTrue(updated_user_4.is_valid(), updated_user_4.errors)
+        updated_user_4.save()
+        user_obj.refresh_from_db()
+
+        self.assertEqual(user_obj.username, 'test4')
+        self.assertEqual(user_obj.password, hashed_password_1)
+
+    def test_surveyor_serializer__projects(self):
+        project_id = self.helper_create_uuid()
+        project = self.helper_create_project(project_id=project_id)
+
+        user = SurveyorSerializer(
+            data={
+                'username': 'test',
+                'password': '~t]:vS3Q>e{2k]CE',
+                'projects': [],
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(user.is_valid(), user.errors)
+        user.save()
+
+        user_obj = get_user_model().objects.get(pk=user.data['id'])
+
+        self.assertEqual(user_obj.projects.count(), 0)
+
+        # add projects to the surveyors
+        updated_user = SurveyorSerializer(
+            user_obj,
+            data={
+                'username': 'test',
+                'projects': [project_id],
+            },
+            context={'request': self.request},
+        )
+
+        self.assertTrue(updated_user.is_valid(), updated_user.errors)
+        updated_user.save()
+
+        user_obj.refresh_from_db()
+        self.assertIn(project, user_obj.projects.all())
+
+        # check that if projects are not included they are not affected
+        updated_user_2 = SurveyorSerializer(
+            user_obj,
+            data={
+                'username': 'test',
+            },
+            context={'request': self.request},
+        )
+
+        self.assertTrue(updated_user_2.is_valid(), updated_user_2.errors)
+        updated_user_2.save()
+
+        user_obj.refresh_from_db()
+        self.assertIn(project, user_obj.projects.all())

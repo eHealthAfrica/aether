@@ -212,7 +212,7 @@ class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     def create(self, validated_data):
         if not validated_data.get('mappingset'):
             raise serializers.ValidationError(
-                _('Mappingset must be provided on initial submission')
+                {'mappingset': [_('Mapping set must be provided on initial submission')]}
             )
 
         return super(SubmissionSerializer, self).create(validated_data)

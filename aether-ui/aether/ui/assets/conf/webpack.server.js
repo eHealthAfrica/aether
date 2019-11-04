@@ -39,6 +39,9 @@ const webpackOptions = Object.assign(
     production: false,
     stylesAsCss: false,
 
+    jsFilename: '[name]-[hash].js',
+    cssFilename: '[name]-[chunkhash].css',
+
     hmr: HMR_URL,
 
     output: {

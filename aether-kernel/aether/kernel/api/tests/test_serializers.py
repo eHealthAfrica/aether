@@ -182,8 +182,8 @@ class SerializersTests(TestCase):
 
         with self.assertRaises(ValidationError) as ve:
             submission.save()
-        self.assertIn('Mappingset must be provided on initial submission',
-                      str(ve.exception))
+            self.assertIn('Mapping set must be provided on initial submission',
+                          str(ve.exception))
 
         # check the submission with entity extraction errors
         submission = serializers.SubmissionSerializer(
@@ -229,8 +229,8 @@ class SerializersTests(TestCase):
 
         with self.assertRaises(Exception) as ve:
             entity.save()
-        self.assertIn('Extracted record did not conform to registered schema',
-                      str(ve.exception))
+            self.assertIn('Extracted record did not conform to registered schema',
+                          str(ve.exception))
 
         # create entity
         entity_2 = serializers.EntitySerializer(
@@ -261,8 +261,8 @@ class SerializersTests(TestCase):
 
         with self.assertRaises(Exception) as ve_3:
             entity_3.save()
-        self.assertIn('Extracted record did not conform to registered schema',
-                      str(ve_3.exception))
+            self.assertIn('Extracted record did not conform to registered schema',
+                          str(ve_3.exception))
 
         entity_4 = serializers.EntitySerializer(
             models.Entity.objects.get(pk=entity_2.data['id']),
@@ -293,9 +293,11 @@ class SerializersTests(TestCase):
         self.assertTrue(bad_bulk.is_valid(), bad_bulk.errors)
         try:
             bad_bulk.save()
-            self.assertTrue(False), 'This should have raised a ValidationError'
+            self.assertTrue(False)  # This should have raised a ValidationError
         except ValidationError:
             self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)  # This should have raised a ValidationError
 
         # good bulk
 

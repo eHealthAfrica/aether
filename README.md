@@ -75,6 +75,15 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 ./scripts/build_docker_credentials.sh > .env
 ```
 
+##### Set up Keycloak
+
+```bash
+./scripts/setup_keycloak.sh
+```
+
+Creates the keycloak database and the default realm+client along with the first user
+(find credentials in the `.env` file).
+
 ##### Build containers and start the applications
 
 ```bash
