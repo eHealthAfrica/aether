@@ -104,9 +104,17 @@ def kernel_artefacts_to_ui_artefacts(request):
 
         if not models.Project.objects.filter(pk=project_id).exists():
             # create the project
-            models.Project.objects.create(project_id=project_id, name=kernel_project['name'])
+            models.Project.objects.create(
+                project_id=project_id,
+                name=kernel_project['name'],
+                active=kernel_project['active'],
+            )
 
         project = models.Project.objects.get(pk=project_id)
+        project.active = kernel_project['active']
+        # project.name = kernel_project['name']  # update name???
+        project.save()
+
         project.add_to_realm(request)
 
         # fetch linked mapping sets
