@@ -18,13 +18,12 @@
 
 from django.db import transaction
 from django.db.models import Count
-from django.conf import settings
 from django.forms.models import model_to_dict
 from aether.python.redis.task import TaskHelper
+from django.conf import settings
 
 from .constants import SUBMISSION_BULK_UPDATEABLE_FIELDS
-from . import models
-
+from . import models, redis
 
 REDIS_TASK = TaskHelper(settings)
 
@@ -165,6 +164,16 @@ def send_model_item_to_redis(model_item):
     realm = model_item.get_realm() \
         if model_name is not models.Schema._meta.default_related_name \
         and model_item.get_realm() else settings.DEFAULT_REALM
+
+    if model_name not in (
+        models.Entity._meta.default_related_name,
+        models.Project._meta.default_related_name,
+        models.Schema._meta.default_related_name,
+    ):
+        project = model_item.project
+        cache_model_name = 'schema_decorators' \
+            if model_name is models.SchemaDecorator._meta.default_related_name else model_name
+        redis.cache_project_artefacts(project, cache_model_name, str(model_item.pk))
 
     if model_name is models.Entity._meta.default_related_name:
         if settings.WRITE_ENTITIES_TO_REDIS:    # pragma: no cover : .env settings

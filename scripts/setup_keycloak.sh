@@ -57,7 +57,7 @@ EOSQL
 start_container keycloak $KC_URL
 
 KC_ID=$(docker-compose ps -q keycloak)
-KCADM="docker container exec -i ${KC_ID} ./keycloak/bin/kcadm.sh"
+KCADM="docker container exec -i ${KC_ID} ./opt/jboss/keycloak/bin/kcadm.sh"
 
 echo_message "Connecting to keycloak server..."
 $KCADM \

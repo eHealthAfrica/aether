@@ -648,27 +648,6 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
     def clean(self):
         super(Entity, self).clean()
 
-        # check linked projects
-        project_ids = set()
-        possible_project = None
-        if self.schemadecorator:
-            project_ids.add(self.schemadecorator.project.pk)
-            possible_project = self.schemadecorator.project
-        if self.submission:
-            project_ids.add(self.submission.project.pk)
-            possible_project = self.submission.project
-        if self.mapping:
-            project_ids.add(self.mapping.project.pk)
-            possible_project = self.mapping.project
-
-        if len(project_ids) > 1:
-            raise ValidationError(_('Submission, Mapping and Schema Decorator MUST belong to the same Project'))
-        elif len(project_ids) == 1:
-            self.project = possible_project
-
-        if self.schemadecorator:  # redundant values taken from schema decorator
-            self.schema = self.schemadecorator.schema
-
         if self.mapping and not self.mapping_revision:
             self.mapping_revision = self.mapping.revision
 
@@ -677,7 +656,8 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         else:
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
 
-        if self.schema:
+        if self.schemadecorator:
+            self.schema = self.schemadecorator.schema  # redundant values taken from schema decorator
             try:
                 validate_entity_payload(
                     schema_definition=self.schema.definition,
@@ -688,7 +668,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     def save(self, *args, **kwargs):
         try:
-            self.full_clean()
+            self.clean()
         except Exception as ve:
             raise IntegrityError(ve)
 

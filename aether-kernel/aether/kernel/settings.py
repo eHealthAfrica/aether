@@ -78,17 +78,6 @@ REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
 WRITE_ENTITIES_TO_REDIS = os.environ.get('WRITE_ENTITIES_TO_REDIS', False)
 
-#
-# Issue: The entities bulk creation is failing with Silk enabled.
-# The reported bug, https://github.com/jazzband/django-silk/issues/348,
-# In the meantime we will disable silk for those requests.
-
-if PROFILING_ENABLED:
-    def ignore_entities_post(request):
-        return request.method != 'POST' or '/entities' not in request.path
-
-    SILKY_INTERCEPT_FUNC = ignore_entities_post
-
 
 # Swagger workaround
 # ------------------------------------------------------------------------------

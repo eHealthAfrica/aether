@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import concurrent
 from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
@@ -153,7 +152,6 @@ class AttachmentSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
 
 class SubmissionListSerializer(serializers.ListSerializer):
-
     def create(self, validated_data):
         submissions = [models.Submission(**s) for s in validated_data]
         for submission in submissions:
@@ -161,11 +159,10 @@ class SubmissionListSerializer(serializers.ListSerializer):
 
         # bulk database operation
         results = models.Submission.objects.bulk_create(submissions)
-        #  send to redis
+        # send to redis
         submission_list = list(submissions)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            while submission_list:
-                executor.submit(send_model_item_to_redis, submission_list.pop())
+        for s in submission_list:
+            send_model_item_to_redis(s)
         return results
 
 
@@ -285,17 +282,20 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
 class EntityListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
-        # remove helper field
-        [i.pop('merge') for i in validated_data]
-        entities = [models.Entity(**e) for e in validated_data]
         errors = []
-        for e in entities:
+        entities = []
+        # remove helper field and validate entity
+        for i in validated_data:
+            i.pop('merge')
             try:
-                # validate entities
-                e.clean()
-            except Exception as err:
-                # either the generated or passed ID.
-                errors.append((e.id, err))
+                # set ignore_submission_check to True to avoid a race condition on bulk submissions
+                i['project'] = validators.validate_entity_project(i)
+                entity = models.Entity(**i)
+                entity.clean()
+                entities.append(entity)
+            except Exception as e:
+                errors.append(str(e))
+
         if errors:
             # reject ALL if ANY invalid entities are included
             raise(serializers.ValidationError(errors))
@@ -377,7 +377,9 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     def create(self, validated_data):
         # remove helper field
         validated_data.pop('merge')
+
         try:
+            validated_data['project'] = validators.validate_entity_project(validated_data)
             return super(EntitySerializer, self).create(validated_data)
         except Exception as e:
             raise serializers.ValidationError(e)
