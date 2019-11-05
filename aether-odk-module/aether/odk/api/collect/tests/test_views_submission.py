@@ -63,6 +63,19 @@ class SubmissionTests(CustomTestCase):
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.content)
 
+        # submit response for inactive xForm entry
+        xform = self.helper_create_xform(
+            surveyor=self.surveyor,
+            xml_data=self.samples['xform']['raw-xml'],
+        )
+        xform.active = False
+        xform.save()
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_surveyor)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.content)
+        self.assertIn(f'This xForm &quot;{xform.form_id}&quot; is no longer active.',
+                      response.content.decode())
+
     def test__submission__422(self):
         # submit without xml file
         response = self.client.post(self.url, {}, **self.headers_surveyor)
