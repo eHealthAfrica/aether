@@ -22,7 +22,6 @@ import uuid
 from datetime import datetime
 from hashlib import md5
 
-from aether.python.exceptions import ValidationError as AetherValidationError
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError, transaction
@@ -34,14 +33,14 @@ from model_utils.models import TimeStampedModel
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.sdk.utils import json_prettified, get_file_content
 
+from aether.python.exceptions import ValidationError as AetherValidationError
+from aether.python.validators import validate_entity_payload
+
 from .constants import NAMESPACE
 from .validators import (
+    wrapper_validate_avro_schema,
     wrapper_validate_schema_definition,
     wrapper_validate_mapping_definition
-)
-from aether.python.validators import (
-    validate_avro_schema,
-    validate_entity_payload,
 )
 from .utils import send_model_item_to_redis
 
@@ -211,7 +210,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     schema = JSONField(
         null=True,
         blank=True,
-        validators=[validate_avro_schema],
+        validators=[wrapper_validate_avro_schema],
         verbose_name=_('AVRO schema'),
     )
     input = JSONField(null=True, blank=True, verbose_name=_('input sample'))
@@ -226,7 +225,26 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     def schema_prettified(self):
         return json_prettified(self.schema)
 
+    def clean(self, *args, **kwargs):
+        super(MappingSet, self).clean(*args, **kwargs)
+
+        if self.schema and self.input:
+            try:
+                validate_entity_payload(
+                    schema_definition=self.schema,
+                    payload=self.input,
+                )
+            except AetherValidationError:
+                raise ValidationError({'input': _('Input does not conform to schema')})
+
     def save(self, *args, **kwargs):
+        try:
+            # this will call the fields validators in our case
+            # `wrapper_validate_avro_schema`
+            self.full_clean()
+        except ValidationError as ve:
+            raise IntegrityError(ve)
+
         super(MappingSet, self).save(*args, **kwargs)
         send_model_item_to_redis(self)
 
@@ -487,7 +505,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
     definition = JSONField(
         validators=[wrapper_validate_mapping_definition],
-        verbose_name=_('mapping rules')
+        verbose_name=_('mapping rules'),
     )
     is_active = models.BooleanField(default=True, verbose_name=_('active?'))
     is_read_only = models.BooleanField(default=False, verbose_name=_('read only?'))
@@ -518,22 +536,20 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
         return json_prettified(self.definition)
 
     def save(self, *args, **kwargs):
-        self.project = self.mappingset.project
-
         try:
-            # this will call the fields validators in our case `validate_mapping_definition`
+            # this will call the fields validators in our case
+            # `wrapper_validate_mapping_definition`
             self.full_clean()
         except ValidationError as ve:
             raise IntegrityError(ve)
 
+        self.project = self.mappingset.project
         super(Mapping, self).save(*args, **kwargs)
 
-        self.schemadecorators.clear()
-        entities = self.definition.get('entities', {})
-        sd_list = []
-        for entity_pk in entities.values():
-            sd_list.append(SchemaDecorator.objects.get(pk=entity_pk, project=self.project))
-        self.schemadecorators.add(*sd_list)
+        self.schemadecorators.set([
+            SchemaDecorator.objects.get(pk=entity_pk, project=self.project)
+            for entity_pk in self.definition.get('entities', {}).values()
+        ])
         send_model_item_to_redis(self)
 
     def get_mt_instance(self):
@@ -648,27 +664,6 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
     def clean(self):
         super(Entity, self).clean()
 
-        # check linked projects
-        project_ids = set()
-        possible_project = None
-        if self.schemadecorator:
-            project_ids.add(self.schemadecorator.project.pk)
-            possible_project = self.schemadecorator.project
-        if self.submission:
-            project_ids.add(self.submission.project.pk)
-            possible_project = self.submission.project
-        if self.mapping:
-            project_ids.add(self.mapping.project.pk)
-            possible_project = self.mapping.project
-
-        if len(project_ids) > 1:
-            raise ValidationError(_('Submission, Mapping and Schema Decorator MUST belong to the same Project'))
-        elif len(project_ids) == 1:
-            self.project = possible_project
-
-        if self.schemadecorator:  # redundant values taken from schema decorator
-            self.schema = self.schemadecorator.schema
-
         if self.mapping and not self.mapping_revision:
             self.mapping_revision = self.mapping.revision
 
@@ -676,6 +671,9 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
         else:
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
+
+        if self.schemadecorator:
+            self.schema = self.schemadecorator.schema  # redundant values taken from schema decorator
 
         if self.schema:
             try:
@@ -688,7 +686,9 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     def save(self, *args, **kwargs):
         try:
-            self.full_clean()
+            # avoid full_clean(). it revalidates all fields which is resource intensive.
+            # linked artefacts validation is already implemented on the serializer
+            self.clean()
         except Exception as ve:
             raise IntegrityError(ve)
 

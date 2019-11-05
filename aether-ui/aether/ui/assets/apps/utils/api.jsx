@@ -21,45 +21,51 @@
 import { LOGOUT_URL } from './constants'
 import { NotFoundError, HTTPError } from './errors'
 
-const methods = ['get', 'post', 'put', 'patch', 'delete']
+const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete']
+
+const appendParams = (path, params) => {
+  if (!params || Object.keys(params).length === 0) {
+    return path
+  }
+
+  const queryString = Object.keys(params)
+    .filter(key => (
+      params[key] !== undefined &&
+      params[key] !== null &&
+      params[key].toString().trim() !== ''
+    ))
+    .map(key => [encodeURIComponent(key), encodeURIComponent(params[key])])
+    .map(([name, value]) => `${name}=${value}`)
+    .join('&')
+
+  if (queryString === '') {
+    return path
+  }
+
+  return path + (path.includes('?') ? '&' : '?') + queryString
+}
 
 export default class ApiClient {
   constructor () {
-    methods.forEach(method => {
+    HTTP_METHODS.forEach(method => {
       this[method] = (path, headers, { params, data } = {}) => {
         const csrfToken = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value
-        const appendParams = (path, params) => {
-          if (!params || Object.keys(params).length === 0) {
-            return path
-          }
-
-          const queryString = Object.keys(params)
-            .filter(key => (
-              params[key] !== undefined &&
-              params[key] !== null &&
-              params[key].toString().trim() !== ''
-            ))
-            .map(key => [encodeURIComponent(key), encodeURIComponent(params[key])])
-            .map(([name, value]) => `${name}=${value}`)
-            .join('&')
-
-          if (queryString === '') {
-            return path
-          }
-
-          return path + (path.includes('?') ? '&' : '?') + queryString
+        const initialHeaders = {
+          'X-CSRFToken': csrfToken,
+          // The default behaviour of Kong is to redirect to the login page
+          // if the user is not authorized, with this header we try to receive
+          // the real status code "403" and redirect us to the logout page
+          'X-Oauth-Unauthorized': 'status_code'
         }
-
         const options = {
           method,
           credentials: 'same-origin',
-          headers: Object.assign({ 'X-CSRFToken': csrfToken }, headers),
+          headers: Object.assign(initialHeaders, headers),
           body: JSON.stringify(data)
         }
-        path = appendParams(path, params)
 
         const host = window.location.origin + window.location.pathname
-        const url = host + path.substring(1)
+        const url = host + appendParams(path, params).substring(1)
 
         return new Promise((resolve, reject) => {
           window.fetch(url, options)

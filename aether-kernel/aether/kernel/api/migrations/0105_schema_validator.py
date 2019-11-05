@@ -33,4 +33,14 @@ class Migration(migrations.Migration):
             name='is_extracted',
             field=models.BooleanField(default=False, verbose_name='entity extracted?'),
         ),
+        migrations.AlterField(
+            model_name='mappingset',
+            name='schema',
+            field=django.contrib.postgres.fields.jsonb.JSONField(
+                blank=True,
+                null=True,
+                validators=[aether.kernel.api.validators.wrapper_validate_avro_schema],
+                verbose_name='AVRO schema'
+            ),
+        ),
     ]

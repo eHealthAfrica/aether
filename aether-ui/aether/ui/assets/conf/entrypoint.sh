@@ -57,7 +57,7 @@ case "$1" in
     test )
         test_lint
         test_js
-        npm run webpack
+        npm run build
     ;;
 
     test_lint )
@@ -70,11 +70,11 @@ case "$1" in
 
     build )
         rm -r -f ./bundles/*
-        npm run webpack
+        npm run build
     ;;
 
     start_dev )
-        npm run webpack-server
+        npm run start
     ;;
 
     help )
