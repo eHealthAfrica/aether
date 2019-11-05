@@ -18,17 +18,31 @@
  * under the License.
  */
 
-import React from 'react'
+import React, { Component } from 'react'
+import onClickOutside from 'react-onclickoutside'
 
-import Portal from './Portal'
-import ModalDialog from './ModalDialog'
+class ModalDialog extends Component {
+  handleClickOutside () {
+    const { handleClickOutside: handler } = this.props
+    if (handler) handler()
+  }
 
-const Modal = ({ onEnter, onEscape, ...props }) => (
-  <Portal onEnter={onEnter} onEscape={onEscape}>
-    <div className='modal show'>
-      <ModalDialog {...props} />
-    </div>
-  </Portal>
-)
+  render () {
+    const { header, children, buttons } = this.props
+    return (
+      <div className='modal-dialog'>
+        <div className='modal-header'>
+          <span className='modal-title'>{header}</span>
+        </div>
 
-export default Modal
+        <div className='modal-content'>
+          {children}
+
+          <div className='modal-actions'>{buttons}</div>
+        </div>
+      </div>
+    )
+  }
+}
+
+export default onClickOutside(ModalDialog)

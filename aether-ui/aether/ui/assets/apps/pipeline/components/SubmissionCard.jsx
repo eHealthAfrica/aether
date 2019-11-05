@@ -21,6 +21,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
+import Clipboard from './Clipboard'
 
 import { getKernelURL } from '../../redux/settings'
 import { objectToString } from '../../utils'
@@ -33,11 +34,9 @@ class SubmissionCard extends Component {
   }
 
   render () {
-    const submissionUrl = `${this.props.kernelUrl}/submissions/`
-    const sampleData = {
-      mappingset: this.props.mappingset,
-      payload: this.props.inputData || {}
-    }
+    const { kernelUrl, mappingset, inputData } = this.props
+    const submissionUrl = `${kernelUrl}/submissions/`
+    const sampleData = objectToString({ mappingset, payload: inputData || {} })
 
     return (
       <div className='mt-4'>
@@ -46,6 +45,7 @@ class SubmissionCard extends Component {
             id='submission.card.url'
             defaultMessage='Submission URL'
           />
+          <Clipboard content={submissionUrl} />
         </label>
         <a className='submission-url' href={submissionUrl}>
           {submissionUrl}
@@ -57,11 +57,10 @@ class SubmissionCard extends Component {
               id='submission.card.sample'
               defaultMessage='Submission sample data'
             />
+            <Clipboard content={sampleData} />
           </label>
           <div className='code'>
-            <code>
-              {objectToString(sampleData)}
-            </code>
+            <code>{sampleData}</code>
           </div>
         </div>
       </div>
