@@ -18,17 +18,26 @@
  * under the License.
  */
 
-import React from 'react'
+import React, { useState } from 'react'
+import Clipboard from 'react-clipboard.js'
 
-import Portal from './Portal'
-import ModalDialog from './ModalDialog'
+export default ({ content }) => {
+  const [icon, setIcon] = useState(null)
 
-const Modal = ({ onEnter, onEscape, ...props }) => (
-  <Portal onEnter={onEnter} onEscape={onEscape}>
-    <div className='modal show'>
-      <ModalDialog {...props} />
-    </div>
-  </Portal>
-)
+  const onCopy = () => {
+    setIcon('-check')
+    setTimeout(() => setIcon(null), 2000)
+  }
 
-export default Modal
+  return (
+    <span className='clipboard'>
+      <Clipboard
+        component='i'
+        onClick={onCopy}
+        data-clipboard-text={content}
+      >
+        <i className={`fa fa-clipboard${icon || ''}`} />
+      </Clipboard>
+    </span>
+  )
+}
