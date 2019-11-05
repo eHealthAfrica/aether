@@ -51,7 +51,7 @@ def wrapper_validate_schema_definition(data):
         raise ValidationError(ve)
 
 
-def validate_entity_project(validated_data, ignore_submission_check=False):
+def validate_entity_project(validated_data):
     from .models import Project
 
     _schema_decorator = validated_data.get('schemadecorator')
@@ -68,12 +68,9 @@ def validate_entity_project(validated_data, ignore_submission_check=False):
         _possible_project = Project.objects.filter(mappings__pk=_mapping.pk).first()
 
     if _possible_project:
-        _submission_id = str(_submission.pk) if _submission else None
-        if ignore_submission_check:
-            _submission_id = None
         _artefact_dict = {
             'schema_decorators': str(_schema_decorator.pk) if _schema_decorator else None,
-            'submissions': _submission_id,
+            'submissions': str(_submission.pk) if _submission else None,
             'mappings': str(_mapping.pk) if _mapping else None,
         }
         _artefacts_in_same_project = in_same_project_and_cache(_artefact_dict, _possible_project)

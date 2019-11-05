@@ -44,6 +44,15 @@ class SerializersTests(TestCase):
         self.assertTrue(project.is_valid(), project.errors)
         project.save()
 
+        project_1 = serializers.ProjectSerializer(
+            data={
+                'name': 'another project name',
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(project_1.is_valid(), project_1.errors)
+        project_1.save()
+
         # check schema with definition validation
         schema = serializers.SchemaSerializer(
             data={
@@ -129,6 +138,17 @@ class SerializersTests(TestCase):
         self.assertTrue(schemadecorator.is_valid(), schemadecorator.errors)
         schemadecorator.save()
 
+        schemadecorator_1 = serializers.SchemaDecoratorSerializer(
+            data={
+                'name': 'another schema decorator name',
+                'project': project_1.data['id'],
+                'schema': schema.data['id'],
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(schemadecorator_1.is_valid(), schemadecorator_1.errors)
+        schemadecorator_1.save()
+
         mappingset = serializers.MappingSetSerializer(
             data={
                 'name': 'a sample mapping set',
@@ -138,6 +158,16 @@ class SerializersTests(TestCase):
         )
         self.assertTrue(mappingset.is_valid(), mappingset.errors)
         mappingset.save()
+
+        mappingset_1 = serializers.MappingSetSerializer(
+            data={
+                'name': 'another sample mapping set',
+                'project': project_1.data['id'],
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(mappingset_1.is_valid(), mappingset_1.errors)
+        mappingset_1.save()
 
         # check mapping with definition validation
         mapping = serializers.MappingSerializer(
@@ -157,7 +187,9 @@ class SerializersTests(TestCase):
                       mapping.errors['definition'][0])
 
         mapping_definition = copy.deepcopy(EXAMPLE_MAPPING)
+        mapping_definition_1 = copy.deepcopy(EXAMPLE_MAPPING)
         mapping_definition['entities']['Person'] = schemadecorator.data['id']
+        mapping_definition_1['entities']['Person'] = schemadecorator_1.data['id']
         mapping = serializers.MappingSerializer(
             data={
                 'name': 'a sample mapping',
@@ -169,6 +201,18 @@ class SerializersTests(TestCase):
         )
         self.assertTrue(mapping.is_valid(), mapping.errors)
         mapping.save()
+
+        mapping_1 = serializers.MappingSerializer(
+            data={
+                'name': 'another sample mapping',
+                'definition': mapping_definition_1,
+                'mappingset': mappingset_1.data['id'],
+                'project': project_1.data['id'],
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(mapping_1.is_valid(), mapping_1.errors)
+        mapping_1.save()
 
         # check the submission without mappingset
         submission = serializers.SubmissionSerializer(
@@ -277,6 +321,64 @@ class SerializersTests(TestCase):
         self.assertTrue(entity_4.is_valid(), entity_4.errors)
         entity_4.save()
         self.assertEqual(entity_2.data['id'], entity_4.data['id'])
+
+        entity_5 = serializers.EntitySerializer(
+            data={
+                'submission': submission.data['id'],
+                'mapping': mapping.data['id'],
+                'status': 'Pending Approval',
+                'payload': EXAMPLE_SOURCE_DATA_ENTITY,
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(entity_5.is_valid(), entity_5.errors)
+        entity_5.save()
+        self.assertEqual(entity_5.data['project'], submission.data['project'])
+
+        entity_6 = serializers.EntitySerializer(
+            data={
+                'mapping': mapping.data['id'],
+                'status': 'Pending Approval',
+                'payload': EXAMPLE_SOURCE_DATA_ENTITY,
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(entity_6.is_valid(), entity_6.errors)
+        entity_6.save()
+        self.assertEqual(entity_6.data['project'], mapping.data['project'])
+
+        entity_7 = serializers.EntitySerializer(
+            data={
+                'status': 'Pending Approval',
+                'payload': EXAMPLE_SOURCE_DATA_ENTITY,
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(entity_7.is_valid(), entity_7.errors)
+        with self.assertRaises(ValidationError) as ve:
+            entity_7.save()
+            self.assertIn(
+                'No associated project. Check you provided the correct Submission, Mapping and Schema Decorator',
+                str(ve.exception)
+            )
+
+        entity_8 = serializers.EntitySerializer(
+            data={
+                'submission': submission.data['id'],
+                'schemadecorator': schemadecorator.data['id'],
+                'mapping': mapping_1.data['id'],
+                'status': 'Pending Approval',
+                'payload': EXAMPLE_SOURCE_DATA_ENTITY,
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(entity_8.is_valid(), entity_8.errors)
+        with self.assertRaises(ValidationError) as ve:
+            entity_8.save()
+            self.assertIn(
+                'Submission, Mapping and Schema Decorator MUST belong to the same Project',
+                str(ve.exception)
+            )
 
         # bulk create
 

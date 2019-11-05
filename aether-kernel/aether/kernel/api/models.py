@@ -42,10 +42,6 @@ from .validators import (
     wrapper_validate_schema_definition,
     wrapper_validate_mapping_definition
 )
-from aether.python.validators import (
-    validate_avro_schema,
-    validate_entity_payload,
-)
 from .utils import send_model_item_to_redis
 
 
