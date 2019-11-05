@@ -62,7 +62,7 @@ def get_redis_project_artefacts(project):
 
 def are_all_items_in_object(obj, items):
     for n in items:
-        if items[n] and items[n] not in obj[n]:
+        if items[n] and n in obj and items[n] not in obj[n]:
             return False
     return True
 

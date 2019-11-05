@@ -167,13 +167,15 @@ def send_model_item_to_redis(model_item):
 
     if model_name not in (
         models.Entity._meta.default_related_name,
-        models.Project._meta.default_related_name,
         models.Schema._meta.default_related_name,
     ):
-        project = model_item.project
         cache_model_name = 'schema_decorators' \
             if model_name is models.SchemaDecorator._meta.default_related_name else model_name
-        redis.cache_project_artefacts(project, cache_model_name, str(model_item.pk))
+
+        if model_name is models.Project._meta.default_related_name:
+            redis.cache_project_artefacts(model_item)
+        else:
+            redis.cache_project_artefacts(model_item.project, cache_model_name, str(model_item.pk))
 
     if model_name is models.Entity._meta.default_related_name:
         if settings.WRITE_ENTITIES_TO_REDIS:    # pragma: no cover : .env settings

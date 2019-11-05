@@ -674,6 +674,8 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
         if self.schemadecorator:
             self.schema = self.schemadecorator.schema  # redundant values taken from schema decorator
+
+        if self.schema:
             try:
                 validate_entity_payload(
                     schema_definition=self.schema.definition,
@@ -684,6 +686,8 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     def save(self, *args, **kwargs):
         try:
+            # avoid full_clean(). it revalidates all fields which is resource intensive.
+            # linked artefacts validation is already implemented on the serializer
             self.clean()
         except Exception as ve:
             raise IntegrityError(ve)

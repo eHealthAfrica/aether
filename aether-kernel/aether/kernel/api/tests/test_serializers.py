@@ -226,8 +226,10 @@ class SerializersTests(TestCase):
 
         with self.assertRaises(ValidationError) as ve:
             submission.save()
-            self.assertIn('Mapping set must be provided on initial submission',
-                          str(ve.exception))
+        self.assertIn(
+            'Mapping set must be provided on initial submission',
+            str(ve.exception)
+        )
 
         # check the submission with entity extraction errors
         submission = serializers.SubmissionSerializer(
@@ -273,8 +275,10 @@ class SerializersTests(TestCase):
 
         with self.assertRaises(Exception) as ve:
             entity.save()
-            self.assertIn('Extracted record did not conform to registered schema',
-                          str(ve.exception))
+        self.assertIn(
+            'Extracted record did not conform to registered schema',
+            str(ve.exception)
+        )
 
         # create entity
         entity_2 = serializers.EntitySerializer(
@@ -305,8 +309,10 @@ class SerializersTests(TestCase):
 
         with self.assertRaises(Exception) as ve_3:
             entity_3.save()
-            self.assertIn('Extracted record did not conform to registered schema',
-                          str(ve_3.exception))
+        self.assertIn(
+            'Extracted record did not conform to registered schema',
+            str(ve_3.exception)
+        )
 
         entity_4 = serializers.EntitySerializer(
             models.Entity.objects.get(pk=entity_2.data['id']),
@@ -357,10 +363,10 @@ class SerializersTests(TestCase):
         self.assertTrue(entity_7.is_valid(), entity_7.errors)
         with self.assertRaises(ValidationError) as ve:
             entity_7.save()
-            self.assertIn(
-                'No associated project. Check you provided the correct Submission, Mapping and Schema Decorator',
-                str(ve.exception)
-            )
+        self.assertIn(
+            'No associated project. Check you provided the correct Submission, Mapping and Schema Decorator',
+            str(ve.exception)
+        )
 
         entity_8 = serializers.EntitySerializer(
             data={
@@ -375,10 +381,10 @@ class SerializersTests(TestCase):
         self.assertTrue(entity_8.is_valid(), entity_8.errors)
         with self.assertRaises(ValidationError) as ve:
             entity_8.save()
-            self.assertIn(
-                'Submission, Mapping and Schema Decorator MUST belong to the same Project',
-                str(ve.exception)
-            )
+        self.assertIn(
+            'Submission, Mapping and Schema Decorator MUST belong to the same Project',
+            str(ve.exception)
+        )
 
         # bulk create
 
