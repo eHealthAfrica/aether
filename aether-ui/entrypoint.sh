@@ -123,7 +123,12 @@ function setup {
 
     STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
     # create static assets
-    ./manage.py collectstatic --noinput --clear --verbosity 0
+    echo "Collecting static files..."
+    if [ $COLLECT_STATIC_FILES_ON_STORAGE ]; then
+        ./manage.py collectstatic --noinput --verbosity 0
+    else
+        ./manage.py collectstatic --noinput --clear --verbosity 0
+    fi
     chmod -R 755 ${STATIC_ROOT}
 
     # expose version number (if exists)
