@@ -20,6 +20,5 @@
 
 if __name__ == '__main__':
 
-    from extractor import main, start_web_server
+    from extractor import main
     main()
-    start_web_server()

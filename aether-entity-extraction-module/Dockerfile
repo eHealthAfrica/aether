@@ -10,7 +10,7 @@ RUN apt-get update -qq && \
         --allow-downgrades \
         --allow-remove-essential \
         --allow-change-held-packages \
-        install gcc
+        install gcc redis-server curl
 
 ################################################################################
 ## install app

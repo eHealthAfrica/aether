@@ -17,7 +17,6 @@
 # under the License.
 
 from .manager import ExtractionManager
-from .web_app import WebApp
 
 SUBMISSION_CHANNEL = '_submissions*'
 
@@ -30,8 +29,3 @@ def main():
         channel=SUBMISSION_CHANNEL
     )
     return extractor
-
-
-def start_web_server():
-    web_server = WebApp()
-    return web_server

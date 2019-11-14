@@ -18,7 +18,6 @@ aether.python
 coverage
 fakeredis
 flake8-quotes
-flask
 gevent
 pytest
 tblib
