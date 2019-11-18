@@ -308,7 +308,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
 
 def __media_path__(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/<project>/<xform>/filename
+    # file will be uploaded to {MEDIA_ROOT}/{project}/{xform}/{filename}
     return '{project}/{xform}/{filename}'.format(
         project=instance.xform.project.pk,
         xform=instance.xform.pk,

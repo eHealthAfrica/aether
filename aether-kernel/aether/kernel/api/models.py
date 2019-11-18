@@ -313,10 +313,10 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
 
 def __attachment_path__(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/<submission_id>/{submission_revision}/filename
-    return '{submission}/{revision}/{attachment}'.format(
-        submission=instance.submission.id,
-        revision=instance.submission_revision,
+    # file will be uploaded to {MEDIA_ROOT}/{project}/{submission}/{filename}
+    return '{project}/{submission}/{attachment}'.format(
+        project=instance.submission.project.pk,
+        submission=instance.submission.pk,
         attachment=filename,
     )
 
