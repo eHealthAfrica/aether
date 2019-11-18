@@ -25,8 +25,8 @@ cryptography==2.8
 Django==2.2.7
 django-cas-ng==3.6.0
 django-cors-headers==3.1.1
-django-debug-toolbar==2.0
 django-minio-storage==0.3.4
+django-debug-toolbar==2.1
 django-model-utils==3.2.0
 django-prometheus==1.1.0
 django-silk==3.0.4
@@ -71,9 +71,9 @@ pytz==2019.3
 requests==2.22.0
 rsa==4.0
 s3transfer==0.2.1
-sentry-sdk==0.13.1
+sentry-sdk==0.13.2
 six==1.13.0
 sqlparse==0.3.0
 tblib==1.5.0
-urllib3==1.25.6
+urllib3==1.25.7
 uWSGI==2.0.18
