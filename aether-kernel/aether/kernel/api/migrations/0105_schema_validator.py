@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             field=django.contrib.postgres.fields.jsonb.JSONField(
                 blank=True,
                 null=True,
-                validators=[aether.kernel.api.validators.wrapper_validate_avro_schema],
+                validators=[aether.kernel.api.validators.wrapper_validate_schema_input_definition],
                 verbose_name='AVRO schema'
             ),
         ),

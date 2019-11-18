@@ -38,9 +38,9 @@ from aether.python.validators import validate_entity_payload
 
 from .constants import NAMESPACE
 from .validators import (
-    wrapper_validate_avro_schema,
+    wrapper_validate_mapping_definition,
     wrapper_validate_schema_definition,
-    wrapper_validate_mapping_definition
+    wrapper_validate_schema_input_definition,
 )
 
 
@@ -209,7 +209,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     schema = JSONField(
         null=True,
         blank=True,
-        validators=[wrapper_validate_avro_schema],
+        validators=[wrapper_validate_schema_input_definition],
         verbose_name=_('AVRO schema'),
     )
     input = JSONField(null=True, blank=True, verbose_name=_('input sample'))
@@ -239,7 +239,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     def save(self, *args, **kwargs):
         try:
             # this will call the fields validators in our case
-            # `wrapper_validate_avro_schema`
+            # `wrapper_validate_schema_input_definition`
             self.full_clean()
         except ValidationError as ve:
             raise IntegrityError(ve)
