@@ -109,8 +109,14 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         value.pop('xml_file')
 
         # check unique together
-        _instance = XForm(**{k: v for k, v in value.items() if k != 'surveyors'})
-        _instance.full_clean()
+        if self.instance:  # in case of "update"
+            for k, v in value.items():
+                if k != 'surveyors':
+                    setattr(self.instance, k, v)
+            self.instance.full_clean()
+        else:  # in case of "create"
+            _instance = XForm(**{k: v for k, v in value.items() if k != 'surveyors'})
+            _instance.full_clean()
 
         return super(XFormSerializer, self).validate(value)
 
