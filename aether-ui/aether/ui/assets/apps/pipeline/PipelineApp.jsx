@@ -20,7 +20,7 @@
 
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Route, Switch } from 'react-router-dom'
+import { HashRouter, Route, Switch } from 'react-router-dom'
 import { hot } from 'react-hot-loader'
 
 import PipelineList from './PipelineList'
@@ -29,15 +29,17 @@ import Pipeline from './Pipeline'
 class PipelineApp extends Component {
   render () {
     return (
-      <Route render={() => (
-        <Switch>
-          <Route exact path='/' component={PipelineList} />
-          <Route path='/:pid/:cid/:view' component={Pipeline} />
-          <Route path='/:pid/:cid' component={Pipeline} />
-          <Route path='/:pid' component={Pipeline} />
-        </Switch>
-      )}
-      />
+      <HashRouter>
+        <Route render={() => (
+          <Switch>
+            <Route exact path='/' component={PipelineList} />
+            <Route path='/:pid/:cid/:view' component={Pipeline} />
+            <Route path='/:pid/:cid' component={Pipeline} />
+            <Route path='/:pid' component={Pipeline} />
+          </Switch>
+        )}
+        />
+      </HashRouter>
     )
   }
 }

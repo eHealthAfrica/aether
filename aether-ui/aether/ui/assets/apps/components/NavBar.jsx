@@ -32,26 +32,31 @@ const MESSAGES = defineMessages({
 
 class NavBar extends Component {
   render () {
-    const { formatMessage } = this.props.intl
+    const { showLogo, showBreadcrumb, children, intl: { formatMessage } } = this.props
     const user = getLoggedInUser()
-    const logoutUrl = window.location.origin + window.location.pathname + 'logout'
+    const { origin, pathname } = window.location
+    const logoutUrl = `${origin}${pathname}logout`
 
     return (
       <div data-qa='navbar' className='navbar top-nav'>
-        <a className='top-nav-logo' title='aether' onClick={this.props.onClick}>
-          <div className='logo-container'>
-            <div className='flipper'>
-              <div className='front' />
-              <div className='back' />
-            </div>
-          </div>
-          <span data-app-name='app-name'><b>ae</b>ther</span>
-        </a>
+        {
+          showLogo && (
+            <a href={origin} className='top-nav-logo' title='aether'>
+              <div className='logo-container'>
+                <div className='flipper'>
+                  <div className='front' />
+                  <div className='back' />
+                </div>
+              </div>
+              <span data-app-name='app-name'><b>ae</b>ther</span>
+            </a>
+          )
+        }
 
         {
-          this.props.showBreadcrumb &&
+          showBreadcrumb &&
             <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
-              {this.props.children}
+              {children}
             </div>
         }
 

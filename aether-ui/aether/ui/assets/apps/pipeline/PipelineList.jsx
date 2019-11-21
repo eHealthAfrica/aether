@@ -93,7 +93,7 @@ class PipelineList extends Component {
       <div className='pipelines-container show-index'>
         {this.props.loading && <LoadingSpinner />}
         {this.props.error && <ModalError error={this.props.error} />}
-        <NavBar />
+        <NavBar showLogo />
 
         <div className='pipelines'>
           <h1 className='pipelines-heading'>

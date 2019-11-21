@@ -1,0 +1,81 @@
+/*
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+.landing-page {
+  @extend .pipelines-container;
+  background: #4f6b81;
+
+  .content {
+    padding: 5rem;
+    position: relative;
+    z-index: 1;
+  
+    .tenant-name {
+      @extend .pipelines-heading;
+    }
+  
+    .services {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  
+    .service {
+      width: 25%;
+      margin: 0 7rem 4rem 0;
+    }
+  
+    .service-card {
+      padding: 4rem;
+      text-align: center;
+      border-radius: $border-radius;
+      box-shadow: 1px 1px 2px $shadow-color;
+    }
+
+    .gather-card {
+      @extend .service-card;
+      background: rgba(rgb(50, 255, 255), .4);
+    }
+  
+    .aether-card {
+      @extend .service-card;
+      @include bg-gradient;
+    }
+  
+    .kernel-card {
+      @extend .service-card;
+      background: rgba($action-color-b, .4);
+    }
+  
+    .odk-card {
+      @extend .service-card;
+      background: rgba($action-color-b, .4);
+    }
+  
+    .kibana-card {
+      @extend .service-card;
+      background: rgba($action-color-b, .4);
+    }
+  
+    .service-about {
+      margin-top: 1rem;
+    }
+  }
+}

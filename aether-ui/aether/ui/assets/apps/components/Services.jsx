@@ -18,12 +18,23 @@
  * under the License.
  */
 
-import React from 'react'
-import { render } from 'react-dom'
+import React, { Component } from 'react'
+import { connect } from 'react-redux'
+import { BrowserRouter, Route, Redirect } from 'react-router-dom'
+import { hot } from 'react-hot-loader'
 
-import { AppLayout, Services } from '../components'
+import LandingPage from './LandingPage'
+import PipelineApp from '../pipeline/PipelineApp'
 
-const appElement = document.getElementById('pipeline-app')
-const component = <AppLayout app={Services} />
+const Services = () => (
+  <BrowserRouter>
+    <Route render={({ location: { pathname, hash } }) => {
+      let component = LandingPage
+      if (hash.startsWith('#/')) component = PipelineApp
 
-render(component, appElement)
+      return <Route component={component} />
+    }} />
+  </BrowserRouter>
+)
+
+export default hot(module)(connect()(Services))

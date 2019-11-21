@@ -151,3 +151,24 @@ export const getLoggedInUser = () => {
  * @param {*} x -- the object
  */
 export const objectToString = (obj) => !isEmpty(obj) ? JSON.stringify(obj, 0, 2) : ''
+
+/**
+ * Capitalizes a given string.
+ *
+ * @param {string} str
+ */
+export const capitalize = (str) => `${str[0].toUpperCase()}${str[1] ? str.slice(1) : ''}`
+
+/**
+ * Return a list of services for a given tenant
+ *
+ * @param {string} tenant
+ */
+export const getServices = (tenant = '') => [
+  { name: 'gather', link: `/${tenant}/gather` },
+  { name: 'kibana', link: `/${tenant}/kibana/kibana-app` },
+  { name: '' },
+  { name: 'aether', link: '/#/' },
+  { name: 'kernel', link: '/kernel' },
+  { name: 'odk', link: '/odk' }
+]

@@ -25,6 +25,8 @@ import LoadingSpinner from './LoadingSpinner'
 import Modal from './Modal'
 import ModalError from './ModalError'
 import NavBar from './NavBar'
+import Services from './Services'
+import ServiceCard from './ServiceCard'
 
 // export all components
 export {
@@ -33,5 +35,7 @@ export {
   LoadingSpinner,
   Modal,
   ModalError,
-  NavBar
+  NavBar,
+  Services,
+  ServiceCard
 }
