@@ -313,8 +313,10 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
 
 def __attachment_path__(instance, filename):
-    # file will be uploaded to {MEDIA_ROOT}/{project}/{submission}/{filename}
-    return '{project}/{submission}/{attachment}'.format(
+    # file will be uploaded to [{tenant}/]{project}/{submission}/{filename}
+    realm = instance.get_realm()
+    return '{tenant}{project}/{submission}/{attachment}'.format(
+        tenant=f'{realm}/' if realm else '',
         project=instance.submission.project.pk,
         submission=instance.submission.pk,
         attachment=filename,
@@ -336,7 +338,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
 
     name = models.TextField(verbose_name=_('filename'))
 
-    attachment_file = models.FileField(upload_to=__attachment_path__, verbose_name=_('file'))
+    attachment_file = models.FileField(upload_to=__attachment_path__, verbose_name=_('file'), max_length=500)
     # save attachment hash to check later if the file is not corrupted
     md5sum = models.CharField(blank=True, max_length=36, verbose_name=_('file MD5'))
 
