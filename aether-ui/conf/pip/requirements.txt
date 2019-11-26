@@ -12,7 +12,7 @@
 #
 ################################################################################
 
-aether.sdk==1.1.10
+aether.sdk==1.1.11
 autopep8==1.4.4
 certifi==2019.9.11
 cffi==1.13.2
@@ -36,7 +36,7 @@ flake8-quotes==2.1.1
 gprof2dot==2017.9.19
 idna==2.8
 Jinja2==2.10.3
-lxml==4.4.1
+lxml==4.4.2
 MarkupSafe==1.1.1
 mccabe==0.6.1
 prometheus-client==0.7.1
@@ -51,7 +51,7 @@ python-dateutil==2.8.1
 python-json-logger==0.1.11
 pytz==2019.3
 requests==2.22.0
-sentry-sdk==0.13.2
+sentry-sdk==0.13.3
 six==1.13.0
 sqlparse==0.3.0
 tblib==1.5.0
