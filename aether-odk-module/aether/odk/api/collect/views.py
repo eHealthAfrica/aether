@@ -32,7 +32,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.timezone import now
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import status
 from rest_framework.decorators import (
