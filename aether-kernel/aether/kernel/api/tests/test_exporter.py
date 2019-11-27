@@ -767,18 +767,32 @@ class ExporterViewsTest(TestCase):
 
     def test_entities_export__xlsx__empty(self):
         response = self.client.get(reverse('entity-xlsx') + '?start_at=1')
-        self.assertTrue(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         response = self.client.get(reverse('entity-xlsx') + '?start_at=2')
-        self.assertTrue(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
 
         response = self.client.get(reverse('entity-xlsx') + '?page=1')
-        self.assertTrue(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         response = self.client.get(reverse('entity-xlsx') + '?page=2')
-        self.assertTrue(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
 
-        models.Entity.objects.all().delete()
+        response = self.client.post(reverse('entity-xlsx') + '?project=unknown')
+        self.assertEqual(response.status_code, 204)
+
+    def test_entities_export__xlsx__more_than_one_project(self):
+        models.Entity.objects.create(
+            project=models.Project.objects.create(name='project2'),
+            payload={'a': 'A'},
+            status='Pending Approval',
+        )
         response = self.client.post(reverse('entity-xlsx'))
-        self.assertTrue(response.status_code, 204)
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.post(reverse('entity-xlsx') + '?project=project1')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(reverse('entity-xlsx') + '?project=project2')
+        self.assertEqual(response.status_code, 200)
 
     def test_entities_export__xlsx(self):
         response = self.client.get(reverse('entity-xlsx'))
@@ -818,9 +832,23 @@ class ExporterViewsTest(TestCase):
         )
 
     def test_entities_export__csv__empty(self):
-        models.Entity.objects.all().delete()
+        response = self.client.post(reverse('entity-csv') + '?project=unknown')
+        self.assertEqual(response.status_code, 204)
+
+    def test_entities_export__csv__more_than_one_project(self):
+        models.Entity.objects.create(
+            project=models.Project.objects.create(name='project2'),
+            payload={'a': 'A'},
+            status='Pending Approval',
+        )
         response = self.client.post(reverse('entity-csv'))
-        self.assertTrue(response.status_code, 204)
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.post(reverse('entity-csv') + '?project=project1')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(reverse('entity-csv') + '?project=project2')
+        self.assertEqual(response.status_code, 200)
 
     def test_entities_export__csv(self):
         response = self.client.post(reverse('entity-csv'))

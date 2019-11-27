@@ -29,11 +29,10 @@ import zipfile
 from openpyxl import Workbook
 
 from django.conf import settings
-from django.db.models import F
+from django.db.models import F, Count
 from django.http import FileResponse
 from django.utils.translation import gettext as _
 
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
@@ -90,11 +89,12 @@ logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
 
 
-class ExporterViewSet(ModelViewSet):
+class ExporterMixin():
     '''
     ModelViewSet that includes export endpoints ``xlsx`` and ``csv``.
     '''
 
+    project_field = 'project'
     json_field = 'payload'
     schema_field = None
     schema_order = None
@@ -229,7 +229,7 @@ class ExporterViewSet(ModelViewSet):
         - ``page``, current block of data.
             Default: ``1``.
 
-        - ``start_at``: indicates the starting position. This allows to start at
+        - ``start_at``, indicates the starting position. This allows to start at
             a custom position and not only at the beginning of the page block.
             Otherwise the ``page`` parameter is used to calculate it.
 
@@ -284,7 +284,7 @@ class ExporterViewSet(ModelViewSet):
                 With yes:       B       C       ... Z
                 Otherwise:      A / B   A / C   ... Z
 
-        - ``data_format``: indicates how to parse the data into the file or files.
+        - ``data_format``, indicates how to parse the data into the file or files.
             Values: ``flatten``, any other ``split``. Default: ``split``.
 
             Example:
@@ -353,6 +353,14 @@ class ExporterViewSet(ModelViewSet):
 
         '''
         queryset = self.filter_queryset(self.get_queryset())
+
+        # Restriction: only export data for ONE PROJECT at a time
+        if queryset.aggregate(p=Count(self.project_field, distinct=True))['p'] > 1:
+            return Response(
+                data={'message': _('Export data from one project at a time')},
+                status=400,
+            )
+
         data = queryset.annotate(exporter_data=F(self.json_field)) \
                        .values('pk', 'exporter_data')
 
@@ -374,6 +382,7 @@ class ExporterViewSet(ModelViewSet):
         docs = self.__get(request, 'labels', {})
         if self.schema_field and not jsonpaths:
             schemas = queryset.order_by(self.schema_order or self.schema_field) \
+                              .exclude(**{self.schema_field: None}) \
                               .values(self.schema_field) \
                               .distinct()
             for schema in schemas:

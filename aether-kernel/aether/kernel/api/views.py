@@ -42,7 +42,7 @@ from aether.python.entity.extractor import (
 from aether.python.avro.tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH
 from .entity_extractor import run_entity_extraction
-from .exporter import ExporterViewSet
+from .exporter import ExporterMixin
 from .mapping_validation import validate_mappings
 
 from . import (
@@ -359,7 +359,7 @@ class MappingViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
         return Response(topics)
 
 
-class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
+class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.ModelViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
@@ -604,7 +604,7 @@ class SchemaDecoratorViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSe
         })
 
 
-class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
+class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.ModelViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
