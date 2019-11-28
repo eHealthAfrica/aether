@@ -18,7 +18,7 @@
 
 import collections
 import json
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 import spavro
 
 from aether.python.entity.extractor import find_by_jsonpath, ARRAY_ACCESSOR_REGEX

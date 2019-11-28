@@ -31,4 +31,4 @@ if __name__ == '__main__':
 
     from producer import main
     main()
-    print("Started Producer with path %s" % settings_path)
+    print('Started Producer with path %s' % settings_path)

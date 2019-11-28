@@ -19,7 +19,7 @@
  */
 
 import React, { Component } from 'react'
-import { FormattedMessage, FormattedHTMLMessage, injectIntl, defineMessages } from 'react-intl'
+import { FormattedMessage, injectIntl, defineMessages } from 'react-intl'
 import { Modal } from '../../components'
 
 const MESSAGES = defineMessages({
@@ -48,10 +48,10 @@ class DeleteModal extends Component {
     const objType = formatMessage(MESSAGES[this.props.objectType || 'pipeline'])
     const header = (
       <span>
-        <FormattedHTMLMessage
+        <FormattedMessage
           id='modal.delete.text'
-          defaultMessage='Delete {objType} <b>{objName}</b>'
-          values={{ objType, objName: this.props.obj.name }}
+          defaultMessage='Delete {objType} {objName}'
+          values={{ objType, objName: <b>{this.props.obj.name}</b> }}
         />
       </span>
     )
@@ -109,9 +109,10 @@ class DeleteModal extends Component {
                 }}
               />
               <label htmlFor='check1'>
-                <FormattedHTMLMessage
+                <FormattedMessage
                   id='modal.delete.submissions.text'
-                  defaultMessage='Data <b>submitted to</b> this pipeline (Submissions)'
+                  defaultMessage='Data <b>submitted to</b> this pipeline (Submissions)'
+                  values={{ b: text => <b>{text}</b> }}
                 />
               </label>
             </div>
@@ -157,10 +158,10 @@ class DeleteModal extends Component {
             }}
           />
           <label htmlFor='check3'>
-            <FormattedHTMLMessage
+            <FormattedMessage
               id='modal.delete.entities.text'
-              defaultMessage='Data <b>created by</b> this {objType} (Entities)'
-              values={{ objType }}
+              defaultMessage='Data <b>created by</b> this {objType} (Entities)'
+              values={{ b: text => <b>{text}</b>, objType }}
             />
           </label>
         </div>

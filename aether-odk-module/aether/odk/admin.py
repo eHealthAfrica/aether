@@ -17,7 +17,7 @@
 # under the License.
 
 from django.contrib import admin, messages
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from .api.models import Project, XForm, MediaFile
 from .api.forms import ProjectForm, XFormForm

@@ -23,7 +23,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
@@ -40,8 +40,8 @@ Data model schema:
 +==================+     +==================+
 | project_id       |<-+  | id               |
 | name             |  |  | name             |
-+------------------+  |  | avro_schema      |
-                      |  +~~~~~~~~~~~~~~~~~~+
+| active           |  |  | avro_schema      |
++------------------+  |  +~~~~~~~~~~~~~~~~~~+
                       |  | kernel_id        |
                       |  +::::::::::::::::::+
                       +-<| project          |
@@ -69,6 +69,7 @@ class Project(ExportModelOperationsMixin('couchdbsync_project'), MtModelAbstract
 
     :ivar UUID  project_id:  Aether Kernel project ID (primary key).
     :ivar text  name:        Project name (might match the linked Kernel project name).
+    :ivar bool  active:      Active. Defaults to ``True``.
     '''
 
     # This is needed to submit data to kernel
@@ -81,6 +82,7 @@ class Project(ExportModelOperationsMixin('couchdbsync_project'), MtModelAbstract
     )
 
     name = models.TextField(null=True, blank=True, default='', verbose_name=_('name'))
+    active = models.BooleanField(default=True, verbose_name=_('active'))
 
     def __str__(self):
         return '{} - {}'.format(str(self.project_id), self.name)

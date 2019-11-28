@@ -77,7 +77,7 @@ services:
     command: minio server --quiet --address minio:9090 /data
 
   keycloak-base:
-    image: jboss/keycloak:latest
+    image: jboss/keycloak:7.0.1
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: db
@@ -376,13 +376,13 @@ services:
   # ---------------------------------
 
   zookeeper-base:
-    image: confluentinc/cp-zookeeper:5.2.1
+    image: confluentinc/cp-zookeeper:5.3.1
     environment:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka-base:
-    image: confluentinc/cp-kafka:5.2.1
+    image: confluentinc/cp-kafka:5.3.1
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181

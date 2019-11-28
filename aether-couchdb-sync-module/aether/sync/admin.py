@@ -17,7 +17,7 @@
 # under the License.
 
 from django.contrib import admin, messages
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from .api.forms import SchemaForm
 from .api.models import MobileUser, DeviceDB, Project, Schema

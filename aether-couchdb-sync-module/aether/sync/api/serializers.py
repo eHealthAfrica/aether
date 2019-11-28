@@ -18,7 +18,7 @@
 
 import json
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
