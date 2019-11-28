@@ -17,7 +17,6 @@
 # under the License.
 
 from unittest import mock
-from django.urls import reverse
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.messages.storage.fallback import FallbackStorage
@@ -42,124 +41,8 @@ class AdminTests(CustomTestCase):
         messages = FallbackStorage(self.request)
         setattr(self.request, '_messages', messages)
 
-        self.url = reverse('admin:odk_xform_add')
-        self.url_list = self.url.replace('add/', '')
-
         self.project = self.helper_create_project()
         self.PROJECT_ID = self.project.project_id
-
-    def test__post__empty(self):
-        response = self.client.post(
-            self.url,
-            {
-                'description': 'some text',
-                'project': self.PROJECT_ID,
-                'kernel_id': self.helper_create_uuid(),
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(XForm.objects.count(), 0)
-
-    def test__post__xml_data__validation_error(self):
-        response = self.client.post(
-            self.url,
-            {
-                'xml_data': self.samples['xform']['xml-err'],
-                'description': 'some text',
-                'project': self.PROJECT_ID,
-                'kernel_id': self.helper_create_uuid(),
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(XForm.objects.count(), 0)
-
-    def test__post__xls_file(self):
-        with open(self.samples['xform']['file-xls'], 'rb') as fp:
-            response = self.client.post(
-                self.url,
-                {
-                    'xml_file': fp,
-                    'description': 'some text',
-                    'project': self.PROJECT_ID,
-                    'kernel_id': self.helper_create_uuid(),
-                },
-            )
-        self.assertEqual(response.status_code, 302)  # redirected to list
-        self.assertEqual(response.url, self.url_list)
-        self.assertEqual(XForm.objects.count(), 1)
-
-        instance = XForm.objects.first()
-        self.assertEqual(instance.form_id, 'my-test-form')
-        self.assertEqual(instance.title, 'My Test Form')
-        self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.project, self.project)
-
-    def test__post__xml_file(self):
-        with open(self.samples['xform']['file-xml'], 'rb') as fp:
-            response = self.client.post(
-                self.url,
-                {
-                    'xml_file': fp,
-                    'description': 'some text',
-                    'project': self.PROJECT_ID,
-                    'kernel_id': self.helper_create_uuid(),
-                },
-            )
-        self.assertEqual(response.status_code, 302)  # redirected to list
-        self.assertEqual(response.url, self.url_list)
-        self.assertEqual(XForm.objects.count(), 1)
-
-        instance = XForm.objects.first()
-        self.assertEqual(instance.form_id, 'my-test-form')
-        self.assertEqual(instance.title, 'My Test Form')
-        self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.project, self.project)
-
-    def test__post__xml_data(self):
-        response = self.client.post(
-            self.url,
-            {
-                'xml_data': self.samples['xform']['xml-ok'],
-                'description': 'some text',
-                'project': self.PROJECT_ID,
-                'kernel_id': self.helper_create_uuid(),
-            },
-        )
-        self.assertEqual(response.status_code, 302)  # redirected to list
-        self.assertEqual(response.url, self.url_list)
-        self.assertEqual(XForm.objects.count(), 1)
-
-        instance = XForm.objects.first()
-        self.assertEqual(instance.form_id, 'xform-id-test')
-        self.assertEqual(instance.title, 'xForm - Test')
-        self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.project, self.project)
-        self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
-
-    def test__post__surveyors(self):
-        surveyor = self.helper_create_surveyor(username='surveyor0')
-        response = self.client.post(
-            self.url,
-            {
-                'xml_data': self.samples['xform']['xml-ok'],
-                'description': 'some text',
-                'project': self.PROJECT_ID,
-                'kernel_id': self.helper_create_uuid(),
-                'surveyors': [surveyor.id],
-            },
-        )
-        self.assertEqual(response.status_code, 302)  # redirected to list
-        self.assertEqual(response.url, self.url_list)
-        self.assertEqual(XForm.objects.count(), 1)
-
-        instance = XForm.objects.first()
-        self.assertEqual(instance.form_id, 'xform-id-test')
-        self.assertEqual(instance.title, 'xForm - Test')
-        self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.project, self.project)
-
-        self.assertEqual(instance.surveyors.count(), 1)
-        self.assertIn(surveyor, instance.surveyors.all())
 
     def test__project__actions(self):
         app_admin = ProjectAdmin(Project, AdminSite())

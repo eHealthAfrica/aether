@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from ast import literal_eval
 import json
 import re
 
@@ -29,7 +30,7 @@ from pyxform.xls2json_backends import xls_to_dict
 from pyxform.xform_instance_parser import XFormInstanceParser
 from spavro.schema import parse as parse_avro_schema, SchemaParseException
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 
 DEFAULT_XFORM_VERSION = '0'
@@ -63,10 +64,15 @@ SELECT_TAGS = ('select', 'select1', 'odk:rank')
 
 SELECT_CHOICES_CUTOFF = 20
 
+AETHER__XML_NAMESPACE = 'aet'
+AET_TAG = f'@{AETHER__XML_NAMESPACE}'
+AETHER_SCHEMA_ANNOTATION_PREFIX = '@aether'
+
 
 # ------------------------------------------------------------------------------
 # Parser methods
 # ------------------------------------------------------------------------------
+
 
 def parse_xform_file(filename, content):
     '''
@@ -311,8 +317,10 @@ def parse_xform_to_avro_schema(
             '@aether_extended_type': current_type,
         }
 
-        if current_choices:
-            current_field['@aether_lookup'] = current_choices
+        current_field[f'{AETHER_SCHEMA_ANNOTATION_PREFIX}_lookup'] = current_choices
+        for pair in definition.get('annotations', []):
+            key, value = pair
+            current_field[key] = value
 
         # get AVRO valid name
         clean_current_name = __clean_odk_name(current_name)
@@ -562,6 +570,19 @@ def __parse_xlsform(fp):
     return survey.xml().toprettyxml(indent='  ')
 
 
+def __parse_annotations(obj):
+    '''
+    annotations with namespace matching AETHER__XML_NAMESPACE are unpacked and
+    renamed using AETHER_SCHEMA_ANNOTATION_PREFIX
+    '''
+
+    annotations = []
+    for k, v in obj.items():
+        name = f'{AETHER_SCHEMA_ANNOTATION_PREFIX}_{k}'
+        annotations.append(tuple([name, v]))
+    return annotations
+
+
 def __parse_xmlform(fp):
     '''
     Parses XML file content into an XML string. Checking that the content is a
@@ -654,7 +675,7 @@ def __get_xform_instance_skeleton(xml_definition):
             'xpath': xpath,
             'type': 'group' if has_children else 'string',
             'required': False,
-            'label': __get_xform_label(xform_dict, xpath, itexts),
+            'label': __get_xform_label(xform_dict, xpath, itexts)
         }
 
     for entries in __find_in_dict(xform_dict, 'bind'):
@@ -669,6 +690,9 @@ def __get_xform_instance_skeleton(xml_definition):
                     select_options = __get_xform_choices(xform_dict, xpath, itexts)
                     if select_options:
                         schema[xpath]['choices'] = select_options
+            if AET_TAG in bind_entry:
+                xpath = bind_entry.get('@nodeset')
+                schema[xpath]['annotations'] = __parse_annotations(bind_entry.get(AET_TAG))
 
     # search in body all the repeat entries
     for entries in __find_in_dict(xform_dict, 'repeat'):
@@ -955,12 +979,13 @@ def __get_all_paths(dictionary):
     '''
     def walk(obj, parent_keys=[]):
         for k, v in obj.items():
+            is_dict = isinstance(v, dict)
             if k.startswith('@'):  # ignore attributes
                 continue
             keys = parent_keys + [k]
             xpath = '/' + '/'.join(keys)
             paths.append((xpath, isinstance(v, dict)))
-            if isinstance(v, dict):
+            if is_dict:
                 walk(v, keys)
 
     paths = []
@@ -971,13 +996,13 @@ def __get_all_paths(dictionary):
 # https://stackoverflow.com/questions/2148119/how-to-convert-an-xml-string-to-a-dictionary-in-python
 def __etree_to_dict(elem):
     # this method is not perfect but it's enough for us
-    def clean(name):
+    def _clean_key(name):
         for uri, prefix in ElementTree.register_namespace._namespace_map.items():
             pref = f'{prefix}:' if prefix else ''
             name = name.replace('{%s}' % uri, pref)
         return name
 
-    tt = clean(elem.tag)
+    tt = _clean_key(elem.tag)
     d = {tt: {} if elem.attrib else None}
     children = list(elem)
 
@@ -986,10 +1011,16 @@ def __etree_to_dict(elem):
         for dc in map(__etree_to_dict, children):
             for k, v in dc.items():
                 dd[k].append(v)
-        d = {tt: {clean(k): v[0] if len(v) == 1 else v for k, v in dd.items()}}
+        d = {tt: {_clean_key(k): v[0] if len(v) == 1 else v for k, v in dd.items()}}
 
     if elem.attrib:
-        d[tt].update(('@' + clean(k), v) for k, v in elem.attrib.items())
+        d[tt].update(
+            ('@' + _clean_key(k), v)
+            for k, v in elem.attrib.items()
+            if k != AETHER__XML_NAMESPACE
+        )
+        if AETHER__XML_NAMESPACE in elem.attrib:
+            d[tt][AET_TAG] = literal_eval(elem.attrib[AETHER__XML_NAMESPACE])
 
     if elem.text:
         text = elem.text.strip()
@@ -998,6 +1029,7 @@ def __etree_to_dict(elem):
                 d[tt]['#text'] = text
         else:
             d[tt] = text
+
     return d
 
 

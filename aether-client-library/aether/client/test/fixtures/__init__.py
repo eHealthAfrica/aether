@@ -28,52 +28,52 @@ def file_to_json(path):
 here = os.path.dirname(os.path.realpath(__file__))
 
 # Projects
-project_name = "TestProject"
+project_name = 'TestProject'
 project_template = {
-    "revision": "1",
-    "name": None
+    'revision': '1',
+    'name': None
 }
 
 # Schemas
 
-schema_file = here + "/schema/schemas.avro"
-schema_definitions = file_to_json("%s" % (schema_file))
+schema_file = here + '/schema/schemas.avro'
+schema_definitions = file_to_json('%s' % (schema_file))
 
 schema_template = {
-    "name": None,
-    "type": "record",
-    "revision": "1",
-    "definition": None
+    'name': None,
+    'type': 'record',
+    'revision': '1',
+    'definition': None
 }
 
 # Schema Decorators
 
 schema_decorator_template = {
-    "revision": "1",
-    "name": None
+    'revision': '1',
+    'name': None
 }
 
 # Mapping
 
 mapping_name = 'VaccineReport'
 mapping_template = {
-    "name": mapping_name,
-    "definition": None,
-    "revision": "1"
+    'name': mapping_name,
+    'definition': None,
+    'revision': '1'
 }
 
-mapping_file = here + "/mappings/mapping.json"
-mapping_definition = file_to_json("%s" % (mapping_file))
+mapping_file = here + '/mappings/mapping.json'
+mapping_definition = file_to_json('%s' % (mapping_file))
 
 # Submission
 
 submission_template = {
-    "revision": 1,
-    "mapping_revision": 1,
-    "payload": None
+    'revision': 1,
+    'mapping_revision': 1,
+    'payload': None
 }
 
 
 def get_submission_payloads():
-    submission_file = here + "/submission/submissions_1000.json"
-    return file_to_json("%s" % (submission_file))
+    submission_file = here + '/submission/submissions_1000.json'
+    return file_to_json('%s' % (submission_file))

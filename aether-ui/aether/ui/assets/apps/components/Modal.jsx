@@ -18,33 +18,17 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React from 'react'
 
 import Portal from './Portal'
+import ModalDialog from './ModalDialog'
 
-export default class Modal extends Component {
-  render () {
-    return (
-      <Portal
-        onEnter={this.props.onEnter}
-        onEscape={this.props.onEscape}
-      >
-        <div className='modal show'>
-          <div className='modal-dialog'>
-            <div className='modal-header'>
-              <span className='modal-title'>{this.props.header}</span>
-            </div>
+const Modal = ({ onEnter, onEscape, ...props }) => (
+  <Portal onEnter={onEnter} onEscape={onEscape}>
+    <div className='modal show'>
+      <ModalDialog {...props} />
+    </div>
+  </Portal>
+)
 
-            <div className='modal-content'>
-              {this.props.children}
-
-              <div className='modal-actions'>
-                {this.props.buttons}
-              </div>
-            </div>
-          </div>
-        </div>
-      </Portal>
-    )
-  }
-}
+export default Modal

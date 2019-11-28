@@ -98,9 +98,9 @@ class KernelUtilsTest(CustomTestCase):
                 artefacts={'avro_schemas': []},
             )
 
-        self.assertIsNotNone(kpe)
-        self.assertIn('Connection with Aether Kernel server is not possible.',
-                      str(kpe.exception), kpe)
+            self.assertIn('Connection with Aether Kernel server is not possible.',
+                          str(kpe.exception), kpe)
+
         mock_auth.assert_called_once()
         mock_patch.assert_not_called()
 
@@ -115,12 +115,12 @@ class KernelUtilsTest(CustomTestCase):
                 artefacts={'avro_schemas': []},
             )
 
-        self.assertIsNotNone(kpe)
-        self.assertIn('Unexpected response from Aether Kernel server',
-                      str(kpe.exception), kpe)
-        self.assertIn('while trying to create/update the project artefacts',
-                      str(kpe.exception), kpe)
-        self.assertIn(f'"{str(self.project.project_id)}"', str(kpe.exception), kpe)
+            self.assertIn('Unexpected response from Aether Kernel server',
+                          str(kpe.exception), kpe)
+            self.assertIn('while trying to create/update the project artefacts',
+                          str(kpe.exception), kpe)
+            self.assertIn(f'"{str(self.project.project_id)}"', str(kpe.exception), kpe)
+
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
             method='patch',

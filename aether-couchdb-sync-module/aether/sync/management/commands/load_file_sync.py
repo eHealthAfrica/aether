@@ -19,7 +19,7 @@
 # under the License.
 
 from django.core.management.base import BaseCommand
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from aether.sync.api.couchdb_file import load_backup_file
 

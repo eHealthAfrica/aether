@@ -18,66 +18,50 @@
 
 import os
 import typing
-from urllib.parse import urlparse
 
 from bravado.requests_client import Authenticator, RequestsClient
 from oauthlib.oauth2 import (
     TokenExpiredError,
     is_secure_transport,
-    InsecureTransportError
+    InsecureTransportError,
 )
 import requests
 from requests_oauthlib import (
     OAuth2Session,
-    TokenUpdated
+    TokenUpdated,
 )
 
 from .logger import LOG
 from .exceptions import AetherAPIException
+
 # don't force https for oauth requests
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
+KEYCLOAK_AETHER_CLIENT = os.environ.get('KEYCLOAK_AETHER_CLIENT', 'aether')
+TOKEN_URL = '{auth_url}/realms/{realm}/protocol/openid-connect/token'
 
-class OauthClient(RequestsClient):
-    """Synchronous HTTP client implementation.
-    """
-
-    def __init__(self, authenticator, ssl_verify=True, ssl_cert=None):
-        """
-        :param ssl_verify: Set to False to disable SSL certificate validation.
-            Provide the path to a CA bundle if you need to use a custom one.
-        :param ssl_cert: Provide a client-side certificate to use. Either a
-            sequence of strings pointing to the certificate (1) and the private
-             key (2), or a string pointing to the combined certificate and key.
-        """
-        self.session = authenticator.session
-        self.authenticator = authenticator
-        self.ssl_verify = ssl_verify
-        self.ssl_cert = ssl_cert
-
-    def authenticated_request(self, request_params):
-        # type: (typing.Mapping[str, typing.Any]) -> requests.Request
-        return self.apply_authentication(
-            self.session.request(execute=False, **request_params))
+CSRF_HEADER_KEY = os.environ.get('CSRF_TOKEN_HEADER_KEY', 'X-CSRFToken')
+CSRF_COOKIE_KEY = os.environ.get('CSRF_TOKEN_COOKIE_KEY', 'csrftoken')
 
 
 class OauthAuthenticator(Authenticator):
 
     def __init__(
         self,
-        server,
+        host,
+        keycloak_url,
         realm,
-        user=None,
-        pw=None,
-        keycloak_url=None,
+        username=None,
+        password=None,
         offline_token=None,
-        endpoint_name='kernel'
+        endpoint_name='kernel',
     ):
+        self.host = host
         self.realm = realm
         self.endpoint_name = endpoint_name
-        self.host = urlparse(server).netloc
-        self.session = get_session(
-            server, realm, user, pw, keycloak_url, offline_token)
+        self.session = _get_session(
+            TOKEN_URL.format(auth_url=keycloak_url, realm=realm),
+            username, password, offline_token)
 
     def bind_client(self, client):
         client.session = self.session
@@ -85,8 +69,9 @@ class OauthAuthenticator(Authenticator):
 
     def get_spec(self, spec_url):
         res = self.session.get(spec_url)
-        self.csrf = res.cookies.get('csrftoken')
+        self.csrf = res.cookies.get(CSRF_COOKIE_KEY)
         LOG.debug(f'Set CSRFToken: {self.csrf}')
+
         spec = res.json()
         spec['host'] = f'{spec["host"]}/{self.realm}/{self.endpoint_name}'
         sec_def = spec['securityDefinitions']
@@ -99,10 +84,10 @@ class OauthAuthenticator(Authenticator):
         spec['security'] = [{'Authorization': []}]
         return spec
 
-    def apply(self, req):
-        # add CSRFToken
-        req.headers['X-CSRFToken'] = self.csrf
-        return req
+    def apply(self, request):
+        # add CSRF Token
+        request.headers[CSRF_HEADER_KEY] = self.csrf
+        return request
 
 
 class PreparableOauth2Session(OAuth2Session):
@@ -119,19 +104,19 @@ class PreparableOauth2Session(OAuth2Session):
         execute=True,
         **kwargs
     ):
-        """Intercept all requests and add the OAuth 2 token if present."""
+        '''Intercept all requests and add the OAuth 2 token if present.'''
         if not is_secure_transport(url):
             raise InsecureTransportError()
         if self.token and not withhold_token:
             LOG.debug(
-                "Invoking %d protected resource request hooks.",
-                len(self.compliance_hook["protected_request"]),
+                'Invoking %d protected resource request hooks.',
+                len(self.compliance_hook['protected_request']),
             )
-            for hook in self.compliance_hook["protected_request"]:
-                LOG.debug("Invoking hook %s.", hook)
+            for hook in self.compliance_hook['protected_request']:
+                LOG.debug('Invoking hook %s.', hook)
                 url, headers, data = hook(url, headers, data)
 
-            LOG.debug("Adding token %s to request.", self.token)
+            LOG.debug('Adding token %s to request.', self.token)
             try:
                 url, headers, data = self._client.add_token(
                     url, http_method=method, body=data, headers=headers
@@ -140,12 +125,12 @@ class PreparableOauth2Session(OAuth2Session):
             except TokenExpiredError:
                 if self.auto_refresh_url:
                     LOG.debug(
-                        "Auto refresh is set, attempting to refresh at %s.",
+                        'Auto refresh is set, attempting to refresh at %s.',
                         self.auto_refresh_url,
                     )
 
                     # We mustn't pass auth twice.
-                    auth = kwargs.pop("auth", None)
+                    auth = kwargs.pop('auth', None)
                     if client_id and client_secret and (auth is None):
                         LOG.debug(
                             f'Encoding client_id "{client_id}" with'
@@ -169,9 +154,9 @@ class PreparableOauth2Session(OAuth2Session):
                         raise TokenUpdated(token)
                 else:
                     raise
-        LOG.debug("Requesting url %s using method %s.", url, method)
-        LOG.debug("Supplying headers %s and data %s", headers, data)
-        LOG.debug("Passing through key word arguments %s.", kwargs)
+        LOG.debug('Requesting url %s using method %s.', url, method)
+        LOG.debug('Supplying headers %s and data %s', headers, data)
+        LOG.debug('Passing through key word arguments %s.', kwargs)
         if execute:
             return super(OAuth2Session, self).request(
                 method, url, headers=headers, data=data, **kwargs
@@ -187,52 +172,72 @@ class PreparableOauth2Session(OAuth2Session):
             return req
 
 
-def get_session(
-    server,
-    realm,
-    user=None,
-    pw=None,
-    keycloak_url=None,
-    offline_token=None
+class OauthClient(RequestsClient):
+    '''Synchronous HTTP client implementation.
+    '''
+
+    def set_oauth(
+        self,
+        host,
+        keycloak_url,
+        realm,
+        username=None,
+        password=None,
+        offline_token=None,
+        endpoint_name='kernel',
+    ):
+        self.authenticator = OauthAuthenticator(
+            host, keycloak_url, realm, username, password,
+            offline_token, endpoint_name,
+        )
+
+    def authenticated_request(self, request_params):
+        # type: (typing.Mapping[str, typing.Any]) -> requests.Request
+        return self.apply_authentication(
+            self.session.request(execute=False, **request_params))
+
+
+def _get_session(
+    token_url,
+    username=None,
+    password=None,
+    offline_token=None,
 ):
-    if not ((pw and user) or offline_token):
-        raise ValueError('Either offline token, or user credentials for'
+    if not ((password and username) or offline_token):
+        raise ValueError('Either offline token, or username credentials for'
                          'password grant must be included.')
-    if user:
+    LOG.debug(f'token url: {token_url}')
+
+    initial_token = _get_initial_token(token_url, username, password, offline_token)
+    LOG.debug(f'initial_token: {initial_token}')
+
+    if username:
         scope = 'profile openid email'
     else:
         scope = 'email offline_access profile'
-    base_url = keycloak_url or f'{server}/auth'
-    token_url = f'{base_url}/realms/{realm}/protocol/openid-connect/token'
-    LOG.debug(f'token url: {token_url}')
-    initial_token = get_initial_token(user, pw, token_url, offline_token)
-    LOG.debug(f'initial_token: {initial_token}')
-    extras = {
-        'client_id': 'aether',
-    }
     return PreparableOauth2Session(
-        user,
+        username,
         token=initial_token,
         auto_refresh_url=token_url,
-        auto_refresh_kwargs=extras,
+        auto_refresh_kwargs={'client_id': KEYCLOAK_AETHER_CLIENT},
         scope=scope,
         token_updater=_do_nothing  # on update, but is not the updater
     )
 
 
-def _do_nothing(token):
-    LOG.info('Updated access token')
-    pass
-
-
-def get_initial_token(user=None, pw=None, token_url=None, offline_token=None):
+def _get_initial_token(
+    token_url,
+    username=None,
+    password=None,
+    offline_token=None,
+):
     grant = None
-    if (user and pw):
+    if username and password:
         grant = 'password'
         data = {
-            'client_id': 'aether',
-            'username': user,
-            'password': pw,
+            'client_id': KEYCLOAK_AETHER_CLIENT,
+            'username': username,
+            'password': password,
             'grant_type': grant,
             'scope': 'profile openid email'
 
@@ -240,17 +245,23 @@ def get_initial_token(user=None, pw=None, token_url=None, offline_token=None):
     elif offline_token:
         grant = 'refresh_token'
         data = {
-            'client_id': 'aether',
+            'client_id': KEYCLOAK_AETHER_CLIENT,
             'refresh_token': offline_token,
             'grant_type': grant,
             'scope': 'profile openid email'
         }
     else:
-        raise ValueError('Either pw grant or offline_token must be used')
+        raise ValueError('Either password grant or offline_token must be used')
+
     res = requests.post(token_url, data=data)
     try:
         res.raise_for_status()
+        LOG.info(f'Got refresh token via {grant}. Status: {res.status_code}')
+        return res.json()
     except requests.exceptions.HTTPError:
         raise AetherAPIException('Could not get initial token for OIDC auth.')
-    LOG.info(f'Got refresh token via {grant}. Status:{res.status_code}')
-    return res.json()
+
+
+def _do_nothing(*args, **kwargs):
+    LOG.info('Updated access token')
+    pass

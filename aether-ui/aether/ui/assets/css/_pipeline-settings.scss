@@ -107,3 +107,10 @@ div.code {
     margin-left: auto;
   }
 }
+
+.clipboard {
+  font-size: 1rem;
+  margin: .2rem;
+  color: lighten($dark-blue, 5);
+  cursor: pointer;
+}

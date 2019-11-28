@@ -31,12 +31,15 @@ matrix:
     # execute only to deploy
     - name: "Aether release"
       stage: deploy
-      script: ./scripts/release.sh
       # release only in:
         #  branch   develop
         #  branch   release-#.#
         #  tag      #.#.#
       if: (branch = develop) OR (branch =~ ^release\-[0-9]+\.[0-9]+$) OR (tag =~ ^[0-9]+(\.[0-9]+){2}$)
+      before_install:
+        - openssl aes-256-cbc -K $encrypted_9112fb2807d4_key -iv $encrypted_9112fb2807d4_iv -in gcs_key.json.enc -out gcs_key.json -d
+      install: pip install -q google-cloud-storage
+      script: ./scripts/release.sh
 
 install: true
 

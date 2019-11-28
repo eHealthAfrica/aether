@@ -24,15 +24,15 @@ import requests
 
 # Register Test Project and provide access to artifacts
 # through client test fixtures
-from aether.client.test_fixtures import (  # noqa
+from aether.client.test import (  # noqa
     client,
     project,
     schemas,
     schemadecorators,
     mapping,
-    mappingset
+    mappingset,
 )
-from aether.client import fixtures  # noqa
+from aether.client.test import fixtures
 
 from .consumer import get_consumer, read
 
@@ -93,7 +93,7 @@ def wait_for_producer_status():
     raise TimeoutError(f'Producer not ready before {max_retry}s timeout. Reason: {failure_mode}')
 
 
-@pytest.fixture(scope='function')  # noqa
+@pytest.fixture(scope='function')
 def entities(client, schemadecorators):  # noqa: F811
     entities = {}
     for sd in schemadecorators:

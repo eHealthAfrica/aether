@@ -19,7 +19,7 @@
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.postgres.forms.jsonb import JSONField
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from .api import models, utils
 
