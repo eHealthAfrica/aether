@@ -62,13 +62,19 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', 
 # Export Configuration
 # ------------------------------------------------------------------------------
 
-EXPORT_CSV_ESCAPE = os.environ.get('EXPORT_CSV_ESCAPE', '\\')
-EXPORT_CSV_QUOTE = os.environ.get('EXPORT_CSV_QUOTE', '"')
-EXPORT_CSV_SEPARATOR = os.environ.get('EXPORT_CSV_SEPARATOR', ',')
-EXPORT_DATA_FORMAT = os.environ.get('EXPORT_DATA_FORMAT', 'split')
-EXPORT_HEADER_CONTENT = os.environ.get('EXPORT_HEADER_CONTENT', 'labels')
-EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR', '/')
-EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
+EXPORT_CSV_ESCAPE = os.environ.get('EXPORT_CSV_ESCAPE') or '\\'
+EXPORT_CSV_QUOTE = os.environ.get('EXPORT_CSV_QUOTE') or '"'
+EXPORT_CSV_SEPARATOR = os.environ.get('EXPORT_CSV_SEPARATOR') or ','
+EXPORT_DATA_FORMAT = os.environ.get('EXPORT_DATA_FORMAT').lower()
+if EXPORT_DATA_FORMAT != 'flatten':
+    EXPORT_DATA_FORMAT = 'split'
+EXPORT_HEADER_CONTENT = os.environ.get('EXPORT_HEADER_CONTENT').lower()
+if EXPORT_HEADER_CONTENT not in ('labels', 'paths', 'both'):
+    EXPORT_HEADER_CONTENT = 'labels'
+EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR') or '/'
+EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN').lower()
+if EXPORT_HEADER_SHORTEN != 'yes':
+    EXPORT_HEADER_SHORTEN = 'no'
 
 
 # Profiling workaround

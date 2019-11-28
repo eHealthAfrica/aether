@@ -47,10 +47,8 @@ from aether.kernel.api.exporter import (
     generate_file as generate,
     CSV_CONTENT_TYPE,
     CSV_FORMAT,
-    DEFAULT_DIALECT,
     XLSX_CONTENT_TYPE,
     XLSX_FORMAT,
-    ExportOptions,
 )
 
 
@@ -353,6 +351,8 @@ class ExporterViewsTest(TestCase):
         run_entity_extraction(submission)
         self.assertEqual(models.Entity.objects.count(), 1)
 
+        self.assertEqual(models.ExportTask.objects.count(), 0)
+
     def tearDown(self):
         self.client.logout()
 
@@ -363,19 +363,19 @@ class ExporterViewsTest(TestCase):
     def test__generate__csv(self):
         kwargs = {
             'labels': EXAMPLE_LABELS,
-            'format': CSV_FORMAT,
+            'file_format': CSV_FORMAT,
             'offset': 0,
             'limit': 1,
         }
         # without paths (includes: ``aether_extractor_enrichment``)
-        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
         _, zip_path, _ = generate(data, paths=[], **kwargs)
         zip_file = zipfile.ZipFile(zip_path, 'r')
         self.assertEqual(zip_file.namelist(),
                          ['export.csv', 'export.1.csv', 'export.2.csv', 'export.3.csv', 'export.4.csv'])
 
         # with the whole paths list (there are 3 arrays with data, ``iterate_none`` is empty)
-        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
         _, zip_path, _ = generate(data, paths=EXAMPLE_PATHS, **kwargs)
         zip_file = zipfile.ZipFile(zip_path, 'r')
         self.assertEqual(zip_file.namelist(),
@@ -392,34 +392,32 @@ class ExporterViewsTest(TestCase):
         _, zip_path, _ = generate(
             data,
             paths=[],
-            options=ExportOptions(
-                header_content='paths',
-                header_separator='*',
-                header_shorten='no',
-                data_format='flatten',
-                csv_dialect=DEFAULT_DIALECT,
-            ),
+            options={
+                'header_content': 'paths',
+                'header_separator': '*',
+                'header_shorten': 'no',
+                'data_format': 'flatten',
+            },
             **kwargs,
         )
         zip_file = zipfile.ZipFile(zip_path, 'r')
         self.assertEqual(zip_file.namelist(), ['export.csv'])
 
     def test__generate__xlsx__split(self):
-        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
         _, xlsx_path, _ = generate(
             data,
             paths=EXAMPLE_PATHS,
             labels=EXAMPLE_LABELS,
-            format=XLSX_FORMAT,
+            file_format=XLSX_FORMAT,
             offset=0,
             limit=1,
-            options=ExportOptions(
-                header_content='both',  # includes paths and labels
-                header_separator='—',
-                header_shorten='no',
-                data_format='split',
-                csv_dialect=DEFAULT_DIALECT,
-            ),
+            options={
+                'header_content': 'both',  # includes paths and labels
+                'header_separator': '—',
+                'header_shorten': 'no',
+                'data_format': 'split',
+            },
         )
         wb = load_workbook(filename=xlsx_path, read_only=True)
         _id = str(models.Submission.objects.first().pk)
@@ -565,21 +563,20 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws3['D3'].value, 'one')
 
     def test__generate__xlsx__flatten(self):
-        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
         _, xlsx_path, _ = generate(
             data,
             paths=EXAMPLE_PATHS,
             labels=EXAMPLE_LABELS,
-            format=XLSX_FORMAT,
+            file_format=XLSX_FORMAT,
             offset=0,
             limit=1,
-            options=ExportOptions(
-                header_content='paths',
-                header_separator='—',
-                header_shorten='no',
-                data_format='flatten',
-                csv_dialect=DEFAULT_DIALECT,
-            ),
+            options={
+                'header_content': 'paths',
+                'header_separator': '—',
+                'header_shorten': 'no',
+                'data_format': 'flatten',
+            },
         )
         wb = load_workbook(filename=xlsx_path, read_only=True)
         _id = str(models.Submission.objects.first().pk)
@@ -643,6 +640,52 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['Y2'].value, 'one')
         self.assertEqual(ws['Z2'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
 
+    @mock.patch('aether.kernel.api.exporter.PAGE_SIZE', 1)
+    def test__generate__xlsx__paginate(self):
+
+        submission_1 = models.Submission.objects.first()
+        submission_2 = models.Submission.objects.create(
+            payload=submission_1.payload,
+            mappingset=submission_1.mappingset,
+        )
+        submission_3 = models.Submission.objects.create(
+            payload=submission_1.payload,
+            mappingset=submission_1.mappingset,
+        )
+
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
+        _, xlsx_path, _ = generate(
+            data,
+            paths=EXAMPLE_PATHS,
+            labels=EXAMPLE_LABELS,
+            file_format=XLSX_FORMAT,
+            offset=0,
+            limit=2,
+            options={
+                'header_content': 'paths',
+                'header_separator': '*',
+                'header_shorten': '—',
+                'data_format': 'flatten',
+            },
+        )
+        wb = load_workbook(filename=xlsx_path, read_only=True)
+
+        # check workbook content
+        ws = wb['0']  # root content
+
+        # check headers: paths
+        self.assertEqual(ws['A1'].value, '@')
+        self.assertEqual(ws['B1'].value, '@id')
+
+        # check entries (ordered by `modified` DESC)
+        self.assertEqual(ws['A2'].value, 1)
+        self.assertEqual(ws['B2'].value, str(submission_3.pk))
+
+        self.assertEqual(ws['A3'].value, 2)
+        self.assertEqual(ws['B3'].value, str(submission_2.pk))
+
+        self.assertIsNone(ws['A4'].value)  # limit is 2
+
     # -----------------------------
     # SUBMISSIONS
     # -----------------------------
@@ -674,17 +717,17 @@ class ExporterViewsTest(TestCase):
             data=mock.ANY,
             paths=[],
             labels={},
-            format='xlsx',
+            file_format='xlsx',
             filename='project1-export',
             offset=0,
             limit=1,
-            options=ExportOptions(
-                header_content='labels',
-                header_separator='/',
-                header_shorten='no',
-                data_format='split',
-                csv_dialect=mock.ANY,
-            ),
+            options={
+                'header_content': 'labels',
+                'header_separator': '/',
+                'header_shorten': 'no',
+                'data_format': 'split',
+            },
+            dialect=mock.ANY,
         )
 
     @mock.patch(
@@ -714,17 +757,17 @@ class ExporterViewsTest(TestCase):
             data=mock.ANY,
             paths=['_id', '_rev'],
             labels={'_id': 'id', '_rev': 'rev'},
-            format='csv',
+            file_format='csv',
             filename='submissions',
             offset=10,
             limit=14,  # there was already one submission
-            options=ExportOptions(
-                header_content='labels',
-                header_separator='/',
-                header_shorten='no',
-                data_format='split',
-                csv_dialect=mock.ANY,
-            ),
+            options={
+                'header_content': 'labels',
+                'header_separator': '/',
+                'header_shorten': 'no',
+                'data_format': 'split',
+            },
+            dialect=mock.ANY,
         )
 
     # -----------------------------
@@ -758,11 +801,12 @@ class ExporterViewsTest(TestCase):
             data=mock.ANY,
             paths=mock.ANY,
             labels=mock.ANY,
-            format='xlsx',
+            file_format='xlsx',
             filename='project1-export',
             offset=0,
             limit=1,
             options=mock.ANY,
+            dialect=mock.ANY,
         )
 
     def test_entities_export__xlsx__empty(self):
@@ -818,18 +862,26 @@ class ExporterViewsTest(TestCase):
             data=mock.ANY,
             paths=mock.ANY,
             labels=mock.ANY,
-            format='csv',
+            file_format='csv',
             filename='project1-export',
             offset=0,
             limit=1,
-            options=ExportOptions(
-                header_content='paths',
-                header_separator=':',
-                header_shorten='yes',
-                data_format='flatten',
-                csv_dialect=mock.ANY,
-            ),
+            options={
+                'header_content': 'paths',
+                'header_separator': ':',
+                'header_shorten': 'yes',
+                'data_format': 'flatten',
+            },
+            dialect=mock.ANY,
         )
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        task = models.ExportTask.objects.first()
+
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.project.name, 'project1')
+        self.assertEqual(task.status, 'ERROR')
+        self.assertEqual(len(task.files), 0)
 
     def test_entities_export__csv__empty(self):
         response = self.client.post(reverse('entity-csv') + '?project=unknown')
@@ -843,15 +895,26 @@ class ExporterViewsTest(TestCase):
         )
         response = self.client.post(reverse('entity-csv'))
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(models.ExportTask.objects.count(), 0)
 
         response = self.client.post(reverse('entity-csv') + '?project=project1')
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.ExportTask.objects.count(), 1)
 
         response = self.client.post(reverse('entity-csv') + '?project=project2')
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.ExportTask.objects.count(), 2)
 
     def test_entities_export__csv(self):
         response = self.client.post(reverse('entity-csv'))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response, FileResponse))
         self.assertEqual(response['Content-Type'], CSV_CONTENT_TYPE)
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        task = models.ExportTask.objects.first()
+
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.project.name, 'project1')
+        self.assertEqual(task.status, 'DONE')
+        self.assertEqual(len(task.files), 1)

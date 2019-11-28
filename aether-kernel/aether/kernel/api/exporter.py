@@ -17,7 +17,6 @@
 # under the License.
 
 from datetime import datetime
-from collections import namedtuple
 import csv
 import json
 import logging
@@ -29,7 +28,8 @@ import zipfile
 from openpyxl import Workbook
 
 from django.conf import settings
-from django.db.models import F, Count
+from django.db import connection
+from django.db.models import Count, F, QuerySet
 from django.http import FileResponse
 from django.utils.translation import gettext as _
 
@@ -39,6 +39,7 @@ from rest_framework.decorators import action
 from aether.python.avro.tools import ARRAY_PATH, MAP_PATH, UNION_PATH, extract_jsonpaths_and_docs
 from aether.python.entity.extractor import ENTITY_EXTRACTION_ENRICHMENT, ENTITY_EXTRACTION_ERRORS
 
+from .models import ExportTask
 
 RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
 RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
@@ -68,22 +69,15 @@ csv.register_dialect(
     quoting=csv.QUOTE_NONNUMERIC,
 )
 
-ExportOptions = namedtuple(
-    'ExportOptions', [
-        'header_content',
-        'header_separator',
-        'header_shorten',
-        'data_format',
-        'csv_dialect',
-    ])
+DEFAULT_OPTIONS = {
+    'header_content': settings.EXPORT_HEADER_CONTENT,
+    'header_separator': settings.EXPORT_HEADER_SEPARATOR,
+    'header_shorten': settings.EXPORT_HEADER_SHORTEN,
+    'data_format': settings.EXPORT_DATA_FORMAT,
+}
 
-DEFAULT_OPTIONS = ExportOptions(
-    header_content=settings.EXPORT_HEADER_CONTENT,
-    header_separator=settings.EXPORT_HEADER_SEPARATOR,
-    header_shorten=settings.EXPORT_HEADER_SHORTEN,
-    data_format=settings.EXPORT_DATA_FORMAT,
-    csv_dialect=DEFAULT_DIALECT,
-)
+EXPORT_FIELD_ID = 'id'
+EXPORT_FIELD_DATA = 'exporter_data'
 
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
@@ -160,7 +154,7 @@ class ExporterMixin():
 
         Reachable at ``/{model}/xlsx/``
         '''
-        return self.__export(request, format=XLSX_FORMAT)
+        return self.__export(request, file_format=XLSX_FORMAT)
 
     @action(detail=False, methods=['get', 'post'])
     def csv(self, request, *args, **kwargs):
@@ -169,53 +163,12 @@ class ExporterMixin():
 
         Reachable at ``/{model}/csv/``
         '''
-        return self.__export(request, format=CSV_FORMAT)
+        return self.__export(request, file_format=CSV_FORMAT)
 
     def __get(self, request, name, default=None):
         return request.query_params.get(name, dict(request.data).get(name, default))
 
-    def __options(self, request):
-        # register CSV dialect for the given options
-        dialect_name = f'aether_custom_{str(uuid.uuid4())}'
-        csv_sep = self.__get(request, 'csv_separator', settings.EXPORT_CSV_SEPARATOR)
-        if csv_sep == 'TAB':
-            csv_sep = '\t'
-
-        csv.register_dialect(
-            dialect_name,
-            delimiter=csv_sep,
-            doublequote=False,
-            escapechar=self.__get(request, 'csv_escape', settings.EXPORT_CSV_ESCAPE),
-            quotechar=self.__get(request, 'csv_quote', settings.EXPORT_CSV_QUOTE),
-            quoting=csv.QUOTE_NONNUMERIC,
-        )
-
-        # check valid values for each option
-        header_content = self.__get(request, 'header_content', settings.EXPORT_HEADER_CONTENT)
-        if header_content not in ('labels', 'paths', 'both'):
-            header_content = 'labels'
-
-        header_separator = self.__get(request, 'header_separator', settings.EXPORT_HEADER_SEPARATOR)
-        if not header_separator:
-            header_separator = settings.EXPORT_HEADER_SEPARATOR
-
-        header_shorten = self.__get(request, 'header_shorten', settings.EXPORT_HEADER_SHORTEN)
-        if header_shorten != 'yes':
-            header_shorten = 'no'
-
-        data_format = self.__get(request, 'data_format', settings.EXPORT_DATA_FORMAT)
-        if data_format != 'flatten':
-            data_format = 'split'
-
-        return ExportOptions(
-            header_content=header_content,
-            header_separator=header_separator,
-            header_shorten=header_shorten,
-            data_format=data_format,
-            csv_dialect=dialect_name,
-        )
-
-    def __export(self, request, format=CSV_FORMAT):
+    def __export(self, request, file_format=CSV_FORMAT):
         '''
         Expected parameters:
 
@@ -351,6 +304,14 @@ class ExporterMixin():
         - ``csv_separator``, a one-character string used to separate the columns.
             Default: comma ``,``.
 
+        Export options:
+
+        - ``include_attachments`` indicates if the attachment files should also be included
+            as part of the generated file.
+
+        - ``offline``, indicates if instead of returning the file return the task id
+            linked to this export and continue the export process in background.
+
         '''
         queryset = self.filter_queryset(self.get_queryset())
 
@@ -361,8 +322,8 @@ class ExporterMixin():
                 status=400,
             )
 
-        data = queryset.annotate(exporter_data=F(self.json_field)) \
-                       .values('pk', 'exporter_data')
+        data = queryset.annotate(**{EXPORT_FIELD_DATA: F(self.json_field)}) \
+                       .values(EXPORT_FIELD_ID, EXPORT_FIELD_DATA)
 
         # check pagination (positive values)
         page_size = max(1, int(self.__get(request, 'page_size', MAX_SIZE)))
@@ -392,24 +353,70 @@ class ExporterMixin():
                     docs=docs,
                 )
 
-        options = self.__options(request)
+        download_attachments = self.__get(request, 'include_attachments', 'false')
+        download_attachments = download_attachments.lower() in ['true', 't']
+
+        in_background = self.__get(request, 'offline', 'false')
+        in_background = in_background.lower() in ['true', 't']
+
+        # check valid values for each option
+        header_content = self.__get(request, 'header_content', settings.EXPORT_HEADER_CONTENT).lower()
+        if header_content not in ('labels', 'paths', 'both'):
+            header_content = 'labels'
+
+        header_separator = self.__get(request, 'header_separator', settings.EXPORT_HEADER_SEPARATOR)
+        if not header_separator:
+            header_separator = settings.EXPORT_HEADER_SEPARATOR
+
+        header_shorten = self.__get(request, 'header_shorten', settings.EXPORT_HEADER_SHORTEN).lower()
+        if header_shorten != 'yes':
+            header_shorten = 'no'
+
+        data_format = self.__get(request, 'data_format', settings.EXPORT_DATA_FORMAT).lower()
+        if data_format != 'flatten':
+            data_format = 'split'
+
+        csv_sep = self.__get(request, 'csv_separator', settings.EXPORT_CSV_SEPARATOR)
+        if csv_sep == 'TAB':
+            csv_sep = '\t'
+
+        # create task with all need data
+        project = getattr(queryset.first(), self.project_field)
+        sql, params = data.query.sql_with_params()
+        export_settings = {
+            'query': {
+                'sql': sql,
+                'params': params,
+            },
+            'file_format': file_format,
+            'filename': self.__get(request, 'filename', queryset.first().name or 'export'),
+            'paths': jsonpaths,
+            'labels': docs,
+            'offset': offset,
+            'limit': limit,
+            'export_options': {
+                'header_content': header_content,
+                'header_separator': header_separator,
+                'header_shorten': header_shorten,
+                'data_format': data_format,
+            },
+            'dialect_options': {
+                'delimiter': csv_sep,
+                'escapechar': self.__get(request, 'csv_escape', settings.EXPORT_CSV_ESCAPE),
+                'quotechar': self.__get(request, 'csv_quote', settings.EXPORT_CSV_QUOTE),
+            },
+            'download_attachments': download_attachments,
+        }
+
+        task = ExportTask.objects.create(
+            created_by=request.user,
+            project=project,
+            settings=export_settings,
+            status='INIT',
+        )
 
         try:
-            logger.info(f'Preparing {format} file: offset {offset}, limit {limit}')
-            logger.info(str(options))
-            file_name, file_path, content_type = generate_file(
-                data=data,
-                format=format,
-                # use the first instance to build the filename
-                filename=self.__get(request, 'filename', queryset.first().name or 'export'),
-                paths=jsonpaths,
-                labels=docs,
-                offset=offset,
-                limit=limit,
-                options=options,
-            )
-            csv.unregister_dialect(options.csv_dialect)
-            logger.info(f'File "{file_name}" ready!')
+            file_name, file_path, content_type = execute_task(task)
 
             response = FileResponse(streaming_content=open(file_path, 'rb'),
                                     as_attachment=True,
@@ -420,41 +427,102 @@ class ExporterMixin():
             return response
 
         except IOError as e:
-            csv.unregister_dialect(options.csv_dialect)
             msg = _('Got an error while creating the file: {error}').format(error=str(e))
             return Response(data={'detail': msg}, status=500)
+
+
+def execute_task(task):
+    settings = task.settings
+
+    try:
+        task.status = 'WIP'
+        task.save()
+
+        # register CSV dialect for the given options
+        dialect_name = f'aether_custom_{str(uuid.uuid4())}'
+        csv.register_dialect(
+            dialect_name,
+            delimiter=settings['dialect_options']['delimiter'],
+            doublequote=False,
+            escapechar=settings['dialect_options']['escapechar'],
+            quotechar=settings['dialect_options']['quotechar'],
+            quoting=csv.QUOTE_NONNUMERIC,
+        )
+
+        _file_format = settings['file_format']
+        _offset = settings['offset']
+        _limit = settings['limit']
+
+        logger.info(f'Preparing {_file_format} file: offset {_offset}, limit {_limit}')
+        logger.info(str(settings['export_options']))
+        file_name, file_path, content_type = generate_file(
+            data=(settings['query']['sql'], settings['query']['params'],),
+            file_format=_file_format,
+            filename=settings['filename'],
+            paths=settings['paths'],
+            labels=settings['labels'],
+            offset=_offset,
+            limit=_limit,
+            options=settings['export_options'],
+            dialect=dialect_name,
+        )
+        logger.info(f'File "{file_name}" ready!')
+
+        task.add_file(file_name, file_path)
+        task.status = 'DONE'
+        task.save()
+
+        return file_name, file_path, content_type
+
+    except Exception:
+        task.status = 'ERROR'
+        task.save()
+        raise
+
+    finally:
+        csv.unregister_dialect(dialect_name)
 
 
 def generate_file(data,
                   paths=[],
                   labels={},
-                  format=CSV_FORMAT,
+                  file_format=CSV_FORMAT,
                   filename='export',
                   offset=0,
                   limit=MAX_SIZE,
                   options=DEFAULT_OPTIONS,
+                  dialect=DEFAULT_DIALECT,
                   ):
     '''
     Generates an XLSX/ ZIP (of CSV files) file with the given data.
 
-    - ``data`` is a queryset with two main properties ``pk`` and ``exporter_data``.
-    - ``format``, expected values ``xlsx`` or ``csv``.
+    - ``data`` can be one of two options:
+      - a queryset with two main properties ``EXPORT_FIELD_ID``
+        and ``EXPORT_FIELD_DATA`` or,
+      - a tuple of sql sentence and params, usually extracted
+        from ``data.query.sql_with_params()``.
+    - ``file_format``, expected values ``xlsx`` or ``csv``.
     - ``paths`` is a list with the allowed jsonpaths.
     - ``labels`` is a dictionary whose keys are the jsonpaths
       and the values the linked labels to use as header for that jsonpath.
     - ``options`` the export options.
     '''
 
-    csv_files = __generate_csv_files(data, paths, labels, offset, limit, options)
-    if format == XLSX_FORMAT:
-        return __prepare_xlsx(csv_files, filename, options.csv_dialect)
+    if isinstance(data, QuerySet):
+        sql, params = data.query.sql_with_params()
+    else:
+        sql, params = data
+
+    csv_files = __generate_csv_files(sql, params, paths, labels, offset, limit, options, dialect)
+    if file_format == XLSX_FORMAT:
+        return __prepare_xlsx(csv_files, filename, dialect)
     else:
         return __prepare_zip(csv_files, filename)
 
 
 def __prepare_zip(csv_files, filename):
     zip_name = f'{filename}-{datetime.now().isoformat()}.zip'
-    zip_path = EXPORT_DIR + '/' + filename
+    zip_path = EXPORT_DIR + '/' + zip_name
     with zipfile.ZipFile(zip_path, 'w') as csv_zip:
         for key, value in csv_files.items():
             csv_name = f'{filename}.csv' if key == '0' else f'{filename}.{key}.csv'
@@ -463,12 +531,12 @@ def __prepare_zip(csv_files, filename):
     return zip_name, zip_path, CSV_CONTENT_TYPE
 
 
-def __prepare_xlsx(csv_files, filename, csv_dialect):
+def __prepare_xlsx(csv_files, filename, dialect):
     wb = Workbook(write_only=True, iso_dates=True)
     for key, value in csv_files.items():
         ws = wb.create_sheet(key)
         with open(value, newline='') as f:
-            reader = csv.reader(f, dialect=csv_dialect)
+            reader = csv.reader(f, dialect=dialect)
             for line in reader:
                 ws.append(line)
 
@@ -490,11 +558,21 @@ def __prepare_xlsx(csv_files, filename, csv_dialect):
 #      creates a new csv group and includes there the array entries
 #      (including the row attributes in each one) as rows.
 #
-# @param {list}  data    - raw data
+# @param {str}   sql     - SQL sentence
+# @param {list}  params  - SQL params
 # @param {list}  paths   - the list of allowed paths
 # @param {dict}  labels  - a dictionary with header labels
 #
-def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_options=DEFAULT_OPTIONS):
+def __generate_csv_files(
+        sql,
+        params,
+        paths,
+        labels,
+        offset=0,
+        limit=MAX_SIZE,
+        export_options=DEFAULT_OPTIONS,
+        dialect=DEFAULT_DIALECT,
+):
     def add_header(options, header):
         if header not in options['headers_set']:
             options['headers_set'].add(header)
@@ -514,7 +592,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
             title = '0' if group == '$' else str(len(csv_options.keys()))
             csv_path = f'{EXPORT_DIR}/temp-{title}.csv'
             f = open(csv_path, 'w', newline='')
-            c = csv.writer(f, dialect=export_options.csv_dialect)
+            c = csv.writer(f, dialect=dialect)
 
             csv_options[group] = {
                 'file': f,
@@ -559,22 +637,26 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
         append_entry(current, entry)
 
     # start generation
-    flatten_list = (export_options.data_format == 'flatten')
+    flatten_list = (export_options['data_format'] == 'flatten')
     csv_options = {}
     paths = __filter_paths(paths)
 
     # paginate results to reduce memory usage
-    data_from = offset
-    index = offset
-    while data_from < limit:
-        data_to = min(data_from + PAGE_SIZE, limit)
-        logger.debug(f'From {data_from} to {data_to}')
+    with connection.cursor() as cursor:
+        data_from = offset
+        index = offset
+        while data_from < limit:
+            data_to = min(data_from + PAGE_SIZE, limit)
+            logger.debug(f'From {data_from} to {data_to}')
 
-        for row in data[data_from:data_to]:
-            index += 1
-            json_data = __flatten_dict(row.get('exporter_data'), flatten_list)
-            walker(json_data, {'@': index, '@id': str(row.get('pk'))}, '$')
-        data_from = data_to
+            cursor.execute(sql + f' OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
+            columns = [col[0] for col in cursor.description]
+            for entry in cursor:
+                row = dict(zip(columns, entry))
+                index += 1
+                json_data = __flatten_dict(row.get(EXPORT_FIELD_DATA), flatten_list)
+                walker(json_data, {'@': index, '@id': str(row.get(EXPORT_FIELD_ID))}, '$')
+            data_from = data_to
 
     logger.debug('Building headers')
 
@@ -592,31 +674,32 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
         headers = __filter_headers(paths, group, current['headers'])
         if headers:
             with open(rows_path, newline='') as fr, open(csv_path, 'w', newline='') as fw:
-                r = csv.DictReader(fr, fieldnames=current['headers'], dialect=export_options.csv_dialect)
-                w = csv.writer(fw, dialect=export_options.csv_dialect)
+                r = csv.DictReader(fr, fieldnames=current['headers'], dialect=dialect)
+                w = csv.writer(fw, dialect=dialect)
 
-                single = (export_options.header_shorten == 'yes')
+                single = (export_options['header_shorten'] == 'yes')
+                joiner = export_options['header_separator']
 
                 # paths header
-                if export_options.header_content in ('paths', 'both'):
+                if export_options['header_content'] in ('paths', 'both'):
                     w.writerow([
                         __get_label(header,
                                     labels,
                                     content='path',
                                     single=single,
-                                    joiner=export_options.header_separator,
+                                    joiner=joiner,
                                     )
                         for header in headers
                     ])
 
                 # labels header
-                if export_options.header_content in ('labels', 'both'):
+                if export_options['header_content'] in ('labels', 'both'):
                     w.writerow([
                         __get_label(header,
                                     labels,
                                     content='label',
                                     single=single,
-                                    joiner=f' {export_options.header_separator} ',
+                                    joiner=f' {joiner} ',
                                     )
                         for header in headers
                     ])
