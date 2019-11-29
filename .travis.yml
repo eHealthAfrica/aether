@@ -32,10 +32,10 @@ matrix:
     - name: "Aether release"
       stage: deploy
       # release only in:
-        #  branch   develop
-        #  branch   release-#.#
-        #  tag      #.#.#
-        #  never in forks or pull request
+      #   - branch   develop
+      #   - branch   release-#.#
+      #   - tag      #.#.#
+      #   - never in forks or pull requests
       if: |
         fork IS false AND \
         type != pull_request AND \
