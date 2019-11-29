@@ -8,6 +8,12 @@ services:
   - docker
 
 
+# build only the develop or release branches
+branches:
+  only:
+  - develop
+  - ^release\-[0-9]+\.[0-9]+$
+
 # use matrix to parallelize tests
 matrix:
   fast_finish: true
