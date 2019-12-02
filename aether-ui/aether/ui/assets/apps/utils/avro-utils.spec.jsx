@@ -18,9 +18,10 @@
  * under the License.
  */
 
-/* global describe, expect, it */
+/* global describe, expect, it, jest */
 
 import * as utils from './avro-utils'
+import avro from 'avsc'
 
 describe('AVRO utils', () => {
   describe('deriveEntityTypes', () => {
@@ -116,6 +117,34 @@ describe('AVRO utils', () => {
         3
       ]
       expect(expected).toEqual(result)
+    })
+  })
+
+  describe('parseSchema', () => {
+    it('calls avro.parse()', () => {
+      avro.parse = jest.fn()
+      utils.parseSchema()
+      expect(avro.parse).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('randomInput', () => {
+    it('when ID, gets UUID as id', () => {
+      const schema = {
+        name: 'Test',
+        type: 'record',
+        fields: [
+          {
+            name: 'id',
+            type: 'string'
+          }
+        ]
+      }
+      avro.parse = jest.fn(() => {
+        return { random: jest.fn(() => { return { id: null } }) }
+      })
+      const result = utils.randomInput(schema)
+      expect(result.id).toBeTruthy()
     })
   })
 
