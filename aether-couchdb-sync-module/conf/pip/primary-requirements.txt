@@ -16,7 +16,7 @@
 # Main libraries
 
 # Aether Django SDK library with extras
-aether.sdk[cas,server,scheduler,test]
+aether.sdk[server,scheduler,test]
 
 
 # OAuth
