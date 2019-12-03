@@ -145,8 +145,17 @@ function test_coverage {
         --parallel-mode \
         manage.py test \
         --parallel ${TEST_PARALLEL:-} \
+        --exclude-tag=noparallel \
         --noinput \
         "${@:1}"
+
+    # the functions that already use multiprocessing cannot be tested in parallel
+    coverage run \
+        manage.py test \
+        --tag=noparallel \
+        --noinput \
+        "${@:1}"
+
     coverage combine --append
     coverage report
     coverage erase

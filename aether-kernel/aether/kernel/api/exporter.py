@@ -25,6 +25,7 @@ import tempfile
 import uuid
 import zipfile
 
+from multiprocessing import Process
 from openpyxl import Workbook
 
 from django.conf import settings
@@ -78,6 +79,7 @@ DEFAULT_OPTIONS = {
 
 EXPORT_FIELD_ID = 'id'
 EXPORT_FIELD_DATA = 'exporter_data'
+EXPORT_FIELD_ATTACHMENT = 'exporter_attachment'
 
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
@@ -90,6 +92,7 @@ class ExporterMixin():
 
     project_field = 'project'
     json_field = 'payload'
+    attachment_field = None
     schema_field = None
     schema_order = None
 
@@ -309,7 +312,7 @@ class ExporterMixin():
         - ``include_attachments`` indicates if the attachment files should also be included
             as part of the generated file.
 
-        - ``offline``, indicates if instead of returning the file return the task id
+        - ``background``, indicates if instead of returning the file return the task id
             linked to this export and continue the export process in background.
 
         '''
@@ -352,12 +355,6 @@ class ExporterMixin():
                     jsonpaths=jsonpaths,
                     docs=docs,
                 )
-
-        download_attachments = self.__get(request, 'include_attachments', 'false')
-        download_attachments = download_attachments.lower() in ['true', 't']
-
-        in_background = self.__get(request, 'offline', 'false')
-        in_background = in_background.lower() in ['true', 't']
 
         # check valid values for each option
         header_content = self.__get(request, 'header_content', settings.EXPORT_HEADER_CONTENT).lower()
@@ -405,8 +402,19 @@ class ExporterMixin():
                 'escapechar': self.__get(request, 'csv_escape', settings.EXPORT_CSV_ESCAPE),
                 'quotechar': self.__get(request, 'csv_quote', settings.EXPORT_CSV_QUOTE),
             },
-            'download_attachments': download_attachments,
         }
+
+        download_attachments = self.__get(request, 'include_attachments', 'false').lower()
+        if self.attachment_field and download_attachments in ['true', 't']:
+            attachments = queryset.annotate(**{EXPORT_FIELD_ATTACHMENT: F(self.attachment_field)}) \
+                                  .exclude(**{self.attachment_field: None}) \
+                                  .values(EXPORT_FIELD_ID, EXPORT_FIELD_ATTACHMENT)
+            if attachments.count() > 0:
+                asql, aparams = attachments.query.sql_with_params()
+                export_settings['query_attachments'] = {
+                    'sql': asql,
+                    'params': aparams
+                }
 
         task = ExportTask.objects.create(
             created_by=request.user,
@@ -415,8 +423,23 @@ class ExporterMixin():
             status='INIT',
         )
 
+        # execute export in background if it includes also the attachments
+        in_background = self.__get(request, 'background', 'false').lower() in ['true', 't']
+        if in_background or 'query_attachments' in export_settings:
+            # start a subprocess and return task id
+            p = Process(target=execute_export_task, args=(task,))
+            p.start()
+            p.join()
+
+            if 'query_attachments' in export_settings:
+                q = Process(target=execute_download_task, args=(task,))
+                q.start()
+                q.join()
+
+            return Response(data={'task': task.pk})
+
         try:
-            file_name, file_path, content_type = execute_task(task)
+            file_name, file_path, content_type = execute_export_task(task)
 
             response = FileResponse(streaming_content=open(file_path, 'rb'),
                                     as_attachment=True,
@@ -431,8 +454,8 @@ class ExporterMixin():
             return Response(data={'detail': msg}, status=500)
 
 
-def execute_task(task):
-    settings = task.settings
+def execute_export_task(task):
+    _settings = task.settings
 
     try:
         task.status = 'WIP'
@@ -442,28 +465,28 @@ def execute_task(task):
         dialect_name = f'aether_custom_{str(uuid.uuid4())}'
         csv.register_dialect(
             dialect_name,
-            delimiter=settings['dialect_options']['delimiter'],
+            delimiter=_settings['dialect_options']['delimiter'],
             doublequote=False,
-            escapechar=settings['dialect_options']['escapechar'],
-            quotechar=settings['dialect_options']['quotechar'],
+            escapechar=_settings['dialect_options']['escapechar'],
+            quotechar=_settings['dialect_options']['quotechar'],
             quoting=csv.QUOTE_NONNUMERIC,
         )
 
-        _file_format = settings['file_format']
-        _offset = settings['offset']
-        _limit = settings['limit']
+        _file_format = _settings['file_format']
+        _offset = _settings['offset']
+        _limit = _settings['limit']
 
         logger.info(f'Preparing {_file_format} file: offset {_offset}, limit {_limit}')
-        logger.info(str(settings['export_options']))
+        logger.info(str(_settings['export_options']))
         file_name, file_path, content_type = generate_file(
-            data=(settings['query']['sql'], settings['query']['params'],),
+            data=(_settings['query']['sql'], _settings['query']['params'],),
             file_format=_file_format,
-            filename=settings['filename'],
-            paths=settings['paths'],
-            labels=settings['labels'],
+            filename=_settings['filename'],
+            paths=_settings['paths'],
+            labels=_settings['labels'],
             offset=_offset,
             limit=_limit,
-            options=settings['export_options'],
+            options=_settings['export_options'],
             dialect=dialect_name,
         )
         logger.info(f'File "{file_name}" ready!')
@@ -481,6 +504,10 @@ def execute_task(task):
 
     finally:
         csv.unregister_dialect(dialect_name)
+
+
+def execute_download_task(task):
+    pass  # TODO
 
 
 def generate_file(data,

@@ -366,6 +366,11 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.M
     search_fields = ('project__name', 'mappingset__name',)
     mt_field = 'project'
 
+    # Exporter required fields
+    attachment_field = 'attachments__id'
+    schema_field = 'mappingset__schema'
+    schema_order = '-mappingset__created'
+
     def check_realm_permission(self, request, mappingset):
         return is_accessible_by_realm(request, mappingset)
 
@@ -612,6 +617,7 @@ class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.Model
     mt_field = 'project'
 
     # Exporter required fields
+    attachment_field = 'submission__attachments__id'
     schema_field = 'schema__definition'
     schema_order = '-schema__created'
 

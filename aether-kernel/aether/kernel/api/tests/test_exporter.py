@@ -27,9 +27,10 @@ from random import shuffle
 from openpyxl import load_workbook
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import F
 from django.http import FileResponse
-from django.test import TestCase, override_settings
+from django.test import tag, TestCase, override_settings
 from django.urls import reverse
 
 from aether.kernel.api import models
@@ -317,6 +318,8 @@ class ExporterTest(TestCase):
 class ExporterViewsTest(TestCase):
 
     def setUp(self):
+        super(ExporterViewsTest, self).setUp()
+
         username = 'test'
         email = 'test@example.com'
         password = 'testtest'
@@ -355,6 +358,7 @@ class ExporterViewsTest(TestCase):
 
     def tearDown(self):
         self.client.logout()
+        super(ExporterViewsTest, self).tearDown()
 
     # -----------------------------
     # GENERATE FILES
@@ -715,8 +719,8 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
-            paths=[],
-            labels={},
+            paths=mock.ANY,
+            labels=mock.ANY,
             file_format='xlsx',
             filename='project1-export',
             offset=0,
@@ -918,3 +922,51 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
         self.assertEqual(len(task.files), 1)
+
+    @tag('noparallel')
+    def test_entities_export__offline(self):
+        response = self.client.post(reverse('entity-csv') + '?background=t')
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        task = models.ExportTask.objects.first()
+
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.project.name, 'project1')
+        self.assertEqual(task.status, 'DONE')
+        self.assertEqual(len(task.files), 1)
+
+        data = response.json()
+        self.assertEqual(data, {'task': str(task.pk)})
+
+    def test_entities_export__attachments__empty(self):
+        models.Attachment.objects.all().delete()
+        response = self.client.post(reverse('entity-csv') + '?include_attachments=t')
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        task = models.ExportTask.objects.first()
+
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.project.name, 'project1')
+        self.assertEqual(task.status, 'DONE')
+        self.assertEqual(len(task.files), 1)
+
+    @tag('noparallel')
+    def test_entities_export__attachments(self):
+        submission = models.Submission.objects.first()
+        models.Attachment.objects.create(
+            submission=submission,
+            attachment_file=SimpleUploadedFile('sample.txt', b'abc'),
+        )
+
+        response = self.client.post(reverse('entity-csv') + '?background=t&include_attachments=t')
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        task = models.ExportTask.objects.first()
+
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.project.name, 'project1')
+        self.assertEqual(task.status, 'DONE')
+        # self.assertEqual(len(task.files), 2)  # TODO
