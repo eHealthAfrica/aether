@@ -20,7 +20,9 @@ from datetime import datetime
 import csv
 import json
 import logging
+import os
 import re
+import shutil
 import tempfile
 import uuid
 import zipfile
@@ -40,7 +42,7 @@ from rest_framework.decorators import action
 from aether.python.avro.tools import ARRAY_PATH, MAP_PATH, UNION_PATH, extract_jsonpaths_and_docs
 from aether.python.entity.extractor import ENTITY_EXTRACTION_ENRICHMENT, ENTITY_EXTRACTION_ERRORS
 
-from .models import ExportTask
+from .models import Attachment, ExportTask
 
 RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
 RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
@@ -458,8 +460,7 @@ def execute_export_task(task):
     _settings = task.settings
 
     try:
-        task.status = 'WIP'
-        task.save()
+        task.set_status('WIP')
 
         # register CSV dialect for the given options
         dialect_name = f'aether_custom_{str(uuid.uuid4())}'
@@ -492,14 +493,12 @@ def execute_export_task(task):
         logger.info(f'File "{file_name}" ready!')
 
         task.add_file(file_name, file_path)
-        task.status = 'DONE'
-        task.save()
+        task.set_status('DONE')
 
         return file_name, file_path, content_type
 
     except Exception:
-        task.status = 'ERROR'
-        task.save()
+        task.set_status('ERROR')
         raise
 
     finally:
@@ -507,7 +506,49 @@ def execute_export_task(task):
 
 
 def execute_download_task(task):
-    pass  # TODO
+    _settings = task.settings
+
+    offset = _settings['offset']
+    limit = _settings['limit']
+
+    sql = _settings['query_attachments']['sql']
+    params = _settings['query_attachments']['params'],
+
+    # paginate results to reduce memory usage
+    with connection.cursor() as cursor:
+        data_from = offset
+        index = offset
+        while data_from < limit:
+            data_to = min(data_from + PAGE_SIZE, limit)
+            logger.debug(f'Downloading attachments from {data_from} to {data_to}')
+
+            cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
+            columns = [col[0] for col in cursor.description]
+            for entry in cursor:
+                row = dict(zip(columns, entry))
+                index += 1
+
+                # Get the attachment id, download it's content from the storage
+                instance_id = str(row.get(EXPORT_FIELD_ID))
+                _directory = f'{EXPORT_DIR}/files/{instance_id}'
+                if not os.path.exists(_directory):
+                    os.makedirs(_directory)
+
+                attach_id = row.get(EXPORT_FIELD_ATTACHMENT)
+                attachment = Attachment.objects.get(pk=attach_id)
+
+                file_path = f'{_directory}/{attachment.name}'
+                with open(file_path, 'wb') as file:
+                    file.write(attachment.get_content().content)
+
+            data_from = data_to
+
+    # create zip with attachments and add to task files
+    zip_ext = 'zip'
+    zip_name = f'attachments-{datetime.now().isoformat()}'
+    zip_path = shutil.make_archive(f'{EXPORT_DIR}/{zip_name}', zip_ext, f'{EXPORT_DIR}/files/')
+
+    task.add_file(f'{zip_name}.{zip_ext}', zip_path)
 
 
 def generate_file(data,
@@ -549,7 +590,7 @@ def generate_file(data,
 
 def __prepare_zip(csv_files, filename):
     zip_name = f'{filename}-{datetime.now().isoformat()}.zip'
-    zip_path = EXPORT_DIR + '/' + zip_name
+    zip_path = f'{EXPORT_DIR}/{zip_name}'
     with zipfile.ZipFile(zip_path, 'w') as csv_zip:
         for key, value in csv_files.items():
             csv_name = f'{filename}.csv' if key == '0' else f'{filename}.{key}.csv'
@@ -568,7 +609,7 @@ def __prepare_xlsx(csv_files, filename, dialect):
                 ws.append(line)
 
     xlsx_name = f'{filename}-{datetime.now().isoformat()}.xlsx'
-    xlsx_path = EXPORT_DIR + '/' + xlsx_name
+    xlsx_path = f'{EXPORT_DIR}/{xlsx_name}'
     wb.save(xlsx_path)
     wb.close()
 
@@ -676,7 +717,7 @@ def __generate_csv_files(
             data_to = min(data_from + PAGE_SIZE, limit)
             logger.debug(f'From {data_from} to {data_to}')
 
-            cursor.execute(sql + f' OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
+            cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
             columns = [col[0] for col in cursor.description]
             for entry in cursor:
                 row = dict(zip(columns, entry))
@@ -791,12 +832,12 @@ def __filter_headers(paths, group, headers):
             filtered_headers = ['@', '@id']
             for path in paths:
                 for header in headers:
-                    if header == path or header.startswith(path + '.'):
+                    if header == path or header.startswith(f'{path}.'):
                         filtered_headers.append(header)
         else:
             # check that the group is in the paths list
             for path in paths:
-                if group == path or group.startswith(path + '.'):
+                if group == path or group.startswith(f'{path}.'):
                     return headers
 
     if group != '$':  # only the main group can have flattened list

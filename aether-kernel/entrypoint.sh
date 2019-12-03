@@ -151,6 +151,8 @@ function test_coverage {
 
     # the functions that already use multiprocessing cannot be tested in parallel
     coverage run \
+        --concurrency=multiprocessing \
+        --parallel-mode \
         manage.py test \
         --tag=noparallel \
         --noinput \

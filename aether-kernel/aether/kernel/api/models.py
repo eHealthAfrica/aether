@@ -26,7 +26,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from django.db import models, IntegrityError
+from django.db import transaction, models, IntegrityError
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
@@ -794,9 +794,18 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
         verbose_name=_('project'),
     )
 
+    @transaction.atomic
     def add_file(self, filename, file_path):
+        self.refresh_from_db()
         with open(file_path, 'rb') as fi:
             self.files.append(File(fi, name=__task_path__(self, filename)))
+        self.save(update_fields=['files'])
+
+    @transaction.atomic
+    def set_status(self, status):
+        self.refresh_from_db()
+        self.status = status
+        self.save(update_fields=['status'])
 
     class Meta:
         default_related_name = 'tasks'

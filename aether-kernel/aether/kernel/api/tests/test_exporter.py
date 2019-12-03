@@ -957,8 +957,26 @@ class ExporterViewsTest(TestCase):
         submission = models.Submission.objects.first()
         models.Attachment.objects.create(
             submission=submission,
-            attachment_file=SimpleUploadedFile('sample.txt', b'abc'),
+            attachment_file=SimpleUploadedFile('download.txt', b'123'),
         )
+
+        submission.pk = None
+        submission.save()  # new submission
+        self.assertEqual(models.Submission.objects.count(), 2)
+
+        models.Attachment.objects.create(
+            submission=submission,
+            attachment_file=SimpleUploadedFile('download.txt', b'123'),
+        )
+        models.Attachment.objects.create(
+            submission=submission,
+            attachment_file=SimpleUploadedFile('download2.txt', b'123'),
+        )
+        self.assertEqual(models.Attachment.objects.count(), 3)
+
+        # extract entities
+        run_entity_extraction(submission)
+        self.assertEqual(models.Entity.objects.count(), 2)
 
         response = self.client.post(reverse('entity-csv') + '?background=t&include_attachments=t')
         self.assertEqual(response.status_code, 200)
@@ -969,4 +987,4 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
-        # self.assertEqual(len(task.files), 2)  # TODO
+        self.assertEqual(len(task.files), 2)
