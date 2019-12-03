@@ -42,7 +42,7 @@ describe('utils', () => {
   describe('generateGUID', () => {
     it('should match the simplest GUID regex', () => {
       const uuid = generateGUID()
-      expect(uuid).toMatch(/[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/)
+      expect(uuid).toMatch(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/)
     })
   })
 
