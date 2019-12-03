@@ -48,6 +48,7 @@ idna==2.8
 Jinja2==2.10.3
 jmespath==0.9.4
 linecache2==1.0.0
+lxml==4.4.2
 MarkupSafe==1.1.1
 mccabe==0.6.1
 minio==5.0.5
