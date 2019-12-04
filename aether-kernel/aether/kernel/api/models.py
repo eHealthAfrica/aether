@@ -844,8 +844,8 @@ class ExportTaskFile(ExportModelOperationsMixin('kernel_exporttask'), ProjectChi
     def project(self):
         return self.task.project
 
-    def get_content(self):
-        return get_file_content(self.name, self.file.url)
+    def get_content(self, as_attachment=False):
+        return get_file_content(self.name, self.file.url, as_attachment)
 
     def save(self, *args, **kwargs):
         # calculate file hash
