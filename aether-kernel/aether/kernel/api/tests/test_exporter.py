@@ -47,9 +47,7 @@ from aether.kernel.api.exporter import (
     __get_label as get_label,
 
     generate_file as generate,
-    CSV_CONTENT_TYPE,
     CSV_FORMAT,
-    XLSX_CONTENT_TYPE,
     XLSX_FORMAT,
 )
 
@@ -374,58 +372,67 @@ class ExporterViewsTest(TestCase):
         }
         # without paths (includes: ``aether_extractor_enrichment``)
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
-        _, zip_path, _ = generate(data, paths=[], **kwargs)
-        zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(),
-                         ['export.csv', 'export.1.csv', 'export.2.csv', 'export.3.csv', 'export.4.csv'])
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _, zip_path = generate(temp_dir, data, paths=[], **kwargs)
+            zip_file = zipfile.ZipFile(zip_path, 'r')
+            self.assertEqual(zip_file.namelist(),
+                             ['export.csv', 'export.1.csv', 'export.2.csv', 'export.3.csv', 'export.4.csv'])
 
         # with the whole paths list (there are 3 arrays with data, ``iterate_none`` is empty)
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
-        _, zip_path, _ = generate(data, paths=EXAMPLE_PATHS, **kwargs)
-        zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(),
-                         ['export.csv', 'export.1.csv', 'export.2.csv', 'export.3.csv'])
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _, zip_path = generate(temp_dir, data, paths=EXAMPLE_PATHS, **kwargs)
+            zip_file = zipfile.ZipFile(zip_path, 'r')
+            self.assertEqual(zip_file.namelist(),
+                             ['export.csv', 'export.1.csv', 'export.2.csv', 'export.3.csv'])
 
         # without `iterate_one` in paths
         paths = [path for path in EXAMPLE_PATHS if not path.startswith('iterate_one')]
-        _, zip_path, _ = generate(data, paths=paths, **kwargs)
-        zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(),
-                         ['export.csv', 'export.1.csv', 'export.2.csv'])
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _, zip_path = generate(temp_dir, data, paths=paths, **kwargs)
+            zip_file = zipfile.ZipFile(zip_path, 'r')
+            self.assertEqual(zip_file.namelist(),
+                             ['export.csv', 'export.1.csv', 'export.2.csv'])
 
         # with `flatten` option should generate only one file
-        _, zip_path, _ = generate(
-            data,
-            paths=[],
-            options={
-                'header_content': 'paths',
-                'header_separator': '*',
-                'header_shorten': 'no',
-                'data_format': 'flatten',
-            },
-            **kwargs,
-        )
-        zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(), ['export.csv'])
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _, zip_path = generate(
+                temp_dir,
+                data,
+                paths=[],
+                options={
+                    'header_content': 'paths',
+                    'header_separator': '*',
+                    'header_shorten': 'no',
+                    'data_format': 'flatten',
+                },
+                **kwargs,
+            )
+            zip_file = zipfile.ZipFile(zip_path, 'r')
+            self.assertEqual(zip_file.namelist(), ['export.csv'])
 
     def test__generate__xlsx__split(self):
-        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
-        _, xlsx_path, _ = generate(
-            data,
-            paths=EXAMPLE_PATHS,
-            labels=EXAMPLE_LABELS,
-            file_format=XLSX_FORMAT,
-            offset=0,
-            limit=1,
-            options={
-                'header_content': 'both',  # includes paths and labels
-                'header_separator': '—',
-                'header_shorten': 'no',
-                'data_format': 'split',
-            },
-        )
-        wb = load_workbook(filename=xlsx_path, read_only=True)
         _id = str(models.Submission.objects.first().pk)
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _, xlsx_path = generate(
+                temp_dir,
+                data,
+                paths=EXAMPLE_PATHS,
+                labels=EXAMPLE_LABELS,
+                file_format=XLSX_FORMAT,
+                offset=0,
+                limit=1,
+                options={
+                    'header_content': 'both',  # includes paths and labels
+                    'header_separator': '—',
+                    'header_shorten': 'no',
+                    'data_format': 'split',
+                },
+            )
+            wb = load_workbook(filename=xlsx_path, read_only=True)
 
         # check workbook content
         ws = wb['0']  # root content
@@ -568,23 +575,26 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws3['D3'].value, 'one')
 
     def test__generate__xlsx__flatten(self):
-        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
-        _, xlsx_path, _ = generate(
-            data,
-            paths=EXAMPLE_PATHS,
-            labels=EXAMPLE_LABELS,
-            file_format=XLSX_FORMAT,
-            offset=0,
-            limit=1,
-            options={
-                'header_content': 'paths',
-                'header_separator': '—',
-                'header_shorten': 'no',
-                'data_format': 'flatten',
-            },
-        )
-        wb = load_workbook(filename=xlsx_path, read_only=True)
         _id = str(models.Submission.objects.first().pk)
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _, xlsx_path = generate(
+                temp_dir,
+                data,
+                paths=EXAMPLE_PATHS,
+                labels=EXAMPLE_LABELS,
+                file_format=XLSX_FORMAT,
+                offset=0,
+                limit=1,
+                options={
+                    'header_content': 'paths',
+                    'header_separator': '—',
+                    'header_shorten': 'no',
+                    'data_format': 'flatten',
+                },
+            )
+            wb = load_workbook(filename=xlsx_path, read_only=True)
 
         # check workbook content
         ws = wb['0']  # root content
@@ -659,21 +669,23 @@ class ExporterViewsTest(TestCase):
         )
 
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
-        _, xlsx_path, _ = generate(
-            data,
-            paths=EXAMPLE_PATHS,
-            labels=EXAMPLE_LABELS,
-            file_format=XLSX_FORMAT,
-            offset=0,
-            limit=2,
-            options={
-                'header_content': 'paths',
-                'header_separator': '*',
-                'header_shorten': '—',
-                'data_format': 'flatten',
-            },
-        )
-        wb = load_workbook(filename=xlsx_path, read_only=True)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _, xlsx_path = generate(
+                temp_dir,
+                data,
+                paths=EXAMPLE_PATHS,
+                labels=EXAMPLE_LABELS,
+                file_format=XLSX_FORMAT,
+                offset=0,
+                limit=2,
+                options={
+                    'header_content': 'paths',
+                    'header_separator': '*',
+                    'header_shorten': '—',
+                    'data_format': 'flatten',
+                },
+            )
+            wb = load_workbook(filename=xlsx_path, read_only=True)
 
         # check workbook content
         ws = wb['0']  # root content
@@ -719,6 +731,7 @@ class ExporterViewsTest(TestCase):
         response = self.client.get(reverse('submission-xlsx'))
         self.assertEqual(response.status_code, 500)
         mock_export.assert_called_once_with(
+            temp_dir=mock.ANY,
             data=mock.ANY,
             paths=mock.ANY,
             labels=mock.ANY,
@@ -759,6 +772,7 @@ class ExporterViewsTest(TestCase):
         }), content_type='application/json')
         self.assertEqual(response.status_code, 500)
         mock_export.assert_called_once_with(
+            temp_dir=mock.ANY,
             data=mock.ANY,
             paths=['_id', '_rev'],
             labels={'_id': 'id', '_rev': 'rev'},
@@ -803,6 +817,7 @@ class ExporterViewsTest(TestCase):
         response = self.client.get(reverse('entity-xlsx'))
         self.assertEqual(response.status_code, 500)
         mock_export.assert_called_once_with(
+            temp_dir=mock.ANY,
             data=mock.ANY,
             paths=mock.ANY,
             labels=mock.ANY,
@@ -847,7 +862,7 @@ class ExporterViewsTest(TestCase):
         response = self.client.get(reverse('entity-xlsx'))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response, FileResponse))
-        self.assertEqual(response['Content-Type'], XLSX_CONTENT_TYPE)
+        self.assertEqual(response['Content-Type'], 'application/octet-stream')
 
     @mock.patch(
         'aether.kernel.api.exporter.generate_file',
@@ -864,6 +879,7 @@ class ExporterViewsTest(TestCase):
 
         self.assertEqual(response.status_code, 500)
         mock_export.assert_called_once_with(
+            temp_dir=mock.ANY,
             data=mock.ANY,
             paths=mock.ANY,
             labels=mock.ANY,
@@ -914,7 +930,7 @@ class ExporterViewsTest(TestCase):
         response = self.client.post(reverse('entity-csv'))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response, FileResponse))
-        self.assertEqual(response['Content-Type'], CSV_CONTENT_TYPE)
+        self.assertEqual(response['Content-Type'], 'application/zip')
 
         self.assertEqual(models.ExportTask.objects.count(), 1)
         task = models.ExportTask.objects.first()
@@ -988,14 +1004,20 @@ class ExporterViewsTest(TestCase):
         task = models.ExportTask.objects.first()
 
         self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.name, 'project1-export')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
         self.assertEqual(task.files.count(), 2)
+        self.assertIsNone(task.revision)
 
         # export file
+        export_file = task.files.first()
+        self.assertIn('project1-export-', export_file.name)
+        self.assertIsNone(export_file.revision)
+
         with tempfile.NamedTemporaryFile() as f:
             with open(f.name, 'wb') as fi:
-                fi.write(task.files.first().get_content().content)
+                fi.write(export_file.get_content().getvalue())
 
             zip_file = zipfile.ZipFile(f)
             _files = zip_file.namelist()
@@ -1010,9 +1032,13 @@ class ExporterViewsTest(TestCase):
                              ])
 
         # attachments
+        attachments_file = task.files.last()
+        self.assertIn('project1-export-attachments-', attachments_file.name)
+        self.assertIsNone(attachments_file.revision)
+
         with tempfile.NamedTemporaryFile() as f:
             with open(f.name, 'wb') as fi:
-                fi.write(task.files.last().get_content().content)
+                fi.write(attachments_file.get_content().getvalue())
 
             zip_file = zipfile.ZipFile(f)
             _files = zip_file.namelist()

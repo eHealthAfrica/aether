@@ -34,7 +34,6 @@ from django.conf import settings
 from django.core.files import File
 from django.db import connection
 from django.db.models import Count, F, QuerySet
-from django.http import FileResponse
 from django.utils.translation import gettext as _
 
 from rest_framework.response import Response
@@ -48,13 +47,8 @@ from .models import Attachment, ExportTask, ExportTaskFile
 RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
 RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
 
-EXPORT_DIR = tempfile.mkdtemp()
-
 CSV_FORMAT = 'csv'
-CSV_CONTENT_TYPE = 'application/zip'
-
 XLSX_FORMAT = 'xlsx'
-XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 # Total number of rows on a worksheet (since Excel 2007): 1048576
 # https://support.office.com/en-us/article/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
@@ -443,15 +437,8 @@ class ExporterMixin():
             return Response(data={'task': task.pk})
 
         try:
-            file_name, file_path, content_type = execute_export_task(task)
-
-            response = FileResponse(streaming_content=open(file_path, 'rb'),
-                                    as_attachment=True,
-                                    filename=file_name)
-            response['Content-Type'] = content_type
-            response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-
-            return response
+            execute_export_task(task)
+            return task.files.first().get_content(as_attachment=True)
 
         except IOError as e:
             msg = _('Got an error while creating the file: {error}').format(error=str(e))
@@ -459,108 +446,113 @@ class ExporterMixin():
 
 
 def execute_export_task(task):
-    _settings = task.settings
+    # temporary directory to keep the generated files
+    with tempfile.TemporaryDirectory() as temp_dir:
+        _settings = task.settings
 
-    try:
-        task.set_status('WIP')
+        try:
+            task.set_status('WIP')
 
-        # register CSV dialect for the given options
-        dialect_name = f'aether_custom_{str(uuid.uuid4())}'
-        csv.register_dialect(
-            dialect_name,
-            delimiter=_settings['dialect_options']['delimiter'],
-            doublequote=False,
-            escapechar=_settings['dialect_options']['escapechar'],
-            quotechar=_settings['dialect_options']['quotechar'],
-            quoting=csv.QUOTE_NONNUMERIC,
-        )
+            # register CSV dialect for the given options
+            dialect_name = f'aether_custom_{str(uuid.uuid4())}'
+            csv.register_dialect(
+                dialect_name,
+                delimiter=_settings['dialect_options']['delimiter'],
+                doublequote=False,
+                escapechar=_settings['dialect_options']['escapechar'],
+                quotechar=_settings['dialect_options']['quotechar'],
+                quoting=csv.QUOTE_NONNUMERIC,
+            )
 
-        _file_format = _settings['file_format']
-        _offset = _settings['offset']
-        _limit = _settings['limit']
+            _file_format = _settings['file_format']
+            _offset = _settings['offset']
+            _limit = _settings['limit']
 
-        logger.info(f'Preparing {_file_format} file: offset {_offset}, limit {_limit}')
-        logger.info(str(_settings['export_options']))
-        file_name, file_path, content_type = generate_file(
-            data=(_settings['query']['sql'], _settings['query']['params'],),
-            file_format=_file_format,
-            filename=_settings['filename'],
-            paths=_settings['paths'],
-            labels=_settings['labels'],
-            offset=_offset,
-            limit=_limit,
-            options=_settings['export_options'],
-            dialect=dialect_name,
-        )
-        logger.info(f'File "{file_name}" ready!')
+            logger.info(f'Preparing {_file_format} file: offset {_offset}, limit {_limit}')
+            logger.info(str(_settings['export_options']))
+            file_name, file_path = generate_file(
+                temp_dir=temp_dir,
+                data=(_settings['query']['sql'], _settings['query']['params'],),
+                file_format=_file_format,
+                filename=_settings['filename'],
+                paths=_settings['paths'],
+                labels=_settings['labels'],
+                offset=_offset,
+                limit=_limit,
+                options=_settings['export_options'],
+                dialect=dialect_name,
+            )
+            logger.info(f'File "{file_name}" ready!')
 
-        with open(file_path, 'rb') as f:
-            export_file = ExportTaskFile(task=task)
-            export_file.file.save(file_name, File(f))
-            export_file.save()
-        task.set_status('DONE')
+            with open(file_path, 'rb') as f:
+                export_file = ExportTaskFile(task=task)
+                export_file.file.save(file_name, File(f))
+                export_file.save()
 
-        return file_name, file_path, content_type
+            task.set_status('DONE')
 
-    except Exception:
-        task.set_status('ERROR')
-        raise
+        except Exception:
+            task.set_status('ERROR')
+            raise
 
-    finally:
-        csv.unregister_dialect(dialect_name)
+        finally:
+            csv.unregister_dialect(dialect_name)
 
 
 def execute_download_task(task):
-    _settings = task.settings
+    # temporary directory to keep the generated files
+    with tempfile.TemporaryDirectory() as temp_dir:
+        _settings = task.settings
 
-    offset = _settings['offset']
-    limit = _settings['limit']
-    filename = _settings['filename']
+        offset = _settings['offset']
+        limit = _settings['limit']
+        filename = _settings['filename']
 
-    sql = _settings['query_attachments']['sql']
-    params = _settings['query_attachments']['params'],
+        sql = _settings['query_attachments']['sql']
+        params = _settings['query_attachments']['params'],
 
-    # paginate results to reduce memory usage
-    with connection.cursor() as cursor:
-        data_from = offset
-        index = offset
-        while data_from < limit:
-            data_to = min(data_from + PAGE_SIZE, limit)
-            logger.debug(f'Downloading attachments from {data_from} to {data_to}')
+        # paginate results to reduce memory usage
+        with connection.cursor() as cursor:
+            data_from = offset
+            index = offset
+            while data_from < limit:
+                data_to = min(data_from + PAGE_SIZE, limit)
+                logger.debug(f'Downloading attachments from {data_from} to {data_to}')
 
-            cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
-            columns = [col[0] for col in cursor.description]
-            for entry in cursor:
-                row = dict(zip(columns, entry))
-                index += 1
+                cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
+                columns = [col[0] for col in cursor.description]
+                for entry in cursor:
+                    row = dict(zip(columns, entry))
+                    index += 1
 
-                # Get the attachment id, download it's content from the storage
-                instance_id = str(row.get(EXPORT_FIELD_ID))
-                _directory = f'{EXPORT_DIR}/files/{instance_id}'
-                if not os.path.exists(_directory):
-                    os.makedirs(_directory)
+                    # Get the attachment id, download it's content from the storage
+                    instance_id = str(row.get(EXPORT_FIELD_ID))
+                    _directory = f'{temp_dir}/files/{instance_id}'
+                    if not os.path.exists(_directory):
+                        os.makedirs(_directory)
 
-                attach_id = row.get(EXPORT_FIELD_ATTACHMENT)
-                attachment = Attachment.objects.get(pk=attach_id)
+                    attach_id = row.get(EXPORT_FIELD_ATTACHMENT)
+                    attachment = Attachment.objects.get(pk=attach_id)
 
-                file_path = f'{_directory}/{attachment.name}'
-                with open(file_path, 'wb') as file:
-                    file.write(attachment.get_content().content)
+                    file_path = f'{_directory}/{attachment.name}'
+                    with open(file_path, 'wb') as file:
+                        file.write(attachment.get_content().getvalue())
 
-            data_from = data_to
+                data_from = data_to
 
-    # create zip with attachments and add to task files
-    zip_ext = 'zip'
-    zip_name = f'{filename}-attachments-{datetime.now().isoformat()}'
-    zip_path = shutil.make_archive(f'{EXPORT_DIR}/{zip_name}', zip_ext, f'{EXPORT_DIR}/files/')
+        # create zip with attachments and add to task files
+        zip_ext = 'zip'
+        zip_name = f'{filename}-attachments-{datetime.now().isoformat()}'
+        zip_path = shutil.make_archive(f'{temp_dir}/{zip_name}', zip_ext, f'{temp_dir}/files/')
 
-    with open(zip_path, 'rb') as f:
-        export_file = ExportTaskFile(task=task)
-        export_file.file.save(f'{zip_name}.{zip_ext}', File(f))
-        export_file.save()
+        with open(zip_path, 'rb') as f:
+            export_file = ExportTaskFile(task=task)
+            export_file.file.save(f'{zip_name}.{zip_ext}', File(f))
+            export_file.save()
 
 
-def generate_file(data,
+def generate_file(temp_dir,
+                  data,
                   paths=[],
                   labels={},
                   file_format=CSV_FORMAT,
@@ -590,25 +582,34 @@ def generate_file(data,
     else:
         sql, params = data
 
-    csv_files = __generate_csv_files(sql, params, paths, labels, offset, limit, options, dialect)
+    csv_files = __generate_csv_files(temp_dir,
+                                     sql,
+                                     params,
+                                     paths,
+                                     labels,
+                                     offset,
+                                     limit,
+                                     options,
+                                     dialect,
+                                     )
     if file_format == XLSX_FORMAT:
-        return __prepare_xlsx(csv_files, filename, dialect)
+        return __prepare_xlsx(temp_dir, csv_files, filename, dialect)
     else:
-        return __prepare_zip(csv_files, filename)
+        return __prepare_zip(temp_dir, csv_files, filename)
 
 
-def __prepare_zip(csv_files, filename):
+def __prepare_zip(temp_dir, csv_files, filename):
     zip_name = f'{filename}-{datetime.now().isoformat()}.zip'
-    zip_path = f'{EXPORT_DIR}/{zip_name}'
+    zip_path = f'{temp_dir}/{zip_name}'
     with zipfile.ZipFile(zip_path, 'w') as csv_zip:
         for key, value in csv_files.items():
             csv_name = f'{filename}.csv' if key == '0' else f'{filename}.{key}.csv'
             csv_zip.write(value, csv_name)
 
-    return zip_name, zip_path, CSV_CONTENT_TYPE
+    return zip_name, zip_path
 
 
-def __prepare_xlsx(csv_files, filename, dialect):
+def __prepare_xlsx(temp_dir, csv_files, filename, dialect):
     wb = Workbook(write_only=True, iso_dates=True)
     for key, value in csv_files.items():
         ws = wb.create_sheet(key)
@@ -618,11 +619,11 @@ def __prepare_xlsx(csv_files, filename, dialect):
                 ws.append(line)
 
     xlsx_name = f'{filename}-{datetime.now().isoformat()}.xlsx'
-    xlsx_path = f'{EXPORT_DIR}/{xlsx_name}'
+    xlsx_path = f'{temp_dir}/{xlsx_name}'
     wb.save(xlsx_path)
     wb.close()
 
-    return xlsx_name, xlsx_path, XLSX_CONTENT_TYPE
+    return xlsx_name, xlsx_path
 
 
 #
@@ -641,6 +642,7 @@ def __prepare_xlsx(csv_files, filename, dialect):
 # @param {dict}  labels  - a dictionary with header labels
 #
 def __generate_csv_files(
+        temp_dir,
         sql,
         params,
         paths,
@@ -667,7 +669,7 @@ def __generate_csv_files(
         except KeyError:
             # new
             title = '0' if group == '$' else str(len(csv_options.keys()))
-            csv_path = f'{EXPORT_DIR}/temp-{title}.csv'
+            csv_path = f'{temp_dir}/temp-{title}.csv'
             f = open(csv_path, 'w', newline='')
             c = csv.writer(f, dialect=dialect)
 
@@ -744,7 +746,7 @@ def __generate_csv_files(
         current['file'].close()
 
         title = current['title']
-        csv_path = f'{EXPORT_DIR}/{title}.csv'
+        csv_path = f'{temp_dir}/{title}.csv'
         rows_path = current['csv_path']
 
         # create headers in order
