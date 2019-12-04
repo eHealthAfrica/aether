@@ -351,8 +351,8 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
     def project(self):
         return self.submission.project
 
-    def get_content(self):
-        return get_file_content(self.name, self.attachment_file.url)
+    def get_content(self, as_attachment=False):
+        return get_file_content(self.name, self.attachment_file.url, as_attachment)
 
     def save(self, *args, **kwargs):
         # calculate file hash

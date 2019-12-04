@@ -169,7 +169,7 @@ class ModelsTests(TransactionTestCase):
 
         response = attachment.get_content()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b'abc')
+        self.assertEqual(b''.join(response.streaming_content), b'abc')
         self.assertNotIn('Content-Disposition', response)
 
         attachment_2 = models.Attachment.objects.create(

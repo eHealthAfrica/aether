@@ -109,7 +109,7 @@ class ViewsTests(CustomTestCase):
         response = self.client.get(self.url_get_media_content, **self.headers_surveyor)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Disposition'], 'attachment; filename="sample.txt"')
-        self.assertEqual(response.content, b'abc')
+        self.assertEqual(b''.join(response.streaming_content), b'abc')
 
         # change xform version
         self.xform.version = self.xform.version + '99'
