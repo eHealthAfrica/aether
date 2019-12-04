@@ -19,6 +19,7 @@
 import json
 from unittest import mock
 import os
+import tempfile
 import zipfile
 
 from copy import deepcopy
@@ -885,7 +886,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'ERROR')
-        self.assertEqual(len(task.files), 0)
+        self.assertEqual(task.files.count(), 0)
 
     def test_entities_export__csv__empty(self):
         response = self.client.post(reverse('entity-csv') + '?project=unknown')
@@ -921,7 +922,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
-        self.assertEqual(len(task.files), 1)
+        self.assertEqual(task.files.count(), 1)
 
     @tag('noparallel')
     def test_entities_export__offline(self):
@@ -934,7 +935,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
-        self.assertEqual(len(task.files), 1)
+        self.assertEqual(task.files.count(), 1)
 
         data = response.json()
         self.assertEqual(data, {'task': str(task.pk)})
@@ -950,15 +951,16 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
-        self.assertEqual(len(task.files), 1)
+        self.assertEqual(task.files.count(), 1)
 
     @tag('noparallel')
     def test_entities_export__attachments(self):
         submission = models.Submission.objects.first()
         models.Attachment.objects.create(
             submission=submission,
-            attachment_file=SimpleUploadedFile('download.txt', b'123'),
+            attachment_file=SimpleUploadedFile('a.txt', b'123'),
         )
+        entity_1 = submission.entities.first()
 
         submission.pk = None
         submission.save()  # new submission
@@ -966,17 +968,18 @@ class ExporterViewsTest(TestCase):
 
         models.Attachment.objects.create(
             submission=submission,
-            attachment_file=SimpleUploadedFile('download.txt', b'123'),
+            attachment_file=SimpleUploadedFile('b.txt', b'123'),
         )
         models.Attachment.objects.create(
             submission=submission,
-            attachment_file=SimpleUploadedFile('download2.txt', b'123'),
+            attachment_file=SimpleUploadedFile('c.txt', b'123'),
         )
         self.assertEqual(models.Attachment.objects.count(), 3)
 
         # extract entities
         run_entity_extraction(submission)
         self.assertEqual(models.Entity.objects.count(), 2)
+        entity_2 = submission.entities.first()
 
         response = self.client.post(reverse('entity-csv') + '?background=t&include_attachments=t')
         self.assertEqual(response.status_code, 200)
@@ -987,4 +990,36 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
-        self.assertEqual(len(task.files), 2)
+        self.assertEqual(task.files.count(), 2)
+
+        # export file
+        with tempfile.NamedTemporaryFile() as f:
+            with open(f.name, 'wb') as fi:
+                fi.write(task.files.first().get_content().content)
+
+            zip_file = zipfile.ZipFile(f)
+            _files = zip_file.namelist()
+
+            self.assertEqual(len(_files), 4, '4 CSV files')
+            self.assertEqual(_files,
+                             [
+                                 'project1-export.csv',
+                                 'project1-export.1.csv',
+                                 'project1-export.2.csv',
+                                 'project1-export.3.csv',
+                             ])
+
+        # attachments
+        with tempfile.NamedTemporaryFile() as f:
+            with open(f.name, 'wb') as fi:
+                fi.write(task.files.last().get_content().content)
+
+            zip_file = zipfile.ZipFile(f)
+            _files = zip_file.namelist()
+
+            self.assertEqual(len(_files), 5, '2 directories and 3 files')
+            self.assertIn(f'{entity_1.pk}/', _files)
+            self.assertIn(f'{entity_2.pk}/', _files)
+            self.assertIn(f'{entity_1.pk}/a.txt', _files)
+            self.assertIn(f'{entity_2.pk}/b.txt', _files)
+            self.assertIn(f'{entity_2.pk}/c.txt', _files)

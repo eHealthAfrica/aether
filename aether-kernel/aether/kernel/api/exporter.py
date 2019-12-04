@@ -31,6 +31,7 @@ from multiprocessing import Process
 from openpyxl import Workbook
 
 from django.conf import settings
+from django.core.files import File
 from django.db import connection
 from django.db.models import Count, F, QuerySet
 from django.http import FileResponse
@@ -42,7 +43,7 @@ from rest_framework.decorators import action
 from aether.python.avro.tools import ARRAY_PATH, MAP_PATH, UNION_PATH, extract_jsonpaths_and_docs
 from aether.python.entity.extractor import ENTITY_EXTRACTION_ENRICHMENT, ENTITY_EXTRACTION_ERRORS
 
-from .models import Attachment, ExportTask
+from .models import Attachment, ExportTask, ExportTaskFile
 
 RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
 RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
@@ -419,6 +420,7 @@ class ExporterMixin():
                 }
 
         task = ExportTask.objects.create(
+            name=export_settings['filename'],
             created_by=request.user,
             project=project,
             settings=export_settings,
@@ -492,7 +494,10 @@ def execute_export_task(task):
         )
         logger.info(f'File "{file_name}" ready!')
 
-        task.add_file(file_name, file_path)
+        with open(file_path, 'rb') as f:
+            export_file = ExportTaskFile(task=task)
+            export_file.file.save(file_name, File(f))
+            export_file.save()
         task.set_status('DONE')
 
         return file_name, file_path, content_type
@@ -510,6 +515,7 @@ def execute_download_task(task):
 
     offset = _settings['offset']
     limit = _settings['limit']
+    filename = _settings['filename']
 
     sql = _settings['query_attachments']['sql']
     params = _settings['query_attachments']['params'],
@@ -545,10 +551,13 @@ def execute_download_task(task):
 
     # create zip with attachments and add to task files
     zip_ext = 'zip'
-    zip_name = f'attachments-{datetime.now().isoformat()}'
+    zip_name = f'{filename}-attachments-{datetime.now().isoformat()}'
     zip_path = shutil.make_archive(f'{EXPORT_DIR}/{zip_name}', zip_ext, f'{EXPORT_DIR}/files/')
 
-    task.add_file(f'{zip_name}.{zip_ext}', zip_path)
+    with open(zip_path, 'rb') as f:
+        export_file = ExportTaskFile(task=task)
+        export_file.file.save(f'{zip_name}.{zip_ext}', File(f))
+        export_file.save()
 
 
 def generate_file(data,
