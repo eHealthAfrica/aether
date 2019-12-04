@@ -141,7 +141,7 @@ class ViewsTests(CustomTestCase):
         response = self.client.get(content_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn('Content-Disposition', response)
-        self.assertEqual(b''.join(response.streaming_content), b'abc')
+        self.assertEqual(response.getvalue(), b'abc')
 
         self.client.logout()
         response = self.client.get(content_url)
