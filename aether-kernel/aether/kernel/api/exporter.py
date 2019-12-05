@@ -377,11 +377,11 @@ class ExporterMixin():
         # create task with all need data
         project = getattr(queryset.first(), self.project_field)
         sql, params = data.query.sql_with_params()
+        with connection.cursor() as cursor:
+            sql_sentence = cursor.mogrify(sql, params).decode('utf-8')
+
         export_settings = {
-            'query': {
-                'sql': sql,
-                'params': params,
-            },
+            'query': sql_sentence,
             'file_format': file_format,
             'filename': self.__get(request, 'filename', queryset.first().name or 'export'),
             'paths': jsonpaths,
@@ -408,11 +408,11 @@ class ExporterMixin():
                                   .values(EXPORT_FIELD_ID, EXPORT_FIELD_ATTACHMENT)
             if attachments.count() > 0:
                 asql, aparams = attachments.query.sql_with_params()
-                export_settings['query_attachments'] = {
-                    'sql': asql,
-                    'params': aparams
-                }
+                with connection.cursor() as cursor:
+                    asql_sentence = cursor.mogrify(asql, aparams).decode('utf-8')
+                export_settings['query_attachments'] = asql_sentence
 
+        print(export_settings)
         task = ExportTask.objects.create(
             name=export_settings['filename'],
             created_by=request.user,
@@ -435,7 +435,7 @@ class ExporterMixin():
                 q.start()
                 q.join()
 
-            return Response(data={'task': task.pk})
+            return Response(data={'task': str(task.pk)})
 
         try:
             execute_export_task(task, dettached=False)
@@ -473,7 +473,7 @@ def execute_export_task(task, dettached=True):
             logger.info(str(_settings['export_options']))
             file_name, file_path = generate_file(
                 temp_dir=temp_dir,
-                data=(_settings['query']['sql'], _settings['query']['params'],),
+                data=_settings['query'],
                 file_format=_file_format,
                 filename=_settings['filename'],
                 paths=_settings['paths'],
@@ -509,9 +509,7 @@ def execute_attachments_task(task):
         offset = _settings['offset']
         limit = _settings['limit']
         filename = _settings['filename']
-
-        sql = _settings['query_attachments']['sql']
-        params = _settings['query_attachments']['params'],
+        sql = _settings['query_attachments']
 
         try:
             task.set_status_attachments('WIP')
@@ -524,7 +522,7 @@ def execute_attachments_task(task):
                     data_to = min(data_from + PAGE_SIZE, limit)
                     logger.debug(f'Downloading attachments from {data_from} to {data_to}')
 
-                    cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
+                    cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}')
                     columns = [col[0] for col in cursor.description]
                     for entry in cursor:
                         row = dict(zip(columns, entry))
@@ -590,12 +588,13 @@ def generate_file(temp_dir,
 
     if isinstance(data, QuerySet):
         sql, params = data.query.sql_with_params()
+        with connection.cursor() as cursor:
+            sql_sentence = cursor.mogrify(sql, params).decode('utf-8')
     else:
-        sql, params = data
+        sql_sentence = data
 
     csv_files = __generate_csv_files(temp_dir,
-                                     sql,
-                                     params,
+                                     sql_sentence,
                                      paths,
                                      labels,
                                      offset,
@@ -648,14 +647,12 @@ def __prepare_xlsx(temp_dir, csv_files, filename, dialect):
 #      (including the row attributes in each one) as rows.
 #
 # @param {str}   sql     - SQL sentence
-# @param {list}  params  - SQL params
 # @param {list}  paths   - the list of allowed paths
 # @param {dict}  labels  - a dictionary with header labels
 #
 def __generate_csv_files(
         temp_dir,
         sql,
-        params,
         paths,
         labels,
         offset=0,
@@ -739,7 +736,7 @@ def __generate_csv_files(
             data_to = min(data_from + PAGE_SIZE, limit)
             logger.debug(f'From {data_from} to {data_to}')
 
-            cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
+            cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}')
             columns = [col[0] for col in cursor.description]
             for entry in cursor:
                 row = dict(zip(columns, entry))

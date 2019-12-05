@@ -797,7 +797,7 @@ class ExportTaskViewSet(MtViewSetMixin, viewsets.ReadOnlyModelViewSet):
     def file_content(self, request, pk=None, file_pk=None, *args, **kwargs):
         task = self.get_object_or_404(pk=pk)
         _file = task.files.get(pk=file_pk)
-        return _file.get_content()
+        return _file.get_content(as_attachment=True)
 
 
 @api_view(['POST'])

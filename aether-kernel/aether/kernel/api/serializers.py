@@ -432,7 +432,7 @@ class ExportTaskFileUrlField(HyperlinkedIdentityField):
             viewname=view_name,
             kwargs={'pk': str(obj.task.pk), 'file_pk': str(obj.pk)},
             request=request,
-            format=format,
+            format=None,
         )
 
 
@@ -451,6 +451,11 @@ class ExportTaskSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     project = MtPrimaryKeyRelatedField(
         read_only=True,
+    )
+    project_name = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name',
+        source='project',
     )
 
     # this will return all files in one request call
