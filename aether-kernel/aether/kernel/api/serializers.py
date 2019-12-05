@@ -25,6 +25,7 @@ from aether.sdk.drf.serializers import (
     FilteredHyperlinkedRelatedField,
     HyperlinkedIdentityField,
     HyperlinkedRelatedField,
+    UserNameField,
 )
 from aether.sdk.multitenancy.serializers import (
     MtPrimaryKeyRelatedField,
@@ -419,3 +420,46 @@ class MappingValidationSerializer(serializers.Serializer):
     submission_payload = serializers.JSONField()
     mapping_definition = serializers.JSONField(validators=[validators.wrapper_validate_mapping_definition])
     schemas = serializers.JSONField(validators=[validators.wrapper_validate_schemas])
+
+
+class ExportTaskFileUrlField(HyperlinkedIdentityField):
+
+    def __init__(self, view_name=None, **kwargs):
+        super(ExportTaskFileUrlField, self).__init__('exporttask-file_content', **kwargs)
+
+    def get_url(self, obj, view_name, request, format):
+        return self.reverse(
+            viewname=view_name,
+            kwargs={'pk': str(obj.task.pk), 'file_pk': str(obj.pk)},
+            request=request,
+            format=format,
+        )
+
+
+class ExportTaskFileSerializer(DynamicFieldsModelSerializer):
+
+    file_url = ExportTaskFileUrlField(read_only=True, lookup_field='task__pk')
+
+    class Meta:
+        model = models.ExportTaskFile
+        fields = ('file_url', 'md5sum')
+
+
+class ExportTaskSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
+
+    created_by = UserNameField()
+
+    project = MtPrimaryKeyRelatedField(
+        read_only=True,
+    )
+
+    # this will return all files in one request call
+    files = ExportTaskFileSerializer(
+        fields=('file_url', 'md5sum'),
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = models.ExportTask
+        fields = '__all__'

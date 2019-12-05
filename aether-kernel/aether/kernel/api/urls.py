@@ -34,6 +34,7 @@ router.register('mappings', views.MappingViewSet)
 router.register('submissions', views.SubmissionViewSet)
 router.register('attachments', views.AttachmentViewSet)
 router.register('entities', views.EntityViewSet)
+router.register('export-tasks', views.ExportTaskViewSet)
 
 
 urlpatterns = router.urls + [

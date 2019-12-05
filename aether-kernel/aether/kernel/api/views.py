@@ -783,6 +783,23 @@ class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet
     mt_field = 'project'
 
 
+class ExportTaskViewSet(MtViewSetMixin, viewsets.ReadOnlyModelViewSet):
+    queryset = models.ExportTask.objects.all()
+    serializer_class = serializers.ExportTaskSerializer
+    mt_field = 'project'
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_name='file_content',
+        url_path='file-content/(?P<file_pk>[^/.]+)',
+    )
+    def file_content(self, request, pk=None, file_pk=None, *args, **kwargs):
+        task = self.get_object_or_404(pk=pk)
+        _file = task.files.get(pk=file_pk)
+        return _file.get_content()
+
+
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
 @permission_classes([permissions.IsAuthenticated])

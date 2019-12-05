@@ -951,6 +951,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
+        self.assertIsNone(task.status_attachments)
         self.assertEqual(task.files.count(), 1)
 
         data = response.json()
@@ -967,6 +968,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
+        self.assertIsNone(task.status_attachments)
         self.assertEqual(task.files.count(), 1)
 
     @tag('noparallel')
@@ -1007,6 +1009,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.name, 'project1-export')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status, 'DONE')
+        self.assertEqual(task.status_attachments, 'DONE')
         self.assertEqual(task.files.count(), 2)
         self.assertIsNone(task.revision)
 
@@ -1049,3 +1052,27 @@ class ExporterViewsTest(TestCase):
             self.assertIn(f'{entity_1.pk}/a.txt', _files)
             self.assertIn(f'{entity_2.pk}/b.txt', _files)
             self.assertIn(f'{entity_2.pk}/c.txt', _files)
+
+        response = self.client.get(reverse('exporttask-detail', kwargs={'pk': task.pk}))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertEqual(data['name'], 'project1-export')
+        self.assertEqual(data['created_by'], 'user')
+        self.assertEqual(data['status'], 'DONE')
+        self.assertEqual(data['status_attachments'], 'DONE')
+        self.assertEqual(len(data['files']), 2)
+
+        self.assertEqual(data['files'][0]['md5sum'], export_file.md5sum)
+        self.assertEqual(
+            data['files'][0]['file_url'],
+            f'http://testserver/export-tasks/{task.pk}/file-content/{export_file.pk}/')
+        export_file_content = self.client.get(data['files'][0]['file_url'])
+        self.assertEqual(export_file.get_content().getvalue(), export_file_content.getvalue())
+
+        self.assertEqual(data['files'][1]['md5sum'], attachments_file.md5sum)
+        self.assertEqual(
+            data['files'][1]['file_url'],
+            f'http://testserver/export-tasks/{task.pk}/file-content/{attachments_file.pk}/')
+        attachments_file_content = self.client.get(data['files'][1]['file_url'])
+        self.assertEqual(attachments_file.get_content().getvalue(), attachments_file_content.getvalue())

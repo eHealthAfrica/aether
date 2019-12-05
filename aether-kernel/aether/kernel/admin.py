@@ -66,6 +66,11 @@ class EntityAdmin(BaseAdmin):
     list_display = ('id', 'revision', 'status', 'submission', 'mapping',)
 
 
+class ExportTaskAdmin(BaseAdmin):
+    list_display = ('id', 'project', 'created', 'created_by', 'status', 'status_attachments', )
+    readonly_fields = ('id', 'name',)
+
+
 admin.site.register(models.Project, ProjectAdmin)
 admin.site.register(models.MappingSet, MappingSetAdmin)
 admin.site.register(models.Mapping, MappingAdmin)
@@ -74,3 +79,4 @@ admin.site.register(models.Attachment, AttachmentAdmin)
 admin.site.register(models.Schema, SchemaAdmin)
 admin.site.register(models.SchemaDecorator, SchemaDecoratorAdmin)
 admin.site.register(models.Entity, EntityAdmin)
+admin.site.register(models.ExportTask, ExportTaskAdmin)

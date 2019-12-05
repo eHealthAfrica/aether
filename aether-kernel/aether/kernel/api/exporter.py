@@ -430,7 +430,8 @@ class ExporterMixin():
             p.join()
 
             if 'query_attachments' in export_settings:
-                q = Process(target=execute_download_task, args=(task,))
+                task.set_status_attachments('INIT')
+                q = Process(target=execute_attachments_task, args=(task,))
                 q.start()
                 q.join()
 
@@ -451,8 +452,6 @@ def execute_export_task(task):
         _settings = task.settings
 
         try:
-            task.set_status('WIP')
-
             # register CSV dialect for the given options
             dialect_name = f'aether_custom_{str(uuid.uuid4())}'
             csv.register_dialect(
@@ -467,6 +466,8 @@ def execute_export_task(task):
             _file_format = _settings['file_format']
             _offset = _settings['offset']
             _limit = _settings['limit']
+
+            task.set_status('WIP')
 
             logger.info(f'Preparing {_file_format} file: offset {_offset}, limit {_limit}')
             logger.info(str(_settings['export_options']))
@@ -499,7 +500,7 @@ def execute_export_task(task):
             csv.unregister_dialect(dialect_name)
 
 
-def execute_download_task(task):
+def execute_attachments_task(task):
     # temporary directory to keep the generated files
     with tempfile.TemporaryDirectory() as temp_dir:
         _settings = task.settings
@@ -511,44 +512,54 @@ def execute_download_task(task):
         sql = _settings['query_attachments']['sql']
         params = _settings['query_attachments']['params'],
 
-        # paginate results to reduce memory usage
-        with connection.cursor() as cursor:
-            data_from = offset
-            index = offset
-            while data_from < limit:
-                data_to = min(data_from + PAGE_SIZE, limit)
-                logger.debug(f'Downloading attachments from {data_from} to {data_to}')
+        try:
+            task.set_status_attachments('WIP')
 
-                cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
-                columns = [col[0] for col in cursor.description]
-                for entry in cursor:
-                    row = dict(zip(columns, entry))
-                    index += 1
+            # paginate results to reduce memory usage
+            with connection.cursor() as cursor:
+                data_from = offset
+                index = offset
+                while data_from < limit:
+                    data_to = min(data_from + PAGE_SIZE, limit)
+                    logger.debug(f'Downloading attachments from {data_from} to {data_to}')
 
-                    # Get the attachment id, download it's content from the storage
-                    instance_id = str(row.get(EXPORT_FIELD_ID))
-                    _directory = f'{temp_dir}/files/{instance_id}'
-                    if not os.path.exists(_directory):
-                        os.makedirs(_directory)
+                    cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}', params)
+                    columns = [col[0] for col in cursor.description]
+                    for entry in cursor:
+                        row = dict(zip(columns, entry))
+                        index += 1
 
-                    attach_id = row.get(EXPORT_FIELD_ATTACHMENT)
-                    attachment = Attachment.objects.get(pk=attach_id)
+                        # Get the attachment id, download it's content from the storage
+                        instance_id = str(row.get(EXPORT_FIELD_ID))
+                        _directory = f'{temp_dir}/files/{instance_id}'
+                        if not os.path.exists(_directory):
+                            os.makedirs(_directory)
 
-                    file_path = f'{_directory}/{attachment.name}'
-                    with open(file_path, 'wb') as file:
-                        file.write(attachment.get_content().getvalue())
+                        attach_id = row.get(EXPORT_FIELD_ATTACHMENT)
+                        attachment = Attachment.objects.get(pk=attach_id)
 
-                data_from = data_to
+                        file_path = f'{_directory}/{attachment.name}'
+                        with open(file_path, 'wb') as file:
+                            file.write(attachment.get_content().getvalue())
 
-        # create zip with attachments and add to task files
-        zip_ext = 'zip'
-        zip_name = f'{filename}-attachments-{datetime.now().isoformat()}'
-        zip_path = shutil.make_archive(f'{temp_dir}/{zip_name}', zip_ext, f'{temp_dir}/files/')
+                    data_from = data_to
 
-        with open(zip_path, 'rb') as f:
-            export_file = ExportTaskFile(task=task)
-            export_file.file.save(f'{zip_name}.{zip_ext}', File(f))
-            export_file.save()
+            # TODO: split in several files depending on final size
+            # create zip with attachments and add to task files
+            zip_ext = 'zip'
+            zip_name = f'{filename}-attachments-{datetime.now().isoformat()}'
+            zip_path = shutil.make_archive(f'{temp_dir}/{zip_name}', zip_ext, f'{temp_dir}/files/')
+
+            with open(zip_path, 'rb') as f:
+                export_file = ExportTaskFile(task=task)
+                export_file.file.save(f'{zip_name}.{zip_ext}', File(f))
+                export_file.save()
+
+            task.set_status_attachments('DONE')
+
+        except Exception:
+            task.set_status_attachments('ERROR')
+            raise
 
 
 def generate_file(temp_dir,
