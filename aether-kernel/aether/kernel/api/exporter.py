@@ -438,7 +438,7 @@ class ExporterMixin():
             return Response(data={'task': task.pk})
 
         try:
-            execute_export_task(task)
+            execute_export_task(task, dettached=False)
             return task.files.first().get_content(as_attachment=True)
 
         except IOError as e:
@@ -446,7 +446,7 @@ class ExporterMixin():
             return Response(data={'detail': msg}, status=500)
 
 
-def execute_export_task(task):
+def execute_export_task(task, dettached=True):
     # temporary directory to keep the generated files
     with tempfile.TemporaryDirectory() as temp_dir:
         _settings = task.settings
@@ -494,7 +494,8 @@ def execute_export_task(task):
 
         except Exception:
             task.set_status('ERROR')
-            raise
+            if not dettached:
+                raise
 
         finally:
             csv.unregister_dialect(dialect_name)
@@ -559,7 +560,6 @@ def execute_attachments_task(task):
 
         except Exception:
             task.set_status_attachments('ERROR')
-            raise
 
 
 def generate_file(temp_dir,
