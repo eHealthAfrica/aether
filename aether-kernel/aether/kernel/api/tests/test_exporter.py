@@ -736,7 +736,7 @@ class ExporterViewsTest(TestCase):
         task = models.ExportTask.objects.get(pk=task_id)
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status, 'ERROR')
+        self.assertEqual(task.status_records, 'ERROR')
         self.assertEqual(task.files.count(), 0)
 
         mock_export.assert_not_called()  # is called in the subprocess
@@ -840,7 +840,7 @@ class ExporterViewsTest(TestCase):
         task = models.ExportTask.objects.get(pk=task_id)
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status, 'ERROR')
+        self.assertEqual(task.status_records, 'ERROR')
         self.assertEqual(task.files.count(), 0)
 
         mock_export.assert_not_called()  # is called in the subprocess
@@ -937,7 +937,7 @@ class ExporterViewsTest(TestCase):
 
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status, 'ERROR')
+        self.assertEqual(task.status_records, 'ERROR')
         self.assertEqual(task.files.count(), 0)
 
     def test_entities_export__csv__empty(self):
@@ -973,7 +973,7 @@ class ExporterViewsTest(TestCase):
 
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status, 'DONE')
+        self.assertEqual(task.status_records, 'DONE')
         self.assertEqual(task.files.count(), 1)
 
     @tag('noparallel')
@@ -986,7 +986,7 @@ class ExporterViewsTest(TestCase):
 
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status, 'DONE')
+        self.assertEqual(task.status_records, 'DONE')
         self.assertIsNone(task.status_attachments)
         self.assertEqual(task.files.count(), 1)
 
@@ -995,17 +995,10 @@ class ExporterViewsTest(TestCase):
 
     def test_entities_export__attachments__empty(self):
         models.Attachment.objects.all().delete()
-        response = self.client.post(reverse('entity-csv') + '?include_attachments=t')
-        self.assertEqual(response.status_code, 200)
+        response = self.client.post(reverse('entity-csv') + '?generate_attachments=t')
+        self.assertEqual(response.status_code, 204)
 
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        task = models.ExportTask.objects.first()
-
-        self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status, 'DONE')
-        self.assertIsNone(task.status_attachments)
-        self.assertEqual(task.files.count(), 1)
+        self.assertEqual(models.ExportTask.objects.count(), 0)
 
     @tag('noparallel')
     def test_entities_export__attachments(self):
@@ -1035,7 +1028,9 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(models.Entity.objects.count(), 2)
         entity_2 = submission.entities.first()
 
-        response = self.client.post(reverse('entity-csv') + '?background=t&include_attachments=t')
+        response = self.client.post(
+            reverse('entity-csv') + '?background=t&generate_records=t&generate_attachments=t'
+        )
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(models.ExportTask.objects.count(), 1)
@@ -1044,7 +1039,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.name, 'project1-export')
         self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status, 'DONE')
+        self.assertEqual(task.status_records, 'DONE')
         self.assertEqual(task.status_attachments, 'DONE')
         self.assertEqual(task.files.count(), 2)
         self.assertIsNone(task.revision)
@@ -1095,7 +1090,7 @@ class ExporterViewsTest(TestCase):
 
         self.assertEqual(data['name'], 'project1-export')
         self.assertEqual(data['created_by'], 'test')
-        self.assertEqual(data['status'], 'DONE')
+        self.assertEqual(data['status_records'], 'DONE')
         self.assertEqual(data['status_attachments'], 'DONE')
         self.assertEqual(len(data['files']), 2)
 
@@ -1124,7 +1119,7 @@ class ExporterViewsTest(TestCase):
             attachment_file=SimpleUploadedFile('a.txt', b'123'),
         )
 
-        response = self.client.post(reverse('entity-csv') + '?background=t&include_attachments=t')
+        response = self.client.post(reverse('entity-csv') + '?background=t&generate_attachments=t')
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(models.ExportTask.objects.count(), 1)
@@ -1133,7 +1128,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.name, 'project1-export')
         self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status, 'DONE')
+        self.assertIsNone(task.status_records)
         self.assertEqual(task.status_attachments, 'ERROR')
-        self.assertEqual(task.files.count(), 1)
+        self.assertEqual(task.files.count(), 0)
         self.assertIsNone(task.revision)

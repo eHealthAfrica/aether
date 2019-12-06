@@ -768,11 +768,12 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
         editable=False,
         verbose_name=_('settings'),
     )
-    status = models.CharField(
-        default='INIT',
+    status_records = models.CharField(
+        blank=True,
         editable=False,
         max_length=20,
-        verbose_name=_('status'),
+        null=True,
+        verbose_name=_('status records'),
     )
     status_attachments = models.CharField(
         blank=True,
@@ -794,10 +795,10 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
         return None
 
     @transaction.atomic
-    def set_status(self, status):
+    def set_status_records(self, status):
         self.refresh_from_db()
-        self.status = status
-        self.save(update_fields=['status'])
+        self.status_records = status
+        self.save(update_fields=['status_records'])
 
     @transaction.atomic
     def set_status_attachments(self, status):

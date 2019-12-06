@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.TextField(editable=False, verbose_name='name')),
                 ('settings', django.contrib.postgres.fields.jsonb.JSONField(default=dict, editable=False, verbose_name='settings')),
-                ('status', models.CharField(default='INIT', editable=False, max_length=20, verbose_name='status')),
+                ('status_records', models.CharField(blank=True, editable=False, null=True, max_length=20, verbose_name='status records')),
                 ('status_attachments', models.CharField(blank=True, editable=False, null=True, max_length=20, verbose_name='status attachments')),
                 ('created_by', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tasks', to=settings.AUTH_USER_MODEL, verbose_name='Requested by')),
                 ('project', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='kernel.Project', verbose_name='project')),

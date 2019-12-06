@@ -67,7 +67,7 @@ class EntityAdmin(BaseAdmin):
 
 
 class ExportTaskAdmin(BaseAdmin):
-    list_display = ('id', 'project', 'created', 'created_by', 'status', 'status_attachments', )
+    list_display = ('id', 'project', 'created', 'created_by', 'status_records', 'status_attachments', )
     readonly_fields = ('id', 'name',)
 
 

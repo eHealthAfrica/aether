@@ -24,7 +24,6 @@ import os
 import re
 import shutil
 import tempfile
-import uuid
 import zipfile
 
 from multiprocessing import Process
@@ -172,6 +171,19 @@ class ExporterMixin():
         '''
         Expected parameters:
 
+        Export options:
+
+        - ``generate_attachments``, indicates if the file(s) with all the linked
+            attachment files should be generated.
+
+        - ``generate_records``, indicates if the file(s) with all the linked
+            records should be generated. If the attachments are not included
+            this option is true.
+
+        - ``background``, indicates if instead of returning the file returns
+            the task id linked to this export and continue the export process
+            in background.
+
         Data filtering:
 
         - ``page_size``, size of the block of data.
@@ -304,14 +316,6 @@ class ExporterMixin():
         - ``csv_separator``, a one-character string used to separate the columns.
             Default: comma ``,``.
 
-        Export options:
-
-        - ``include_attachments`` indicates if the attachment files should also be included
-            as part of the generated file.
-
-        - ``background``, indicates if instead of returning the file return the task id
-            linked to this export and continue the export process in background.
-
         '''
         queryset = self.filter_queryset(self.get_queryset())
 
@@ -322,9 +326,6 @@ class ExporterMixin():
                 status=400,
             )
 
-        data = queryset.annotate(**{EXPORT_FIELD_DATA: F(self.json_field)}) \
-                       .values(EXPORT_FIELD_ID, EXPORT_FIELD_DATA)
-
         # check pagination (positive values)
         page_size = max(1, int(self.__get(request, 'page_size', MAX_SIZE)))
         start_at = max(0, int(self.__get(request, 'start_at', '0')))
@@ -334,111 +335,138 @@ class ExporterMixin():
             current_page = int(self.__get(request, 'page', '1'))
             offset = (current_page - 1) * page_size
 
-        limit = min(data.count(), offset + page_size)
+        limit = min(queryset.count(), offset + page_size)
         if offset >= limit:
             return Response(status=204)  # NO-CONTENT
 
-        # extract jsonpaths and docs from linked schemas definition
-        jsonpaths = self.__get(request, 'paths', [])
-        docs = self.__get(request, 'labels', {})
-        if self.schema_field and not jsonpaths:
-            schemas = queryset.order_by(self.schema_order or self.schema_field) \
-                              .exclude(**{self.schema_field: None}) \
-                              .values(self.schema_field) \
-                              .distinct()
-            for schema in schemas:
-                extract_jsonpaths_and_docs(
-                    schema=schema.get(self.schema_field),
-                    jsonpaths=jsonpaths,
-                    docs=docs,
-                )
-
-        # check valid values for each option
-        header_content = self.__get(request, 'header_content', settings.EXPORT_HEADER_CONTENT).lower()
-        if header_content not in ('labels', 'paths', 'both'):
-            header_content = 'labels'
-
-        header_separator = self.__get(request, 'header_separator', settings.EXPORT_HEADER_SEPARATOR)
-        if not header_separator:
-            header_separator = settings.EXPORT_HEADER_SEPARATOR
-
-        header_shorten = self.__get(request, 'header_shorten', settings.EXPORT_HEADER_SHORTEN).lower()
-        if header_shorten != 'yes':
-            header_shorten = 'no'
-
-        data_format = self.__get(request, 'data_format', settings.EXPORT_DATA_FORMAT).lower()
-        if data_format != 'flatten':
-            data_format = 'split'
-
-        csv_sep = self.__get(request, 'csv_separator', settings.EXPORT_CSV_SEPARATOR)
-        if csv_sep == 'TAB':
-            csv_sep = '\t'
-
-        # create task with all need data
         project = getattr(queryset.first(), self.project_field)
-        sql, params = data.query.sql_with_params()
-        with connection.cursor() as cursor:
-            sql_sentence = cursor.mogrify(sql, params).decode('utf-8')
-
+        filename = self.__get(request, 'filename', queryset.first().name or 'export')
         export_settings = {
-            'query': sql_sentence,
-            'file_format': file_format,
-            'filename': self.__get(request, 'filename', queryset.first().name or 'export'),
-            'paths': jsonpaths,
-            'labels': docs,
             'offset': offset,
             'limit': limit,
-            'export_options': {
-                'header_content': header_content,
-                'header_separator': header_separator,
-                'header_shorten': header_shorten,
-                'data_format': data_format,
-            },
-            'dialect_options': {
-                'delimiter': csv_sep,
-                'escapechar': self.__get(request, 'csv_escape', settings.EXPORT_CSV_ESCAPE),
-                'quotechar': self.__get(request, 'csv_quote', settings.EXPORT_CSV_QUOTE),
-            },
+            'records': {},
+            'attachments': {},
         }
 
-        download_attachments = self.__get(request, 'include_attachments', 'false').lower()
-        if self.attachment_field and download_attachments in ['true', 't']:
+        generate_attachments = self.__get(request, 'generate_attachments', 'false').lower()
+        generate_attachments = self.attachment_field and generate_attachments in ['true', 't']
+        if generate_attachments:
             attachments = queryset.annotate(**{EXPORT_FIELD_ATTACHMENT: F(self.attachment_field)}) \
                                   .exclude(**{self.attachment_field: None}) \
                                   .values(EXPORT_FIELD_ID, EXPORT_FIELD_ATTACHMENT)
             if attachments.count() > 0:
-                asql, aparams = attachments.query.sql_with_params()
                 with connection.cursor() as cursor:
-                    asql_sentence = cursor.mogrify(asql, aparams).decode('utf-8')
-                export_settings['query_attachments'] = asql_sentence
+                    sql, params = attachments.query.sql_with_params()
+                    query = cursor.mogrify(sql, params).decode('utf-8')
+                export_settings['attachments'] = {
+                    'query': query,
+                    'filename': f'{filename}-attachments',
+                }
 
-        print(export_settings)
+        generate_records = self.__get(request, 'generate_records', 'false').lower()
+        generate_records = not generate_attachments or generate_records in ['true', 't']
+        if generate_records:
+            data = queryset.annotate(**{EXPORT_FIELD_DATA: F(self.json_field)}) \
+                           .values(EXPORT_FIELD_ID, EXPORT_FIELD_DATA)
+
+            # extract jsonpaths and docs from linked schemas definition
+            jsonpaths = self.__get(request, 'paths', [])
+            docs = self.__get(request, 'labels', {})
+            if self.schema_field and not jsonpaths:
+                schemas = queryset.order_by(self.schema_order or self.schema_field) \
+                                  .exclude(**{self.schema_field: None}) \
+                                  .values(self.schema_field) \
+                                  .distinct()
+                for schema in schemas:
+                    extract_jsonpaths_and_docs(
+                        schema=schema.get(self.schema_field),
+                        jsonpaths=jsonpaths,
+                        docs=docs,
+                    )
+
+            # check valid values for each option
+            header_content = self.__get(request, 'header_content', settings.EXPORT_HEADER_CONTENT).lower()
+            if header_content not in ('labels', 'paths', 'both'):
+                header_content = 'labels'
+
+            header_separator = self.__get(request, 'header_separator', settings.EXPORT_HEADER_SEPARATOR)
+            if not header_separator:
+                header_separator = settings.EXPORT_HEADER_SEPARATOR
+
+            header_shorten = self.__get(request, 'header_shorten', settings.EXPORT_HEADER_SHORTEN).lower()
+            if header_shorten != 'yes':
+                header_shorten = 'no'
+
+            data_format = self.__get(request, 'data_format', settings.EXPORT_DATA_FORMAT).lower()
+            if data_format != 'flatten':
+                data_format = 'split'
+
+            csv_sep = self.__get(request, 'csv_separator', settings.EXPORT_CSV_SEPARATOR)
+            if csv_sep == 'TAB':
+                csv_sep = '\t'
+
+            with connection.cursor() as cursor:
+                sql, params = data.query.sql_with_params()
+                query = cursor.mogrify(sql, params).decode('utf-8')
+
+            export_settings['records'] = {
+                'query': query,
+                'file_format': file_format,
+                'filename': filename,
+                'paths': jsonpaths,
+                'labels': docs,
+                'export_options': {
+                    'header_content': header_content,
+                    'header_separator': header_separator,
+                    'header_shorten': header_shorten,
+                    'data_format': data_format,
+                },
+                'dialect_options': {
+                    'delimiter': csv_sep,
+                    'escapechar': self.__get(request, 'csv_escape', settings.EXPORT_CSV_ESCAPE),
+                    'quotechar': self.__get(request, 'csv_quote', settings.EXPORT_CSV_QUOTE),
+                },
+            }
+
+        if generate_attachments and not export_settings['attachments'] and not generate_records:
+            # there are no attachments to download
+            return Response(status=204)  # NO-CONTENT
+
+        # create task with all need data
         task = ExportTask.objects.create(
-            name=export_settings['filename'],
+            name=filename,
             created_by=request.user,
             project=project,
             settings=export_settings,
-            status='INIT',
+            status_records='INIT' if export_settings['records'] else None,
+            status_attachments='INIT' if export_settings['attachments'] else None,
         )
 
-        # execute export in background if it includes also the attachments
+        # always execute export in background if it generates the attachment files
         in_background = self.__get(request, 'background', 'false').lower() in ['true', 't']
-        if in_background or 'query_attachments' in export_settings:
-            # start a subprocess and return task id
-            p = Process(target=execute_export_task, args=(task,))
-            p.start()
-            p.join()
+        if in_background or export_settings['attachments']:
+            # start download subprocess(-es) and return task id
 
-            if 'query_attachments' in export_settings:
-                task.set_status_attachments('INIT')
-                q = Process(target=execute_attachments_task, args=(task,))
+            if generate_records:
+                p = Process(target=execute_records_task, args=(task.pk,))
+                p.start()
+
+                # join the process to the main thread to pass the tests
+                if settings.TESTING:  # pragma: no cover
+                    p.join()
+
+            if export_settings['attachments']:
+                q = Process(target=execute_attachments_task, args=(task.pk,))
                 q.start()
-                q.join()
+
+                # join the process to the main thread to pass the tests
+                if settings.TESTING:  # pragma: no cover
+                    q.join()
 
             return Response(data={'task': str(task.pk)})
 
         try:
-            execute_export_task(task, dettached=False)
+            execute_records_task(task.pk, dettached=False)
             return task.files.first().get_content(as_attachment=True)
 
         except IOError as e:
@@ -446,14 +474,21 @@ class ExporterMixin():
             return Response(data={'detail': msg}, status=500)
 
 
-def execute_export_task(task, dettached=True):
-    # temporary directory to keep the generated files
-    with tempfile.TemporaryDirectory() as temp_dir:
-        _settings = task.settings
+def execute_records_task(task_id, dettached=True):
+    if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
+        return
 
-        try:
+    task = ExportTask.objects.get(pk=task_id)
+    dialect_name = None
+
+    try:
+        dialect_name = f'aether_custom_{str(task.id)}'
+
+        # temporary directory to keep the generated files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _settings = task.settings['records']
+
             # register CSV dialect for the given options
-            dialect_name = f'aether_custom_{str(uuid.uuid4())}'
             csv.register_dialect(
                 dialect_name,
                 delimiter=_settings['dialect_options']['delimiter'],
@@ -464,10 +499,10 @@ def execute_export_task(task, dettached=True):
             )
 
             _file_format = _settings['file_format']
-            _offset = _settings['offset']
-            _limit = _settings['limit']
+            _offset = task.settings['offset']
+            _limit = task.settings['limit']
 
-            task.set_status('WIP')
+            task.set_status_records('WIP')
 
             logger.info(f'Preparing {_file_format} file: offset {_offset}, limit {_limit}')
             logger.info(str(_settings['export_options']))
@@ -490,28 +525,35 @@ def execute_export_task(task, dettached=True):
                 export_file.file.save(file_name, File(f))
                 export_file.save()
 
-            task.set_status('DONE')
+            task.set_status_records('DONE')
 
-        except Exception:
-            task.set_status('ERROR')
-            if not dettached:
-                raise
+    except Exception:
+        task.set_status_records('ERROR')
+        if not dettached:
+            raise
 
-        finally:
+    finally:  # pragma: no cover
+        if dialect_name:
             csv.unregister_dialect(dialect_name)
 
 
-def execute_attachments_task(task):
-    # temporary directory to keep the generated files
-    with tempfile.TemporaryDirectory() as temp_dir:
-        _settings = task.settings
+def execute_attachments_task(task_id):
+    if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
+        return
 
-        offset = _settings['offset']
-        limit = _settings['limit']
-        filename = _settings['filename']
-        sql = _settings['query_attachments']
+    task = ExportTask.objects.get(pk=task_id)
 
-        try:
+    try:
+
+        # temporary directory to keep the generated files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _settings = task.settings['attachments']
+
+            offset = task.settings['offset']
+            limit = task.settings['limit']
+            filename = _settings['filename']
+            sql = _settings['query']
+
             task.set_status_attachments('WIP')
 
             # paginate results to reduce memory usage
@@ -546,7 +588,7 @@ def execute_attachments_task(task):
             # TODO: split in several files depending on final size
             # create zip with attachments and add to task files
             zip_ext = 'zip'
-            zip_name = f'{filename}-attachments-{datetime.now().isoformat()}'
+            zip_name = f'{filename}-{datetime.now().isoformat()}'
             zip_path = shutil.make_archive(f'{temp_dir}/{zip_name}', zip_ext, f'{temp_dir}/files/')
 
             with open(zip_path, 'rb') as f:
@@ -556,8 +598,8 @@ def execute_attachments_task(task):
 
             task.set_status_attachments('DONE')
 
-        except Exception:
-            task.set_status_attachments('ERROR')
+    except Exception:
+        task.set_status_attachments('ERROR')
 
 
 def generate_file(temp_dir,
