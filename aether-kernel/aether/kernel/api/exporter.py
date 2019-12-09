@@ -357,7 +357,11 @@ class ExporterMixin():
         }
 
         generate_attachments = self.__get(request, 'generate_attachments', 'false').lower()
-        generate_attachments = self.attachment_field and generate_attachments in ['true', 't']
+        generate_attachments = (
+            self.attachment_field and
+            self.attachment_parent_field and
+            generate_attachments in ['true', 't']
+        )
         if (
             generate_attachments and
             queryset.exclude(**{self.attachment_field: None}).count() > 0
