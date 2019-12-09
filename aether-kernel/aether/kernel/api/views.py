@@ -23,7 +23,7 @@ from django.shortcuts import get_object_or_404
 from aether.sdk.multitenancy.utils import filter_by_realm, is_accessible_by_realm
 from rest_framework.exceptions import PermissionDenied
 
-from rest_framework import viewsets, permissions, status
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import (
     action,
@@ -785,7 +785,7 @@ class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet
     mt_field = 'project'
 
 
-class ExportTaskViewSet(MtViewSetMixin, viewsets.ReadOnlyModelViewSet):
+class ExportTaskViewSet(MtViewSetMixin, viewsets.ReadOnlyModelViewSet, mixins.DestroyModelMixin):
     queryset = models.ExportTask.objects.all()
     serializer_class = serializers.ExportTaskSerializer
     mt_field = 'project'
