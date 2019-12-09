@@ -825,6 +825,7 @@ class ExportTaskFile(ExportModelOperationsMixin('kernel_exporttaskfile'), Projec
 
     :ivar File        file:    Path to generated file (depends on the file storage system).
     :ivar text        md5sum:  File content hash (MD5).
+    :ivar number      size:    File size (in bytes).
     :ivar ExportTask  task:    Task.
 
     '''

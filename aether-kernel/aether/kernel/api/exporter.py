@@ -57,7 +57,7 @@ PAGE_SIZE = 1000
 # Nowadays the ZIP file size limit is 16 EB (exabytes), but
 # 4 GB (gigabytes) size is a limitation for an old zip format and,
 # it is a limit for any file on FAT32 disks.
-MAX_FILE_SIZE = 4 * 1024 * 1024 * 1024  # 4 GiB
+MAX_FILE_SIZE = 4 * 1000 * 1000 * 1000  # 4 GB
 
 # CSV Dialect
 # https://docs.python.org/3/library/csv.html#dialects-and-formatting-parameters
@@ -539,6 +539,7 @@ def execute_records_task(task_id, dettached=True):
             with open(file_path, 'rb') as f:
                 export_file = ExportTaskFile(task=task)
                 export_file.file.save(file_name, File(f))
+                export_file.size = os.path.getsize(file_path)
                 export_file.save()
 
             task.set_status_records('DONE')
@@ -609,6 +610,7 @@ def execute_attachments_task(task_id):
                                     file.write(attachment.get_content().getvalue())
 
                     data_from = data_to
+            logger.info('All attachments downloaded!')
 
             # create zip with attachments and add to task files
             zip_ext = 'zip'
@@ -620,19 +622,21 @@ def execute_attachments_task(task_id):
             )
 
             # TODO: split in several files depending on final size
-            file_stats = os.stat(zip_path)
-            zip_size = sizeof_fmt(file_stats.st_size)
+            file_size = os.path.getsize(zip_path)
+            zip_size = sizeof_fmt(file_size)
             logger.info(
                 f'Generated attachments file "{zip_path}" with size: {zip_size}.'
             )
-            if file_stats.st_size > MAX_FILE_SIZE:  # pragma: no cover
+            if file_size > MAX_FILE_SIZE:  # pragma: no cover
                 logger.warning(
-                    'The file size might cause problems in FAT32 disks or with old ZIP versions'
+                    f'The file size ({zip_size}) might cause problems'
+                    ' in FAT32 disks or with old ZIP versions'
                 )
 
             with open(zip_path, 'rb') as f:
                 export_file = ExportTaskFile(task=task)
                 export_file.file.save(f'{zip_name}.{zip_ext}', File(f))
+                export_file.size = file_size
                 export_file.save()
 
             task.set_status_attachments('DONE')
@@ -1111,26 +1115,26 @@ def __is_flatten(value):
 
 
 # https://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
-def sizeof_fmt(num, suffix='B'):  # pragma: no cover
+def sizeof_fmt(num):  # pragma: no cover
     '''
-    Multiples of bytes (binary):
+    Multiples of bytes (decimal):
 
-        Value     IEC    JEDEC
-        -------   ----   ---------
-        1024      KiB    kibibyte
-        1024^2    MiB    mebibyte
-        1024^3    GiB    gibibyte
-        1024^4    TiB    tebibyte
-        1024^5    PiB    pebibyte
-        1024^6    EiB    exbibyte
-        1024^7    ZiB    zebibyte
-        1024^8    YiB    yobibyte
+        Value     Metric
+        -------   --------------
+        1000      KB  kilobyte
+        1000^2    MB  megabyte
+        1000^3    GB  gigabyte
+        1000^4    TB  terabyte
+        1000^5    PB  petabyte
+        1000^6    EB  exabyte
+        1000^7    ZB  zettabyte
+        1000^8    YB  yottabyte
     '''
-    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
-        if abs(num) < 1024.0:
-            return '%3.1f%s%s' % (num, unit, suffix)
-        num /= 1024.0
-    return '%.1f%s%s' % (num, 'Yi', suffix)
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB']:
+        if abs(num) < 1000.0:
+            return '%3.1f%s' % (num, unit)
+        num /= 1000.0
+    return '%.1f%s' % (num, 'YB')
 
 
 def __reset_connection():
@@ -1140,4 +1144,5 @@ def __reset_connection():
     #   psycopg2.InterfaceError: connection already closed
     #   django.db.utils.OperationalError: server closed the connection unexpectedly
 
-    connection.close()
+    if not settings.TESTING:  # pragma: no cover
+        connection.close()

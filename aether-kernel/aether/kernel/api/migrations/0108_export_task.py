@@ -11,12 +11,6 @@ import model_utils.fields
 import uuid
 
 
-def migrate__update_attachment_md5sum(apps, schema_editor):
-    Attachment = apps.get_model('kernel', 'attachment')
-    for a in Attachment.objects.all():
-        a.save()  # calculate md5sum
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -29,14 +23,6 @@ class Migration(migrations.Migration):
             model_name='attachment',
             name='md5sum',
             field=models.CharField(blank=True, editable=False, max_length=36, verbose_name='file MD5'),
-        ),
-
-        migrations.RunPython(
-            code=migrate__update_attachment_md5sum,
-            reverse_code=migrations.RunPython.noop,
-            # The optional elidable argument determines whether or not the operation
-            # will be removed (elided) when squashing migrations.
-            elidable=True,
         ),
 
         migrations.CreateModel(

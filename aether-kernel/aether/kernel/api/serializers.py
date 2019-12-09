@@ -442,7 +442,7 @@ class ExportTaskFileSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = models.ExportTaskFile
-        fields = ('file_url', 'md5sum')
+        fields = ('name', 'file_url', 'size', 'md5sum',)
 
 
 class ExportTaskSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
@@ -460,7 +460,6 @@ class ExportTaskSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     # this will return all files in one request call
     files = ExportTaskFileSerializer(
-        fields=('file_url', 'md5sum'),
         many=True,
         read_only=True,
     )
