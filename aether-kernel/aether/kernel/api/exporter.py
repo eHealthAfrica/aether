@@ -488,6 +488,9 @@ class ExporterMixin():
 
 
 def execute_records_task(task_id, dettached=True):
+    if dettached:
+        __reset_connection()
+
     if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
         return
 
@@ -541,8 +544,7 @@ def execute_records_task(task_id, dettached=True):
             task.set_status_records('DONE')
 
     except Exception as e:
-        msg = _('Got an error while generating records file: {error}').format(error=str(e))
-        logger.error(msg)
+        logger.error(f'Got an error while generating records file: {str(e)}')
 
         task.set_status_records('ERROR')
         if not dettached:
@@ -554,6 +556,8 @@ def execute_records_task(task_id, dettached=True):
 
 
 def execute_attachments_task(task_id):
+    __reset_connection()
+
     if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
         return
 
@@ -583,7 +587,7 @@ def execute_attachments_task(task_id):
                 index = offset
                 while data_from < limit:
                     data_to = min(data_from + PAGE_SIZE, limit)
-                    logger.debug(f'Downloading attachments from {data_from} to {data_to}')
+                    logger.info(f'Downloading attachments from {data_from} to {data_to}')
 
                     cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}')
                     columns = [col[0] for col in cursor.description]
@@ -618,15 +622,12 @@ def execute_attachments_task(task_id):
             # TODO: split in several files depending on final size
             file_stats = os.stat(zip_path)
             zip_size = sizeof_fmt(file_stats.st_size)
-            logger.debug(
-                _('Generated attachments file "{path}" with size: {size}.').format(
-                    path=zip_path,
-                    size=zip_size,
-                )
+            logger.info(
+                f'Generated attachments file "{zip_path}" with size: {zip_size}.'
             )
             if file_stats.st_size > MAX_FILE_SIZE:  # pragma: no cover
                 logger.warning(
-                    _('The file size might cause problems in FAT32 disks or with old ZIP versions')
+                    'The file size might cause problems in FAT32 disks or with old ZIP versions'
                 )
 
             with open(zip_path, 'rb') as f:
@@ -635,10 +636,10 @@ def execute_attachments_task(task_id):
                 export_file.save()
 
             task.set_status_attachments('DONE')
+            logger.info(f'File "{zip_name}.{zip_ext}" ready!')
 
     except Exception as e:
-        msg = _('Got an error while generating attachments file: {error}').format(error=str(e))
-        logger.error(msg)
+        logger.error(f'Got an error while generating attachments file: {str(e)}')
         task.set_status_attachments('ERROR')
 
 
@@ -1130,3 +1131,13 @@ def sizeof_fmt(num, suffix='B'):  # pragma: no cover
             return '%3.1f%s%s' % (num, unit, suffix)
         num /= 1024.0
     return '%.1f%s%s' % (num, 'Yi', suffix)
+
+
+def __reset_connection():
+    # The subprocess is executed outside the main thread, we need to close the
+    # current connection an open a new one handle by this subprocess.
+    # Avoids:
+    #   psycopg2.InterfaceError: connection already closed
+    #   django.db.utils.OperationalError: server closed the connection unexpectedly
+
+    connection.close()
