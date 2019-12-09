@@ -68,6 +68,7 @@ class Migration(migrations.Migration):
                 ('name', models.TextField(verbose_name='name')),
                 ('file', models.FileField(editable=False, max_length=500, upload_to=aether.kernel.api.models.__task_path__, verbose_name='file')),
                 ('md5sum', models.CharField(blank=True, editable=False, max_length=36, verbose_name='file MD5')),
+                ('size', models.DecimalField(decimal_places=0, default=0, editable=False, max_digits=19, verbose_name='file size')),
                 ('task', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, related_name='files', to='kernel.ExportTask', verbose_name='task')),
             ],
             options={

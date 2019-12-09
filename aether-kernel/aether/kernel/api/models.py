@@ -843,6 +843,13 @@ class ExportTaskFile(ExportModelOperationsMixin('kernel_exporttaskfile'), Projec
         max_length=36,
         verbose_name=_('file MD5'),
     )
+    size = models.DecimalField(
+        decimal_places=0,
+        default=0,
+        editable=False,
+        max_digits=19,  # 1 EB = 10^18 B
+        verbose_name=_('file size'),
+    )
 
     task = models.ForeignKey(
         editable=False,
