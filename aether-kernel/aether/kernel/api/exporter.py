@@ -54,6 +54,11 @@ XLSX_FORMAT = 'xlsx'
 MAX_SIZE = 1048574  # the missing ones are the header ones (paths & labels)
 PAGE_SIZE = 1000
 
+# Nowadays the ZIP file size limit is 16 EB (exabytes), but
+# 4 GB (gigabytes) size is a limitation for an old zip format and,
+# it is a limit for any file on FAT32 disks.
+MAX_FILE_SIZE = 4 * 1024 * 1024 * 1024  # 4 GiB
+
 # CSV Dialect
 # https://docs.python.org/3/library/csv.html#dialects-and-formatting-parameters
 DEFAULT_DIALECT = 'aether_dialect'
@@ -88,9 +93,10 @@ class ExporterMixin():
 
     project_field = 'project'
     json_field = 'payload'
-    attachment_field = None
     schema_field = None
     schema_order = None
+    attachment_field = None
+    attachment_parent_field = None
 
     def get_queryset(self):
         '''
@@ -171,150 +177,152 @@ class ExporterMixin():
         '''
         Expected parameters:
 
-        Export options:
+        - Export options:
 
-        - ``generate_attachments``, indicates if the file(s) with all the linked
-            attachment files should be generated.
+            - ``generate_attachments``, indicates if the file(s) with all
+              the linked attachment files should be generated.
 
-        - ``generate_records``, indicates if the file(s) with all the linked
-            records should be generated. If the attachments are not included
-            this option is true.
+            - ``generate_records``, indicates if the file(s) with all the linked
+              records should be generated. If the attachments are not included
+              this option is true.
 
-        - ``background``, indicates if instead of returning the file returns
-            the task id linked to this export and continue the export process
-            in background.
+            - ``background``, indicates if instead of returning the file returns
+              the task id linked to this export and continue the export process
+              in background.
 
-        Data filtering:
+        - Data filtering:
 
-        - ``page_size``, size of the block of data.
-            Default: ``1048574``. The missing ones are reserved to the header.
-            Total number of rows on a worksheet (since Excel 2007): ``1048576``.
-            https://support.office.com/en-us/article/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
+            - ``page_size``, size of the block of data.
+              Default: ``1048574``. The missing ones are reserved to the header.
+              Total number of rows on a worksheet (since Excel 2007): ``1048576``.
+              https://support.office.com/en-us/article/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
 
-        - ``page``, current block of data.
-            Default: ``1``.
+            - ``page``, current block of data.
+              Default: ``1``.
 
-        - ``start_at``, indicates the starting position. This allows to start at
-            a custom position and not only at the beginning of the page block.
-            Otherwise the ``page`` parameter is used to calculate it.
+            - ``start_at``, indicates the starting position. This allows to start at
+              a custom position and not only at the beginning of the page block.
+              Otherwise the ``page`` parameter is used to calculate it.
 
-        - ``{json_field}__xxx``, json field filters. Handled by the ``get_queryset`` method.
+            - ``{json_field}__xxx``, json field filters.
+              Handled by the ``get_queryset`` method.
 
-        File options:
+        - File options:
 
-        - ``filename``, name of the generated file (without extension).
-            Default: first instance name (project/mappingset name) or ``export``.
+            - ``filename``, name of the generated file (without extension).
+              Default: first instance name (project/mappingset name) or ``export``.
 
-        - ``paths``, using the AVRO schema definition for the data, the jsonpaths to be included.
-            If missing will extract it from the schemas associated to the data
-            along with the ``labels``.
+            - ``paths``, using the AVRO schema definition for the data,
+              the jsonpaths to be included.
+              If missing will extract it from the schemas associated to the data
+              along with the ``labels``.
 
-            Example:
-                ["a.b", "a.c", ..., "z"]
+              Example:
+                  ["a.b", "a.c", ..., "z"]
 
-        - ``labels``, the dictionary of labels for each jsonpath.
-            If missing will use the jsonpaths or the one extracted from the schemas.
+            - ``labels``, the dictionary of labels for each jsonpath.
+              If missing will use the jsonpaths or the one extracted from the schemas.
 
-            Example:
-                {
-                    "a": "A",
-                    "a.b": "B",
-                    "a.c": "C",
-                    ...
-                    "z": "Z"
-                }
+              Example:
+                  {
+                      "a": "A",
+                      "a.b": "B",
+                      "a.c": "C",
+                      ...
+                      "z": "Z"
+                  }
 
-        - ``header_content``, indicates what to include in the header.
-            Options: ``labels`` (default), ``paths``, ``both`` (occupies two rows).
+            - ``header_content``, indicates what to include in the header.
+              Options: ``labels`` (default), ``paths``, ``both`` (occupies two rows).
 
-            Example:
-                With labels:    A / B   A / C   ... Z
-                With paths:     a/b     a/c     ... z
-                With both:      a/b     a/c     ... z
-                                A / B   A / C   ... Z
+              Example:
+                  With labels:    A / B   A / C   ... Z
+                  With paths:     a/b     a/c     ... z
+                  With both:      a/b     a/c     ... z
+                                  A / B   A / C   ... Z
 
-        - ``header_separator``, a one-character string used to separate the nested
-            columns in the headers row.
-            Default: slash ``/``.
+            - ``header_separator``, a one-character string used to separate the nested
+              columns in the headers row.
+              Default: slash ``/``.
 
-            Example:
-                With labels:    A / B   A / C   ... Z
-                With paths:     a/b     a/c     ... z
+              Example:
+                  With labels:    A / B   A / C   ... Z
+                  With paths:     a/b     a/c     ... z
 
-        - ``header_shorten``, indicates if the header includes the full jsonpath/label
-            or only the column one.
-            Values: ``yes``, any other ``no``. Default: ``no``.
+            - ``header_shorten``, indicates if the header includes the full jsonpath/label
+              or only the column one.
+              Values: ``yes``, any other ``no``. Default: ``no``.
 
-            Example:
-                With yes:       B       C       ... Z
-                Otherwise:      A / B   A / C   ... Z
+              Example:
+                  With yes:       B       C       ... Z
+                  Otherwise:      A / B   A / C   ... Z
 
-        - ``data_format``, indicates how to parse the data into the file or files.
-            Values: ``flatten``, any other ``split``. Default: ``split``.
+            - ``data_format``, indicates how to parse the data into the file or files.
+              Values: ``flatten``, any other ``split``. Default: ``split``.
 
-            Example:
+              Example:
 
-                Data:
+                  Data:
 
-                [
-                    {
-                        "id": "id1",
-                        "payload": {
-                            "a": {
-                                "b": "1,2,3",
-                                "c": [0, 1, 2]
-                            },
-                            ...
-                            "z": 1
-                        }
-                    },
-                    {
-                        "id": "id2",
-                        "payload": {
-                            "a": {
-                                "b": "a,b,c",
-                                "c": [4, 5]
-                            },
-                            ...
-                            "z": 2
-                        }
-                    }
-                ]
+                      [
+                          {
+                              "id": "id1",
+                              "payload": {
+                                  "a": {
+                                      "b": "1,2,3",
+                                      "c": [0, 1, 2]
+                                  },
+                                  ...
+                                  "z": 1
+                              }
+                          },
+                          {
+                              "id": "id2",
+                              "payload": {
+                                  "a": {
+                                      "b": "a,b,c",
+                                      "c": [4, 5]
+                                  },
+                                  ...
+                                  "z": 2
+                              }
+                          }
+                      ]
 
-                With flatten:
+                  With flatten:
 
-                    @   @ID   A / B   A / C / 1   A / C / 2   A / C / 3   ... Z
-                    1   id1   1,2,3   0           1           2           ... 1
-                    2   id2   a,b,c   4           5                       ... 2
+                      @   @ID   A / B   A / C / 1   A / C / 2   A / C / 3   ... Z
+                      1   id1   1,2,3   0           1           2           ... 1
+                      2   id2   a,b,c   4           5                       ... 2
 
-                Otherwise (with split):
+                  Otherwise (with split):
 
-                    Main file:
-                        @   @ID   A / B   ... Z
-                        1   id1   1,2,3   ... 1
-                        2   id2   a,b,c   ... 2
+                      Main file:
+                          @   @ID   A / B   ... Z
+                          1   id1   1,2,3   ... 1
+                          2   id2   a,b,c   ... 2
 
-                    A_C file:
-                        @   @ID   A / C / #   A / C
-                        1   id1   1           0
-                        1   id1   2           1
-                        1   id1   3           2
-                        2   id2   1           4
-                        2   id2   2           5
+                      A_C file:
+                          @   @ID   A / C / #   A / C
+                          1   id1   1           0
+                          1   id1   2           1
+                          1   id1   3           2
+                          2   id2   1           4
+                          2   id2   2           5
 
-        CSV format specific:
+        - CSV format specific:
 
-        - ``csv_escape``, a one-character string used to escape the separator
-            and the quotechar char.
-            Default: backslash ``\\``.
+            - ``csv_escape``, a one-character string used to escape the separator
+              and the quotechar char.
+              Default: backslash ``\\``.
 
-        - ``csv_quote``, a one-character string used to quote fields containing
-            special characters, such as the separator or quote char, or which contain
-            new-line characters.
-            Default: double quotes ``"``.
+            - ``csv_quote``, a one-character string used to quote fields containing
+              special characters, such as the separator or quote char, or which contain
+              new-line characters.
+              Default: double quotes ``"``.
 
-        - ``csv_separator``, a one-character string used to separate the columns.
-            Default: comma ``,``.
+            - ``csv_separator``, a one-character string used to separate the columns.
+              Default: comma ``,``.
 
         '''
         queryset = self.filter_queryset(self.get_queryset())
@@ -350,18 +358,19 @@ class ExporterMixin():
 
         generate_attachments = self.__get(request, 'generate_attachments', 'false').lower()
         generate_attachments = self.attachment_field and generate_attachments in ['true', 't']
-        if generate_attachments:
-            attachments = queryset.annotate(**{EXPORT_FIELD_ATTACHMENT: F(self.attachment_field)}) \
-                                  .exclude(**{self.attachment_field: None}) \
-                                  .values(EXPORT_FIELD_ID, EXPORT_FIELD_ATTACHMENT)
-            if attachments.count() > 0:
-                with connection.cursor() as cursor:
-                    sql, params = attachments.query.sql_with_params()
-                    query = cursor.mogrify(sql, params).decode('utf-8')
-                export_settings['attachments'] = {
-                    'query': query,
-                    'filename': f'{filename}-attachments',
-                }
+        if (
+            generate_attachments and
+            queryset.exclude(**{self.attachment_field: None}).count() > 0
+        ):
+            with connection.cursor() as cursor:
+                sql, params = queryset.values(EXPORT_FIELD_ID).query.sql_with_params()
+                query = cursor.mogrify(sql, params).decode('utf-8')
+
+            export_settings['attachments'] = {
+                'query': query,
+                'filename': f'{filename}-attachments',
+                'parent_field': self.attachment_parent_field,
+            }
 
         generate_records = self.__get(request, 'generate_records', 'false').lower()
         generate_records = not generate_attachments or generate_records in ['true', 't']
@@ -527,7 +536,10 @@ def execute_records_task(task_id, dettached=True):
 
             task.set_status_records('DONE')
 
-    except Exception:
+    except Exception as e:
+        msg = _('Got an error while generating records file: {error}').format(error=str(e))
+        logger.error(msg)
+
         task.set_status_records('ERROR')
         if not dettached:
             raise
@@ -549,10 +561,15 @@ def execute_attachments_task(task_id):
         with tempfile.TemporaryDirectory() as temp_dir:
             _settings = task.settings['attachments']
 
+            # These values belong to the parent model
+            # We iterate the parent model instead of the attachments
+            # to match the "records" file content with this.
             offset = task.settings['offset']
             limit = task.settings['limit']
+
             filename = _settings['filename']
             sql = _settings['query']
+            parent_field = _settings['parent_field']
 
             task.set_status_attachments('WIP')
 
@@ -570,26 +587,43 @@ def execute_attachments_task(task_id):
                         row = dict(zip(columns, entry))
                         index += 1
 
-                        # Get the attachment id, download it's content from the storage
-                        instance_id = str(row.get(EXPORT_FIELD_ID))
-                        _directory = f'{temp_dir}/files/{instance_id}'
-                        if not os.path.exists(_directory):
-                            os.makedirs(_directory)
+                        parent_id = str(row.get(EXPORT_FIELD_ID))
+                        attachments = Attachment.objects.filter(**{parent_field: parent_id})
 
-                        attach_id = row.get(EXPORT_FIELD_ATTACHMENT)
-                        attachment = Attachment.objects.get(pk=attach_id)
+                        if attachments.count():
+                            _directory = f'{temp_dir}/files/{parent_id}'
+                            os.makedirs(_directory, exist_ok=True)
 
-                        file_path = f'{_directory}/{attachment.name}'
-                        with open(file_path, 'wb') as file:
-                            file.write(attachment.get_content().getvalue())
+                            # Get the attachments list, download their content from the storage
+                            for attachment in attachments.distinct():
+                                file_path = f'{_directory}/{attachment.name}'
+                                with open(file_path, 'wb') as file:
+                                    file.write(attachment.get_content().getvalue())
 
                     data_from = data_to
 
-            # TODO: split in several files depending on final size
             # create zip with attachments and add to task files
             zip_ext = 'zip'
             zip_name = f'{filename}-{datetime.now().isoformat()}'
-            zip_path = shutil.make_archive(f'{temp_dir}/{zip_name}', zip_ext, f'{temp_dir}/files/')
+            zip_path = shutil.make_archive(
+                base_name=f'{temp_dir}/{zip_name}',
+                format=zip_ext,
+                root_dir=f'{temp_dir}/files/',
+            )
+
+            # TODO: split in several files depending on final size
+            file_stats = os.stat(zip_path)
+            zip_size = sizeof_fmt(file_stats.st_size)
+            logger.debug(
+                _('Generated attachments file "{path}" with size: {size}.').format(
+                    path=zip_path,
+                    size=zip_size,
+                )
+            )
+            if file_stats.st_size > MAX_FILE_SIZE:  # pragma: no cover
+                logger.warning(
+                    _('The file size might cause problems in FAT32 disks or with old ZIP versions')
+                )
 
             with open(zip_path, 'rb') as f:
                 export_file = ExportTaskFile(task=task)
@@ -598,7 +632,9 @@ def execute_attachments_task(task_id):
 
             task.set_status_attachments('DONE')
 
-    except Exception:
+    except Exception as e:
+        msg = _('Got an error while generating attachments file: {error}').format(error=str(e))
+        logger.error(msg)
         task.set_status_attachments('ERROR')
 
 
@@ -1067,3 +1103,26 @@ def __is_int(value):
 
 def __is_flatten(value):
     return RE_CONTAINS_DIGIT.search(value) or RE_ENDSWITH_DIGIT.search(value)
+
+
+# https://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
+def sizeof_fmt(num, suffix='B'):  # pragma: no cover
+    '''
+    Multiples of bytes (binary):
+
+        Value     IEC    JEDEC
+        -------   ----   ---------
+        1024      KiB    kibibyte
+        1024^2    MiB    mebibyte
+        1024^3    GiB    gibibyte
+        1024^4    TiB    tebibyte
+        1024^5    PiB    pebibyte
+        1024^6    EiB    exbibyte
+        1024^7    ZiB    zebibyte
+        1024^8    YiB    yobibyte
+    '''
+    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+        if abs(num) < 1024.0:
+            return '%3.1f%s%s' % (num, unit, suffix)
+        num /= 1024.0
+    return '%.1f%s%s' % (num, 'Yi', suffix)

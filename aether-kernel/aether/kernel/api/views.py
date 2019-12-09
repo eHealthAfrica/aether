@@ -367,9 +367,10 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.M
     mt_field = 'project'
 
     # Exporter required fields
-    attachment_field = 'attachments__id'
     schema_field = 'mappingset__schema'
     schema_order = '-mappingset__created'
+    attachment_field = 'attachments__id'
+    attachment_parent_field = 'submission__id'
 
     def check_realm_permission(self, request, mappingset):
         return is_accessible_by_realm(request, mappingset)
@@ -617,9 +618,10 @@ class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.Model
     mt_field = 'project'
 
     # Exporter required fields
-    attachment_field = 'submission__attachments__id'
     schema_field = 'schema__definition'
     schema_order = '-schema__created'
+    attachment_field = 'submission__attachments__id'
+    attachment_parent_field = 'submission__entities__id'
 
     def get_serializer(self, *args, **kwargs):
         if 'data' in kwargs:

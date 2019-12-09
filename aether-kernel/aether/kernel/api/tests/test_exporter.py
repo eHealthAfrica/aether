@@ -1001,6 +1001,31 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(models.ExportTask.objects.count(), 0)
 
     @tag('noparallel')
+    @mock.patch(
+        'aether.sdk.utils.request',
+        side_effect=ConnectionResetError('[Errno 104] Connection reset by peer'),
+    )
+    def test_entities_export__attachments__error(self, mock_req):
+        models.Attachment.objects.create(
+            submission=models.Submission.objects.first(),
+            attachment_file=SimpleUploadedFile('a.txt', b'123'),
+        )
+
+        response = self.client.post(reverse('entity-csv') + '?background=t&generate_attachments=t')
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        task = models.ExportTask.objects.first()
+
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.name, 'project1-export')
+        self.assertEqual(task.project.name, 'project1')
+        self.assertIsNone(task.status_records)
+        self.assertEqual(task.status_attachments, 'ERROR')
+        self.assertEqual(task.files.count(), 0)
+        self.assertIsNone(task.revision)
+
+    @tag('noparallel')
     def test_entities_export__attachments(self):
         submission = models.Submission.objects.first()
         models.Attachment.objects.create(
@@ -1009,8 +1034,9 @@ class ExporterViewsTest(TestCase):
         )
         entity_1 = submission.entities.first()
 
+        # new submission with 2 attachments
         submission.pk = None
-        submission.save()  # new submission
+        submission.save()
         self.assertEqual(models.Submission.objects.count(), 2)
 
         models.Attachment.objects.create(
@@ -1023,10 +1049,16 @@ class ExporterViewsTest(TestCase):
         )
         self.assertEqual(models.Attachment.objects.count(), 3)
 
-        # extract entities
         run_entity_extraction(submission)
         self.assertEqual(models.Entity.objects.count(), 2)
         entity_2 = submission.entities.first()
+
+        # new submission without attachments
+        submission.pk = None
+        submission.save()
+        self.assertEqual(models.Submission.objects.count(), 3)
+        run_entity_extraction(submission)
+        self.assertEqual(models.Entity.objects.count(), 3)
 
         response = self.client.post(
             reverse('entity-csv') + '?background=t&generate_records=t&generate_attachments=t'
@@ -1107,28 +1139,3 @@ class ExporterViewsTest(TestCase):
             f'http://testserver/export-tasks/{task.pk}/file-content/{attachments_file.pk}/')
         attachments_file_content = self.client.get(data['files'][1]['file_url'])
         self.assertEqual(attachments_file.get_content().getvalue(), attachments_file_content.getvalue())
-
-    @tag('noparallel')
-    @mock.patch(
-        'aether.sdk.utils.request',
-        side_effect=ConnectionResetError('[Errno 104] Connection reset by peer'),
-    )
-    def test_entities_export__attachments__error(self, mock_req):
-        models.Attachment.objects.create(
-            submission=models.Submission.objects.first(),
-            attachment_file=SimpleUploadedFile('a.txt', b'123'),
-        )
-
-        response = self.client.post(reverse('entity-csv') + '?background=t&generate_attachments=t')
-        self.assertEqual(response.status_code, 200)
-
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        task = models.ExportTask.objects.first()
-
-        self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.name, 'project1-export')
-        self.assertEqual(task.project.name, 'project1')
-        self.assertIsNone(task.status_records)
-        self.assertEqual(task.status_attachments, 'ERROR')
-        self.assertEqual(task.files.count(), 0)
-        self.assertIsNone(task.revision)
