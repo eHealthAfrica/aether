@@ -25,7 +25,7 @@ Django==2.2.8
 django-cors-headers==3.2.0
 django-debug-toolbar==2.1
 django-prometheus==1.1.0
-django-rq==2.1.0
+django-rq==2.2.0
 django-silk==3.0.4
 django-uwsgi==0.2.2
 djangorestframework==3.10.3
@@ -57,9 +57,9 @@ requests==2.22.0
 rq==1.1.0
 rq-scheduler==0.9.1
 rsa==4.0
-sentry-sdk==0.13.4
+sentry-sdk==0.13.5
 six==1.13.0
 sqlparse==0.3.0
-tblib==1.5.0
+tblib==1.6.0
 urllib3==1.25.7
 uWSGI==2.0.18

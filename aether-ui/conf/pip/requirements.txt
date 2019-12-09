@@ -48,9 +48,9 @@ python-dateutil==2.8.1
 python-json-logger==0.1.11
 pytz==2019.3
 requests==2.22.0
-sentry-sdk==0.13.4
+sentry-sdk==0.13.5
 six==1.13.0
 sqlparse==0.3.0
-tblib==1.5.0
+tblib==1.6.0
 urllib3==1.25.7
 uWSGI==2.0.18
