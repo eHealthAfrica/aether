@@ -308,9 +308,9 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
 
 def __media_path__(instance, filename):
-    # file will be uploaded to [{tenant}/]{project}/{xform}/{filename}
+    # file will be uploaded to [{tenant}/]__mediafiles__/{project}/{xform}/{filename}
     realm = instance.get_realm()
-    return '{tenant}{project}/{xform}/{filename}'.format(
+    return '{tenant}__mediafiles__/{project}/{xform}/{filename}'.format(
         tenant=f'{realm}/' if realm else '',
         project=instance.xform.project.pk,
         xform=instance.xform.pk,

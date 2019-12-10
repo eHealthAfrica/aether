@@ -313,9 +313,9 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
 
 def __attachment_path__(instance, filename):
-    # file will be uploaded to [{tenant}/]{project}/{submission}/{filename}
+    # file will be uploaded to [{tenant}/]__attachments__/{project}/{submission}/{filename}
     realm = instance.get_realm()
-    return '{tenant}{project}/{submission}/{attachment}'.format(
+    return '{tenant}__attachments__/{project}/{submission}/{attachment}'.format(
         tenant=f'{realm}/' if realm else '',
         project=instance.submission.project.pk,
         submission=instance.submission.pk,
