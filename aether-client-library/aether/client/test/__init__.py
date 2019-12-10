@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from aether.client import fixtures as fix
 import os
 import pytest
 import random
@@ -25,11 +24,14 @@ from uuid import uuid4
 
 from aether.client import Client
 
+from . import fixtures as fix
+
 URL = os.environ['KERNEL_URL']
 USER = os.environ['KERNEL_USERNAME']
 PW = os.environ['KERNEL_PASSWORD']
 # realm is only required if Kernel is MultiTenant
 REALM = os.environ.get('KERNEL_REALM')
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'ERROR')
 
 
 def simple_entity(value_size=10):
@@ -48,7 +50,7 @@ def client():
         URL,
         USER,
         PW,
-        log_level='DEBUG',
+        log_level=LOG_LEVEL,
         auth_type='basic',
         realm=REALM
     )

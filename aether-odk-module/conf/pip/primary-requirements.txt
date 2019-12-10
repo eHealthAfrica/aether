@@ -16,10 +16,11 @@
 # Main libraries
 
 # Aether Django SDK library with extras
-aether.sdk[cas,server,storage,test]
+aether.sdk[server,storage,test]
 
 
 # xForm and data manipulation
+lxml
 python-dateutil
 pyxform
 spavro

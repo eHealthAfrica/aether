@@ -18,7 +18,7 @@
 
 from django.db import models as db_models
 from django.db.models.functions import Cast, Coalesce
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.shortcuts import get_object_or_404
 from aether.sdk.multitenancy.utils import filter_by_realm, is_accessible_by_realm
 from rest_framework.exceptions import PermissionDenied
@@ -58,6 +58,7 @@ class ProjectViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
+    search_fields = ('name',)
 
     @action(detail=True, methods=['get'], url_name='skeleton', url_path='schemas-skeleton')
     def schemas_skeleton(self, request, pk=None, *args, **kwargs):
@@ -312,6 +313,7 @@ class MappingSetViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetSerializer
     filter_class = filters.MappingSetFilter
+    search_fields = ('name',)
     mt_field = 'project'
 
     @action(detail=True, methods=['post'], url_path='delete-artefacts')
@@ -333,6 +335,7 @@ class MappingViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
+    search_fields = ('name',)
     mt_field = 'mappingset__project'
 
     @action(detail=True, methods=['post'], url_path='delete-artefacts')
@@ -360,6 +363,7 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
+    search_fields = ('project__name', 'mappingset__name',)
     mt_field = 'project'
 
     def check_realm_permission(self, request, mappingset):
@@ -487,6 +491,7 @@ class AttachmentViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
+    search_fields = ('name',)
     mt_field = 'submission__project'
 
     @action(detail=True, methods=['get'])
@@ -499,6 +504,7 @@ class SchemaViewSet(FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Schema.objects.all()
     serializer_class = serializers.SchemaSerializer
     filter_class = filters.SchemaFilter
+    search_fields = ('name',)
 
     @action(detail=True, methods=['get'])
     def skeleton(self, request, pk=None, *args, **kwargs):
@@ -568,6 +574,7 @@ class SchemaDecoratorViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSe
     queryset = models.SchemaDecorator.objects.all()
     serializer_class = serializers.SchemaDecoratorSerializer
     filter_class = filters.SchemaDecoratorFilter
+    search_fields = ('name',)
     mt_field = 'project'
 
     @action(detail=True, methods=['get'])
@@ -601,11 +608,12 @@ class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
+    search_fields = ('project__name', 'schema__name',)
     mt_field = 'project'
 
     # Exporter required fields
-    schema_field = 'schemadecorator__schema__definition'
-    schema_order = '-schemadecorator__schema__created'
+    schema_field = 'schema__definition'
+    schema_order = '-schema__created'
 
     def get_serializer(self, *args, **kwargs):
         if 'data' in kwargs:

@@ -16,7 +16,7 @@
 # Main libraries
 
 # Aether Django SDK library with extras
-aether.sdk[cas,server,storage,test]
+aether.sdk[server,storage,test]
 
 # Aether Python library
 aether.python
@@ -25,8 +25,7 @@ aether.python
 # Django specific
 django-filter
 django-model-utils
-drf-yasg<1.17.0  # breaking change that needs to be fixed in the client
-packaging        # missing dependency of drf-yasg
+drf-yasg
 python-dateutil
 
 # XLSX libraries

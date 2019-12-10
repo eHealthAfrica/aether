@@ -35,10 +35,10 @@ function show_help {
 }
 
 function test_flake8 {
-    flake8 /code/. --config=/code/setup.cfg
+    flake8
 }
 
-function test {
+function test_python {
     export PYTHONDONTWRITEBYTECODE=1
     pytest -p no:cacheprovider
     cat /code/conf/extras/good_job.txt
@@ -55,7 +55,7 @@ case "$1" in
 
     test )
         test_flake8
-        test
+        test_python
     ;;
 
     test_lint )

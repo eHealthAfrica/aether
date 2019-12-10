@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import PipelineInfoButton from './PipelineInfoButton'
+import PipelineInfo from './PipelineInfo'
 import ContractCard from './ContractCard'
 import PipelineRename from './PipelineRename'
 import PipelineActions from './PipelineActions'
@@ -33,37 +33,38 @@ class PipelineCard extends Component {
   constructor (props) {
     super(props)
 
-    this.state = {
-      isRenaming: false
-    }
+    this.state = { isRenaming: false, showInfo: false }
   }
 
   render () {
-    const { pipeline } = this.props
+    const { pipeline, history } = this.props
+    const { isRenaming, showInfo } = this.state
+    const { id, name, isInputReadOnly, mappingset, contracts } = pipeline
 
     const handleRenameSave = (newName) => {
-      this.props.renamePipeline(this.props.pipeline.id, newName)
-      this.setState({
-        isRenaming: false
-      })
+      this.props.renamePipeline(id, newName)
+      this.setState({ isRenaming: false })
     }
 
-    const handlePipelineSelect = (pipeline) => {
-      this.props.selectPipeline(pipeline.id)
-      this.props.history.push(`/${pipeline.id}/`)
+    const handlePipelineSelect = () => {
+      this.props.selectPipeline(id)
+      history.push(`/${id}/`)
+    }
+
+    const setShowInfo = (event, showInfo) => {
+      event.stopPropagation()
+      this.setState({ showInfo })
     }
 
     return (
       <div className='pipeline-preview'>
         <div className='preview-heading'>
-          <span className='pipeline-name'>
-            // {pipeline.name}
-          </span>
+          <span className='pipeline-name'>// {name}</span>
           {
-            this.state.isRenaming
+            isRenaming
               ? (
                 <PipelineRename
-                  name={pipeline.name}
+                  name={name}
                   onCancel={() => { this.setState({ isRenaming: false }) }}
                   onSave={handleRenameSave}
                 />
@@ -73,18 +74,18 @@ class PipelineCard extends Component {
                   delete={this.props.delete}
                   rename={() => { this.setState({ isRenaming: true }) }}
                   pipeline={pipeline}
-                  history={this.props.history}
+                  history={history}
                 />
               )
           }
         </div>
 
         <div
-          className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`}
-          onClick={() => { handlePipelineSelect(pipeline) }}
+          className={`preview-input ${isInputReadOnly ? 'pipeline-readonly' : ''}`}
+          onClick={handlePipelineSelect}
         >
           {
-            pipeline.isInputReadOnly &&
+            isInputReadOnly &&
               <span className='tag'>
                 <FormattedMessage
                   id='pipeline.card.read-only'
@@ -98,23 +99,35 @@ class PipelineCard extends Component {
               <i className='fas fa-file' />
             </span>
             <span className='input-name'>
-              {pipeline.name} {pipeline.mappingset && <PipelineInfoButton pipeline={pipeline} />}
+              {name} {mappingset && (
+                <i
+                  className='ml-1 fas fa-info-circle published-info-icon'
+                  onClick={(event) => { setShowInfo(event, true) }}
+                />
+              )}
             </span>
           </div>
         </div>
 
         <div className='preview-contracts'>
           {
-            pipeline.contracts.map(contract => (
+            contracts.map(contract => (
               <ContractCard
                 key={contract.id}
                 contract={contract}
-                history={this.props.history}
+                history={history}
               />
             ))
           }
         </div>
 
+        {mappingset && (
+          <PipelineInfo
+            pipeline={pipeline}
+            showInfo={showInfo}
+            setShowInfo={setShowInfo}
+          />
+        )}
       </div>
     )
   }

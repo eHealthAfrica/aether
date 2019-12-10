@@ -17,11 +17,12 @@ flask
 gevent
 psycogreen
 psycopg2-binary
-requests
+requests[security]
 spavro
 sqlalchemy
 
 
 # Test libraries
 flake8
+flake8-quotes
 pytest
