@@ -12,12 +12,12 @@
 #
 ################################################################################
 
-aether.python==1.0.13
-aether.sdk==1.1.11
+aether.python==1.0.14
+aether.sdk==1.2.3
 attrs==19.3.0
 autopep8==1.4.4
-boto3==1.10.19
-botocore==1.13.19
+boto3==1.10.35
+botocore==1.13.35
 cachetools==3.1.1
 certifi==2019.11.28
 cffi==1.13.2
@@ -29,7 +29,7 @@ cryptography==2.8
 decorator==4.4.1
 Django==2.2.8
 django-autofixture==0.12.1
-django-cas-ng==3.6.0
+django-cleanup==4.0.0
 django-cors-headers==3.2.0
 django-debug-toolbar==2.1
 django-filter==2.2.0
@@ -49,8 +49,8 @@ et-xmlfile==1.0.1
 flake8==3.7.9
 flake8-quotes==2.1.1
 google-api-core==1.14.3
-google-auth==1.7.1
-google-cloud-core==1.0.3
+google-auth==1.8.1
+google-cloud-core==1.1.0
 google-cloud-storage==1.23.0
 google-resumable-media==0.5.0
 googleapis-common-protos==1.6.0
@@ -68,8 +68,8 @@ lxml==4.4.2
 MarkupSafe==1.1.1
 mccabe==0.6.1
 minio==5.0.5
-more-itertools==7.2.0
-openpyxl==3.0.1
+more-itertools==8.0.2
+openpyxl==3.0.2
 packaging==19.2
 ply==3.11
 prometheus-client==0.7.1
@@ -80,7 +80,7 @@ pyasn1-modules==0.2.7
 pycodestyle==2.5.0
 pycparser==2.19
 pyflakes==2.1.1
-Pygments==2.4.2
+Pygments==2.5.2
 pyOpenSSL==19.1.0
 pyparsing==2.4.5
 pyrsistent==0.15.6
