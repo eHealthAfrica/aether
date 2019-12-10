@@ -50,3 +50,5 @@ class Command(BaseCommand):
                     file = File(open(file_path, 'rb'))
                 default_storage.save(file_name, file)
                 file.close()
+            else:   # pragma: no cover
+                pass
