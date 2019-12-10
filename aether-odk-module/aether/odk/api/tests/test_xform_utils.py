@@ -269,8 +269,8 @@ class XFormUtilsParsersTests(CustomTestCase):
             xml_content = parse_xform_file('xform.xml', fp)
 
         self.assertEqual(
-            json.dumps(parse_xml_to_dict(xls_content), sort_keys=True),
-            json.dumps(parse_xml_to_dict(xml_content), sort_keys=True),
+            parse_xml_to_dict(xls_content),
+            parse_xml_to_dict(xml_content),
             'The XLS form and the XML form should define both the same form'
         )
 
@@ -669,10 +669,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         )
 
         # the same fields
-        self.assertEqual(
-            json.dumps(schema['fields'], sort_keys=True),
-            json.dumps(schema_i18n['fields'], sort_keys=True)
-        )
+        self.assertEqual(schema['fields'], schema_i18n['fields'])
 
     def test__parse_xform_to_avro_schema__nested_repeats(self):
         xml_definition = '''
