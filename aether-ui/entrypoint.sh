@@ -120,7 +120,7 @@ function setup {
     # create static assets
     echo "Collecting static files..."
     if [ $COLLECT_STATIC_FILES_ON_STORAGE ]; then
-        ./manage.py copy_webpack_files_to_cloud
+        ./manage.py cdn_publish
     else
         # cleaning local
         STATIC_UI=/code/aether/ui/static
