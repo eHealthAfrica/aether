@@ -116,13 +116,10 @@ function setup {
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 
     STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
+    mkdir -p $STATIC_ROOT
     # create static assets
     echo "Collecting static files..."
-    if [ $COLLECT_STATIC_FILES_ON_STORAGE ]; then
-        ./manage.py collectstatic --noinput --verbosity 0
-    else
-        ./manage.py collectstatic --noinput --clear --verbosity 0
-    fi
+    ./manage.py collectstatic --noinput --verbosity 0
     chmod -R 755 ${STATIC_ROOT}
 
     # expose version number (if exists)

@@ -200,7 +200,7 @@ Used on Kernel and ODK Module
   More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
   Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development
   (in which case "minio" would typically be used with the `minio` service).
-- `COLLECT_STATIC_FILES_ON_STORAGE`: Used to indicate if static files should be collected on the specified cloud-based storage service (`s3` or `gcs`)
+- `COLLECT_STATIC_FILES_ON_STORAGE`: Used to indicate if static files should be collected on the specified cloud-based storage service (`minio`, `s3` or `gcs`)
   Is `false` if unset or set to empty string, anything else is considered `true`.
 
 ##### Minio (`DJANGO_STORAGE_BACKEND=minio`)
@@ -221,6 +221,7 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 - `BUCKET_NAME`: Name of the bucket to use on s3 (**mandatory**). Must be unique on s3.
 - `AWS_ACCESS_KEY_ID`: AWS Access Key to your s3 account.
 - `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your s3 account.
+- `AWS_S3_REGION_NAME`: AWS region.
 
 ##### Google Cloud Storage (`DJANGO_STORAGE_BACKEND=gcs`)
 
@@ -232,6 +233,7 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 - `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 - `GOOGLE_APPLICATION_CREDENTIALS`: Path to the Google Application Credentials file as specified [here](https://cloud.google.com/docs/authentication/getting-started)
+- `GCS_PROJECT_ID`: The project id of the linked bucket. [How to locate a Project ID](https://support.google.com/googleapi/answer/7014113?hl=en)
 
 *[Return to TOC](#table-of-contents)*
 
@@ -362,11 +364,8 @@ The default values for the export feature:
 - `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+- `CDN_URL`: `e.g https://storage.cloud.google.com/bucket_name` CDN url to access uploaded files.
 
-#### Aether UI-Assets
-
-- `CDN_PLATFORM`: `s3 || gcs` Specify which service is used for CDN static files collection
-- `WEBPACK_URL`: `e.g https://storage.cloud.google.com/ui-aether-dev/` CDN link to access webpack built and uploaded files.
 
 *[Return to TOC](#table-of-contents)*
 
