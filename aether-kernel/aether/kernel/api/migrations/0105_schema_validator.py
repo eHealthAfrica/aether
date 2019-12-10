@@ -28,4 +28,14 @@ class Migration(migrations.Migration):
                 verbose_name='mapping rules'
             ),
         ),
+        migrations.AlterField(
+            model_name='mappingset',
+            name='schema',
+            field=django.contrib.postgres.fields.jsonb.JSONField(
+                blank=True,
+                null=True,
+                validators=[aether.kernel.api.validators.wrapper_validate_schema_input_definition],
+                verbose_name='AVRO schema'
+            ),
+        ),
     ]

@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
@@ -197,7 +197,7 @@ class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     def create(self, validated_data):
         if not validated_data.get('mappingset'):
             raise serializers.ValidationError(
-                _('Mappingset must be provided on initial submission')
+                {'mappingset': [_('Mapping set must be provided on initial submission')]}
             )
 
         instance = super(SubmissionSerializer, self).create(validated_data)

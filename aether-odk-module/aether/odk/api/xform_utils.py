@@ -30,7 +30,7 @@ from pyxform.xls2json_backends import xls_to_dict
 from pyxform.xform_instance_parser import XFormInstanceParser
 from spavro.schema import parse as parse_avro_schema, SchemaParseException
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 
 DEFAULT_XFORM_VERSION = '0'
@@ -65,7 +65,9 @@ SELECT_TAGS = ('select', 'select1', 'odk:rank')
 SELECT_CHOICES_CUTOFF = 20
 
 AETHER__XML_NAMESPACE = 'aet'
+AET_TAG = f'@{AETHER__XML_NAMESPACE}'
 AETHER_SCHEMA_ANNOTATION_PREFIX = '@aether'
+
 
 # ------------------------------------------------------------------------------
 # Parser methods
@@ -315,7 +317,7 @@ def parse_xform_to_avro_schema(
             '@aether_extended_type': current_type,
         }
 
-        current_field['@aether_lookup'] = current_choices
+        current_field[f'{AETHER_SCHEMA_ANNOTATION_PREFIX}_lookup'] = current_choices
         for pair in definition.get('annotations', []):
             key, value = pair
             current_field[key] = value
@@ -690,8 +692,7 @@ def __get_xform_instance_skeleton(xml_definition):
                         schema[xpath]['choices'] = select_options
             if AET_TAG in bind_entry:
                 xpath = bind_entry.get('@nodeset')
-                annotations = literal_eval(bind_entry.get(AET_TAG, '[]'))
-                schema[xpath]['annotations'] = __parse_annotations(annotations)
+                schema[xpath]['annotations'] = __parse_annotations(bind_entry.get(AET_TAG))
 
     # search in body all the repeat entries
     for entries in __find_in_dict(xform_dict, 'repeat'):
@@ -995,13 +996,13 @@ def __get_all_paths(dictionary):
 # https://stackoverflow.com/questions/2148119/how-to-convert-an-xml-string-to-a-dictionary-in-python
 def __etree_to_dict(elem):
     # this method is not perfect but it's enough for us
-    def clean(name):
+    def _clean_key(name):
         for uri, prefix in ElementTree.register_namespace._namespace_map.items():
             pref = f'{prefix}:' if prefix else ''
             name = name.replace('{%s}' % uri, pref)
         return name
 
-    tt = clean(elem.tag)
+    tt = _clean_key(elem.tag)
     d = {tt: {} if elem.attrib else None}
     children = list(elem)
 
@@ -1010,10 +1011,16 @@ def __etree_to_dict(elem):
         for dc in map(__etree_to_dict, children):
             for k, v in dc.items():
                 dd[k].append(v)
-        d = {tt: {clean(k): v[0] if len(v) == 1 else v for k, v in dd.items()}}
+        d = {tt: {_clean_key(k): v[0] if len(v) == 1 else v for k, v in dd.items()}}
 
     if elem.attrib:
-        d[tt].update(('@' + clean(k), v) for k, v in elem.attrib.items())
+        d[tt].update(
+            ('@' + _clean_key(k), v)
+            for k, v in elem.attrib.items()
+            if k != AETHER__XML_NAMESPACE
+        )
+        if AETHER__XML_NAMESPACE in elem.attrib:
+            d[tt][AET_TAG] = literal_eval(elem.attrib[AETHER__XML_NAMESPACE])
 
     if elem.text:
         text = elem.text.strip()
@@ -1022,6 +1029,7 @@ def __etree_to_dict(elem):
                 d[tt]['#text'] = text
         else:
             d[tt] = text
+
     return d
 
 

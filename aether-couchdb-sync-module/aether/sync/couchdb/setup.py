@@ -19,7 +19,7 @@
 import logging
 
 from django.conf import settings
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from . import api
 from .. import errors

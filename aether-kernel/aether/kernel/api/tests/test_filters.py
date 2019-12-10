@@ -40,6 +40,28 @@ class TestFilters(TestCase):
         self.user = get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
+    def test_project_filter__active(self):
+        url = reverse(viewname='project-list')
+        # Generate projects.
+        for _ in range(random.randint(2, 4)):
+            generate_project(project_field_values={'active': True})
+        for _ in range(random.randint(2, 4)):
+            generate_project(project_field_values={'active': False})
+
+        # active
+        active_count = models.Project.objects.filter(active=True).count()
+        self.assertTrue(active_count > 0)
+        kwargs = {'active': True, 'fields': 'id'}
+        response = json.loads(self.client.get(url, kwargs).content)
+        self.assertEqual(response['count'], active_count)
+
+        # inactive
+        inactive_count = models.Project.objects.filter(active=False).count()
+        self.assertTrue(inactive_count > 0)
+        kwargs = {'active': False, 'fields': 'id'}
+        response = json.loads(self.client.get(url, kwargs).content)
+        self.assertEqual(response['count'], inactive_count)
+
     def test_project_filter__by_schema(self):
         url = reverse(viewname='project-list')
         # Generate projects.

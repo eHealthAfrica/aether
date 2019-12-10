@@ -18,9 +18,27 @@
  * under the License.
  */
 
+var fs = require('fs')
 var buildConfig = require('./webpack.common')
+
+function readFile (filename) {
+  try {
+    return fs.readFileSync(filename).toString().replace(/(\r\n|\n|\r)/gm, '')
+  } catch (e) {
+    return null
+  }
+}
+
+// read VERSION and REVISION files
+// to identify files with current branch and commit hash
+var version = readFile('/var/tmp/VERSION')
+var revision = readFile('/var/tmp/REVISION')
+
+var prefix = `[name]-${version || '0.0.0'}`
 
 module.exports = buildConfig({
   production: true,
-  stylesAsCss: true
+  stylesAsCss: true,
+  jsFilename: `${prefix}-${revision || '[hash]'}.js`,
+  cssFilename: `${prefix}-${revision || '[chunkhash]'}.css`
 })

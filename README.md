@@ -75,6 +75,15 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 ./scripts/build_docker_credentials.sh > .env
 ```
 
+##### Set up Keycloak
+
+```bash
+./scripts/setup_keycloak.sh
+```
+
+Creates the keycloak database and the default realm+client along with the first user
+(find credentials in the `.env` file).
+
 ##### Build containers and start the applications
 
 ```bash
@@ -450,10 +459,6 @@ Read more in [Keycloak](https://www.keycloak.org).
 **Note**: Multi-tenancy is automatically enabled if the authentication server
 is keycloak.
 
-Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
-activate the CAS integration in the app.
-See more in [Django CAS client](https://github.com/mingchen/django-cas-ng).
-
 Other options are to log in via token authentication, via basic authentication
 or via the standard django authentication.
 
@@ -503,7 +508,7 @@ For those endpoints that don't depend on the realm and must also be available
 
 - `GATEWAY_PUBLIC_REALM`: `-` This represents the fake realm that is not protected
   by the gateway server. In this case the authentication is handled by the other
-  available options, i.e., basic, token, CAS...
+  available options, i.e., basic, token...
 
 The authorization and admin endpoints don't depend on any realm so the final urls
 use the public realm.
@@ -635,9 +640,6 @@ To learn more about the Aether release process, refer to the [release management
 *[Return to TOC](#table-of-contents)*
 
 ## Deployment
-
-Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
-activate the CAS integration in each container.
 
 Set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables when
 starting the `aether-odk-module` to have ODK Collect submissions posted to Aether Kernel.

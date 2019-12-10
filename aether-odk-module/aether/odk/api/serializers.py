@@ -18,7 +18,7 @@
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password as validate_pwd
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
@@ -108,6 +108,16 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
                 raise serializers.ValidationError({'xml_file': str(e)})
         value.pop('xml_file')
 
+        # check unique together
+        if self.instance:  # in case of "update"
+            for k, v in value.items():
+                if k != 'surveyors':
+                    setattr(self.instance, k, v)
+            self.instance.full_clean()
+        else:  # in case of "create"
+            _instance = XForm(**{k: v for k, v in value.items() if k != 'surveyors'})
+            _instance.full_clean()
+
         return super(XFormSerializer, self).validate(value)
 
     class Meta:
@@ -118,37 +128,63 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     username = UsernameField()
-    password = serializers.CharField(style={'input_type': 'password'})
+    password = serializers.CharField(
+        allow_null=True,
+        default=None,
+        required=False,
+        style={'input_type': 'password'},
+        write_only=True,
+    )
+
+    projects = MtPrimaryKeyRelatedField(
+        allow_null=True,
+        default=None,
+        many=True,
+        queryset=Project.objects.all(),
+        required=False,
+    )
+    project_names = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='name',
+        source='projects',
+    )
 
     def validate_password(self, value):
-        validate_pwd(value)
+        if value is not None:
+            validate_pwd(value)
         return value
 
     def create(self, validated_data):
+        projects = validated_data.pop('projects', None)
         raw_password = validated_data.pop('password', None)
+        if raw_password is None:
+            # password is mandatory to create the surveyor but not to update it
+            raise serializers.ValidationError({'password': [_('This field is required.')]})
+
         instance = self.Meta.model(**validated_data)
-        instance.set_password(raw_password)
-        self._save(instance, raw_password)
+        self._save(instance, raw_password, projects)
 
         return instance
 
     def update(self, instance, validated_data):
-        raw_password = None
+        projects = validated_data.pop('projects', None)
+        raw_password = validated_data.pop('password', None)
         for attr, value in validated_data.items():
-            if attr == 'password':
-                if value != instance.password:
-                    instance.set_password(value)
-                    raw_password = value
-            else:
-                setattr(instance, attr, value)
-        self._save(instance, raw_password)
+            setattr(instance, attr, value)
+        self._save(instance, raw_password, projects)
 
         return instance
 
-    def _save(self, instance, raw_password):
+    def _save(self, instance, raw_password, projects):
         request = self.context['request']
 
+        if raw_password is not None and raw_password != instance.password:
+            instance.set_password(raw_password)
         instance.save()
+
+        if projects is not None:
+            instance.projects.set(projects)
         instance.groups.add(get_surveyor_group())
         add_user_to_realm(request, instance)
 
@@ -158,7 +194,7 @@ class SurveyorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'password', )
+        fields = ('id', 'username', 'password', 'projects', 'project_names',)
 
 
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):

@@ -353,7 +353,7 @@ class UtilsTest(TestCase):
         contract.refresh_from_db()
         with self.assertRaises(utils.PublishError) as pe:
             utils.publish_contract(contract)
-        self.assertIn('Contract is read only', str(pe.exception))
+            self.assertIn('Contract is read only', str(pe.exception))
 
         contract.is_read_only = False
         contract.save()

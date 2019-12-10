@@ -18,7 +18,7 @@
 
 import copy
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from aether.sdk.health.utils import (
     check_external_app,
