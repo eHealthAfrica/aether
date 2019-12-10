@@ -581,6 +581,7 @@ def execute_attachments_task(task_id):
             parent_field = _settings['parent_field']
 
             task.set_status_attachments('WIP')
+            logger.info(f'Preparing attachments file: offset {offset}, limit {limit}')
 
             # paginate results to reduce memory usage
             with connection.cursor() as cursor:
@@ -588,7 +589,7 @@ def execute_attachments_task(task_id):
                 index = offset
                 while data_from < limit:
                     data_to = min(data_from + PAGE_SIZE, limit)
-                    logger.info(f'Downloading attachments from {data_from} to {data_to}')
+                    logger.debug(f'Downloading attachments from {data_from} to {data_to}')
 
                     cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}')
                     columns = [col[0] for col in cursor.description]
@@ -610,7 +611,7 @@ def execute_attachments_task(task_id):
                                     file.write(attachment.get_content().getvalue())
 
                     data_from = data_to
-            logger.info('All attachments downloaded!')
+            logger.debug('All attachments downloaded!')
 
             # create zip with attachments and add to task files
             zip_ext = 'zip'
@@ -624,7 +625,7 @@ def execute_attachments_task(task_id):
             # TODO: split in several files depending on final size
             file_size = os.path.getsize(zip_path)
             zip_size = sizeof_fmt(file_size)
-            logger.info(
+            logger.debug(
                 f'Generated attachments file "{zip_path}" with size: {zip_size}.'
             )
             if file_size > MAX_FILE_SIZE:  # pragma: no cover
