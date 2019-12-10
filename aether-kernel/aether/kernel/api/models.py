@@ -25,7 +25,7 @@ from hashlib import md5
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
@@ -38,9 +38,9 @@ from aether.python.validators import validate_entity_payload
 
 from .constants import NAMESPACE
 from .validators import (
-    wrapper_validate_avro_schema,
+    wrapper_validate_mapping_definition,
     wrapper_validate_schema_definition,
-    wrapper_validate_mapping_definition
+    wrapper_validate_schema_input_definition,
 )
 
 
@@ -209,7 +209,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     schema = JSONField(
         null=True,
         blank=True,
-        validators=[wrapper_validate_avro_schema],
+        validators=[wrapper_validate_schema_input_definition],
         verbose_name=_('AVRO schema'),
     )
     input = JSONField(null=True, blank=True, verbose_name=_('input sample'))
@@ -239,7 +239,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     def save(self, *args, **kwargs):
         try:
             # this will call the fields validators in our case
-            # `wrapper_validate_avro_schema`
+            # `wrapper_validate_schema_input_definition`
             self.full_clean()
         except ValidationError as ve:
             raise IntegrityError(ve)
@@ -351,8 +351,8 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
     def project(self):
         return self.submission.project
 
-    def get_content(self):
-        return get_file_content(self.name, self.attachment_file.url)
+    def get_content(self, as_attachment=False):
+        return get_file_content(self.name, self.attachment_file.url, as_attachment)
 
     def save(self, *args, **kwargs):
         # calculate file hash

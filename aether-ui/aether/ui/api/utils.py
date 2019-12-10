@@ -23,7 +23,7 @@ from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import status
 

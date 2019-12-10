@@ -26,7 +26,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
@@ -302,7 +302,9 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         ordering = ['title', 'form_id', 'version']
         verbose_name = _('xform')
         verbose_name_plural = _('xforms')
-        unique_together = ['project', 'form_id', 'version']
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'form_id', 'version'], name='unique_xform_by_project'),
+        ]
 
 
 def __media_path__(instance, filename):

@@ -23,7 +23,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract

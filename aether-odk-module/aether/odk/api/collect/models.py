@@ -31,7 +31,9 @@ class DigestCounter(models.Model):
 
     class Meta:
         app_label = 'collect'
-        unique_together = ('server_nonce', 'client_nonce')
+        constraints = [
+            models.UniqueConstraint(fields=['server_nonce', 'client_nonce'], name='unique_digest_counter'),
+        ]
 
 
 class DigestPartial(models.Model):
@@ -45,4 +47,6 @@ class DigestPartial(models.Model):
 
     class Meta:
         app_label = 'collect'
-        unique_together = ('user', 'username')
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'username'], name='unique_digest_partial'),
+        ]

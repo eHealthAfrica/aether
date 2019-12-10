@@ -20,7 +20,7 @@ import uuid
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 

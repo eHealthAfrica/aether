@@ -18,7 +18,7 @@
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password as validate_pwd
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
@@ -109,8 +109,14 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         value.pop('xml_file')
 
         # check unique together
-        _instance = XForm(**{k: v for k, v in value.items() if k != 'surveyors'})
-        _instance.full_clean()
+        if self.instance:  # in case of "update"
+            for k, v in value.items():
+                if k != 'surveyors':
+                    setattr(self.instance, k, v)
+            self.instance.full_clean()
+        else:  # in case of "create"
+            _instance = XForm(**{k: v for k, v in value.items() if k != 'surveyors'})
+            _instance.full_clean()
 
         return super(XFormSerializer, self).validate(value)
 

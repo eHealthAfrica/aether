@@ -23,6 +23,7 @@ from django.test import RequestFactory, override_settings
 from rest_framework.serializers import ValidationError
 
 from . import CustomTestCase
+from ..models import XForm
 from ..serializers import SurveyorSerializer, XFormSerializer, MediaFileSerializer
 
 
@@ -80,6 +81,24 @@ class SerializersTests(CustomTestCase):
         self.assertFalse(xform_2.is_valid(), xform_2.errors)
         self.assertIn('Xform with this Project, XForm ID and XForm version already exists.',
                       xform_2.errors['__all__'])
+
+        # update the xform
+        instance = XForm.objects.get(pk=xform_1.data['id'])
+        self.assertEqual(instance.description, 'test xml data')
+
+        xform_3 = XFormSerializer(
+            instance,
+            data={
+                'project': project_id,
+                'description': 'test xml data 2',
+                'xml_data': self.samples['xform']['raw-xml'],
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(xform_3.is_valid(), xform_3.errors)
+        xform_3.save()
+        instance.refresh_from_db()
+        self.assertEqual(instance.description, 'test xml data 2')
 
     def test_xform_serializer__with_xml_file(self):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
