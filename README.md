@@ -364,7 +364,7 @@ The default values for the export feature:
 - `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
-- `CDN_URL`: `e.g https://storage.cloud.google.com/bucket_name` CDN url to access uploaded files.
+- `CDN_URL`: e.g `https://storage.cloud.google.com/bucket_name` CDN url to access uploaded files.
 
 
 *[Return to TOC](#table-of-contents)*
