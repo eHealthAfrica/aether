@@ -123,6 +123,16 @@ class SubmissionFilter(filters.FilterSet):
 
 
 class AttachmentFilter(filters.FilterSet):
+    project = filters.CharFilter(
+        method='project_filter',
+    )
+
+    def project_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(submission__project__pk=value)
+        else:
+            return queryset.filter(submission__project__name=value)
+
     class Meta:
         exclude = ('attachment_file',)
         model = models.Attachment
@@ -180,7 +190,7 @@ class EntityFilter(filters.FilterSet):
         method='mapping_filter',
     )
     family = filters.CharFilter(
-        field_name='schemadecorator__schema__family',
+        field_name='schema__family',
         lookup_expr='iexact',  # case-insensitive
     )
     passthrough = filters.CharFilter(
@@ -195,9 +205,9 @@ class EntityFilter(filters.FilterSet):
 
     def schema_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(schemadecorator__schema__pk=value)
+            return queryset.filter(schema__pk=value)
         else:
-            return queryset.filter(schemadecorator__schema__name=value)
+            return queryset.filter(schema__name=value)
 
     def mapping_filter(self, queryset, name, value):
         if is_uuid(value):
@@ -208,7 +218,7 @@ class EntityFilter(filters.FilterSet):
     def passthrough__filter(self, queryset, name, value):
         if value == 'true':
             return queryset.filter(
-                schemadecorator__schema__family=Cast('project__pk', TextField()),
+                schema__family=Cast('project__pk', TextField()),
                 mapping__is_read_only=True,
             )
         return queryset
