@@ -38,7 +38,7 @@ function show_help {
 
         <name>
             Expected values: kernel, odk, ui, couchdb-sync or producer.
-            In no name indicated then all the containers will be upgraded.
+            If no name indicated then all the containers will be upgraded.
     """
 }
 
