@@ -776,18 +776,23 @@ class SubmissionStatsMixin(MtViewSetMixin):
 class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectStatsSerializer
+    filter_class = filters.ProjectFilter
+    search_fields = ('name',)
     entities_fk = 'project'
 
 
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
+    filter_class = filters.MappingSetFilter
+    search_fields = ('name',)
     mt_field = 'project'
 
 
 class ExportTaskViewSet(MtViewSetMixin, viewsets.ReadOnlyModelViewSet, mixins.DestroyModelMixin):
     queryset = models.ExportTask.objects.all()
     serializer_class = serializers.ExportTaskSerializer
+    filter_class = filters.ExportTaskFilter
     mt_field = 'project'
 
     @action(
