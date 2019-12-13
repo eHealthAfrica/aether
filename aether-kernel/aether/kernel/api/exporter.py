@@ -547,7 +547,7 @@ def execute_records_task(task_id, dettached=True):
     except Exception as e:
         logger.error(f'Got an error while generating records file: {str(e)}')
 
-        task.set_status_records('ERROR')
+        task.set_error_records(str(e))
         if not dettached:
             raise
 
@@ -645,7 +645,7 @@ def execute_attachments_task(task_id):
 
     except Exception as e:
         logger.error(f'Got an error while generating attachments file: {str(e)}')
-        task.set_status_attachments('ERROR')
+        task.set_error_attachments(str(e))
 
 
 def generate_file(temp_dir,

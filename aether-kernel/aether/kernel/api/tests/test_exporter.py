@@ -737,6 +737,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status_records, 'ERROR')
+        self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
         self.assertEqual(task.files.count(), 0)
 
         mock_export.assert_not_called()  # is called in the subprocess
@@ -841,6 +842,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status_records, 'ERROR')
+        self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
         self.assertEqual(task.files.count(), 0)
 
         mock_export.assert_not_called()  # is called in the subprocess
@@ -974,6 +976,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status_records, 'DONE')
+        self.assertIsNone(task.error_records)
         self.assertEqual(task.files.count(), 1)
 
     @tag('noparallel')
@@ -987,6 +990,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.created_by.username, 'test')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status_records, 'DONE')
+        self.assertIsNone(task.error_records)
         self.assertIsNone(task.status_attachments)
         self.assertEqual(task.files.count(), 1)
 
@@ -1021,7 +1025,9 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.name, 'project1-export')
         self.assertEqual(task.project.name, 'project1')
         self.assertIsNone(task.status_records)
+        self.assertIsNone(task.error_records)
         self.assertEqual(task.status_attachments, 'ERROR')
+        self.assertEqual(task.error_attachments, '[Errno 104] Connection reset by peer')
         self.assertEqual(task.files.count(), 0)
         self.assertIsNone(task.revision)
 
@@ -1072,7 +1078,9 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.name, 'project1-export')
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status_records, 'DONE')
+        self.assertIsNone(task.error_records)
         self.assertEqual(task.status_attachments, 'DONE')
+        self.assertIsNone(task.error_attachments)
         self.assertEqual(task.files.count(), 2)
         self.assertIsNone(task.revision)
 
@@ -1123,7 +1131,9 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(data['name'], 'project1-export')
         self.assertEqual(data['created_by'], 'test')
         self.assertEqual(data['status_records'], 'DONE')
+        self.assertIsNone(task.error_records)
         self.assertEqual(data['status_attachments'], 'DONE')
+        self.assertIsNone(task.error_attachments)
         self.assertEqual(len(data['files']), 2)
 
         self.assertEqual(data['files'][0]['md5sum'], export_file.md5sum)

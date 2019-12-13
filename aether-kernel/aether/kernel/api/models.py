@@ -91,7 +91,7 @@ class KernelAbstract(TimeStampedModel):
 
     :ivar UUID  id:        ID (primary key).
     :ivar text  revision:  Revision.
-    :ivar text  name:      Name (**unique**).
+    :ivar text  name:      Name.
 
     .. note:: Extends from :class:`model_utils.models.TimeStampedModel`
 
@@ -747,10 +747,13 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
 
     .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
-    :ivar User     created_by:  User that requested the data.
-    :ivar JSON     settings:    The settings to get the requested the data.
-    :ivar text     status:      Task status: Initial/In progress/Done/Cancelled.
-    :ivar Project  project:     Project.
+    :ivar User     created_by:          User that requested the data.
+    :ivar JSON     settings:            The settings to get the requested the data.
+    :ivar text     status_records:      Task status (for records download).
+    :ivar text     error_records:       Task error (for records download).
+    :ivar text     status_attachments:  Task status (for attachments download).
+    :ivar text     error_attachments:   Task error (for attachments download).
+    :ivar Project  project:             Project.
 
     '''
 
@@ -775,12 +778,25 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
         null=True,
         verbose_name=_('status records'),
     )
+    error_records = models.TextField(
+        blank=True,
+        editable=False,
+        null=True,
+        verbose_name=_('error records'),
+    )
+
     status_attachments = models.CharField(
         blank=True,
         editable=False,
         max_length=20,
         null=True,
         verbose_name=_('status attachments'),
+    )
+    error_attachments = models.TextField(
+        blank=True,
+        editable=False,
+        null=True,
+        verbose_name=_('error attachments'),
     )
 
     project = models.ForeignKey(
@@ -801,10 +817,24 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
         self.save(update_fields=['status_records'])
 
     @transaction.atomic
+    def set_error_records(self, error):
+        self.refresh_from_db()
+        self.error_records = error
+        self.status_records = 'ERROR'
+        self.save(update_fields=['status_records', 'error_records'])
+
+    @transaction.atomic
     def set_status_attachments(self, status):
         self.refresh_from_db()
         self.status_attachments = status
         self.save(update_fields=['status_attachments'])
+
+    @transaction.atomic
+    def set_error_attachments(self, error):
+        self.refresh_from_db()
+        self.error_attachments = error
+        self.status_attachments = 'ERROR'
+        self.save(update_fields=['status_attachments', 'error_attachments'])
 
     class Meta:
         default_related_name = 'tasks'
