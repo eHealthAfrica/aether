@@ -308,8 +308,10 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
 
 def __media_path__(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/<project>/<xform>/filename
-    return '{project}/{xform}/{filename}'.format(
+    # file will be uploaded to [{tenant}/]__mediafiles__/{project}/{xform}/{filename}
+    realm = instance.get_realm()
+    return '{tenant}__mediafiles__/{project}/{xform}/{filename}'.format(
+        tenant=f'{realm}/' if realm else '',
         project=instance.xform.project.pk,
         xform=instance.xform.pk,
         filename=filename,
@@ -329,7 +331,7 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
     '''
 
     name = models.TextField(blank=True, verbose_name=_('name'))
-    media_file = models.FileField(upload_to=__media_path__, verbose_name=_('file'))
+    media_file = models.FileField(upload_to=__media_path__, verbose_name=_('file'), max_length=500)
     md5sum = models.CharField(editable=False, max_length=36, verbose_name=_('md5sum'))
 
     xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE, verbose_name=_('xForm'))

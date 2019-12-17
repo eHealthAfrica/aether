@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuo pipefail
+set -Eeo pipefail
 
 function show_help {
     echo """
@@ -115,17 +115,21 @@ function setup {
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=${ADMIN_TOKEN:-}
 
-    # cleaning
-    STATIC_UI=/code/aether/ui/static
-    rm -r -f $STATIC_UI && mkdir -p $STATIC_UI
-    # copy assets bundles folder into static folder
-    cp -r /code/aether/ui/assets/bundles/* $STATIC_UI
-
     STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
+    mkdir -p $STATIC_ROOT
     # create static assets
-    ./manage.py collectstatic --noinput --clear --verbosity 0
+    echo "Collecting static files..."
+    if [ $COLLECT_STATIC_FILES_ON_STORAGE ]; then
+        ./manage.py cdn_publish
+    else
+        # cleaning local
+        STATIC_UI=/code/aether/ui/static
+        rm -r -f $STATIC_UI && mkdir -p $STATIC_UI
+        # copy assets bundles folder into static folder
+        cp -r /code/aether/ui/assets/bundles/* $STATIC_UI
+    fi
+    ./manage.py collectstatic --noinput --verbosity 0
     chmod -R 755 ${STATIC_ROOT}
-
     # expose version number (if exists)
     cp /var/tmp/VERSION ${STATIC_ROOT}/VERSION   2>/dev/null || true
     # add git revision (if exists)
