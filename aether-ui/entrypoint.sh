@@ -133,7 +133,11 @@ function setup {
     # copy assets bundles folder into static folder
     local WEBPACK_FILES="/code/aether/ui/assets/bundles"
     if [ $COLLECT_STATIC_FILES_ON_STORAGE ]; then
-        local APP_VERSION=`cat /var/tmp/VERSION`
+        if [ $COLLECT_STATIC_FILES_VERSIONED ]; then
+            local APP_VERSION=`cat /var/tmp/VERSION`
+        else
+            local APP_VERSION=""
+        fi
 
         ./manage.py cdn_publish \
             -u="${CDN_URL}/${APP_VERSION}" \
