@@ -193,7 +193,8 @@ variables that set up the different authentication options.
 
 > https://github.com/eHealthAfrica/aether-django-sdk-library#file-storage-system
 
-Used on Kernel and ODK Module
+Used on Kernel and ODK Module for media files and on the rest to upload static files
+to a CDN.
 
 - `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/2.2/ref/settings/#default-file-storage).
   Available options: `minio`, `s3`, `gcs`.
