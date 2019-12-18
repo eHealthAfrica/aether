@@ -24,6 +24,7 @@ import os
 import re
 import shutil
 import tempfile
+import time
 import zipfile
 
 from multiprocessing import Process
@@ -558,6 +559,32 @@ def execute_records_task(task_id, dettached=True):
 
 
 def execute_attachments_task(task_id):
+    def _fetch_attachs(data_from, data_to):
+        try:
+            # indicate progress percentage
+            task.set_status_attachments('{:.0%}'.format((data_from - offset) / (limit - offset)))
+
+            logger.debug(f'Downloading attachments from {data_from} to {data_to}')
+            with connection.cursor() as cursor:
+                cursor.execute(f'{sql} OFFSET {data_from} LIMIT {data_to - data_from}')
+                for entry in cursor:
+                    parent_id = entry[0]
+                    attachments = Attachment.objects.filter(**{parent_field: parent_id})
+                    if attachments.count():
+                        _directory = f'{temp_dir}/files/{parent_id}'
+                        os.makedirs(_directory, exist_ok=True)
+
+                        # Get the attachments list, download their content from the storage
+                        for attachment in attachments.distinct():
+                            file_path = f'{_directory}/{attachment.name}'
+                            with open(file_path, 'wb') as file:
+                                file.write(attachment.get_content().getvalue())
+
+        except Exception as e:
+            logger.error(f'Got an error while generating attachments file: {str(e)}')
+            task.set_error_attachments(str(e))
+            raise
+
     __reset_connection()
 
     if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
@@ -584,33 +611,30 @@ def execute_attachments_task(task_id):
             task.set_status_attachments('0%')
             logger.info(f'Preparing attachments file: offset {offset}, limit {limit}')
 
-            # TODO: this can be parallelized
             # paginate results to reduce memory usage
-            with connection.cursor() as cursor:
-                data_from = offset
+            processes = []
+            data_from = offset
+            while data_from < limit:
+                data_to = min(data_from + ATTACHMENTS_PAGE_SIZE, limit)
+                # download in parallel
+                processes.append(Process(target=_fetch_attachs, args=(data_from, data_to,)))
+                data_from = data_to  # next
 
-                while data_from < limit:
-                    # indicate progress percentage
-                    task.set_status_attachments('{:.0%}'.format((data_from - offset) / (limit - offset)))
+            for p in processes:  # start
+                p.start()
 
-                    data_to = min(data_from + ATTACHMENTS_PAGE_SIZE, limit)
-                    logger.debug(f'Downloading attachments from {data_from} to {data_to}')
+            while any(map(lambda x: x.is_alive(), processes)):  # wait
+                if any(map(lambda x: (not x.is_alive() and x.exitcode != 0), processes)):
+                    # terminate all processes, one failed
+                    for p in processes:
+                        p.kill()
+                time.sleep(.1)
 
-                    cursor.execute(f'{sql} OFFSET {data_from} LIMIT {data_to - data_from}')
-                    for entry in cursor:
-                        data_from += 1
-                        parent_id = entry[0]
-                        attachments = Attachment.objects.filter(**{parent_field: parent_id})
-
-                        if attachments.count():
-                            _directory = f'{temp_dir}/files/{parent_id}'
-                            os.makedirs(_directory, exist_ok=True)
-
-                            # Get the attachments list, download their content from the storage
-                            for attachment in attachments.distinct():
-                                file_path = f'{_directory}/{attachment.name}'
-                                with open(file_path, 'wb') as file:
-                                    file.write(attachment.get_content().getvalue())
+            failure = any(map(lambda x: x.exitcode != 0, processes))
+            for p in processes:  # release resources
+                p.close()
+            if failure:
+                return
 
             task.set_status_attachments('100%')  # indicate percentage
             logger.debug('All attachments downloaded!')
