@@ -655,7 +655,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['Y2'].value, 'one')
         self.assertEqual(ws['Z2'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
 
-    @mock.patch('aether.kernel.api.exporter.PAGE_SIZE', 1)
+    @mock.patch('aether.kernel.api.exporter.RECORDS_PAGE_SIZE', 1)
     def test__generate__xlsx__paginate(self):
 
         submission_1 = models.Submission.objects.first()

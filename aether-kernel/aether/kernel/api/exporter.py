@@ -52,7 +52,8 @@ XLSX_FORMAT = 'xlsx'
 # Total number of rows on a worksheet (since Excel 2007): 1048576
 # https://support.office.com/en-us/article/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
 MAX_SIZE = 1048574  # the missing ones are the header ones (paths & labels)
-PAGE_SIZE = 1000
+RECORDS_PAGE_SIZE = 1000
+ATTACHMENTS_PAGE_SIZE = 200
 
 # Nowadays the ZIP file size limit is 16 EB (exabytes), but
 # 4 GB (gigabytes) size is a limitation for an old zip format and,
@@ -580,24 +581,25 @@ def execute_attachments_task(task_id):
             sql = _settings['query']
             parent_field = _settings['parent_field']
 
-            task.set_status_attachments('WIP')
+            task.set_status_attachments('0%')
             logger.info(f'Preparing attachments file: offset {offset}, limit {limit}')
 
+            # TODO: this can be parallelized
             # paginate results to reduce memory usage
             with connection.cursor() as cursor:
                 data_from = offset
-                index = offset
+
                 while data_from < limit:
-                    data_to = min(data_from + PAGE_SIZE, limit)
+                    # indicate progress percentage
+                    task.set_status_attachments('{:.0%}'.format((data_from - offset) / (limit - offset)))
+
+                    data_to = min(data_from + ATTACHMENTS_PAGE_SIZE, limit)
                     logger.debug(f'Downloading attachments from {data_from} to {data_to}')
 
-                    cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}')
-                    columns = [col[0] for col in cursor.description]
+                    cursor.execute(f'{sql} OFFSET {data_from} LIMIT {data_to - data_from}')
                     for entry in cursor:
-                        row = dict(zip(columns, entry))
-                        index += 1
-
-                        parent_id = str(row.get(EXPORT_FIELD_ID))
+                        data_from += 1
+                        parent_id = entry[0]
                         attachments = Attachment.objects.filter(**{parent_field: parent_id})
 
                         if attachments.count():
@@ -610,7 +612,7 @@ def execute_attachments_task(task_id):
                                 with open(file_path, 'wb') as file:
                                     file.write(attachment.get_content().getvalue())
 
-                    data_from = data_to
+            task.set_status_attachments('100%')  # indicate percentage
             logger.debug('All attachments downloaded!')
 
             # create zip with attachments and add to task files
@@ -819,19 +821,17 @@ def __generate_csv_files(
     # paginate results to reduce memory usage
     with connection.cursor() as cursor:
         data_from = offset
-        index = offset
         while data_from < limit:
-            data_to = min(data_from + PAGE_SIZE, limit)
+            data_to = min(data_from + RECORDS_PAGE_SIZE, limit)
             logger.debug(f'From {data_from} to {data_to}')
 
-            cursor.execute(f'{sql} OFFSET {data_from} LIMIT {PAGE_SIZE}')
+            cursor.execute(f'{sql} OFFSET {data_from} LIMIT {data_to - data_from}')
             columns = [col[0] for col in cursor.description]
             for entry in cursor:
                 row = dict(zip(columns, entry))
-                index += 1
+                data_from += 1
                 json_data = __flatten_dict(row.get(EXPORT_FIELD_DATA), flatten_list)
-                walker(json_data, {'@': index, '@id': str(row.get(EXPORT_FIELD_ID))}, '$')
-            data_from = data_to
+                walker(json_data, {'@': data_from, '@id': str(row.get(EXPORT_FIELD_ID))}, '$')
 
     logger.debug('Building headers')
 
