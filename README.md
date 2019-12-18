@@ -200,7 +200,8 @@ Used on Kernel and ODK Module
   More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
   Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development
   (in which case "minio" would typically be used with the `minio` service).
-- `COLLECT_STATIC_FILES_ON_STORAGE`: Used to indicate if static files should be collected on the specified cloud-based storage service (`minio`, `s3` or `gcs`)
+- `COLLECT_STATIC_FILES_ON_STORAGE`: Used to indicate if static files should
+  be collected on the specified cloud-based storage service (`minio`, `s3` or `gcs`).
   Is `false` if unset or set to empty string, anything else is considered `true`.
 
 ##### Minio (`DJANGO_STORAGE_BACKEND=minio`)
@@ -231,8 +232,10 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 - `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
-- `GOOGLE_APPLICATION_CREDENTIALS`: Path to the Google Application Credentials file as specified [here](https://cloud.google.com/docs/authentication/getting-started)
-- `GCS_PROJECT_ID`: The project id of the linked bucket. [How to locate a Project ID](https://support.google.com/googleapi/answer/7014113?hl=en)
+- `GOOGLE_APPLICATION_CREDENTIALS`: Path to the Google Application Credentials file as specified
+  [here](https://cloud.google.com/docs/authentication/getting-started)
+- `GCS_PROJECT_ID`: The project id of the linked bucket.
+  [How to locate a Project ID](https://support.google.com/googleapi/answer/7014113?hl=en)
 
 *[Return to TOC](#table-of-contents)*
 
@@ -364,6 +367,7 @@ The default values for the export feature:
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 - `CDN_URL`: e.g `https://storage.cloud.google.com/bucket_name` CDN url to access uploaded files.
+- `COLLECT_STATIC_BUCKET_PATH`: path in the storage bucket where the static content is uploaded.
 
 
 *[Return to TOC](#table-of-contents)*

@@ -119,14 +119,18 @@ function setup {
     mkdir -p $STATIC_ROOT
     # create static assets
     echo "Collecting static files..."
+    ASSETS_UI="/code/aether/ui/assets/bundles"
     if [ $COLLECT_STATIC_FILES_ON_STORAGE ]; then
-        ./manage.py cdn_publish
+        ./manage.py cdn_publish \
+            -u=${CDN_URL} \
+            -w=$ASSETS_UI \
+            -s=${COLLECT_STATIC_BUCKET_PATH:-}
     else
         # cleaning local
         STATIC_UI=/code/aether/ui/static
         rm -r -f $STATIC_UI && mkdir -p $STATIC_UI
         # copy assets bundles folder into static folder
-        cp -r /code/aether/ui/assets/bundles/* $STATIC_UI
+        cp -r "${ASSETS_UI}/*" $STATIC_UI
     fi
     ./manage.py collectstatic --noinput --verbosity 0
     chmod -R 755 ${STATIC_ROOT}
