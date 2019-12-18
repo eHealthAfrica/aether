@@ -1,6 +1,6 @@
 FROM python:3.7-slim-stretch
 
-ARG VERSION
+ARG VERSION=0.0.0
 
 WORKDIR /code
 
