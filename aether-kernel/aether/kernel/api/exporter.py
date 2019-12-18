@@ -623,12 +623,12 @@ def execute_attachments_task(task_id):
             for p in processes:  # start
                 p.start()
 
-            while any(map(lambda x: x.is_alive(), processes)):  # wait
-                if any(map(lambda x: (not x.is_alive() and x.exitcode != 0), processes)):
+            while any(map(lambda x: x.is_alive(), processes)):
+                if any(map(lambda x: (not x.is_alive() and x.exitcode != 0), processes)):  # pragma: no cover
                     # terminate all processes, one failed
                     for p in processes:
                         p.kill()
-                time.sleep(.1)
+                time.sleep(.1)  # wait
 
             failure = any(map(lambda x: x.exitcode != 0, processes))
             for p in processes:  # release resources
