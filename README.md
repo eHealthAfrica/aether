@@ -204,6 +204,9 @@ to a CDN.
 - `COLLECT_STATIC_FILES_ON_STORAGE`: Used to indicate if static files should
   be collected on the specified cloud-based storage service (`minio`, `s3` or `gcs`).
   Is `false` if unset or set to empty string, anything else is considered `true`.
+- `COLLECT_STATIC_FILES_VERSIONED`: Used to indicate if static files include the
+  current app VERSION in the path like `/0.0.0/my-static-file`.
+  Is `false` if unset or set to empty string, anything else is considered `true`.
 
 ##### Minio (`DJANGO_STORAGE_BACKEND=minio`)
 
