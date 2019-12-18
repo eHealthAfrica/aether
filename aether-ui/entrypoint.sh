@@ -115,29 +115,35 @@ function setup {
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=${ADMIN_TOKEN:-}
 
-    STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
-    mkdir -p $STATIC_ROOT
     # create static assets
     echo "Collecting static files..."
-    ASSETS_UI="/code/aether/ui/assets/bundles"
+
+    STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
+    mkdir -p $STATIC_ROOT
+
+    # cleaning local
+    local STATIC_DIR=/code/aether/ui/static
+    rm -r -f $STATIC_DIR && mkdir -p $STATIC_DIR
+
+    # expose version number (if exists)
+    cp /var/tmp/VERSION ${STATIC_DIR}/VERSION   2>/dev/null || true
+    # add git revision (if exists)
+    cp /var/tmp/REVISION ${STATIC_DIR}/REVISION 2>/dev/null || true
+
+    # copy assets bundles folder into static folder
+    local WEBPACK_FILES="/code/aether/ui/assets/bundles"
     if [ $COLLECT_STATIC_FILES_ON_STORAGE ]; then
+        local APP_VERSION=`cat /var/tmp/VERSION`
+
         ./manage.py cdn_publish \
-            -u=${CDN_URL} \
-            -w=$ASSETS_UI \
-            -s=${COLLECT_STATIC_BUCKET_PATH:-}
-    else
-        # cleaning local
-        STATIC_UI=/code/aether/ui/static
-        rm -r -f $STATIC_UI && mkdir -p $STATIC_UI
-        # copy assets bundles folder into static folder
-        cp -r "${ASSETS_UI}/*" $STATIC_UI
+            -u="${CDN_URL}/${APP_VERSION}" \
+            -w=$WEBPACK_FILES \
+            -s="${APP_VERSION}/"
     fi
+    cp -r ${WEBPACK_FILES}/* $STATIC_DIR
+
     ./manage.py collectstatic --noinput --verbosity 0
     chmod -R 755 ${STATIC_ROOT}
-    # expose version number (if exists)
-    cp /var/tmp/VERSION ${STATIC_ROOT}/VERSION   2>/dev/null || true
-    # add git revision (if exists)
-    cp /var/tmp/REVISION ${STATIC_ROOT}/REVISION 2>/dev/null || true
 }
 
 function test_lint {
