@@ -21,6 +21,7 @@ from unittest import mock
 import os
 import requests
 import tempfile
+import time
 import zipfile
 
 from copy import deepcopy
@@ -1010,10 +1011,10 @@ class ExporterViewsTest(TestCase):
     def test_entities_export__attachments__error(self):
         def my_side_effect(*args, **kwargs):
             if not kwargs['url'].endswith('/b.txt'):
-                # real method
-                return requests.request(*args, **kwargs)
+                time.sleep(.01)  # wait a little bit
+                return requests.request(*args, **kwargs)  # real method
             else:
-                # there is going to be an unexpected while fetch file "b.txt"
+                # there is going to be an unexpected error while fetch file "b.txt"
                 raise ConnectionResetError('[Errno 104] Connection reset by peer')
 
         models.Attachment.objects.create(

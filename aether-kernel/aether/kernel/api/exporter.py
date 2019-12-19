@@ -462,21 +462,22 @@ class ExporterMixin():
         if in_background or export_settings['attachments']:
             # start download subprocess(-es) and return task id
 
+            processes = []
             if generate_records:
-                p = Process(target=execute_records_task, args=(task.pk,))
-                p.start()
+                processes.append(
+                    Process(target=execute_records_task, args=(task.pk,))
+                )
 
+            if export_settings['attachments']:
+                processes.append(
+                    Process(target=execute_attachments_task, args=(task.pk,))
+                )
+
+            for p in processes:
+                p.start()
                 # join the process to the main thread to pass the tests
                 if settings.TESTING:  # pragma: no cover
                     p.join()
-
-            if export_settings['attachments']:
-                q = Process(target=execute_attachments_task, args=(task.pk,))
-                q.start()
-
-                # join the process to the main thread to pass the tests
-                if settings.TESTING:  # pragma: no cover
-                    q.join()
 
             return Response(data={'task': str(task.pk)})
 
@@ -559,26 +560,27 @@ def execute_records_task(task_id, dettached=True):
 
 
 def execute_attachments_task(task_id):
-    def _fetch_attachs(data_from, data_to):
+    def _fetch_attachs(_start, _stop):
         try:
-            # indicate progress percentage
-            task.set_status_attachments('{:.0%}'.format((data_from - offset) / (limit - offset)))
+            logger.debug(f'Downloading attachments from {_start} to {_stop}')
 
-            logger.debug(f'Downloading attachments from {data_from} to {data_to}')
+            # get parent ids
             with connection.cursor() as cursor:
-                cursor.execute(f'{sql} OFFSET {data_from} LIMIT {data_to - data_from}')
-                for entry in cursor:
-                    parent_id = entry[0]
-                    attachments = Attachment.objects.filter(**{parent_field: parent_id})
-                    if attachments.count():
-                        _directory = f'{temp_dir}/files/{parent_id}'
-                        os.makedirs(_directory, exist_ok=True)
+                cursor.execute(f'{sql} OFFSET {_start} LIMIT {_stop - _start}')
+                _parent_ids = [_row[0] for _row in cursor.fetchall()]
 
-                        # Get the attachments list, download their content from the storage
-                        for attachment in attachments.distinct():
-                            file_path = f'{_directory}/{attachment.name}'
-                            with open(file_path, 'wb') as file:
-                                file.write(attachment.get_content().getvalue())
+            # get attachments
+            for _parent_id in _parent_ids:
+                _attachments = Attachment.objects.filter(**{parent_field: _parent_id})
+                if _attachments.count():
+                    _directory = f'{temp_dir}/files/{_parent_id}'
+                    os.makedirs(_directory, exist_ok=True)
+
+                    # Get the attachments list, download their content from the storage
+                    for _attachment in _attachments.distinct():
+                        _aname = _attachment.name.split('/')[-1]
+                        with open(f'{_directory}/{_aname}', 'wb') as _file:
+                            _file.write(_attachment.get_content().getvalue())
 
         except Exception as e:
             logger.error(f'Got an error while generating attachments file: {str(e)}')
@@ -620,22 +622,33 @@ def execute_attachments_task(task_id):
                 processes.append(Process(target=_fetch_attachs, args=(data_from, data_to,)))
                 data_from = data_to  # next
 
+            __reset_connection()
             for p in processes:  # start
                 p.start()
 
             while any(map(lambda x: x.is_alive(), processes)):
-                if any(map(lambda x: (not x.is_alive() and x.exitcode != 0), processes)):  # pragma: no cover
+                if (
+                    # one of the processes failed
+                    any(map(lambda x: (not x.is_alive() and x.exitcode != 0), processes))
+                    or
+                    # the task was deleted
+                    not ExportTask.objects.filter(pk=task_id).exists()
+                ):  # pragma: no cover
                     # terminate all processes, one failed
                     for p in processes:
                         p.kill()
+                else:
+                    finished = [p for p in processes if not p.is_alive()]
+                    task.set_status_attachments('{:.0%}'.format(len(finished) / len(processes)))
                 time.sleep(.1)  # wait
 
             failure = any(map(lambda x: x.exitcode != 0, processes))
             for p in processes:  # release resources
                 p.close()
-            if failure:
+            if failure or not ExportTask.objects.filter(pk=task_id).exists():
                 return
 
+            __reset_connection()
             task.set_status_attachments('100%')  # indicate percentage
             logger.debug('All attachments downloaded!')
 
