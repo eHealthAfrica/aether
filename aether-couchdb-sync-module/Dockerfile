@@ -24,7 +24,7 @@ COPY ./ /code
 ## copy application version and create git revision
 ################################################################################
 
-ARG VERSION
+ARG VERSION=0.0.0
 ARG GIT_REVISION
 
 RUN mkdir -p /var/tmp && \

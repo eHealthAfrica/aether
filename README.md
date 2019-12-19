@@ -193,14 +193,19 @@ variables that set up the different authentication options.
 
 > https://github.com/eHealthAfrica/aether-django-sdk-library#file-storage-system
 
-Used on Kernel and ODK Module
+Used on Kernel and ODK Module for media files and on the rest to upload static files
+to a CDN.
 
 - `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/2.2/ref/settings/#default-file-storage).
   Available options: `minio`, `s3`, `gcs`.
   More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
   Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development
   (in which case "minio" would typically be used with the `minio` service).
-- `COLLECT_STATIC_FILES_ON_STORAGE`: Used to indicate if static files should be collected on the specified cloud-based storage service (`minio`, `s3` or `gcs`)
+- `COLLECT_STATIC_FILES_ON_STORAGE`: Used to indicate if static files should
+  be collected on the specified cloud-based storage service (`minio`, `s3` or `gcs`).
+  Is `false` if unset or set to empty string, anything else is considered `true`.
+- `COLLECT_STATIC_FILES_VERSIONED`: Used to indicate if static files include the
+  current app VERSION in the path like `/0.0.0/my-static-file`.
   Is `false` if unset or set to empty string, anything else is considered `true`.
 
 ##### Minio (`DJANGO_STORAGE_BACKEND=minio`)
@@ -231,8 +236,10 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 - `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
-- `GOOGLE_APPLICATION_CREDENTIALS`: Path to the Google Application Credentials file as specified [here](https://cloud.google.com/docs/authentication/getting-started)
-- `GCS_PROJECT_ID`: The project id of the linked bucket. [How to locate a Project ID](https://support.google.com/googleapi/answer/7014113?hl=en)
+- `GOOGLE_APPLICATION_CREDENTIALS`: Path to the Google Application Credentials file as specified
+  [here](https://cloud.google.com/docs/authentication/getting-started)
+- `GCS_PROJECT_ID`: The project id of the linked bucket.
+  [How to locate a Project ID](https://support.google.com/googleapi/answer/7014113?hl=en)
 
 *[Return to TOC](#table-of-contents)*
 
