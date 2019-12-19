@@ -27,7 +27,7 @@ import tempfile
 import time
 import zipfile
 
-from multiprocessing import Process
+from multiprocessing import Process, cpu_count
 from openpyxl import Workbook
 
 from django.conf import settings
@@ -492,7 +492,7 @@ class ExporterMixin():
 
 def execute_records_task(task_id, dettached=True):
     if dettached:
-        __reset_connection()
+        reset_connection()
 
     if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
         return
@@ -549,7 +549,6 @@ def execute_records_task(task_id, dettached=True):
 
     except Exception as e:
         logger.error(f'Got an error while generating records file: {str(e)}')
-
         task.set_error_records(str(e))
         if not dettached:
             raise
@@ -566,28 +565,37 @@ def execute_attachments_task(task_id):
 
             # get parent ids
             with connection.cursor() as cursor:
-                cursor.execute(f'{sql} OFFSET {_start} LIMIT {_stop - _start}')
-                _parent_ids = [_row[0] for _row in cursor.fetchall()]
 
-            # get attachments
-            for _parent_id in _parent_ids:
-                _attachments = Attachment.objects.filter(**{parent_field: _parent_id})
-                if _attachments.count():
-                    _directory = f'{temp_dir}/files/{_parent_id}'
-                    os.makedirs(_directory, exist_ok=True)
+                data_from = _start
+                while data_from < _stop:
+                    data_to = min(data_from + RECORDS_PAGE_SIZE, _stop)
+                    logger.debug(f'Downloading attachments {data_from} to {data_to}')
 
-                    # Get the attachments list, download their content from the storage
-                    for _attachment in _attachments.distinct():
-                        _aname = _attachment.name.split('/')[-1]
-                        with open(f'{_directory}/{_aname}', 'wb') as _file:
-                            _file.write(_attachment.get_content().getvalue())
+                    cursor.execute(f'{sql} OFFSET {data_from} LIMIT {data_to - data_from}')
+                    _parent_ids = set([_row[0] for _row in cursor.fetchall()])
+
+                    # get attachments
+                    for _parent_id in _parent_ids:
+                        _attachments = Attachment.objects.filter(**{parent_field: _parent_id})
+                        if _attachments.count():
+                            _directory = f'{temp_dir}/files/{_parent_id}'
+                            os.makedirs(_directory, exist_ok=True)
+
+                            # Get the attachments list, download their content from the storage
+                            for _attachment in _attachments.distinct():
+                                _aname = _attachment.name.split('/')[-1]
+                                with open(f'{_directory}/{_aname}', 'wb') as _file:
+                                    _file.write(_attachment.get_content().getvalue())
+
+                    # next iteration
+                    data_from = data_to
 
         except Exception as e:
             logger.error(f'Got an error while generating attachments file: {str(e)}')
             task.set_error_attachments(str(e))
             raise
 
-    __reset_connection()
+    reset_connection()
 
     if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
         return
@@ -613,16 +621,19 @@ def execute_attachments_task(task_id):
             task.set_status_attachments('0%')
             logger.info(f'Preparing attachments file: offset {offset}, limit {limit}')
 
-            # paginate results to reduce memory usage
+            # divide the task based on the number of CPUs
+            num_chunks = min(1, cpu_count() / 2)
+            chunk_size = (limit - offset) / num_chunks
+
             processes = []
             data_from = offset
             while data_from < limit:
-                data_to = min(data_from + ATTACHMENTS_PAGE_SIZE, limit)
+                data_to = min(data_from + chunk_size, limit)
                 # download in parallel
                 processes.append(Process(target=_fetch_attachs, args=(data_from, data_to,)))
                 data_from = data_to  # next
 
-            __reset_connection()
+            reset_connection()
             for p in processes:  # start
                 p.start()
 
@@ -648,7 +659,7 @@ def execute_attachments_task(task_id):
             if failure or not ExportTask.objects.filter(pk=task_id).exists():
                 return
 
-            __reset_connection()
+            reset_connection()
             task.set_status_attachments('100%')  # indicate percentage
             logger.debug('All attachments downloaded!')
 
@@ -1175,7 +1186,7 @@ def sizeof_fmt(num):  # pragma: no cover
     return '%.1f%s' % (num, 'YB')
 
 
-def __reset_connection():
+def reset_connection():
     # The subprocess is executed outside the main thread, we need to close the
     # current connection an open a new one handle by this subprocess.
     # Avoids:

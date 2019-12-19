@@ -33,7 +33,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import F
 from django.http import FileResponse
-from django.test import tag, TestCase, override_settings
+from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
 from aether.kernel.api import models
@@ -315,6 +315,7 @@ class ExporterTest(TestCase):
         self.assertEqual(get_label('x.y.a.z', labels), 'X / Y / A / Z')
 
 
+@tag('noparallel')
 @override_settings(MULTITENANCY=False)
 class ExporterViewsTest(TestCase):
 
@@ -717,20 +718,19 @@ class ExporterViewsTest(TestCase):
         'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    def test_submissions_export__error(self, mock_export):
+    def test_submissions_export__error(self, *args):
         response = self.client.get(reverse('submission-xlsx'))
         self.assertEqual(response.status_code, 500)
         data = response.json()['detail']
         self.assertIn('Got an error while creating the file:', data)
         self.assertIn('[Errno 2] No such file or directory', data)
-        mock_export.assert_called_once()
+        self.assertEqual(models.ExportTask.objects.count(), 1)
 
     @mock.patch(
         'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    @tag('noparallel')
-    def test_submission_export___error__dettached(self, mock_export):
+    def test_submission_export___error__background(self, *args):
         response = self.client.get(reverse('submission-csv') + '?background=t')
         self.assertEqual(response.status_code, 200)
 
@@ -741,39 +741,36 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.status_records, 'ERROR')
         self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
         self.assertEqual(task.files.count(), 0)
-
-        mock_export.assert_not_called()  # is called in the subprocess
+        self.assertEqual(models.ExportTask.objects.count(), 1)
 
     @mock.patch(
         'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    def test_submissions_export__xlsx__error(self, mock_export):
+    def test_submissions_export__xlsx__error(self, *args):
         response = self.client.get(reverse('submission-xlsx'))
         self.assertEqual(response.status_code, 500)
-        mock_export.assert_called_once_with(
-            temp_dir=mock.ANY,
-            data=mock.ANY,
-            paths=mock.ANY,
-            labels=mock.ANY,
-            file_format='xlsx',
-            filename='project1-export',
-            offset=0,
-            limit=1,
-            options={
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        settings = models.ExportTask.objects.first().settings
+        self.assertEqual(settings['offset'], 0)
+        self.assertEqual(settings['limit'], 1)
+        self.assertEqual(settings['records']['file_format'], 'xlsx')
+        self.assertEqual(settings['records']['filename'], 'project1-export')
+        self.assertEqual(
+            settings['records']['export_options'],
+            {
                 'header_content': 'labels',
                 'header_separator': '/',
                 'header_shorten': 'no',
                 'data_format': 'split',
-            },
-            dialect=mock.ANY,
-        )
+            })
 
     @mock.patch(
         'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    def test_submissions_export__csv__error(self, mock_export):
+    def test_submissions_export__csv__error(self, *args):
         for i in range(13):
             models.Submission.objects.create(
                 payload={'name': f'Person-{i}'},
@@ -792,23 +789,23 @@ class ExporterViewsTest(TestCase):
             'data_format': 'flattening',  # not valid, switch to "split"
         }), content_type='application/json')
         self.assertEqual(response.status_code, 500)
-        mock_export.assert_called_once_with(
-            temp_dir=mock.ANY,
-            data=mock.ANY,
-            paths=['_id', '_rev'],
-            labels={'_id': 'id', '_rev': 'rev'},
-            file_format='csv',
-            filename='submissions',
-            offset=10,
-            limit=14,  # there was already one submission
-            options={
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        settings = models.ExportTask.objects.first().settings
+        self.assertEqual(settings['offset'], 10)
+        self.assertEqual(settings['limit'], 14)  # there was already one submission
+        self.assertEqual(settings['records']['file_format'], 'csv')
+        self.assertEqual(settings['records']['filename'], 'submissions')
+        self.assertEqual(settings['records']['paths'], ['_id', '_rev'])
+        self.assertEqual(settings['records']['labels'], {'_id': 'id', '_rev': 'rev'})
+        self.assertEqual(
+            settings['records']['export_options'],
+            {
                 'header_content': 'labels',
                 'header_separator': '/',
                 'header_shorten': 'no',
                 'data_format': 'split',
-            },
-            dialect=mock.ANY,
-        )
+            })
 
     # -----------------------------
     # ENTITIES
@@ -822,20 +819,22 @@ class ExporterViewsTest(TestCase):
         'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    def test_entities_export___error(self, mock_export):
+    def test_entities_export___error(self, *args):
         response = self.client.get(reverse('entity-csv'))
         self.assertEqual(response.status_code, 500)
         data = response.json()['detail']
         self.assertIn('Got an error while creating the file:', data)
         self.assertIn('[Errno 2] No such file or directory', data)
-        mock_export.assert_called_once()
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        task = models.ExportTask.objects.first()
+        self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
 
     @mock.patch(
         'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    @tag('noparallel')
-    def test_entities_export___error__dettached(self, mock_export):
+    def test_entities_export___error__background(self, *args):
         response = self.client.get(reverse('entity-csv') + '?background=t')
         self.assertEqual(response.status_code, 200)
 
@@ -847,27 +846,20 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
         self.assertEqual(task.files.count(), 0)
 
-        mock_export.assert_not_called()  # is called in the subprocess
-
     @mock.patch(
         'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    def test_entities_export__xlsx__error(self, mock_export):
+    def test_entities_export__xlsx__error(self, *args):
         response = self.client.get(reverse('entity-xlsx'))
         self.assertEqual(response.status_code, 500)
-        mock_export.assert_called_once_with(
-            temp_dir=mock.ANY,
-            data=mock.ANY,
-            paths=mock.ANY,
-            labels=mock.ANY,
-            file_format='xlsx',
-            filename='project1-export',
-            offset=0,
-            limit=1,
-            options=mock.ANY,
-            dialect=mock.ANY,
-        )
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        settings = models.ExportTask.objects.first().settings
+        self.assertEqual(settings['offset'], 0)
+        self.assertEqual(settings['limit'], 1)
+        self.assertEqual(settings['records']['file_format'], 'xlsx')
+        self.assertEqual(settings['records']['filename'], 'project1-export')
 
     def test_entities_export__xlsx__empty(self):
         response = self.client.get(reverse('entity-xlsx') + '?start_at=1')
@@ -908,7 +900,7 @@ class ExporterViewsTest(TestCase):
         'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    def test_entities_export__csv__error(self, mock_export):
+    def test_entities_export__csv__error(self, *args):
         response = self.client.post(reverse('entity-csv'), data=json.dumps({
             'header_content': 'paths',
             'header_separator': ':',
@@ -918,23 +910,6 @@ class ExporterViewsTest(TestCase):
         }), content_type='application/json')
 
         self.assertEqual(response.status_code, 500)
-        mock_export.assert_called_once_with(
-            temp_dir=mock.ANY,
-            data=mock.ANY,
-            paths=mock.ANY,
-            labels=mock.ANY,
-            file_format='csv',
-            filename='project1-export',
-            offset=0,
-            limit=1,
-            options={
-                'header_content': 'paths',
-                'header_separator': ':',
-                'header_shorten': 'yes',
-                'data_format': 'flatten',
-            },
-            dialect=mock.ANY,
-        )
 
         self.assertEqual(models.ExportTask.objects.count(), 1)
         task = models.ExportTask.objects.first()
@@ -943,6 +918,20 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.project.name, 'project1')
         self.assertEqual(task.status_records, 'ERROR')
         self.assertEqual(task.files.count(), 0)
+
+        settings = task.settings
+        self.assertEqual(settings['offset'], 0)
+        self.assertEqual(settings['limit'], 1)
+        self.assertEqual(settings['records']['file_format'], 'csv')
+        self.assertEqual(settings['records']['filename'], 'project1-export')
+        self.assertEqual(
+            settings['records']['export_options'],
+            {
+                'header_content': 'paths',
+                'header_separator': ':',
+                'header_shorten': 'yes',
+                'data_format': 'flatten',
+            })
 
     def test_entities_export__csv__empty(self):
         response = self.client.post(reverse('entity-csv') + '?project=unknown')
@@ -981,7 +970,6 @@ class ExporterViewsTest(TestCase):
         self.assertIsNone(task.error_records)
         self.assertEqual(task.files.count(), 1)
 
-    @tag('noparallel')
     def test_entities_export__offline(self):
         response = self.client.post(reverse('entity-csv') + '?background=t')
         self.assertEqual(response.status_code, 200)
@@ -1006,9 +994,8 @@ class ExporterViewsTest(TestCase):
 
         self.assertEqual(models.ExportTask.objects.count(), 0)
 
-    @tag('noparallel')
-    @mock.patch('aether.kernel.api.exporter.ATTACHMENTS_PAGE_SIZE', 1)  # creates 3 processes
-    def test_entities_export__attachments__error(self):
+    @mock.patch('aether.kernel.api.exporter.cpu_count', return_value=1)  # creates 3 processes
+    def test_entities_export__attachments__error(self, *args):
         def my_side_effect(*args, **kwargs):
             if not kwargs['url'].endswith('/b.txt'):
                 time.sleep(.01)  # wait a little bit
@@ -1049,7 +1036,6 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.files.count(), 0)
         self.assertIsNone(task.revision)
 
-    @tag('noparallel')
     @mock.patch(
         'shutil.make_archive',
         side_effect=RuntimeError('Zip too big!!!'),
@@ -1076,7 +1062,6 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.files.count(), 0)
         self.assertIsNone(task.revision)
 
-    @tag('noparallel')
     def test_entities_export__attachments(self):
         submission = models.Submission.objects.first()
         models.Attachment.objects.create(

@@ -25,7 +25,7 @@ from hashlib import md5
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.db import transaction, models, IntegrityError
+from django.db import models, IntegrityError
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
@@ -810,26 +810,22 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
     def revision(self):  # overrides base model field
         return None
 
-    @transaction.atomic
     def set_status_records(self, status):
         self.refresh_from_db()
         self.status_records = status
         self.save(update_fields=['status_records'])
 
-    @transaction.atomic
     def set_error_records(self, error):
         self.refresh_from_db()
         self.error_records = error
         self.status_records = 'ERROR'
         self.save(update_fields=['status_records', 'error_records'])
 
-    @transaction.atomic
     def set_status_attachments(self, status):
         self.refresh_from_db()
         self.status_attachments = status
         self.save(update_fields=['status_attachments'])
 
-    @transaction.atomic
     def set_error_attachments(self, error):
         self.refresh_from_db()
         self.error_attachments = error
