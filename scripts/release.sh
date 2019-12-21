@@ -78,6 +78,14 @@ function release_gcs {
         GCS_PROJECTS="eha-data"
     fi
 
+    openssl aes-256-cbc \
+        -K $encrypted_9112fb2807d4_key \
+        -iv $encrypted_9112fb2807d4_iv \
+        -in gcs_key.json.enc \
+        -out gcs_key.json -d
+
+    pip install -q google-cloud-storage
+
     python ./scripts/push_version.py --version $GCS_VERSION --projects $GCS_PROJECTS
 }
 

@@ -25,7 +25,7 @@ from hashlib import md5
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError, transaction
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
@@ -38,9 +38,9 @@ from aether.python.validators import validate_entity_payload
 
 from .constants import NAMESPACE
 from .validators import (
-    wrapper_validate_avro_schema,
     wrapper_validate_schema_definition,
-    wrapper_validate_mapping_definition
+    wrapper_validate_mapping_definition,
+    wrapper_validate_schema_input_definition
 )
 from .utils import send_model_item_to_redis
 
@@ -57,12 +57,13 @@ Data model schema:
 | Project          |       | MappingSet       |       | Submission       |       | Attachment          |
 +==================+       +==================+       +==================+       +=====================+
 | Base fields      |<---+  | Base fields      |<---+  | Base fields      |<---+  | Base fields         |
-| salad_schema     |    |  | input            |    |  | payload          |    |  | attachment_file     |
-| jsonld_context   |    |  | schema           |    |  +::::::::::::::::::+    |  | md5sum              |
-| rdf_definition   |    |  +::::::::::::::::::+    +-<| mappingset       |    |  +:::::::::::::::::::::+
-+::::::::::::::::::+    +-<| project          |    |  | project(**)      |    +-<| submission          |
-| organizations(*) |    |  +------------------+    |  +------------------+    |  | submission_revision |
-+------------------+    |                          |                          |  +---------------------+
+| active           |    |  | input            |    |  | payload          |    |  | attachment_file     |
+| salad_schema     |    |  | schema           |    |  +::::::::::::::::::+    |  | md5sum              |
+| jsonld_context   |    |  +::::::::::::::::::+    +-<| mappingset       |    |  +:::::::::::::::::::::+
+| rdf_definition   |    +-<| project          |    |  | project(**)      |    +-<| submission          |
++::::::::::::::::::+    |  +------------------+    |  +------------------+    |  | submission_revision |
+| organizations(*) |    |                          |                          |  +---------------------+
++------------------+    |                          |                          |
                         |                          |                          |
 +------------------+    |  +------------------+    |  +------------------+    |  +------------------+
 | Schema           |    |  | SchemaDecorator  |    |  | Mapping          |    |  | Entity           |
@@ -115,6 +116,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
     .. note:: Extends from :class:`aether.sdk.multitenancy.models.MultitenancyBaseAbstract`
 
+    :ivar bool      active:          Active. Defaults to ``True``.
     :ivar text      salad_schema:    Salad schema (optional).
         Semantic Annotations for Linked Avro Data (SALAD)
         https://www.commonwl.org/draft-3/SchemaSalad.html
@@ -127,6 +129,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
 
     '''
 
+    active = models.BooleanField(default=True, verbose_name=_('active'))
     salad_schema = models.TextField(
         null=True,
         blank=True,
@@ -210,7 +213,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     schema = JSONField(
         null=True,
         blank=True,
-        validators=[wrapper_validate_avro_schema],
+        validators=[wrapper_validate_schema_input_definition],
         verbose_name=_('AVRO schema'),
     )
     input = JSONField(null=True, blank=True, verbose_name=_('input sample'))
@@ -240,7 +243,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     def save(self, *args, **kwargs):
         try:
             # this will call the fields validators in our case
-            # `wrapper_validate_avro_schema`
+            # `wrapper_validate_schema_input_definition`
             self.full_clean()
         except ValidationError as ve:
             raise IntegrityError(ve)
@@ -324,10 +327,12 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
 
 def __attachment_path__(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/<submission_id>/{submission_revision}/filename
-    return '{submission}/{revision}/{attachment}'.format(
-        submission=instance.submission.id,
-        revision=instance.submission_revision,
+    # file will be uploaded to [{tenant}/]__attachments__/{project}/{submission}/{filename}
+    realm = instance.get_realm()
+    return '{tenant}__attachments__/{project}/{submission}/{attachment}'.format(
+        tenant=f'{realm}/' if realm else '',
+        project=instance.submission.project.pk,
+        submission=instance.submission.pk,
         attachment=filename,
     )
 
@@ -347,7 +352,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
 
     name = models.TextField(verbose_name=_('filename'))
 
-    attachment_file = models.FileField(upload_to=__attachment_path__, verbose_name=_('file'))
+    attachment_file = models.FileField(upload_to=__attachment_path__, verbose_name=_('file'), max_length=500)
     # save attachment hash to check later if the file is not corrupted
     md5sum = models.CharField(blank=True, max_length=36, verbose_name=_('file MD5'))
 
@@ -362,8 +367,8 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
     def project(self):
         return self.submission.project
 
-    def get_content(self):
-        return get_file_content(self.name, self.attachment_file.url)
+    def get_content(self, as_attachment=False):
+        return get_file_content(self.name, self.attachment_file.url, as_attachment)
 
     def save(self, *args, **kwargs):
         # calculate file hash

@@ -30,7 +30,7 @@ from pyxform.xls2json_backends import xls_to_dict
 from pyxform.xform_instance_parser import XFormInstanceParser
 from spavro.schema import parse as parse_avro_schema, SchemaParseException
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 
 DEFAULT_XFORM_VERSION = '0'

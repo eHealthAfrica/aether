@@ -83,7 +83,7 @@ services:
     command: minio server --quiet --address minio:9090 /data
 
   keycloak-base:
-    image: jboss/keycloak:latest
+    image: jboss/keycloak:7.0.1
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: db

@@ -193,13 +193,20 @@ variables that set up the different authentication options.
 
 > https://github.com/eHealthAfrica/aether-django-sdk-library#file-storage-system
 
-Used on Kernel and ODK Module
+Used on Kernel and ODK Module for media files and on the rest to upload static files
+to a CDN.
 
 - `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/2.2/ref/settings/#default-file-storage).
   Available options: `minio`, `s3`, `gcs`.
   More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
   Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development
   (in which case "minio" would typically be used with the `minio` service).
+- `COLLECT_STATIC_FILES_ON_STORAGE`: Used to indicate if static files should
+  be collected on the specified cloud-based storage service (`minio`, `s3` or `gcs`).
+  Is `false` if unset or set to empty string, anything else is considered `true`.
+- `COLLECT_STATIC_FILES_VERSIONED`: Used to indicate if static files include the
+  current app VERSION in the path like `/0.0.0/my-static-file`.
+  Is `false` if unset or set to empty string, anything else is considered `true`.
 
 ##### Minio (`DJANGO_STORAGE_BACKEND=minio`)
 
@@ -218,6 +225,7 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 - `BUCKET_NAME`: Name of the bucket to use on s3 (**mandatory**). Must be unique on s3.
 - `AWS_ACCESS_KEY_ID`: AWS Access Key to your s3 account.
 - `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your s3 account.
+- `AWS_S3_REGION_NAME`: AWS region.
 
 ##### Google Cloud Storage (`DJANGO_STORAGE_BACKEND=gcs`)
 
@@ -228,6 +236,10 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 - `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
+- `GOOGLE_APPLICATION_CREDENTIALS`: Path to the Google Application Credentials file as specified
+  [here](https://cloud.google.com/docs/authentication/getting-started)
+- `GCS_PROJECT_ID`: The project id of the linked bucket.
+  [How to locate a Project ID](https://support.google.com/googleapi/answer/7014113?hl=en)
 
 *[Return to TOC](#table-of-contents)*
 
@@ -358,6 +370,8 @@ The default values for the export feature:
 - `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
 - `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+- `CDN_URL`: e.g `https://storage.cloud.google.com/bucket_name` CDN url to access uploaded files.
+
 
 *[Return to TOC](#table-of-contents)*
 
@@ -459,10 +473,6 @@ Read more in [Keycloak](https://www.keycloak.org).
 **Note**: Multi-tenancy is automatically enabled if the authentication server
 is keycloak.
 
-Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
-activate the CAS integration in the app.
-See more in [Django CAS client](https://github.com/mingchen/django-cas-ng).
-
 Other options are to log in via token authentication, via basic authentication
 or via the standard django authentication.
 
@@ -512,7 +522,7 @@ For those endpoints that don't depend on the realm and must also be available
 
 - `GATEWAY_PUBLIC_REALM`: `-` This represents the fake realm that is not protected
   by the gateway server. In this case the authentication is handled by the other
-  available options, i.e., basic, token, CAS...
+  available options, i.e., basic, token...
 
 The authorization and admin endpoints don't depend on any realm so the final urls
 use the public realm.
@@ -644,9 +654,6 @@ To learn more about the Aether release process, refer to the [release management
 *[Return to TOC](#table-of-contents)*
 
 ## Deployment
-
-Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
-activate the CAS integration in each container.
 
 Set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables when
 starting the `aether-odk-module` to have ODK Collect submissions posted to Aether Kernel.

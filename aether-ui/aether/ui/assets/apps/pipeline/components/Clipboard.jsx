@@ -18,15 +18,26 @@
  * under the License.
  */
 
-// sass-lint:disable no-url-domains no-url-protocols
+import React, { useState } from 'react'
+import Clipboard from 'react-clipboard.js'
 
-/* Google Fonts */
-@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,400i,600');
-@import url('https://fonts.googleapis.com/css?family=Fira+Mono');
+export default ({ content }) => {
+  const [icon, setIcon] = useState(null)
 
+  const onCopy = () => {
+    setIcon('-check')
+    setTimeout(() => setIcon(null), 2000)
+  }
 
-/* Font Awesome 5  https://fontawesome.com/ */
-@import url('https://use.fontawesome.com/releases/v5.12.0/css/fontawesome.css');
-@import url('https://use.fontawesome.com/releases/v5.12.0/css/solid.css');
-
-// sass-lint:disable no-url-domains no-url-protocols
+  return (
+    <span className='clipboard'>
+      <Clipboard
+        component='i'
+        onClick={onCopy}
+        data-clipboard-text={content}
+      >
+        <i className={`fa fa-clipboard${icon || ''}`} />
+      </Clipboard>
+    </span>
+  )
+}

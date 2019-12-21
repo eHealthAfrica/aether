@@ -822,7 +822,7 @@ class ViewsTest(TestCase):
         response = self.client.get(content_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn('Content-Disposition', response)
-        self.assertEqual(response.content, b'abc')
+        self.assertEqual(response.getvalue(), b'abc')
 
         self.client.logout()
         response = self.client.get(content_url)

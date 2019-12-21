@@ -20,12 +20,15 @@ import random
 
 from autofixture import AutoFixture
 
+from django.core.files.uploadedfile import SimpleUploadedFile
+
 from aether.python.avro.tools import random_avro
 from aether.kernel.api import models
 from aether.kernel.api.entity_extractor import run_entity_extraction
 
 MAPPINGS_COUNT_RANGE = (1, 3)
-SUBMISSIONS_COUNT_RANGE = (2, 5)
+SUBMISSIONS_COUNT_RANGE = (2, 3)
+ATTACHMENTS_COUNT_RANGE = (1, 2)
 
 
 def schema_definition():
@@ -84,6 +87,7 @@ def generate_project(
         mappingset_field_values=None,
         mapping_field_values=None,
         submission_field_values=None,
+        include_attachments=False,
 ):
     '''
     Generate an Aether Project.
@@ -176,6 +180,13 @@ def generate_project(
                     values=submission_field_values,
                 ),
             ).create_one()
+
+            if include_attachments:
+                for index in range(random.randint(*ATTACHMENTS_COUNT_RANGE)):
+                    models.Attachment.objects.create(
+                        submission=submission,
+                        attachment_file=SimpleUploadedFile(f'sample_{index}.txt', b'abc'),
+                    )
 
             # extract entities
             run_entity_extraction(submission)

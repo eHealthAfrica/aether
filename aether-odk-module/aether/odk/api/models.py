@@ -26,7 +26,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
@@ -46,13 +46,14 @@ Data model schema:
 | Project          |     | XForm            |     | MediaFile        |
 +==================+     +==================+     +==================+
 | project_id       |<-+  | id               |<-+  | id               |
-| name             |  |  | created_at       |  |  | name             |
-+::::::::::::::::::+  |  | modified_at      |  |  | media_file       |
-| surveyors (User) |  |  | description      |  |  +~~~~~~~~~~~~~~~~~~+
-+------------------+  |  | xml_data         |  |  | md5sum           |
-                      |  +~~~~~~~~~~~~~~~~~~+  |  +::::::::::::::::::+
-                      |  | title            |  +-<| xform            |
-                      |  | form_id          |     +------------------+
+| name             |  |  | active           |  |  | name             |
+| active           |  |  | created_at       |  |  | media_file       |
++::::::::::::::::::+  |  | modified_at      |  |  +~~~~~~~~~~~~~~~~~~+
+| surveyors (User) |  |  | description      |  |  | md5sum           |
++------------------+  |  | xml_data         |  |  +::::::::::::::::::+
+                      |  +~~~~~~~~~~~~~~~~~~+  +-<| xform            |
+                      |  | title            |     +------------------+
+                      |  | form_id          |
                       |  | version          |
                       |  | md5sum           |
                       |  | avro_schema      |
@@ -73,6 +74,7 @@ class Project(ExportModelOperationsMixin('odk_project'), MtModelAbstract):
 
     :ivar UUID  project_id:  Aether Kernel project ID (primary key).
     :ivar text  name:        Project name (might match the linked Kernel project name).
+    :ivar bool  active:      Active. Defaults to ``True``.
     :ivar User  surveyors:   List of granted surveyors (user with the group "surveyor").
         EVERYONE will be able to access this project xForms if none is indicated.
     '''
@@ -87,6 +89,7 @@ class Project(ExportModelOperationsMixin('odk_project'), MtModelAbstract):
     )
 
     name = models.TextField(null=True, blank=True, default='', verbose_name=_('name'))
+    active = models.BooleanField(default=True, verbose_name=_('active'))
 
     # the list of granted surveyors
     surveyors = models.ManyToManyField(
@@ -95,6 +98,9 @@ class Project(ExportModelOperationsMixin('odk_project'), MtModelAbstract):
         verbose_name=_('surveyors'),
         help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'),
     )
+
+    def is_active(self):
+        return self.active
 
     def __str__(self):
         return f'{self.project_id} - {self.name}'
@@ -133,6 +139,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
 
     :ivar integer   id:           ID (primary key).
+    :ivar bool      active:       Active. Defaults to ``True``.
     :ivar datetime  created_at:   Creation timestamp.
     :ivar datetime  modified_at:  Last update timestamp.
     :ivar text      description:  Description.
@@ -151,6 +158,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
     '''
 
+    active = models.BooleanField(default=True, verbose_name=_('active'))
     created_at = models.DateTimeField(default=timezone.now, editable=False, verbose_name=_('created at'))
     modified_at = models.DateTimeField(default=timezone.now, verbose_name=_('modified at'))
     description = models.TextField(default='', null=True, blank=True, verbose_name=_('xForm description'))
@@ -229,6 +237,9 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         else:
             return ''
 
+    def is_active(self):
+        return self.active and self.project.is_active()
+
     def clean_fields(self, *args, **kwargs):
         super(XForm, self).clean_fields(*args, **kwargs)
 
@@ -291,12 +302,16 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         ordering = ['title', 'form_id', 'version']
         verbose_name = _('xform')
         verbose_name_plural = _('xforms')
-        unique_together = ['project', 'form_id', 'version']
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'form_id', 'version'], name='unique_xform_by_project'),
+        ]
 
 
 def __media_path__(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/<project>/<xform>/filename
-    return '{project}/{xform}/{filename}'.format(
+    # file will be uploaded to [{tenant}/]__mediafiles__/{project}/{xform}/{filename}
+    realm = instance.get_realm()
+    return '{tenant}__mediafiles__/{project}/{xform}/{filename}'.format(
+        tenant=f'{realm}/' if realm else '',
         project=instance.xform.project.pk,
         xform=instance.xform.pk,
         filename=filename,
@@ -316,7 +331,7 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
     '''
 
     name = models.TextField(blank=True, verbose_name=_('name'))
-    media_file = models.FileField(upload_to=__media_path__, verbose_name=_('file'))
+    media_file = models.FileField(upload_to=__media_path__, verbose_name=_('file'), max_length=500)
     md5sum = models.CharField(editable=False, max_length=36, verbose_name=_('md5sum'))
 
     xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE, verbose_name=_('xForm'))
@@ -331,6 +346,9 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
     @property
     def download_url(self):
         return reverse('media-file-get-content', kwargs={'pk': self.pk})
+
+    def is_active(self):
+        return self.xform.is_active()
 
     def save(self, *args, **kwargs):
         # calculate hash
