@@ -353,26 +353,6 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         source='submission.attachments',
     )
 
-    project = MtPrimaryKeyRelatedField(
-        queryset=models.Project.objects.all(),
-        required=False,
-    )
-    submission = MtPrimaryKeyRelatedField(
-        queryset=models.Submission.objects.all(),
-        mt_field='mappingset__project',
-        required=False,
-    )
-    mapping = MtPrimaryKeyRelatedField(
-        queryset=models.Mapping.objects.all(),
-        mt_field='mappingset__project',
-        required=False,
-    )
-    schemadecorator = MtPrimaryKeyRelatedField(
-        queryset=models.SchemaDecorator.objects.all(),
-        mt_field='project',
-        required=False,
-    )
-
     def create(self, validated_data):
         # remove helper field
         validated_data.pop('merge')

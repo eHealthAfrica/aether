@@ -93,7 +93,6 @@ def validate_entity_project(validated_data):
     if _possible_project:
         _artefact_dict = {
             'schema_decorators': str(_schema_decorator.pk) if _schema_decorator else None,
-            'submissions': str(_submission.pk) if _submission else None,
             'mappings': str(_mapping.pk) if _mapping else None,
         }
         _artefacts_in_same_project = in_same_project_and_cache(_artefact_dict, _possible_project)

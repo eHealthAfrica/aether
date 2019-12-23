@@ -71,9 +71,9 @@ def in_same_project_and_cache(artefacts, project):
     _project_id = str(project.pk)
     _key = f'_{PROJECT_ARTEFACT_CACHE}:{settings.DEFAULT_REALM}:{_project_id}'
     try:
-        redis_artefacts = REDIS_TASK.get_by_key(_key)
-        return are_all_items_in_object(redis_artefacts['data'], artefacts)
+        redis_artefacts = REDIS_TASK.get_by_key(_key)['data']
+        return are_all_items_in_object(redis_artefacts, artefacts)
     except Exception:
         cache_project_artefacts(project)
-        redis_artefacts = REDIS_TASK.get_by_key(_key)
-        return are_all_items_in_object(redis_artefacts['data'], artefacts)
+        redis_artefacts = REDIS_TASK.get_by_key(_key)['data']
+        return are_all_items_in_object(redis_artefacts, artefacts)
