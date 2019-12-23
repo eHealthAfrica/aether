@@ -18,7 +18,7 @@
 
 from django.db import models as db_models
 from django.db.models.functions import Cast, Coalesce
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.shortcuts import get_object_or_404
 from aether.sdk.multitenancy.utils import filter_by_realm, is_accessible_by_realm
 from rest_framework.exceptions import PermissionDenied

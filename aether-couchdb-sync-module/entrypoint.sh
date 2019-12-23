@@ -120,15 +120,23 @@ function setup {
     # create system databases if missing (since CouchDB 2.X)
     ./manage.py setup_couchdb
 
-    STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
     # create static assets
-    ./manage.py collectstatic --noinput --clear --verbosity 0
-    chmod -R 755 ${STATIC_ROOT}
+    echo "Collecting static files..."
+
+    STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
+    mkdir -p $STATIC_ROOT
+
+    # cleaning local
+    local STATIC_DIR=/code/aether/sync/static
+    rm -r -f $STATIC_DIR && mkdir -p $STATIC_DIR
 
     # expose version number (if exists)
-    cp /var/tmp/VERSION ${STATIC_ROOT}/VERSION   2>/dev/null || true
+    cp /var/tmp/VERSION ${STATIC_DIR}/VERSION   2>/dev/null || true
     # add git revision (if exists)
-    cp /var/tmp/REVISION ${STATIC_ROOT}/REVISION 2>/dev/null || true
+    cp /var/tmp/REVISION ${STATIC_DIR}/REVISION 2>/dev/null || true
+
+    ./manage.py collectstatic --noinput --verbosity 0
+    chmod -R 755 ${STATIC_ROOT}
 }
 
 function start_worker {

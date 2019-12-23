@@ -40,6 +40,28 @@ class TestFilters(TestCase):
         self.user = get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
+    def test_project_filter__active(self):
+        url = reverse(viewname='project-list')
+        # Generate projects.
+        for _ in range(random.randint(2, 4)):
+            generate_project(project_field_values={'active': True})
+        for _ in range(random.randint(2, 4)):
+            generate_project(project_field_values={'active': False})
+
+        # active
+        active_count = models.Project.objects.filter(active=True).count()
+        self.assertTrue(active_count > 0)
+        kwargs = {'active': True, 'fields': 'id'}
+        response = json.loads(self.client.get(url, kwargs).content)
+        self.assertEqual(response['count'], active_count)
+
+        # inactive
+        inactive_count = models.Project.objects.filter(active=False).count()
+        self.assertTrue(inactive_count > 0)
+        kwargs = {'active': False, 'fields': 'id'}
+        response = json.loads(self.client.get(url, kwargs).content)
+        self.assertEqual(response['count'], inactive_count)
+
     def test_project_filter__by_schema(self):
         url = reverse(viewname='project-list')
         # Generate projects.
@@ -344,64 +366,6 @@ class TestFilters(TestCase):
             self.assertEqual(single_count, 1)
             self.assertEqual(count, (single_count + gt_count + lt_count))
 
-    def test_submission_filter__by_project(self):
-        url = reverse(viewname='submission-list')
-        # Generate projects.
-        for _ in range(random.randint(5, 10)):
-            generate_project()
-        submissions_count = models.Submission.objects.count()
-        # Get a list of all projects.
-        for project in models.Project.objects.all():
-            # Request a list of all submissions, filtered by `project`.
-            # This checks that SubmissionFilter.project exists and that
-            # SubmissionFilter has been correctly configured.
-            expected = set([str(s.id) for s in project.submissions.all()])
-
-            # by id
-            kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': submissions_count}
-            response = json.loads(self.client.get(url, kwargs).content)
-            # Check both sets of ids for equality.
-            self.assertEqual(response['count'], len(expected))
-            result_by_id = set([r['id'] for r in response['results']])
-            self.assertEqual(expected, result_by_id, 'by id')
-
-            # by name
-            kwargs = {'project': project.name, 'fields': 'id', 'page_size': submissions_count}
-            response = json.loads(self.client.get(url, kwargs).content)
-            # Check both sets of ids for equality.
-            self.assertEqual(response['count'], len(expected))
-            result_by_name = set([r['id'] for r in response['results']])
-            self.assertEqual(expected, result_by_name, 'by name')
-
-    def test_submission_filter__by_mappingset(self):
-        url = reverse(viewname='submission-list')
-        # Generate projects.
-        for _ in range(random.randint(5, 10)):
-            generate_project()
-        submissions_count = models.Submission.objects.count()
-        # Get a list of all mapping sets.
-        for mappingset in models.MappingSet.objects.all():
-            # Request a list of all submissions, filtered by `mappingset`.
-            # This checks that SubmissionFilter.mappingset exists and that
-            # SubmissionFilter has been correctly configured.
-            expected = set([str(e.id) for e in mappingset.submissions.all()])
-
-            # by id
-            kwargs = {'mappingset': str(mappingset.id), 'fields': 'id', 'page_size': submissions_count}
-            response = json.loads(self.client.get(url, kwargs).content)
-            # Check both sets of ids for equality.
-            self.assertEqual(response['count'], len(expected))
-            result_by_id = set([r['id'] for r in response['results']])
-            self.assertEqual(expected, result_by_id, 'by id')
-
-            # by name
-            kwargs = {'mappingset': mappingset.name, 'fields': 'id', 'page_size': submissions_count}
-            response = json.loads(self.client.get(url, kwargs).content)
-            # Check both sets of ids for equality.
-            self.assertEqual(response['count'], len(expected))
-            result_by_name = set([r['id'] for r in response['results']])
-            self.assertEqual(expected, result_by_name, 'by name')
-
     def test_mapping_filter__by_mappingset(self):
         url = reverse(viewname='mapping-list')
         # Generate projects.
@@ -501,6 +465,64 @@ class TestFilters(TestCase):
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result)
+
+    def test_submission_filter__by_project(self):
+        url = reverse(viewname='submission-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        submissions_count = models.Submission.objects.count()
+        # Get a list of all projects.
+        for project in models.Project.objects.all():
+            # Request a list of all submissions, filtered by `project`.
+            # This checks that SubmissionFilter.project exists and that
+            # SubmissionFilter has been correctly configured.
+            expected = set([str(s.id) for s in project.submissions.all()])
+
+            # by id
+            kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': submissions_count}
+            response = json.loads(self.client.get(url, kwargs).content)
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result_by_id = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result_by_id, 'by id')
+
+            # by name
+            kwargs = {'project': project.name, 'fields': 'id', 'page_size': submissions_count}
+            response = json.loads(self.client.get(url, kwargs).content)
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result_by_name = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result_by_name, 'by name')
+
+    def test_submission_filter__by_mappingset(self):
+        url = reverse(viewname='submission-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        submissions_count = models.Submission.objects.count()
+        # Get a list of all mapping sets.
+        for mappingset in models.MappingSet.objects.all():
+            # Request a list of all submissions, filtered by `mappingset`.
+            # This checks that SubmissionFilter.mappingset exists and that
+            # SubmissionFilter has been correctly configured.
+            expected = set([str(e.id) for e in mappingset.submissions.all()])
+
+            # by id
+            kwargs = {'mappingset': str(mappingset.id), 'fields': 'id', 'page_size': submissions_count}
+            response = json.loads(self.client.get(url, kwargs).content)
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result_by_id = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result_by_id, 'by id')
+
+            # by name
+            kwargs = {'mappingset': mappingset.name, 'fields': 'id', 'page_size': submissions_count}
+            response = json.loads(self.client.get(url, kwargs).content)
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result_by_name = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result_by_name, 'by name')
 
     def test_submission_filter__by_date(self):
         for _ in range(random.randint(5, 10)):
@@ -605,3 +627,33 @@ class TestFilters(TestCase):
             'payload__a': '[1',  # raise json.decoder.JSONDecodeError
         })
         self.assertEqual(json.loads(response.content)['count'], submissions_count)
+
+    def test_attachment_filter__by_project(self):
+        url = reverse(viewname='attachment-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project(include_attachments=True)
+        attachments_count = models.Attachment.objects.count()
+        self.assertNotEqual(attachments_count, 0, ' There is at least one attachment')
+
+        # Get a list of all projects.
+        for project in models.Project.objects.all():
+            expected = set([
+                str(a.id)
+                for a in models.Attachment.objects.filter(submission__project__pk=project.pk)
+            ])
+            # by id
+            kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': attachments_count}
+            response = json.loads(self.client.get(url, kwargs).content)
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+            # by name
+            kwargs = {'project': project.name, 'fields': 'id', 'page_size': attachments_count}
+            response = json.loads(self.client.get(url, kwargs).content)
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)

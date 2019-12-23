@@ -31,7 +31,7 @@ from openpyxl import Workbook
 from django.conf import settings
 from django.db.models import F
 from django.http import FileResponse
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response

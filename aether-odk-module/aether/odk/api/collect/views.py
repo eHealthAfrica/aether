@@ -29,9 +29,10 @@ import logging
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.timezone import now
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import status
 from rest_framework.decorators import (
@@ -68,6 +69,7 @@ from .authentication import CollectAuthentication
 
 OPEN_ROSA_HEADERS = {'X-OpenRosa-Version': '1.0'}
 
+NATURE_FETCH_ERROR = 'fetch_error'
 NATURE_SUBMIT_SUCCESS = 'submit_success'
 NATURE_SUBMIT_ERROR = 'submit_error'
 
@@ -134,6 +136,9 @@ MSG_SUBMISSION_SUBMIT_SUCCESS_ID = _(
 MSG_401_UNAUTHORIZED = _(
     'You do not have authorization to access this instance.'
 )
+MSG_INSTANCE_INACTIVE = _(
+    'This xForm "{form_id}" is no longer active.'
+)
 
 
 logger = logging.getLogger(__name__)
@@ -176,6 +181,27 @@ def _get_xforms(request):
     return filter_by_realm(request, XForm.objects.all(), 'project')
 
 
+def _send_response(request, nature, message, status):
+    xml_content = get_template(template_name='openRosaResponse.xml').render({
+        'nature': nature,
+        'message': message,
+    })
+
+    http_response = HttpResponse(
+        content=xml_content,
+        status=status,
+        content_type='text/xml',
+    )
+    headers = {
+        'User': request.user.username,
+        'Date': str(now()),
+        **OPEN_ROSA_HEADERS
+    }
+    for k, v in headers.items():
+        http_response[k] = v
+    return http_response
+
+
 class IsAuthenticatedAndSurveyor(IsAuthenticated):
     '''
     Allows access only to surveyor users.
@@ -198,7 +224,7 @@ def xform_list(request, *args, **kwargs):
 
     '''
 
-    xforms = _get_xforms(request)
+    xforms = _get_xforms(request).filter(project__active=True, active=True)
     formID = request.query_params.get('formID')
     if formID:
         xforms = xforms.filter(form_id=formID)
@@ -232,6 +258,14 @@ def xform_get_download(request, pk, *args, **kwargs):
     '''
 
     xform = _get_instance(request, XForm, pk=pk)
+    if not xform.is_active():
+        return _send_response(
+            request=request,
+            nature=NATURE_FETCH_ERROR,
+            message=MSG_INSTANCE_INACTIVE.format(form_id=xform.form_id),
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
     version = request.query_params.get('version', '0')
     # check provided version with current one
     if version < xform.version:
@@ -259,6 +293,13 @@ def media_file_get_content(request, pk, *args, **kwargs):
     '''
 
     media = _get_instance(request, MediaFile, pk=pk)
+    if not media.is_active():
+        return _send_response(
+            request=request,
+            nature=NATURE_FETCH_ERROR,
+            message=MSG_INSTANCE_INACTIVE.format(form_id=media.xform.form_id),
+            status=status.HTTP_404_NOT_FOUND,
+        )
     return media.get_content(as_attachment=True)
 
 
@@ -275,6 +316,14 @@ def xform_get_manifest(request, pk, *args, **kwargs):
     '''
 
     xform = _get_instance(request, XForm, pk=pk)
+    if not xform.is_active():
+        return _send_response(
+            request=request,
+            nature=NATURE_FETCH_ERROR,
+            message=MSG_INSTANCE_INACTIVE.format(form_id=xform.form_id),
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
     version = request.query_params.get('version', '0')
     # check provided version with current one
     if version < xform.version:
@@ -324,7 +373,7 @@ def xform_submission(request, *args, **kwargs):
        This check is part of the OpenRosa spec.
        Otherwise responds with a 422 (unprocessable entity) status code.
 
-    5. Checks if the xForm linked to the request exists in Aether ODK.
+    5. Checks if the xForm linked to the request exists and is active in Aether ODK.
        Otherwise responds with a 404 (not found) status code.
 
     6. Checks if the request user is a granted surveyor of the xForm.
@@ -374,22 +423,10 @@ def xform_submission(request, *args, **kwargs):
                 headers=auth_header,
             )
 
-    def _respond(nature, message, status):
-        return Response(
-            data={'nature': nature, 'message': message},
-            status=status,
-            template_name='openRosaResponse.xml',
-            content_type='text/xml',
-            headers={
-                'User': request.user.username,
-                'Date': str(now()),
-                **OPEN_ROSA_HEADERS
-            },
-        )
-
     # first of all check if the connection is possible
     if not check_kernel_connection():
-        return _respond(
+        return _send_response(
+            request=request,
             nature=NATURE_SUBMIT_ERROR,
             message=MSG_KERNEL_CONNECTION_ERR,
             status=status.HTTP_424_FAILED_DEPENDENCY,
@@ -406,7 +443,8 @@ def xform_submission(request, *args, **kwargs):
         # missing submitted data
         msg = MSG_SUBMISSION_MISSING_DATA_ERR
         logger.warning(msg)
-        return _respond(
+        return _send_response(
+            request=request,
             nature=NATURE_SUBMIT_ERROR,
             message=msg,
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -420,7 +458,8 @@ def xform_submission(request, *args, **kwargs):
         msg = MSG_SUBMISSION_FILE_ERR
         logger.warning(msg)
         logger.error(str(e))
-        return _respond(
+        return _send_response(
+            request=request,
             nature=NATURE_SUBMIT_ERROR,
             message=msg + '\n' + str(e),
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -441,7 +480,8 @@ def xform_submission(request, *args, **kwargs):
     if not instance_id:
         msg = MSG_SUBMISSION_MISSING_INSTANCE_ID_ERR
         logger.warning(msg)
-        return _respond(
+        return _send_response(
+            request=request,
             nature=NATURE_SUBMIT_ERROR,
             message=msg,
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -452,7 +492,19 @@ def xform_submission(request, *args, **kwargs):
     if not xforms.exists():
         msg = MSG_SUBMISSION_XFORM_NOT_FOUND_ERR.format(form_id=form_id)
         logger.error(msg)
-        return _respond(
+        return _send_response(
+            request=request,
+            nature=NATURE_SUBMIT_ERROR,
+            message=msg,
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    # check that there is at least one active xForm instance
+    xforms = xforms.filter(project__active=True, active=True)
+    if not xforms.exists():
+        msg = MSG_INSTANCE_INACTIVE.format(form_id=form_id)
+        logger.error(msg)
+        return _send_response(
+            request=request,
             nature=NATURE_SUBMIT_ERROR,
             message=msg,
             status=status.HTTP_404_NOT_FOUND,
@@ -469,7 +521,8 @@ def xform_submission(request, *args, **kwargs):
     if not xform:
         msg = MSG_SUBMISSION_XFORM_UNAUTHORIZED_ERR.format(form_id=form_id)
         logger.error(msg)
-        return _respond(
+        return _send_response(
+            request=request,
             nature=NATURE_SUBMIT_ERROR,
             message=msg,
             status=status.HTTP_401_UNAUTHORIZED,
@@ -490,7 +543,8 @@ def xform_submission(request, *args, **kwargs):
         msg = MSG_SUBMISSION_KERNEL_ARTEFACTS_ERR.format(form_id=form_id)
         logger.warning(msg)
         logger.error(str(kpe))
-        return _respond(
+        return _send_response(
+            request=request,
             nature=NATURE_SUBMIT_ERROR,
             message=msg + '\n' + str(kpe),
             status=status.HTTP_424_FAILED_DEPENDENCY,
@@ -532,7 +586,8 @@ def xform_submission(request, *args, **kwargs):
                 msg = MSG_SUBMISSION_KERNEL_SUBMIT_ERR.format(status=response.status_code, form_id=form_id)
                 logger.warning(msg)
                 logger.warning(submission_content)
-                return _respond(
+                return _send_response(
+                    request=request,
                     nature=NATURE_SUBMIT_ERROR,
                     message=msg + '\n' + submission_content,
                     status=response.status_code,
@@ -579,7 +634,8 @@ def xform_submission(request, *args, **kwargs):
                     # delete submission and return error
                     _rollback_submission(submission_id)
 
-                    return _respond(
+                    return _send_response(
+                        request=request,
                         nature=NATURE_SUBMIT_ERROR,
                         message=msg + '\n' + attachment_content,
                         status=response.status_code,
@@ -588,7 +644,8 @@ def xform_submission(request, *args, **kwargs):
         msg = MSG_SUBMISSION_SUBMIT_SUCCESS_ID.format(instance=instance_id, id=submission_id)
         logger.info(msg)
 
-        return _respond(
+        return _send_response(
+            request=request,
             nature=NATURE_SUBMIT_SUCCESS,
             message=MSG_SUBMISSION_SUBMIT_SUCCESS.format(form_id=form_id),
             status=status.HTTP_201_CREATED,
@@ -603,7 +660,8 @@ def xform_submission(request, *args, **kwargs):
         _rollback_submission(submission_id)
 
         # something went wrong... just send an 400 error
-        return _respond(
+        return _send_response(
+            request=request,
             nature=NATURE_SUBMIT_ERROR,
             message=msg + '\n' + str(e),
             status=status.HTTP_400_BAD_REQUEST,

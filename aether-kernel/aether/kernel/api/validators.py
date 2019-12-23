@@ -23,14 +23,16 @@ from django.utils.translation import ugettext as _
 from .redis import in_same_project_and_cache
 
 
-def wrapper_validate_avro_schema(data):
-    try:
-        return validators.validate_avro_schema(data)
-    except exceptions.ValidationError as ve:
-        raise ValidationError(ve.message)
-
-
 def wrapper_validate_schemas(data):
+    '''
+    Used to validate:
+    - the Entity definitions in the ``validate_mappings_view`` view.
+
+    Checks that each entity definition:
+    - is a valid AVRO schema and,
+    - is of type "record" and,
+    - contains a top-level field "id" of type "string".
+    '''
     try:
         return validators.validate_schemas(data)
     except exceptions.ValidationError as ve:
@@ -38,6 +40,11 @@ def wrapper_validate_schemas(data):
 
 
 def wrapper_validate_mapping_definition(data):
+    '''
+    Used to validate:
+    - the mapping rules in the ``validate_mappings_view`` view.
+    - the mapping rules in the Mapping instances.
+    '''
     try:
         return validators.validate_mapping_definition(data)
     except exceptions.ValidationError as ve:
@@ -45,10 +52,34 @@ def wrapper_validate_mapping_definition(data):
 
 
 def wrapper_validate_schema_definition(data):
+    '''
+    Used to validate:
+    - the AVRO schema definition in the Schema instances.
+
+    Checks that the schema definition:
+    - is a valid AVRO schema and,
+    - is of type "record" and,
+    - contains a top-level field "id" of type "string".
+    '''
     try:
         return validators.validate_schema_definition(data)
     except exceptions.ValidationError as ve:
         raise ValidationError(ve)
+
+
+def wrapper_validate_schema_input_definition(data):
+    '''
+    Used to validate:
+    - the AVRO schema derived from an input in the Mapping Set instances.
+
+    Checks that the schema definition:
+    - is a valid AVRO schema and,
+    - is of type "record".
+    '''
+    try:
+        return validators.validate_schema_input_definition(data)
+    except exceptions.ValidationError as ve:
+        raise ValidationError(ve.message)
 
 
 def validate_entity_project(validated_data):
