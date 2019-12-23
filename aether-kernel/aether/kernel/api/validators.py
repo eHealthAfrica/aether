@@ -23,13 +23,6 @@ from django.utils.translation import ugettext as _
 from .redis import in_same_project_and_cache
 
 
-def wrapper_validate_avro_schema(data):
-    try:
-        return validators.validate_avro_schema(data)
-    except exceptions.ValidationError as ve:
-        raise ValidationError(ve.message)
-
-
 def wrapper_validate_schemas(data):
     '''
     Used to validate:
