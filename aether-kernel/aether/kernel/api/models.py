@@ -37,12 +37,12 @@ from aether.python.exceptions import ValidationError as AetherValidationError
 from aether.python.validators import validate_entity_payload
 
 from .constants import NAMESPACE
-from .validators import (
-    wrapper_validate_schema_definition,
-    wrapper_validate_mapping_definition,
-    wrapper_validate_schema_input_definition
-)
 from .utils import send_model_item_to_redis
+from .validators import (
+    wrapper_validate_mapping_definition,
+    wrapper_validate_schema_definition,
+    wrapper_validate_schema_input_definition,
+)
 
 
 ENTITY_STATUS_CHOICES = (

@@ -67,6 +67,21 @@ def wrapper_validate_schema_definition(data):
         raise ValidationError(ve)
 
 
+def wrapper_validate_schema_input_definition(data):
+    '''
+    Used to validate:
+    - the AVRO schema derived from an input in the Mapping Set instances.
+
+    Checks that the schema definition:
+    - is a valid AVRO schema and,
+    - is of type "record".
+    '''
+    try:
+        return validators.validate_schema_input_definition(data)
+    except exceptions.ValidationError as ve:
+        raise ValidationError(ve.message)
+
+
 def validate_entity_project(validated_data):
     from .models import Project
 
