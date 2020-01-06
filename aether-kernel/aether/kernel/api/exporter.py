@@ -504,19 +504,13 @@ class ExporterMixin():
 
 
 def execute_records_task(task_id):
-    reset_connection()
+    def __exec(task_id):
+        task = ExportTask.objects.get(pk=task_id)
+        dialect_name = None
 
-    if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
-        return
+        try:
+            dialect_name = f'aether_custom_{str(task.id)}'
 
-    task = ExportTask.objects.get(pk=task_id)
-    dialect_name = None
-
-    try:
-        dialect_name = f'aether_custom_{str(task.id)}'
-
-        # temporary directory to keep the generated files
-        with tempfile.TemporaryDirectory() as temp_dir:
             _settings = task.settings['records']
 
             # register CSV dialect for the given options
@@ -537,35 +531,51 @@ def execute_records_task(task_id):
 
             logger.info(f'Preparing {_file_format} file: offset {_offset}, limit {_limit}')
             logger.info(str(_settings['export_options']))
-            file_name, file_path = generate_file(
-                temp_dir=temp_dir,
-                data=_settings['query'],
-                file_format=_file_format,
-                filename=_settings['filename'],
-                paths=_settings['paths'],
-                labels=_settings['labels'],
-                offset=_offset,
-                limit=_limit,
-                options=_settings['export_options'],
-                dialect=dialect_name,
-            )
-            logger.info(f'File "{file_name}" ready!')
 
-            with open(file_path, 'rb') as f:
-                export_file = ExportTaskFile(task=task)
-                export_file.file.save(file_name, File(f))
-                export_file.size = os.path.getsize(file_path)
-                export_file.save()
+            # temporary directory to keep the generated files
+            with tempfile.TemporaryDirectory() as temp_dir:
+                file_name, file_path = generate_file(
+                    temp_dir=temp_dir,
+                    data=_settings['query'],
+                    file_format=_file_format,
+                    filename=_settings['filename'],
+                    paths=_settings['paths'],
+                    labels=_settings['labels'],
+                    offset=_offset,
+                    limit=_limit,
+                    options=_settings['export_options'],
+                    dialect=dialect_name,
+                )
+                logger.info(f'File "{file_name}" ready!')
+
+                with open(file_path, 'rb') as f:
+                    export_file = ExportTaskFile(task=task)
+                    export_file.file.save(file_name, File(f))
+                    export_file.size = os.path.getsize(file_path)
+                    export_file.save()
 
             task.set_status_records('DONE')
 
-    except Exception as e:
-        logger.error(f'Got an error while generating records file: {str(e)}')
-        task.set_error_records(str(e))
+        except Exception as e:
+            logger.error(f'Got an error while generating records file: {str(e)}')
+            task.set_error_records(str(e))
 
-    finally:  # pragma: no cover
         if dialect_name:
             csv.unregister_dialect(dialect_name)
+
+    reset_connection()
+
+    # execute in another thread to check if the task was deleted
+    # (allow us to kill it instead of waiting for its conclusion)
+    p = Process(target=__exec, args=(task_id,))
+    p.start()
+
+    while p.is_alive():
+        if not ExportTask.objects.filter(pk=task_id).exists():
+            p.kill()
+        time.sleep(.1)  # wait
+
+    p.close()
 
 
 def execute_attachments_task(task_id):
@@ -607,7 +617,7 @@ def execute_attachments_task(task_id):
 
     reset_connection()
 
-    if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
+    if not ExportTask.objects.filter(pk=task_id).exists():
         return
 
     task = ExportTask.objects.get(pk=task_id)

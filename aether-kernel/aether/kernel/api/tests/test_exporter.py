@@ -49,6 +49,8 @@ from aether.kernel.api.exporter import (
     __get_label as get_label,
 
     generate_file as generate,
+    execute_records_task,
+    execute_attachments_task,
     CSV_FORMAT,
     XLSX_FORMAT,
 )
@@ -743,6 +745,23 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.files.count(), 0)
         self.assertEqual(models.ExportTask.objects.count(), 1)
 
+    def test_submissions_export__error__deleted_task(self):
+        def my_side_effect(task_id):
+            # let's remove the task and execute the real method
+            models.ExportTask.objects.filter(pk=task_id).delete()
+            execute_records_task(task_id)
+
+        with mock.patch(
+            'aether.kernel.api.exporter.execute_records_task',
+            side_effect=my_side_effect,
+        ):
+            response = self.client.get(reverse('submission-xlsx'))
+
+        self.assertEqual(response.status_code, 500)
+        data = response.json()['detail']
+        self.assertIn('Got an error while creating the file', data)
+        self.assertEqual(models.ExportTask.objects.count(), 0)
+
     @mock.patch(
         'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
@@ -1002,7 +1021,7 @@ class ExporterViewsTest(TestCase):
                 return requests.request(*args, **kwargs)  # real method
             else:
                 # there is going to be an unexpected error while fetch file "b.txt"
-                raise ConnectionResetError('[Errno 104] Connection reset by peer')
+                raise RuntimeError('Being evil')
 
         models.Attachment.objects.create(
             submission=models.Submission.objects.first(),
@@ -1032,7 +1051,7 @@ class ExporterViewsTest(TestCase):
         self.assertIsNone(task.status_records)
         self.assertIsNone(task.error_records)
         self.assertEqual(task.status_attachments, 'ERROR')
-        self.assertEqual(task.error_attachments, '[Errno 104] Connection reset by peer')
+        self.assertEqual(task.error_attachments, 'Being evil')
         self.assertEqual(task.files.count(), 0)
         self.assertIsNone(task.revision)
 
@@ -1061,6 +1080,26 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.error_attachments, 'Zip too big!!!')
         self.assertEqual(task.files.count(), 0)
         self.assertIsNone(task.revision)
+
+    def test_entities_export__attachments__deleted_task(self):
+        def my_side_effect(task_id):
+            # let's remove the task and execute the real method
+            models.ExportTask.objects.filter(pk=task_id).delete()
+            execute_attachments_task(task_id)
+
+        models.Attachment.objects.create(
+            submission=models.Submission.objects.first(),
+            attachment_file=SimpleUploadedFile('a.txt', b'123'),
+        )
+
+        with mock.patch(
+            'aether.kernel.api.exporter.execute_attachments_task',
+            side_effect=my_side_effect,
+        ):
+            response = self.client.post(reverse('entity-csv') + '?generate_attachments=t')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(models.ExportTask.objects.count(), 0)
 
     def test_entities_export__attachments(self):
         submission = models.Submission.objects.first()
