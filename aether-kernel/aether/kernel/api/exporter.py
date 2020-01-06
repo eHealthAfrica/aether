@@ -175,6 +175,9 @@ class ExporterMixin():
     def __get(self, request, name, default=None):
         return request.query_params.get(name, dict(request.data).get(name, default))
 
+    def __get_bool(self, request, name):
+        return self.__get(request, name, '').lower() in ['true', 't']
+
     def __export(self, request, file_format=CSV_FORMAT):
         '''
         Expected parameters:
@@ -358,11 +361,11 @@ class ExporterMixin():
             'attachments': {},
         }
 
-        generate_attachments = self.__get(request, 'generate_attachments', 'false').lower()
+        generate_attachments = self.__get_bool(request, 'generate_attachments')
         generate_attachments = (
+            generate_attachments and
             self.attachment_field and
-            self.attachment_parent_field and
-            generate_attachments in ['true', 't']
+            self.attachment_parent_field
         )
         if (
             generate_attachments and
@@ -378,8 +381,7 @@ class ExporterMixin():
                 'parent_field': self.attachment_parent_field,
             }
 
-        generate_records = self.__get(request, 'generate_records', 'false').lower()
-        generate_records = not generate_attachments or generate_records in ['true', 't']
+        generate_records = not generate_attachments or self.__get_bool(request, 'generate_records')
         if generate_records:
             data = queryset.annotate(**{EXPORT_FIELD_DATA: F(self.json_field)}) \
                            .values(EXPORT_FIELD_ID, EXPORT_FIELD_DATA)
@@ -456,43 +458,53 @@ class ExporterMixin():
             status_records='INIT' if export_settings['records'] else None,
             status_attachments='INIT' if export_settings['attachments'] else None,
         )
+        task_id = task.pk
+
+        # start download subprocess(-es) and return task id
+        processes = []
+        if generate_records:
+            processes.append(
+                Process(target=execute_records_task, args=(task_id,))
+            )
+
+        if export_settings['attachments']:
+            processes.append(
+                Process(target=execute_attachments_task, args=(task_id,))
+            )
+
+        for p in processes:
+            p.start()
 
         # always execute export in background if it generates the attachment files
-        in_background = self.__get(request, 'background', 'false').lower() in ['true', 't']
-        if in_background or export_settings['attachments']:
-            # start download subprocess(-es) and return task id
+        if export_settings['attachments'] or self.__get_bool(request, 'background'):
+            try:
+                return Response(data={'task': str(task_id)})
+            finally:  # pragma: no cover
+                if settings.TESTING:
+                    for p in processes:
+                        p.join()
+                        p.close()
 
-            processes = []
-            if generate_records:
-                processes.append(
-                    Process(target=execute_records_task, args=(task.pk,))
-                )
+        # from this point only records download expected
+        err_msg = _('Got an error while creating the file')
 
-            if export_settings['attachments']:
-                processes.append(
-                    Process(target=execute_attachments_task, args=(task.pk,))
-                )
+        for p in processes:
+            p.join()   # join to main thread
+            p.close()  # release resources
 
-            for p in processes:
-                p.start()
-                # join the process to the main thread to pass the tests
-                if settings.TESTING:  # pragma: no cover
-                    p.join()
-
-            return Response(data={'task': str(task.pk)})
-
-        try:
-            execute_records_task(task.pk, dettached=False)
-            return task.files.first().get_content(as_attachment=True)
-
-        except IOError as e:
-            msg = _('Got an error while creating the file: {error}').format(error=str(e))
-            return Response(data={'detail': msg}, status=500)
-
-
-def execute_records_task(task_id, dettached=True):
-    if dettached:
         reset_connection()
+        if ExportTask.objects.filter(pk=task_id).exists():
+            task = ExportTask.objects.get(pk=task_id)
+            if task.status_records == 'DONE':
+                return task.files.first().get_content(as_attachment=True)
+            if task.error_records:
+                return Response(data={'detail': err_msg + ': ' + task.error_records}, status=500)
+
+        return Response(data={'detail': err_msg}, status=500)
+
+
+def execute_records_task(task_id):
+    reset_connection()
 
     if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
         return
@@ -550,8 +562,6 @@ def execute_records_task(task_id, dettached=True):
     except Exception as e:
         logger.error(f'Got an error while generating records file: {str(e)}')
         task.set_error_records(str(e))
-        if not dettached:
-            raise
 
     finally:  # pragma: no cover
         if dialect_name:
