@@ -18,15 +18,31 @@
  * under the License.
  */
 
-// sass-lint:disable no-url-domains no-url-protocols
+import React, { Component } from 'react'
+import onClickOutside from 'react-onclickoutside'
 
-/* Google Fonts */
-@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,400i,600');
-@import url('https://fonts.googleapis.com/css?family=Fira+Mono');
+class ModalDialog extends Component {
+  handleClickOutside () {
+    const { handleClickOutside: handler } = this.props
+    if (handler) handler()
+  }
 
+  render () {
+    const { header, children, buttons } = this.props
+    return (
+      <div className='modal-dialog'>
+        <div className='modal-header'>
+          <span className='modal-title'>{header}</span>
+        </div>
 
-/* Font Awesome 5  https://fontawesome.com/ */
-@import url('https://use.fontawesome.com/releases/v5.12.0/css/fontawesome.css');
-@import url('https://use.fontawesome.com/releases/v5.12.0/css/solid.css');
+        <div className='modal-content'>
+          {children}
 
-// sass-lint:disable no-url-domains no-url-protocols
+          <div className='modal-actions'>{buttons}</div>
+        </div>
+      </div>
+    )
+  }
+}
+
+export default onClickOutside(ModalDialog)

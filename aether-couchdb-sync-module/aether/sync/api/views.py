@@ -20,7 +20,7 @@ import logging
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.views.decorators.csrf import csrf_exempt
 
 from oauth2client import client, crypt
