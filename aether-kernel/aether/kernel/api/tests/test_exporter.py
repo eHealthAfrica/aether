@@ -315,7 +315,7 @@ class ExporterTest(TestCase):
         self.assertEqual(get_label('x.y.a.z', labels), 'X / Y / A / Z')
 
 
-@tag('noparallel')
+@tag('nonparallel')
 @override_settings(MULTITENANCY=False)
 class ExporterViewsTest(TestCase):
 

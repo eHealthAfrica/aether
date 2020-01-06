@@ -628,7 +628,7 @@ class TestFilters(TestCase):
         })
         self.assertEqual(json.loads(response.content)['count'], submissions_count)
 
-    @tag('noparallel')
+    @tag('nonparallel')
     def test_attachment_filter__by_project(self):
         url = reverse(viewname='attachment-list')
         # Generate projects.

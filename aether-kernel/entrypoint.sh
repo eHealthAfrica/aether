@@ -145,7 +145,7 @@ function test_coverage {
         --parallel-mode \
         manage.py test \
         --parallel ${TEST_PARALLEL:-} \
-        --exclude-tag=noparallel \
+        --exclude-tag=nonparallel \
         --noinput \
         "${@:1}"
 
@@ -154,7 +154,7 @@ function test_coverage {
         --concurrency=multiprocessing \
         --parallel-mode \
         manage.py test \
-        --tag=noparallel \
+        --tag=nonparallel \
         --noinput \
         "${@:1}"
 
