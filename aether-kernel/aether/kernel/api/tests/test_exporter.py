@@ -1013,7 +1013,7 @@ class ExporterViewsTest(TestCase):
 
         self.assertEqual(models.ExportTask.objects.count(), 0)
 
-    @mock.patch('aether.kernel.api.exporter.cpu_count', return_value=1)  # creates 3 processes
+    @override_settings(EXPORT_NUM_CHUNKS=1)  # creates 3 processes
     def test_entities_export__attachments__error(self, *args):
         def my_side_effect(*args, **kwargs):
             if not kwargs['url'].endswith('/b.txt'):

@@ -76,6 +76,13 @@ EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN').lower()
 if EXPORT_HEADER_SHORTEN != 'yes':
     EXPORT_HEADER_SHORTEN = 'no'
 
+try:
+    EXPORT_NUM_CHUNKS = int(os.environ.get('EXPORT_NUM_CHUNKS', 4))
+except ValueError:
+    EXPORT_NUM_CHUNKS = 4
+if EXPORT_NUM_CHUNKS < 1:
+    EXPORT_NUM_CHUNKS = 1
+
 
 # Profiling workaround
 # ------------------------------------------------------------------------------

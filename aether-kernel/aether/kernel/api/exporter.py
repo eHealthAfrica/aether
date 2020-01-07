@@ -27,7 +27,7 @@ import tempfile
 import time
 import zipfile
 
-from multiprocessing import Process, cpu_count
+from multiprocessing import Process
 from openpyxl import Workbook
 
 from django.conf import settings
@@ -450,30 +450,42 @@ class ExporterMixin():
             return Response(status=204)  # NO-CONTENT
 
         # create task with all need data
-        task = ExportTask.objects.create(
+        task_id = ExportTask.objects.create(
             name=filename,
             created_by=request.user,
             project=project,
             settings=export_settings,
             status_records='INIT' if export_settings['records'] else None,
             status_attachments='INIT' if export_settings['attachments'] else None,
-        )
-        task_id = task.pk
+        ).pk
 
         # start download subprocess(-es) and return task id
         processes = []
         if generate_records:
             processes.append(
-                Process(target=execute_records_task, args=(task_id,))
+                Process(
+                    target=execute_records_task,
+                    args=(task_id,),
+                    name=f'task-records:{task_id}',
+                )
             )
 
         if export_settings['attachments']:
             processes.append(
-                Process(target=execute_attachments_task, args=(task_id,))
+                Process(
+                    target=execute_attachments_task,
+                    args=(task_id,),
+                    name=f'task-attachments:{task_id}',
+                )
             )
 
         for p in processes:
             p.start()
+
+        # ----------------------------------------------------------------------
+        # Backward compatibility
+        # In release 2.0 all the export requests will be executed in background
+        # ----------------------------------------------------------------------
 
         # always execute export in background if it generates the attachment files
         if export_settings['attachments'] or self.__get_bool(request, 'background'):
@@ -500,7 +512,7 @@ class ExporterMixin():
             if task.error_records:
                 return Response(data={'detail': err_msg + ': ' + task.error_records}, status=500)
 
-        return Response(data={'detail': err_msg}, status=500)
+        return Response(data={'detail': err_msg}, status=500)  # pragma: no cover
 
 
 def execute_records_task(task_id):
@@ -560,14 +572,14 @@ def execute_records_task(task_id):
             logger.error(f'Got an error while generating records file: {str(e)}')
             task.set_error_records(str(e))
 
-        if dialect_name:
+        if dialect_name:  # pragma: no cover
             csv.unregister_dialect(dialect_name)
 
     reset_connection()
 
     # execute in another thread to check if the task was deleted
     # (allow us to kill it instead of waiting for its conclusion)
-    p = Process(target=__exec, args=(task_id,))
+    p = Process(target=__exec, args=(task_id,), name=f'task-records:{task_id}:0')
     p.start()
 
     while p.is_alive():
@@ -601,7 +613,8 @@ def execute_attachments_task(task_id):
                             _directory = f'{temp_dir}/files/{_parent_id}'
                             os.makedirs(_directory, exist_ok=True)
 
-                            # Get the attachments list, download their content from the storage
+                            # Get the attachments list,
+                            # download their content from the storage
                             for _attachment in _attachments.distinct():
                                 _aname = _attachment.name.split('/')[-1]
                                 with open(f'{_directory}/{_aname}', 'wb') as _file:
@@ -613,7 +626,7 @@ def execute_attachments_task(task_id):
         except Exception as e:
             logger.error(f'Got an error while generating attachments file: {str(e)}')
             task.set_error_attachments(str(e))
-            raise
+            raise  # required to force exitcode != 0
 
     reset_connection()
 
@@ -641,16 +654,20 @@ def execute_attachments_task(task_id):
             task.set_status_attachments('0%')
             logger.info(f'Preparing attachments file: offset {offset}, limit {limit}')
 
-            # divide the task based on the number of CPUs
-            num_chunks = min(1, cpu_count() / 2)
-            chunk_size = (limit - offset) / num_chunks
+            chunk_size = min(1, int((limit - offset) / settings.EXPORT_NUM_CHUNKS)) or 1
 
             processes = []
             data_from = offset
             while data_from < limit:
                 data_to = min(data_from + chunk_size, limit)
                 # download in parallel
-                processes.append(Process(target=_fetch_attachs, args=(data_from, data_to,)))
+                processes.append(
+                    Process(
+                        target=_fetch_attachs,
+                        args=(data_from, data_to,),
+                        name=f'task-attachments:{task_id}:{data_from}:{data_to}',
+                    )
+                )
                 data_from = data_to  # next
 
             reset_connection()
