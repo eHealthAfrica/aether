@@ -653,7 +653,7 @@ def execute_attachments_task(task_id):
             task.set_status_attachments('0%')
             logger.info(f'Preparing attachments file: offset {offset}, limit {limit}')
 
-            chunk_size = min(1, int((limit - offset) / settings.EXPORT_NUM_CHUNKS)) or 1
+            chunk_size = max(1, int((limit - offset) / settings.EXPORT_NUM_CHUNKS))
 
             processes = []
             data_from = offset
