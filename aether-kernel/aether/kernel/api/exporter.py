@@ -489,13 +489,12 @@ class ExporterMixin():
 
         # always execute export in background if it generates the attachment files
         if export_settings['attachments'] or self.__get_bool(request, 'background'):
-            try:
-                return Response(data={'task': str(task_id)})
-            finally:  # pragma: no cover
-                if settings.TESTING:
-                    for p in processes:
-                        p.join()
-                        p.close()
+            if settings.TESTING:  # pragma: no cover
+                for p in processes:
+                    p.join()
+                    p.close()
+
+            return Response(data={'task': str(task_id)})
 
         # from this point only records download expected
         err_msg = _('Got an error while creating the file')
