@@ -27,7 +27,7 @@ import tempfile
 import time
 import zipfile
 
-from multiprocessing import Process
+from multiprocessing import Process, Value
 from openpyxl import Workbook
 
 from django.conf import settings
@@ -590,18 +590,18 @@ def execute_records_task(task_id):
 
 
 def execute_attachments_task(task_id):
-    def _fetch_attachs(_start, _stop):
+    def _fetch_attachs(_start, _stop, counter):
         try:
             logger.debug(f'Downloading attachments from {_start} to {_stop}')
 
-            # get parent ids
             with connection.cursor() as cursor:
 
                 data_from = _start
                 while data_from < _stop:
-                    data_to = min(data_from + RECORDS_PAGE_SIZE, _stop)
+                    data_to = min(data_from + ATTACHMENTS_PAGE_SIZE, _stop)
                     logger.debug(f'Downloading attachments {data_from} to {data_to}')
 
+                    # get parent ids
                     cursor.execute(f'{sql} OFFSET {data_from} LIMIT {data_to - data_from}')
                     _parent_ids = set([_row[0] for _row in cursor.fetchall()])
 
@@ -618,6 +618,9 @@ def execute_attachments_task(task_id):
                                 _aname = _attachment.name.split('/')[-1]
                                 with open(f'{_directory}/{_aname}', 'wb') as _file:
                                     _file.write(_attachment.get_content().getvalue())
+
+                        with counter.get_lock():
+                            counter.value += 1
 
                     # next iteration
                     data_from = data_to
@@ -645,17 +648,20 @@ def execute_attachments_task(task_id):
             # to match the "records" file content with this.
             offset = task.settings['offset']
             limit = task.settings['limit']
+            total = limit - offset
 
             filename = _settings['filename']
             sql = _settings['query']
             parent_field = _settings['parent_field']
 
-            task.set_status_attachments('0%')
+            task.set_status_attachments('WIP')
             logger.info(f'Preparing attachments file: offset {offset}, limit {limit}')
 
-            chunk_size = max(1, int((limit - offset) / settings.EXPORT_NUM_CHUNKS))
+            chunk_size = max(1, int(total / settings.EXPORT_NUM_CHUNKS))
 
             processes = []
+            counter = Value('i', 0)
+
             data_from = offset
             while data_from < limit:
                 data_to = min(data_from + chunk_size, limit)
@@ -663,7 +669,7 @@ def execute_attachments_task(task_id):
                 processes.append(
                     Process(
                         target=_fetch_attachs,
-                        args=(data_from, data_to,),
+                        args=(data_from, data_to, counter,),
                         name=f'task-attachments:{task_id}:{data_from}:{data_to}',
                     )
                 )
@@ -685,8 +691,8 @@ def execute_attachments_task(task_id):
                     for p in processes:
                         p.kill()
                 else:
-                    finished = [p for p in processes if not p.is_alive()]
-                    task.set_status_attachments('{:.0%}'.format(len(finished) / len(processes)))
+                    value = counter.value / total
+                    task.set_status_attachments(f'{value:.0%}')
                 time.sleep(.1)  # wait
 
             failure = any(map(lambda x: x.exitcode != 0, processes))
@@ -696,10 +702,10 @@ def execute_attachments_task(task_id):
                 return
 
             reset_connection()
-            task.set_status_attachments('100%')  # indicate percentage
             logger.debug('All attachments downloaded!')
 
             # create zip with attachments and add to task files
+            task.set_status_attachments('ZIP…')
             zip_ext = 'zip'
             zip_name = f'{filename}-{datetime.now().isoformat()}'
             zip_path = shutil.make_archive(
@@ -714,6 +720,7 @@ def execute_attachments_task(task_id):
             logger.debug(
                 f'Generated attachments file "{zip_path}" with size: {zip_size}.'
             )
+            task.set_status_attachments(f'ZIP ({zip_size})')
             if file_size > MAX_FILE_SIZE:  # pragma: no cover
                 logger.warning(
                     f'The file size ({zip_size}) might cause problems'
