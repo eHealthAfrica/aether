@@ -143,8 +143,19 @@ function test_coverage {
     coverage run \
         manage.py test \
         --parallel ${TEST_PARALLEL:-} \
+        --exclude-tag=nonparallel \
         --noinput \
         "${@:1}"
+
+    # the functions that already use multiprocessing cannot be tested in parallel
+    # also the tests linked to attachments
+    #   TypeError: Cannot serialize socket object
+    coverage run \
+        manage.py test \
+        --tag=nonparallel \
+        --noinput \
+        "${@:1}"
+
     coverage combine --append
     coverage report
     coverage erase
