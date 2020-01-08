@@ -141,8 +141,6 @@ function test_coverage {
     rm -R /code/.coverage* 2>/dev/null || true
 
     coverage run \
-        --concurrency=multiprocessing \
-        --parallel-mode \
         manage.py test \
         --parallel ${TEST_PARALLEL:-} \
         --noinput \
