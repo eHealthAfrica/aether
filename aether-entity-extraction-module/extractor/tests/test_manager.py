@@ -22,7 +22,7 @@ import uuid
 import copy
 import requests
 from unittest import TestCase, mock
-from ..manager import ExtractionManager
+from ..manager import ExtractionManager, TenantedEntity
 from . import MAPPINGS, MAPPINGSET, TENANT, SCHEMA_DECORATORS, SCHEMAS, SUBMISSION
 from ..utils import KERNEL_ARTEFACT_NAMES, Task
 
@@ -72,14 +72,6 @@ def load_redis(redis):
 
 class ExtractionManagerTests(TestCase):
     redis = fakeredis.FakeStrictRedis()
-    # from redis import Redis
-    # import os
-    # redis_host = os.environ['REDIS_HOST']
-    # redis_pw = os.environ['REDIS_PASSWORD']
-    # redis = Redis(
-    #     host=redis_host,
-    #     password=redis_pw
-    # )
     NO_OF_SUBMISSIONS = 10
     data = SUBMISSION
     data['id'] = str(uuid.uuid4())
@@ -165,7 +157,17 @@ class ExtractionManagerTests(TestCase):
         mock_response.status_code = 500
         mock_kernel_data_request.return_value = mock_response
         manager = ExtractionManager()
-        manager.PROCESSED_ENTITIES.appendleft({'name': 'test entity', 'submission': 'id_1'})
+        manager.PROCESSED_ENTITIES.appendleft(
+            TenantedEntity(
+                TENANT,
+                {
+                    'payload': {
+                        'id': 'a-guid'
+                    },
+                    'name': 'test entity',
+                    'submission': 'id_1'
+                })
+        )
         manager.PROCESSED_SUBMISSIONS.appendleft({
             'name': 'test submission',
             'tenant': TENANT,

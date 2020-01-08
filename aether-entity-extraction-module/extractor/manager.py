@@ -17,10 +17,12 @@
 # under the License.
 
 import collections
+from dataclasses import dataclass
 import time
 import gettext
 import concurrent.futures
 import threading
+from typing import Any, Mapping
 import logging
 from . import settings
 from .utils import (
@@ -44,9 +46,16 @@ from aether.python.entity.extractor import (
 )
 
 PUSH_TO_KERNEL_INTERVAL = 0.05
+MAX_ENTITIY_RETRY = 3
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
 _ = gettext.gettext
+
+
+@dataclass
+class TenantedEntity:
+    tenant: str
+    entity: Mapping[Any, Any]
 
 
 class ExtractionManager():
@@ -180,7 +189,10 @@ class ExtractionManager():
         if ENTITY_EXTRACTION_ERRORS not in current_submission:
             current_submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ERRORS] = []
             current_submission[SUBMISSION_EXTRACTION_FLAG] = True
-            [self.PROCESSED_ENTITIES.appendleft(entity) for entity in submission_entities]
+            for entity in submission_entities:
+                self.PROCESSED_ENTITIES.appendleft(
+                    TenantedEntity(submission.tenant, entity)
+                )
 
         # add to processed submission queue
         self.PROCESSED_SUBMISSIONS.appendleft(current_submission)
@@ -202,10 +214,10 @@ class ExtractionManager():
 
     def push_to_kernel(self):
         logger.debug('Pushing to kernel')
+        entity_retries = {}
         while self.PROCESSED_ENTITIES or self.PROCESSED_SUBMISSIONS or self.is_extracting:
             current_entity_size = len(self.PROCESSED_ENTITIES)
             current_submission_size = len(self.PROCESSED_SUBMISSIONS)
-            submission_tenant = {}
             if current_submission_size:
                 submissions = [
                     self.PROCESSED_SUBMISSIONS.pop()
@@ -213,6 +225,7 @@ class ExtractionManager():
                 ]
 
                 # remove helper property
+                submission_tenant = {}
                 for submission in submissions:
                     submission_tenant[submission['id']] = submission['tenant']
                     submission.pop('tenant')
@@ -239,13 +252,13 @@ class ExtractionManager():
             if current_entity_size:
                 entities = [self.PROCESSED_ENTITIES.pop() for _ in range(current_entity_size)]
                 # group entities by realm
-                entities_by_realm = {}
-                for entity in entities:
-                    realm = submission_tenant[entity['submission']]
-                    try:
-                        entities_by_realm[realm].append(entity)
-                    except KeyError:
-                        entities_by_realm[realm] = [entity]
+                tenants = list(set([i.tenant for i in entities]))
+                entities_by_realm = {
+                    tenant: [
+                        e.entity for e in entities if e.tenant == tenant
+                    ] for tenant in tenants
+                }
+
                 # post entities to kernel per realm
                 for r in entities_by_realm:
                     try:
@@ -255,10 +268,27 @@ class ExtractionManager():
                             data=entities_by_realm[r],
                             realm=r
                         )
+                        res.raise_for_status()
                     except Exception as e:
-                        # todo: find a way to handle unsubmitted entities
+                        # todo: persist failed entity saves in redis
                         logger.error(str(e))
+                        _size = len(entities_by_realm[r])
+                        _requeue = 0
+                        for entity in entities_by_realm[r]:
+                            _id = entity['payload']['id']
+                            entity_retries[_id] = entity_retries.get(_id, 0) + 1
+                            if entity_retries[_id] <= MAX_ENTITIY_RETRY:
+                                _requeue += 1
+                                self.PROCESSED_ENTITIES.appendleft(
+                                    TenantedEntity(r, entity)
+                                )
+                        if _requeue:
+                            logger.info(
+                                f're-queueing {_requeue}/{_size} messages from tenant {r}')
 
             time.sleep(PUSH_TO_KERNEL_INTERVAL)
         self.is_pushing_to_kernel = False
+        _failed = [_id for _id, n in entity_retries.items() if n >= MAX_ENTITIY_RETRY]
+        if _failed:
+            logger.critical(f'{_failed} could not be submitted in {MAX_ENTITIY_RETRY} tries')
         logger.debug('Pushed all entities and submissions to kernel')
