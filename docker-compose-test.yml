@@ -33,13 +33,6 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: redis-base
-    # networks:
-    #   - aether
-    # volumes:
-    #   - ../.persistent_data/backups/ardb:/opt/ardb/data
-    # ports:
-    #   - 6379:6379
-
 
   minio-test:
     extends:
