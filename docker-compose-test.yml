@@ -33,6 +33,13 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: redis-base
+    # networks:
+    #   - aether
+    # volumes:
+    #   - ../.persistent_data/backups/ardb:/opt/ardb/data
+    # ports:
+    #   - 6379:6379
+
 
   minio-test:
     extends:
@@ -264,6 +271,7 @@ services:
       LOGGING_LEVEL: DEBUG
       AETHER_KERNEL_URL: http://kernel-test:9100
       REDIS_HOST: redis-test
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       DEFAULT_REALM: test
 
     command: start

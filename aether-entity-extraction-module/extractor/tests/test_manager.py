@@ -72,6 +72,14 @@ def load_redis(redis):
 
 class ExtractionManagerTests(TestCase):
     redis = fakeredis.FakeStrictRedis()
+    # from redis import Redis
+    # import os
+    # redis_host = os.environ['REDIS_HOST']
+    # redis_pw = os.environ['REDIS_PASSWORD']
+    # redis = Redis(
+    #     host=redis_host,
+    #     password=redis_pw
+    # )
     NO_OF_SUBMISSIONS = 10
     data = SUBMISSION
     data['id'] = str(uuid.uuid4())
@@ -102,7 +110,7 @@ class ExtractionManagerTests(TestCase):
         for x in range(self.NO_OF_SUBMISSIONS):
             SUBMISSION['id'] = str(uuid.uuid4())
             key = build_key(SUBMISSION_CHANNEL, TENANT, SUBMISSION['id'])
-            publish_key = f'__keyspace@0__:{key}'
+            publish_key = f'eventspace_0__:{key}'
             data = json.dumps(SUBMISSION)
             self.redis.set(key, data)
             self.redis.publish(
