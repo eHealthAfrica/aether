@@ -169,6 +169,7 @@ export APP_MODULE=aether.kernel
 export DJANGO_SETTINGS_MODULE="${APP_MODULE}.settings"
 
 export STORAGE_REQUIRED=true
+export REDIS_REQUIRED=true
 
 case "$1" in
     bash )
