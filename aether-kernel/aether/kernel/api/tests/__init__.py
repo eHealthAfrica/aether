@@ -479,6 +479,7 @@ PAYLOAD = {
     'opening_hour': '7AM working days',
     'facility_name': 'Primary Health Care Abuja'
 }
+
 MAPPINGSET = {
     'name': 'Dummy-test',
     'schema': {
