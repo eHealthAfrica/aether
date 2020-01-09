@@ -24,7 +24,7 @@ cffi==1.13.2
 chardet==3.0.4
 coreapi==2.3.3
 coreschema==0.0.4
-coverage==5.0.1
+coverage==5.0.2
 cryptography==2.8
 decorator==4.4.1
 Django==2.2.9
@@ -70,7 +70,7 @@ mccabe==0.6.1
 minio==5.0.6
 more-itertools==8.0.2
 openpyxl==3.0.2
-packaging==19.2
+packaging==20.0
 ply==3.11
 prometheus-client==0.7.1
 protobuf==3.11.2
