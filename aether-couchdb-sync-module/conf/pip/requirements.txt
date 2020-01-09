@@ -12,7 +12,7 @@
 #
 ################################################################################
 
-aether.sdk==1.2.8
+aether.sdk==1.2.9
 autopep8==1.4.4
 boto3==1.10.49
 botocore==1.13.49
@@ -25,6 +25,7 @@ coverage==5.0.2
 croniter==0.3.31
 cryptography==2.8
 Django==2.2.9
+django-cacheops==4.2
 django-cleanup==4.0.0
 django-cors-headers==3.2.1
 django-debug-toolbar==2.1
@@ -40,6 +41,7 @@ drf-dynamic-fields==0.3.1
 entrypoints==0.3
 flake8==3.7.9
 flake8-quotes==2.1.1
+funcy==1.14
 google-api-core==1.15.0
 google-auth==1.10.0
 google-cloud-core==1.1.0
