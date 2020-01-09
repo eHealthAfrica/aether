@@ -16,7 +16,7 @@
 # Main libraries
 
 # Aether Django SDK library with extras
-aether.sdk[server,storage,test]
+aether.sdk[cache,server,storage,test]
 
 # Aether Python library
 aether.python
