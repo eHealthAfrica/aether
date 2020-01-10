@@ -569,7 +569,7 @@ def execute_records_task(task_id):
 
         except Exception as e:
             logger.error(f'Got an error while generating records file: {str(e)}')
-            if task:
+            if task:  # pragma: no cover
                 task.set_error_records(str(e))
             raise  # required to force exitcode != 0
 
