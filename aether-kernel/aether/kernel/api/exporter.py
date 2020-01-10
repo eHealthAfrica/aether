@@ -516,11 +516,11 @@ class ExporterMixin():
 
 def execute_records_task(task_id):
     def __exec(task_id):
-        task = ExportTask.objects.get(pk=task_id)
-        dialect_name = None
+        dialect_name = f'aether_custom_{str(task_id)}'
+        task = None
 
         try:
-            dialect_name = f'aether_custom_{str(task.id)}'
+            task = ExportTask.objects.get(pk=task_id)
 
             _settings = task.settings['records']
 
@@ -569,9 +569,11 @@ def execute_records_task(task_id):
 
         except Exception as e:
             logger.error(f'Got an error while generating records file: {str(e)}')
-            task.set_error_records(str(e))
+            if task:
+                task.set_error_records(str(e))
+            raise  # required to force exitcode != 0
 
-        if dialect_name:  # pragma: no cover
+        finally:
             csv.unregister_dialect(dialect_name)
 
     reset_connection()
