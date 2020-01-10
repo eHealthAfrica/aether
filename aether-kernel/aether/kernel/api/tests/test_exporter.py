@@ -31,6 +31,7 @@ from openpyxl import load_workbook
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.db.models import F
 from django.http import FileResponse
 from django.test import TestCase, override_settings, tag
@@ -48,11 +49,17 @@ from aether.kernel.api.exporter import (
     __flatten_dict as flatten_dict,
     __get_label as get_label,
 
-    generate_file as generate,
+    __generate_csv_files as gen_csv_files,
+    __prepare_xlsx as gen_xlsx,
+    __prepare_zip as gen_zip,
+
     execute_records_task,
     execute_attachments_task,
+
     CSV_FORMAT,
     XLSX_FORMAT,
+    MAX_SIZE,
+    DEFAULT_OPTIONS,
 )
 
 
@@ -134,6 +141,48 @@ EXAMPLE_LABELS = {
     'iterate_none.#.nothing': 'None',
     'id': 'ID',
 }
+
+
+def helper__generate_file(
+    temp_dir,
+    data,
+    paths=[],
+    labels={},
+    file_format=CSV_FORMAT,
+    filename='export',
+    offset=0,
+    limit=MAX_SIZE,
+    options=DEFAULT_OPTIONS,
+):
+    '''
+    Generates an XLSX/ZIP (of CSV files) file with the given data.
+
+    - ``data`` a queryset with two main properties ``EXPORT_FIELD_ID``
+        and ``EXPORT_FIELD_DATA``.
+    - ``paths`` is a list with the allowed jsonpaths.
+    - ``labels`` is a dictionary whose keys are the jsonpaths
+      and the values the linked labels to use as header for that jsonpath.
+    - ``file_format``, expected values ``xlsx`` or ``csv``.
+    - ``options`` the export options.
+    '''
+
+    sql, params = data.query.sql_with_params()
+    with connection.cursor() as cursor:
+        sql_sentence = cursor.mogrify(sql, params).decode('utf-8')
+
+    csv_files = gen_csv_files(temp_dir,
+                              sql_sentence,
+                              paths,
+                              labels,
+                              offset,
+                              limit,
+                              options,
+                              )
+
+    if file_format == XLSX_FORMAT:
+        return gen_xlsx(temp_dir, csv_files, filename)
+    else:
+        return gen_zip(temp_dir, csv_files, filename)
 
 
 class ExporterTest(TestCase):
@@ -379,7 +428,7 @@ class ExporterViewsTest(TestCase):
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            _, zip_path = generate(temp_dir, data, paths=[], **kwargs)
+            _, zip_path = helper__generate_file(temp_dir, data, paths=[], **kwargs)
             zip_file = zipfile.ZipFile(zip_path, 'r')
             self.assertEqual(zip_file.namelist(),
                              ['export.csv', 'export.1.csv', 'export.2.csv', 'export.3.csv', 'export.4.csv'])
@@ -387,7 +436,7 @@ class ExporterViewsTest(TestCase):
         # with the whole paths list (there are 3 arrays with data, ``iterate_none`` is empty)
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
         with tempfile.TemporaryDirectory() as temp_dir:
-            _, zip_path = generate(temp_dir, data, paths=EXAMPLE_PATHS, **kwargs)
+            _, zip_path = helper__generate_file(temp_dir, data, paths=EXAMPLE_PATHS, **kwargs)
             zip_file = zipfile.ZipFile(zip_path, 'r')
             self.assertEqual(zip_file.namelist(),
                              ['export.csv', 'export.1.csv', 'export.2.csv', 'export.3.csv'])
@@ -395,14 +444,14 @@ class ExporterViewsTest(TestCase):
         # without `iterate_one` in paths
         paths = [path for path in EXAMPLE_PATHS if not path.startswith('iterate_one')]
         with tempfile.TemporaryDirectory() as temp_dir:
-            _, zip_path = generate(temp_dir, data, paths=paths, **kwargs)
+            _, zip_path = helper__generate_file(temp_dir, data, paths=paths, **kwargs)
             zip_file = zipfile.ZipFile(zip_path, 'r')
             self.assertEqual(zip_file.namelist(),
                              ['export.csv', 'export.1.csv', 'export.2.csv'])
 
         # with `flatten` option should generate only one file
         with tempfile.TemporaryDirectory() as temp_dir:
-            _, zip_path = generate(
+            _, zip_path = helper__generate_file(
                 temp_dir,
                 data,
                 paths=[],
@@ -422,7 +471,7 @@ class ExporterViewsTest(TestCase):
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            _, xlsx_path = generate(
+            _, xlsx_path = helper__generate_file(
                 temp_dir,
                 data,
                 paths=EXAMPLE_PATHS,
@@ -584,7 +633,7 @@ class ExporterViewsTest(TestCase):
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            _, xlsx_path = generate(
+            _, xlsx_path = helper__generate_file(
                 temp_dir,
                 data,
                 paths=EXAMPLE_PATHS,
@@ -675,7 +724,7 @@ class ExporterViewsTest(TestCase):
 
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('id', 'exporter_data')
         with tempfile.TemporaryDirectory() as temp_dir:
-            _, xlsx_path = generate(
+            _, xlsx_path = helper__generate_file(
                 temp_dir,
                 data,
                 paths=EXAMPLE_PATHS,
@@ -717,7 +766,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(reverse('submission-csv'), '/submissions/csv/')
 
     @mock.patch(
-        'aether.kernel.api.exporter.generate_file',
+        'aether.kernel.api.exporter.__generate_csv_files',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__error(self, *args):
@@ -729,7 +778,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(models.ExportTask.objects.count(), 1)
 
     @mock.patch(
-        'aether.kernel.api.exporter.generate_file',
+        'aether.kernel.api.exporter.__generate_csv_files',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submission_export___error__background(self, *args):
@@ -763,7 +812,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(models.ExportTask.objects.count(), 0)
 
     @mock.patch(
-        'aether.kernel.api.exporter.generate_file',
+        'aether.kernel.api.exporter.__generate_csv_files',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__xlsx__error(self, *args):
@@ -786,7 +835,7 @@ class ExporterViewsTest(TestCase):
             })
 
     @mock.patch(
-        'aether.kernel.api.exporter.generate_file',
+        'aether.kernel.api.exporter.__generate_csv_files',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__csv__error(self, *args):
@@ -835,7 +884,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(reverse('entity-csv'), '/entities/csv/')
 
     @mock.patch(
-        'aether.kernel.api.exporter.generate_file',
+        'aether.kernel.api.exporter.__generate_csv_files',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export___error(self, *args):
@@ -850,7 +899,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
 
     @mock.patch(
-        'aether.kernel.api.exporter.generate_file',
+        'aether.kernel.api.exporter.__generate_csv_files',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export___error__background(self, *args):
@@ -866,7 +915,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.files.count(), 0)
 
     @mock.patch(
-        'aether.kernel.api.exporter.generate_file',
+        'aether.kernel.api.exporter.__generate_csv_files',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export__xlsx__error(self, *args):
@@ -916,7 +965,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(response['Content-Type'], 'application/octet-stream')
 
     @mock.patch(
-        'aether.kernel.api.exporter.generate_file',
+        'aether.kernel.api.exporter.__generate_csv_files',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export__csv__error(self, *args):

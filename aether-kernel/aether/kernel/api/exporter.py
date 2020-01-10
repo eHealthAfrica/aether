@@ -20,6 +20,7 @@ from datetime import datetime
 import csv
 import json
 import logging
+import math
 import os
 import re
 import shutil
@@ -33,7 +34,7 @@ from openpyxl import Workbook
 from django.conf import settings
 from django.core.files import File
 from django.db import connection
-from django.db.models import Count, F, QuerySet
+from django.db.models import Count, F
 from django.utils.translation import gettext as _
 
 from rest_framework.response import Response
@@ -515,80 +516,117 @@ class ExporterMixin():
 
 
 def execute_records_task(task_id):
-    def __exec(task_id):
-        dialect_name = f'aether_custom_{str(task_id)}'
-        task = None
-
+    def __exec(counter):
         try:
-            task = ExportTask.objects.get(pk=task_id)
-
-            _settings = task.settings['records']
-
-            # register CSV dialect for the given options
-            csv.register_dialect(
+            __generate_csv_files(
+                temp_dir,
+                _settings['query'],
+                _settings['paths'],
+                _settings['labels'],
+                _offset,
+                _limit,
+                _settings['export_options'],
                 dialect_name,
-                delimiter=_settings['dialect_options']['delimiter'],
-                doublequote=False,
-                escapechar=_settings['dialect_options']['escapechar'],
-                quotechar=_settings['dialect_options']['quotechar'],
-                quoting=csv.QUOTE_NONNUMERIC,
+                counter,
             )
-
-            _file_format = _settings['file_format']
-            _offset = task.settings['offset']
-            _limit = task.settings['limit']
-
-            task.set_status_records('WIP')
-
-            logger.info(f'Preparing {_file_format} file: offset {_offset}, limit {_limit}')
-            logger.info(str(_settings['export_options']))
-
-            # temporary directory to keep the generated files
-            with tempfile.TemporaryDirectory() as temp_dir:
-                file_name, file_path = generate_file(
-                    temp_dir=temp_dir,
-                    data=_settings['query'],
-                    file_format=_file_format,
-                    filename=_settings['filename'],
-                    paths=_settings['paths'],
-                    labels=_settings['labels'],
-                    offset=_offset,
-                    limit=_limit,
-                    options=_settings['export_options'],
-                    dialect=dialect_name,
-                )
-                logger.info(f'File "{file_name}" ready!')
-
-                with open(file_path, 'rb') as f:
-                    export_file = ExportTaskFile(task=task)
-                    export_file.file.save(file_name, File(f))
-                    export_file.size = os.path.getsize(file_path)
-                    export_file.save()
-
-            task.set_status_records('DONE')
-
         except Exception as e:
+            print(e)
             logger.error(f'Got an error while generating records file: {str(e)}')
-            if task:  # pragma: no cover
-                task.set_error_records(str(e))
+            task.set_error_records(str(e))
             raise  # required to force exitcode != 0
-
-        finally:
-            csv.unregister_dialect(dialect_name)
 
     reset_connection()
 
-    # execute in another thread to check if the task was deleted
-    # (allow us to kill it instead of waiting for its conclusion)
-    p = Process(target=__exec, args=(task_id,), name=f'task-records:{task_id}:0')
-    p.start()
+    if not ExportTask.objects.filter(pk=task_id).exists():
+        return
 
-    while p.is_alive():
-        if not ExportTask.objects.filter(pk=task_id).exists():
-            p.kill()
-        time.sleep(.1)  # wait
+    dialect_name = f'aether_custom_{str(task_id)}'
+    task = ExportTask.objects.get(pk=task_id)
 
-    p.close()
+    try:
+        _settings = task.settings['records']
+
+        # register CSV dialect for the given options
+        csv.register_dialect(
+            dialect_name,
+            delimiter=_settings['dialect_options']['delimiter'],
+            doublequote=False,
+            escapechar=_settings['dialect_options']['escapechar'],
+            quotechar=_settings['dialect_options']['quotechar'],
+            quoting=csv.QUOTE_NONNUMERIC,
+        )
+
+        _file_format = _settings['file_format']
+        _offset = task.settings['offset']
+        _limit = task.settings['limit']
+        total = _limit - _offset
+
+        task.set_status_records('WIP')
+
+        logger.info(f'Preparing {_file_format} file: offset {_offset}, limit {_limit}')
+        logger.info(str(_settings['export_options']))
+
+        # temporary directory to keep the generated files
+        with tempfile.TemporaryDirectory() as temp_dir:
+
+            counter = Value('i', 0)
+            # execute in another thread to check if the task was deleted
+            # (allow us to kill it instead of waiting for its conclusion)
+            p = Process(target=__exec, args=(counter,), name=f'task-records:{task_id}:0')
+            p.start()
+
+            while p.is_alive():
+                if not ExportTask.objects.filter(pk=task_id).exists():
+                    p.kill()
+                else:
+                    value = counter.value / total
+                    task.set_status_records(f'{value:.0%}')
+
+                time.sleep(.1)  # wait
+
+            failure = (p.exitcode != 0)
+            p.close()
+
+            if failure or not ExportTask.objects.filter(pk=task_id).exists():
+                return
+
+            _csv_files = {
+                f.split('.')[0]: os.path.join(temp_dir, f)
+                for f in os.listdir(temp_dir)
+                if os.path.isfile(os.path.join(temp_dir, f)) and not f.startswith('temp-')
+            }
+            # order object keys and reformat leading zeros depending on total number
+            _sorted_keys = sorted(_csv_files.keys(), key=lambda x: int(x))
+            csv_files = {
+                k: _csv_files[k]
+                for k in _sorted_keys
+            }
+
+            filename = _settings['filename']
+            task.set_status_records(f'{_file_format}…')
+            if _file_format == XLSX_FORMAT:
+                file_name, file_path = __prepare_xlsx(temp_dir, csv_files, filename, dialect_name)
+            else:
+                file_name, file_path = __prepare_zip(temp_dir, csv_files, filename)
+
+            task.set_status_records(_file_format)
+            with open(file_path, 'rb') as f:
+                export_file = ExportTaskFile(task=task)
+                export_file.file.save(file_name, File(f))
+                export_file.size = os.path.getsize(file_path)
+                export_file.save()
+
+        task.set_status_records('DONE')
+        logger.info(f'File "{file_name}" ready!')
+
+    except Exception as e:
+        print(e)
+        logger.error(f'Got an error while generating records file: {str(e)}')
+        task.set_error_records(str(e))
+        raise  # required to force exitcode != 0
+
+    finally:
+        csv.unregister_dialect(dialect_name)
 
 
 def execute_attachments_task(task_id):
@@ -743,66 +781,20 @@ def execute_attachments_task(task_id):
         task.set_error_attachments(str(e))
 
 
-def generate_file(temp_dir,
-                  data,
-                  paths=[],
-                  labels={},
-                  file_format=CSV_FORMAT,
-                  filename='export',
-                  offset=0,
-                  limit=MAX_SIZE,
-                  options=DEFAULT_OPTIONS,
-                  dialect=DEFAULT_DIALECT,
-                  ):
-    '''
-    Generates an XLSX/ ZIP (of CSV files) file with the given data.
-
-    - ``data`` can be one of two options:
-      - a queryset with two main properties ``EXPORT_FIELD_ID``
-        and ``EXPORT_FIELD_DATA`` or,
-      - a tuple of sql sentence and params, usually extracted
-        from ``data.query.sql_with_params()``.
-    - ``file_format``, expected values ``xlsx`` or ``csv``.
-    - ``paths`` is a list with the allowed jsonpaths.
-    - ``labels`` is a dictionary whose keys are the jsonpaths
-      and the values the linked labels to use as header for that jsonpath.
-    - ``options`` the export options.
-    '''
-
-    if isinstance(data, QuerySet):
-        sql, params = data.query.sql_with_params()
-        with connection.cursor() as cursor:
-            sql_sentence = cursor.mogrify(sql, params).decode('utf-8')
-    else:
-        sql_sentence = data
-
-    csv_files = __generate_csv_files(temp_dir,
-                                     sql_sentence,
-                                     paths,
-                                     labels,
-                                     offset,
-                                     limit,
-                                     options,
-                                     dialect,
-                                     )
-    if file_format == XLSX_FORMAT:
-        return __prepare_xlsx(temp_dir, csv_files, filename, dialect)
-    else:
-        return __prepare_zip(temp_dir, csv_files, filename)
-
-
 def __prepare_zip(temp_dir, csv_files, filename):
     zip_name = f'{filename}-{datetime.now().isoformat()}.zip'
     zip_path = f'{temp_dir}/{zip_name}'
+    num_zeros = math.floor(math.log10(len(csv_files.keys()) - 1))
+
     with zipfile.ZipFile(zip_path, 'w') as csv_zip:
         for key, value in csv_files.items():
-            csv_name = f'{filename}.csv' if key == '0' else f'{filename}.{key}.csv'
+            csv_name = f'{filename}.csv' if key == '0' else f'{filename}.{key.zfill(num_zeros)}.csv'
             csv_zip.write(value, csv_name)
 
     return zip_name, zip_path
 
 
-def __prepare_xlsx(temp_dir, csv_files, filename, dialect):
+def __prepare_xlsx(temp_dir, csv_files, filename, dialect=DEFAULT_DIALECT):
     wb = Workbook(write_only=True, iso_dates=True)
     for key, value in csv_files.items():
         ws = wb.create_sheet(key)
@@ -842,6 +834,7 @@ def __generate_csv_files(
         limit=MAX_SIZE,
         export_options=DEFAULT_OPTIONS,
         dialect=DEFAULT_DIALECT,
+        counter=None,
 ):
     def add_header(options, header):
         if header not in options['headers_set']:
@@ -860,7 +853,7 @@ def __generate_csv_files(
         except KeyError:
             # new
             title = '0' if group == '$' else str(len(csv_options.keys()))
-            csv_path = f'{temp_dir}/temp-{title}.csv'
+            csv_path = os.path.join(temp_dir, f'temp-{title}.csv')
             f = open(csv_path, 'w', newline='')
             c = csv.writer(f, dialect=dialect)
 
@@ -925,6 +918,9 @@ def __generate_csv_files(
                 data_from += 1
                 json_data = __flatten_dict(row.get(EXPORT_FIELD_DATA), flatten_list)
                 walker(json_data, {'@': data_from, '@id': str(row.get(EXPORT_FIELD_ID))}, '$')
+                if counter:  # pragma: no cover
+                    with counter.get_lock():
+                        counter.value += 1
 
     logger.debug('Building headers')
 
@@ -935,7 +931,7 @@ def __generate_csv_files(
         current['file'].close()
 
         title = current['title']
-        csv_path = f'{temp_dir}/{title}.csv'
+        csv_path = os.path.join(temp_dir, f'{title}.csv')
         rows_path = current['csv_path']
 
         # create headers in order
@@ -1233,7 +1229,7 @@ def sizeof_fmt(num):  # pragma: no cover
 
 def reset_connection():
     # The subprocess is executed outside the main thread, we need to close the
-    # current connection an open a new one handle by this subprocess.
+    # current connection and open a new one handled by this subprocess.
     # Avoids:
     #   psycopg2.InterfaceError: connection already closed
     #   django.db.utils.OperationalError: server closed the connection unexpectedly

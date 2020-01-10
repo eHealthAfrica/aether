@@ -26,6 +26,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
+from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
@@ -806,7 +807,7 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
         verbose_name=_('project'),
     )
 
-    @property
+    @cached_property
     def revision(self):  # overrides base model field
         return None
 
@@ -885,11 +886,11 @@ class ExportTaskFile(ExportModelOperationsMixin('kernel_exporttaskfile'), Projec
         verbose_name=_('task'),
     )
 
-    @property
+    @cached_property
     def revision(self):  # overrides base model field
         return None
 
-    @property
+    @cached_property
     def project(self):
         return self.task.project
 
@@ -908,6 +909,11 @@ class ExportTaskFile(ExportModelOperationsMixin('kernel_exporttaskfile'), Projec
             self.name = self.file.name
 
         super(ExportTaskFile, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['project']:
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     class Meta:
         default_related_name = 'files'
