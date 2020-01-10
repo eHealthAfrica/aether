@@ -26,6 +26,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
@@ -198,15 +199,15 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
     )
 
-    @property
+    @cached_property
     def avro_schema_prettified(self):
         return json_prettified(self.avro_schema)
 
-    @property
+    @cached_property
     def hash(self):
         return f'md5:{self.md5sum}'
 
-    @property
+    @cached_property
     def download_url(self):
         '''
         https://docs.opendatakit.org/openrosa-form-list/
@@ -220,6 +221,19 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
             version=self.version,
         )
 
+    @cached_property
+    def _manifest_url(self):
+        '''
+        https://docs.opendatakit.org/openrosa-form-list/
+
+        Represents the `<manifestUrl/>` entry in the forms list.
+
+        '''
+        return '{url}?version={version}'.format(
+            url=reverse('xform-get-manifest', kwargs={'pk': self.pk}),
+            version=self.version,
+        )
+
     @property
     def manifest_url(self):
         '''
@@ -230,10 +244,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         '''
 
         if self.media_files.count() > 0:
-            return '{url}?version={version}'.format(
-                url=reverse('xform-get-manifest', kwargs={'pk': self.pk}),
-                version=self.version,
-            )
+            return self._manifest_url
         else:
             return ''
 
@@ -280,6 +291,11 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
         # update "modified_at"
         self.modified_at = timezone.now()
         return super(XForm, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['avro_schema_prettified', 'hash', 'download_url', '_manifest_url']:
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     def update_hash(self, increase_version=False):
         md5sum = md5(self.xml_data.encode('utf8')).hexdigest()
@@ -336,14 +352,14 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
 
     xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE, verbose_name=_('xForm'))
 
-    @property
+    @cached_property
     def hash(self):
         return f'md5:{self.md5sum}'
 
     def get_content(self, as_attachment=False):
         return get_file_content(self.name, self.media_file.url, as_attachment)
 
-    @property
+    @cached_property
     def download_url(self):
         return reverse('media-file-get-content', kwargs={'pk': self.pk})
 
@@ -362,6 +378,11 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
             self.name = self.media_file.name
 
         super(MediaFile, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['hash', 'download_url']:
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     def get_mt_instance(self):
         return self.xform.project
