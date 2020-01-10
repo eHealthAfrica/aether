@@ -148,7 +148,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel, MtMo
         [contract.save() for contract in contracts]
 
         # invalidates cached properties
-        for p in ['input_prettified', 'schema_prettified']:
+        for p in ['input_prettified', 'schema_prettified']:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 
@@ -340,7 +340,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
             'output_errors_prettified',
             'kernel_refs_errors_prettified',
             'kernel_rules',
-        ]:
+        ]:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 

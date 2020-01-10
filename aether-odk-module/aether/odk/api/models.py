@@ -290,10 +290,15 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
 
         # update "modified_at"
         self.modified_at = timezone.now()
-        return super(XForm, self).save(*args, **kwargs)
+        super(XForm, self).save(*args, **kwargs)
 
         # invalidates cached properties
-        for p in ['avro_schema_prettified', 'hash', 'download_url', '_manifest_url']:
+        for p in [
+            'avro_schema_prettified',
+            'hash',
+            'download_url',
+            '_manifest_url',
+        ]:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 
@@ -380,7 +385,7 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstrac
         super(MediaFile, self).save(*args, **kwargs)
 
         # invalidates cached properties
-        for p in ['hash', 'download_url']:
+        for p in ['hash', 'download_url']:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 

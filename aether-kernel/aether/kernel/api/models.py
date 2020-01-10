@@ -248,7 +248,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
         super(MappingSet, self).save(*args, **kwargs)
 
         # invalidates cached properties
-        for p in ['input_prettified', 'schema_prettified']:
+        for p in ['input_prettified', 'schema_prettified']:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 
@@ -295,7 +295,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
     def payload_prettified(self):
         return json_prettified(self.payload)
 
-    @cached_property
+    @property
     def name(self):  # overrides base model field
         name = self.mappingset.name if self.mappingset else self.id
         return f'{self.project.name}-{name}'
@@ -305,7 +305,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         super(Submission, self).save(*args, **kwargs)
 
         # invalidates cached properties
-        for p in ['payload_prettified', 'name']:
+        for p in ['payload_prettified']:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 
@@ -385,7 +385,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
         super(Attachment, self).save(*args, **kwargs)
 
         # invalidates cached properties
-        for p in ['project']:
+        for p in ['project']:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 
@@ -432,7 +432,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
         super(Schema, self).save(*args, **kwargs)
 
         # invalidates cached properties
-        for p in ['definition_prettified', 'schema_name']:
+        for p in ['definition_prettified', 'schema_name']:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 
@@ -486,7 +486,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
         super(SchemaDecorator, self).save(*args, **kwargs)
 
         # invalidates cached properties
-        for p in ['topic_prettified']:
+        for p in ['topic_prettified']:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 
@@ -562,7 +562,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
         super(Mapping, self).save(*args, **kwargs)
 
         # invalidates cached properties
-        for p in ['definition_prettified']:
+        for p in ['definition_prettified']:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 
@@ -664,7 +664,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
     def payload_prettified(self):
         return json_prettified(self.payload)
 
-    @cached_property
+    @property
     def name(self):  # overrides base model field
         # try to build a name for the extracted entity base on the linked data
         if self.schemadecorator and self.mapping:
@@ -730,7 +730,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         super(Entity, self).save(*args, **kwargs)
 
         # invalidates cached properties
-        for p in ['payload_prettified', 'name']:
+        for p in ['payload_prettified']:  # pragma: no cover
             if p in self.__dict__:
                 del self.__dict__[p]
 
