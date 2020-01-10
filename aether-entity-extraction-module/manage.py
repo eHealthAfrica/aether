@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-#
+#!/usr/bin/env python
+
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,11 +17,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-containers=( kernel exm client ui odk couchdb-sync producer integration )
+if __name__ == '__main__':
 
-for container in "${containers[@]}"; do
-    ./scripts/test_container.sh $container
-done
+    from extractor import main
+    main()

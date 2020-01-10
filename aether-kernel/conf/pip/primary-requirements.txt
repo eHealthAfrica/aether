@@ -35,3 +35,6 @@ lxml
 
 # Test libraries
 django-autofixture
+
+# Caching libraries
+redis
