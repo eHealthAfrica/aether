@@ -220,11 +220,11 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
 
-    @property
+    @cached_property
     def input_prettified(self):
         return json_prettified(self.input)
 
-    @property
+    @cached_property
     def schema_prettified(self):
         return json_prettified(self.schema)
 
@@ -249,6 +249,11 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
             raise IntegrityError(ve)
 
         super(MappingSet, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['input_prettified', 'schema_prettified']:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     class Meta:
         default_related_name = 'mappingsets'
@@ -289,7 +294,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         verbose_name=_('project'),
     )
 
-    @property
+    @cached_property
     def payload_prettified(self):
         return json_prettified(self.payload)
 
@@ -301,6 +306,11 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project if self.mappingset else self.project
         super(Submission, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['payload_prettified']:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     def __str__(self):
         return f'{self.id}'
@@ -358,11 +368,11 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
     submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE, verbose_name=_('submission'))
     submission_revision = models.TextField(verbose_name=_('submission revision'))
 
-    @property
+    @cached_property
     def revision(self):  # overrides base model field
         return None
 
-    @property
+    @cached_property
     def project(self):
         return self.submission.project
 
@@ -385,6 +395,11 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
             self.name = self.attachment_file.name
 
         super(Attachment, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['project']:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     class Meta:
         default_related_name = 'attachments'
@@ -417,13 +432,21 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
     # the passthrough schemas will contain the project id as family
     family = models.TextField(null=True, blank=True, verbose_name=_('schema family'))
 
-    @property
+    @cached_property
     def definition_prettified(self):
         return json_prettified(self.definition)
 
-    @property
+    @cached_property
     def schema_name(self):
         return self.definition.get('name', self.name)
+
+    def save(self, *args, **kwargs):
+        super(Schema, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['definition_prettified', 'schema_name']:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     class Meta:
         default_related_name = 'schemas'
@@ -461,11 +484,11 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
 
-    @property
+    @cached_property
     def revision(self):  # overrides base model field
         return None
 
-    @property
+    @cached_property
     def topic_prettified(self):
         return json_prettified(self.topic)
 
@@ -473,6 +496,11 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
         if self.topic is None:
             self.topic = {'name': self.name}
         super(SchemaDecorator, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['topic_prettified']:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     class Meta:
         default_related_name = 'schemadecorators'
@@ -530,7 +558,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
         verbose_name=_('project'),
     )
 
-    @property
+    @cached_property
     def definition_prettified(self):
         return json_prettified(self.definition)
 
@@ -544,6 +572,11 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
         self.project = self.mappingset.project
         super(Mapping, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['definition_prettified']:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
         self.schemadecorators.set([
             SchemaDecorator.objects.get(pk=entity_pk, project=self.project)
@@ -639,7 +672,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         verbose_name=_('schema'),
     )
 
-    @property
+    @cached_property
     def payload_prettified(self):
         return json_prettified(self.payload)
 
@@ -707,6 +740,11 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
             raise IntegrityError(ve)
 
         super(Entity, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in ['payload_prettified']:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     def __str__(self):
         return f'{self.id}'
