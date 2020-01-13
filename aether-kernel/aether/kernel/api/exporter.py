@@ -530,7 +530,6 @@ def execute_records_task(task_id):
                 counter,
             )
         except Exception as e:
-            print(e)
             logger.error(f'Got an error while generating records file: {str(e)}')
             task.set_error_records(str(e))
             raise  # required to force exitcode != 0
@@ -620,7 +619,6 @@ def execute_records_task(task_id):
         logger.info(f'File "{file_name}" ready!')
 
     except Exception as e:
-        print(e)
         logger.error(f'Got an error while generating records file: {str(e)}')
         task.set_error_records(str(e))
         raise  # required to force exitcode != 0
@@ -784,7 +782,8 @@ def execute_attachments_task(task_id):
 def __prepare_zip(temp_dir, csv_files, filename):
     zip_name = f'{filename}-{datetime.now().isoformat()}.zip'
     zip_path = f'{temp_dir}/{zip_name}'
-    num_zeros = math.floor(math.log10(len(csv_files.keys()) - 1))
+    num_files = len(csv_files.keys()) - 1
+    num_zeros = math.floor(math.log10(num_files) if num_files > 9 else 0)
 
     with zipfile.ZipFile(zip_path, 'w') as csv_zip:
         for key, value in csv_files.items():
