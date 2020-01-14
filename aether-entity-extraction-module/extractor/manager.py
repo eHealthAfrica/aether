@@ -27,7 +27,7 @@ from .utils import (
     cache_failed_entities,
     get_from_redis_or_kernel,
     get_redis_keys_by_pattern,
-    get_redis_subcribed_message,
+    get_redis_subscribed_message,
     KERNEL_ARTEFACT_NAMES,
     kernel_data_request,
     MAX_WORKERS,
@@ -83,7 +83,7 @@ class ExtractionManager():
             self.redis
         )
         for key in pending_submission_keys:
-            self.add_to_queue(get_redis_subcribed_message(
+            self.add_to_queue(get_redis_subscribed_message(
                 key,
                 self.redis
             ))

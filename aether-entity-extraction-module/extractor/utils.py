@@ -133,7 +133,7 @@ def get_redis_keys_by_pattern(pattern, redis=None):
     return redis.get_keys(pattern)
 
 
-def get_redis_subcribed_message(key, redis=None):
+def get_redis_subscribed_message(key, redis=None):
     redis = get_redis(redis)
     try:
         doc = redis.get_by_key(key)
