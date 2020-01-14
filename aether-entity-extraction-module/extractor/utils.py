@@ -31,6 +31,7 @@ from typing import (
 EXTERNAL_APP_KERNEL = 'aether-kernel'
 SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
 SUBMISSION_PAYLOAD_FIELD = 'payload'
+FAILED_ENTITIES_KEY = '_aether_failed_entities'
 CONSTANTS = collections.namedtuple(
     'CONSTANTS',
     'projects mappingsets mappings schemas single_schema \
@@ -49,6 +50,8 @@ KERNEL_ARTEFACT_NAMES = CONSTANTS(
 )
 
 MAX_WORKERS = 10
+
+MAX_PUSH_SIZE = 100
 
 REDIS_INSTANCE = None
 
@@ -130,10 +133,10 @@ def get_redis_keys_by_pattern(pattern, redis=None):
     return redis.get_keys(pattern)
 
 
-def get_redis_subcribed_message(key, redis=None):
+def get_redis_subscribed_message(key, redis=None):
     redis = get_redis(redis)
-    doc = redis.get_by_key(key)
-    if doc:
+    try:
+        doc = redis.get_by_key(key)
         key = key if isinstance(key, str) else key.decode()
         _type, tenant, _id = key.split(':')
         return Task(
@@ -142,7 +145,8 @@ def get_redis_subcribed_message(key, redis=None):
             type=_type,
             data=doc
         )
-    return None
+    except Exception:
+        return None
 
 
 def redis_subscribe(callback, pattern, redis=None):
@@ -157,3 +161,14 @@ def redis_subscribe(callback, pattern, redis=None):
 def redis_stop(redis):
     redis = get_redis(redis)
     redis.stop()
+
+
+def cache_failed_entities(entities, realm, redis=None):
+    redis = get_redis(redis)
+    failed_entities = {}
+    try:
+        failed_entities = redis.get_by_key(FAILED_ENTITIES_KEY)
+        failed_entities[realm].append(entities)
+    except Exception:
+        failed_entities[realm] = entities
+    redis.redis.set(FAILED_ENTITIES_KEY, json.dumps(failed_entities))
