@@ -27,5 +27,5 @@ class InitTests(TestCase):
         container = main()
         self.assertEqual(container.SUBMISSION_QUEUE, collections.deque())
         self.assertEqual(container.PROCESSED_SUBMISSIONS, collections.deque())
-        self.assertEqual(container.PROCESSED_ENTITIES, collections.deque())
+        self.assertEqual(container.realm_entities, {})
         container.stop()

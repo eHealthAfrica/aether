@@ -86,7 +86,7 @@ class ExtractionManagerTests(TestCase):
         manager = ExtractionManager()
         self.assertEqual(manager.SUBMISSION_QUEUE, collections.deque())
         self.assertEqual(manager.PROCESSED_SUBMISSIONS, collections.deque())
-        self.assertEqual(manager.PROCESSED_ENTITIES, collections.deque())
+        self.assertEqual(manager.realm_entities, {})
         self.assertFalse(manager.is_extracting)
         self.assertFalse(manager.is_pushing_to_kernel)
         self.assertIsNone(manager.redis)
@@ -136,7 +136,7 @@ class ExtractionManagerTests(TestCase):
         load_redis(self.redis)
         manager = ExtractionManager(self.redis)
         self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 0)
-        self.assertEqual(len(manager.PROCESSED_ENTITIES), 0)
+        self.assertEqual(manager.realm_entities, {})
         # test extraction with missing schema definition in schema decorator
         remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
         for sd in remove_definitions:
@@ -147,7 +147,7 @@ class ExtractionManagerTests(TestCase):
             )
         manager.entity_extraction(self.test_task)
         self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 1)
-        self.assertEqual(len(manager.PROCESSED_ENTITIES), 3)
+        self.assertEqual(len(manager.realm_entities[TENANT]), 3)
 
     @mock.patch(
         'extractor.utils.kernel_data_request'
@@ -157,7 +157,8 @@ class ExtractionManagerTests(TestCase):
         mock_response.status_code = 500
         mock_kernel_data_request.return_value = mock_response
         manager = ExtractionManager()
-        manager.PROCESSED_ENTITIES.appendleft({'name': 'test entity', 'submission': 'id_1'})
+        manager.realm_entities[TENANT] = collections.deque()
+        manager.realm_entities[TENANT].appendleft({'name': 'test entity', 'submission': 'id_1'})
         manager.PROCESSED_SUBMISSIONS.appendleft({
             'name': 'test submission',
             'tenant': TENANT,

@@ -24,15 +24,17 @@ import threading
 import logging
 from . import settings
 from .utils import (
+    cache_failed_entities,
     get_from_redis_or_kernel,
-    KERNEL_ARTEFACT_NAMES,
-    kernel_data_request,
-    remove_from_redis,
     get_redis_keys_by_pattern,
     get_redis_subcribed_message,
+    KERNEL_ARTEFACT_NAMES,
+    kernel_data_request,
+    MAX_WORKERS,
+    MAX_PUSH_SIZE,
+    remove_from_redis,
     redis_subscribe,
     redis_stop,
-    MAX_WORKERS,
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
 )
@@ -54,7 +56,7 @@ class ExtractionManager():
     def __init__(self, redis=None):
         self.SUBMISSION_QUEUE = collections.deque()
         self.PROCESSED_SUBMISSIONS = collections.deque()
-        self.PROCESSED_ENTITIES = collections.deque()
+        self.realm_entities = {}
         self.is_extracting = False
         self.is_pushing_to_kernel = False
         self.redis = redis
@@ -180,7 +182,11 @@ class ExtractionManager():
         if ENTITY_EXTRACTION_ERRORS not in current_submission:
             current_submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ERRORS] = []
             current_submission[SUBMISSION_EXTRACTION_FLAG] = True
-            [self.PROCESSED_ENTITIES.appendleft(entity) for entity in submission_entities]
+            for entity in submission_entities:
+                try:
+                    self.realm_entities[submission.tenant].append(entity)
+                except KeyError:
+                    self.realm_entities[submission.tenant] = collections.deque([entity])
 
         # add to processed submission queue
         self.PROCESSED_SUBMISSIONS.appendleft(current_submission)
@@ -200,17 +206,42 @@ class ExtractionManager():
         else:
             self.is_extracting = False
 
+    def realm_has_entities(self):
+        for realm in self.realm_entities:
+            if self.realm_entities[realm]:
+                return True
+        return False
+
     def push_to_kernel(self):
         logger.debug('Pushing to kernel')
-        while self.PROCESSED_ENTITIES or self.PROCESSED_SUBMISSIONS or self.is_extracting:
-            current_entity_size = len(self.PROCESSED_ENTITIES)
-            current_submission_size = len(self.PROCESSED_SUBMISSIONS)
-            submission_tenant = {}
+        while self.realm_has_entities() or self.PROCESSED_SUBMISSIONS or self.is_extracting:
+            available_length = len(self.PROCESSED_SUBMISSIONS)
+            current_submission_size = MAX_PUSH_SIZE if available_length > MAX_PUSH_SIZE else available_length
+
+            for realm in self.realm_entities:
+                available_length = len(self.realm_entities[realm])
+                current_entity_size = MAX_PUSH_SIZE if available_length > MAX_PUSH_SIZE else available_length
+                if current_entity_size:
+                    entities = [self.realm_entities[realm].pop() for _ in range(current_entity_size)]
+                    # post entities to kernel per realm
+                    try:
+                        res = kernel_data_request(
+                            url='entities/',
+                            method='post',
+                            data=entities,
+                            realm=realm
+                        )
+                    except Exception as e:
+                        logger.error(str(e))
+                        # cache failed entities on redis for retries later
+                        cache_failed_entities(entities, realm)
+
             if current_submission_size:
                 submissions = [
                     self.PROCESSED_SUBMISSIONS.pop()
                     for _ in range(current_submission_size)
                 ]
+                submission_tenant = {}
 
                 # remove helper property
                 for submission in submissions:
@@ -235,29 +266,6 @@ class ExtractionManager():
                         )
                 except Exception as e:
                     logger.error(str(e))
-
-            if current_entity_size:
-                entities = [self.PROCESSED_ENTITIES.pop() for _ in range(current_entity_size)]
-                # group entities by realm
-                entities_by_realm = {}
-                for entity in entities:
-                    realm = submission_tenant[entity['submission']]
-                    try:
-                        entities_by_realm[realm].append(entity)
-                    except KeyError:
-                        entities_by_realm[realm] = [entity]
-                # post entities to kernel per realm
-                for r in entities_by_realm:
-                    try:
-                        res = kernel_data_request(
-                            url='entities/',
-                            method='post',
-                            data=entities_by_realm[r],
-                            realm=r
-                        )
-                    except Exception as e:
-                        # todo: find a way to handle unsubmitted entities
-                        logger.error(str(e))
 
             time.sleep(PUSH_TO_KERNEL_INTERVAL)
         self.is_pushing_to_kernel = False
