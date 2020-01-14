@@ -948,11 +948,6 @@ class ExportTaskFile(ExportModelOperationsMixin('kernel_exporttaskfile'), Projec
 
         super(ExportTaskFile, self).save(*args, **kwargs)
 
-        # invalidates cached properties
-        for p in ['project']:
-            if p in self.__dict__:
-                del self.__dict__[p]
-
     class Meta:
         default_related_name = 'files'
         ordering = ['task__id', 'name']

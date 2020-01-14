@@ -33,7 +33,7 @@ from openpyxl import Workbook
 
 from django.conf import settings
 from django.core.files import File
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Count, F
 from django.utils.translation import gettext as _
 
@@ -179,6 +179,7 @@ class ExporterMixin():
     def __get_bool(self, request, name):
         return self.__get(request, name, '').lower() in ['true', 't']
 
+    @transaction.non_atomic_requests
     def __export(self, request, file_format=CSV_FORMAT):
         '''
         Expected parameters:
@@ -460,6 +461,14 @@ class ExporterMixin():
             status_attachments='INIT' if export_settings['attachments'] else None,
         ).pk
 
+        # The subprocesses are executed outside the main thread,
+        # we need to close the current connection and
+        # each subprocess will open a new one.
+        # Avoids:
+        #   psycopg2.InterfaceError: connection already closed
+        #   django.db.utils.OperationalError: server closed the connection unexpectedly
+        connection.close()
+
         # start download subprocess(-es) and return task id
         processes = []
         if generate_records:
@@ -491,6 +500,7 @@ class ExporterMixin():
         # always execute export in background if it generates the attachment files
         if export_settings['attachments'] or self.__get_bool(request, 'background'):
             if settings.TESTING:  # pragma: no cover
+                # In tests wait for the processes to finish
                 for p in processes:
                     p.join()
                     p.close()
@@ -504,7 +514,6 @@ class ExporterMixin():
             p.join()   # join to main thread
             p.close()  # release resources
 
-        reset_connection()
         if ExportTask.objects.filter(pk=task_id).exists():
             task = ExportTask.objects.get(pk=task_id)
             if task.status_records == 'DONE':
@@ -533,8 +542,6 @@ def execute_records_task(task_id):
             logger.error(f'Got an error while generating records file: {str(e)}')
             task.set_error_records(str(e))
             raise  # required to force exitcode != 0
-
-    reset_connection()
 
     if not ExportTask.objects.filter(pk=task_id).exists():
         return
@@ -567,6 +574,7 @@ def execute_records_task(task_id):
 
         # temporary directory to keep the generated files
         with tempfile.TemporaryDirectory() as temp_dir:
+            connection.close()
 
             counter = Value('i', 0)
             # execute in another thread to check if the task was deleted
@@ -575,7 +583,8 @@ def execute_records_task(task_id):
             p.start()
 
             while p.is_alive():
-                if not ExportTask.objects.filter(pk=task_id).exists():
+                if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
+                    # the task was removed, stop the execution
                     p.kill()
                 else:
                     value = counter.value / total
@@ -633,7 +642,6 @@ def execute_attachments_task(task_id):
             logger.debug(f'Downloading attachments from {_start} to {_stop}')
 
             with connection.cursor() as cursor:
-
                 data_from = _start
                 while data_from < _stop:
                     data_to = min(data_from + ATTACHMENTS_PAGE_SIZE, _stop)
@@ -668,8 +676,6 @@ def execute_attachments_task(task_id):
             task.set_error_attachments(str(e))
             raise  # required to force exitcode != 0
 
-    reset_connection()
-
     if not ExportTask.objects.filter(pk=task_id).exists():
         return
 
@@ -697,6 +703,7 @@ def execute_attachments_task(task_id):
 
             chunk_size = max(1, int(total / settings.EXPORT_NUM_CHUNKS))
 
+            connection.close()
             processes = []
             counter = Value('i', 0)
 
@@ -713,7 +720,6 @@ def execute_attachments_task(task_id):
                 )
                 data_from = data_to  # next
 
-            reset_connection()
             for p in processes:  # start
                 p.start()
 
@@ -736,10 +742,10 @@ def execute_attachments_task(task_id):
             failure = any(map(lambda x: x.exitcode != 0, processes))
             for p in processes:  # release resources
                 p.close()
+
             if failure or not ExportTask.objects.filter(pk=task_id).exists():
                 return
 
-            reset_connection()
             logger.debug('All attachments downloaded!')
 
             # create zip with attachments and add to task files
@@ -1224,14 +1230,3 @@ def sizeof_fmt(num):  # pragma: no cover
             return '%3.1f%s' % (num, unit)
         num /= 1000.0
     return '%.1f%s' % (num, 'YB')
-
-
-def reset_connection():
-    # The subprocess is executed outside the main thread, we need to close the
-    # current connection and open a new one handled by this subprocess.
-    # Avoids:
-    #   psycopg2.InterfaceError: connection already closed
-    #   django.db.utils.OperationalError: server closed the connection unexpectedly
-
-    if not settings.TESTING:  # pragma: no cover
-        connection.close()

@@ -34,7 +34,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.db.models import F
 from django.http import FileResponse
-from django.test import TestCase, override_settings, tag
+from django.test import TransactionTestCase, TestCase, override_settings, tag
 from django.urls import reverse
 
 from aether.kernel.api import models
@@ -368,7 +368,7 @@ class ExporterTest(TestCase):
 
 @tag('nonparallel')
 @override_settings(MULTITENANCY=False)
-class ExporterViewsTest(TestCase):
+class ExporterViewsTest(TransactionTestCase):
 
     def setUp(self):
         super(ExporterViewsTest, self).setUp()
@@ -778,7 +778,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(models.ExportTask.objects.count(), 1)
 
     @mock.patch(
-        'aether.kernel.api.exporter.__generate_csv_files',
+        'aether.kernel.api.exporter.__prepare_zip',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submission_export___error__background(self, *args):
@@ -812,7 +812,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(models.ExportTask.objects.count(), 0)
 
     @mock.patch(
-        'aether.kernel.api.exporter.__generate_csv_files',
+        'aether.kernel.api.exporter.__prepare_xlsx',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__xlsx__error(self, *args):
@@ -899,7 +899,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
 
     @mock.patch(
-        'aether.kernel.api.exporter.__generate_csv_files',
+        'aether.kernel.api.exporter.__prepare_zip',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export___error__background(self, *args):
@@ -915,7 +915,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(task.files.count(), 0)
 
     @mock.patch(
-        'aether.kernel.api.exporter.__generate_csv_files',
+        'aether.kernel.api.exporter.__prepare_xlsx',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export__xlsx__error(self, *args):
@@ -1207,63 +1207,63 @@ class ExporterViewsTest(TestCase):
         self.assertIn('project1-export-', export_file.name)
         self.assertIsNone(export_file.revision)
 
-        with tempfile.NamedTemporaryFile() as f:
-            with open(f.name, 'wb') as fi:
-                fi.write(export_file.get_content().getvalue())
+        with tempfile.NamedTemporaryFile() as fe:
+            with open(fe.name, 'wb') as fpe:
+                fpe.write(export_file.get_content().getvalue())
 
-            zip_file = zipfile.ZipFile(f)
-            _files = zip_file.namelist()
+            _csv_files = zipfile.ZipFile(fe).namelist()
 
-            self.assertEqual(len(_files), 4, '4 CSV files')
-            self.assertEqual(_files,
-                             [
-                                 'project1-export.csv',
-                                 'project1-export.1.csv',
-                                 'project1-export.2.csv',
-                                 'project1-export.3.csv',
-                             ])
+            self.assertEqual(len(_csv_files), 4, _csv_files)
+            self.assertIn('project1-export.csv', _csv_files)
+            self.assertIn('project1-export.1.csv', _csv_files)
+            self.assertIn('project1-export.2.csv', _csv_files)
+            self.assertIn('project1-export.3.csv', _csv_files)
 
         # attachments
         attachments_file = task.files.last()
         self.assertIn('project1-export-attachments-', attachments_file.name)
         self.assertIsNone(attachments_file.revision)
 
-        with tempfile.NamedTemporaryFile() as f:
-            with open(f.name, 'wb') as fi:
-                fi.write(attachments_file.get_content().getvalue())
+        with tempfile.NamedTemporaryFile() as fa:
+            with open(fa.name, 'wb') as fpa:
+                fpa.write(attachments_file.get_content().getvalue())
 
-            zip_file = zipfile.ZipFile(f)
-            _files = zip_file.namelist()
+            _attach_files = zipfile.ZipFile(fa).namelist()
 
-            self.assertEqual(len(_files), 5, '2 directories and 3 files')
-            self.assertIn(f'{entity_1.pk}/', _files)
-            self.assertIn(f'{entity_2.pk}/', _files)
-            self.assertIn(f'{entity_1.pk}/a.txt', _files)
-            self.assertIn(f'{entity_2.pk}/b.txt', _files)
-            self.assertIn(f'{entity_2.pk}/c.txt', _files)
+            self.assertEqual(len(_attach_files), 5, _attach_files)
+            self.assertIn(f'{entity_1.pk}/', _attach_files)
+            self.assertIn(f'{entity_1.pk}/a.txt', _attach_files)
 
-        response = self.client.get(reverse('exporttask-detail', kwargs={'pk': task.pk}))
+            self.assertIn(f'{entity_2.pk}/', _attach_files)
+            self.assertIn(f'{entity_2.pk}/b.txt', _attach_files)
+            self.assertIn(f'{entity_2.pk}/c.txt', _attach_files)
+
+    def test_exporttask_view(self):
+        task = models.ExportTask.objects.create(
+            name='test',
+            project=models.Project.objects.first(),
+        )
+        task_file = models.ExportTaskFile.objects.create(
+            task=task,
+            file=SimpleUploadedFile('a.txt', b'123')
+        )
+        task_url = reverse('exporttask-detail', kwargs={'pk': task.pk})
+
+        response = self.client.get(task_url)
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
-        self.assertEqual(data['name'], 'project1-export')
-        self.assertEqual(data['created_by'], 'test')
-        self.assertEqual(data['status_records'], 'DONE')
-        self.assertIsNone(task.error_records)
-        self.assertEqual(data['status_attachments'], 'DONE')
-        self.assertIsNone(task.error_attachments)
-        self.assertEqual(len(data['files']), 2)
+        self.assertEqual(data['name'], 'test')
+        self.assertEqual(len(data['files']), 1)
 
-        self.assertEqual(data['files'][0]['md5sum'], export_file.md5sum)
+        self.assertEqual(data['files'][0]['md5sum'], task_file.md5sum)
         self.assertEqual(
             data['files'][0]['file_url'],
-            f'http://testserver/export-tasks/{task.pk}/file-content/{export_file.pk}/')
-        export_file_content = self.client.get(data['files'][0]['file_url'])
-        self.assertEqual(export_file.get_content().getvalue(), export_file_content.getvalue())
+            f'http://testserver/export-tasks/{task.pk}/file-content/{task_file.pk}/')
+        task_file_content = self.client.get(data['files'][0]['file_url'])
+        self.assertEqual(task_file_content.getvalue(), b'123')
 
-        self.assertEqual(data['files'][1]['md5sum'], attachments_file.md5sum)
-        self.assertEqual(
-            data['files'][1]['file_url'],
-            f'http://testserver/export-tasks/{task.pk}/file-content/{attachments_file.pk}/')
-        attachments_file_content = self.client.get(data['files'][1]['file_url'])
-        self.assertEqual(attachments_file.get_content().getvalue(), attachments_file_content.getvalue())
+        task.delete()
+
+        response = self.client.get(task_url)
+        self.assertEqual(response.status_code, 404)
