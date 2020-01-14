@@ -74,6 +74,7 @@ EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
 
 WRITE_ENTITIES_TO_REDIS = bool(os.environ.get('WRITE_ENTITIES_TO_REDIS'))
 
+
 # Swagger workaround
 # ------------------------------------------------------------------------------
 # The ``bravado`` lib in ``aether.client`` cannot deal with JSON fields handled
