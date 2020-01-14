@@ -21,7 +21,7 @@ from django.test import TransactionTestCase
 from django.conf import settings
 from aether.python.redis.task import TaskHelper
 
-from ..models import Project, Schema, SchemaDecorator
+from ..models import Project, Schema, SchemaDecorator, Mapping, MappingSet, Submission
 from ..redis import (
     get_redis_project_artefacts,
     are_all_items_in_object,
@@ -93,6 +93,18 @@ class RedisTests(TransactionTestCase):
             project=project,
             schema=schema,
         )
+        mappingset = MappingSet.objects.create(
+            schema={},
+            input={},
+            project=project,
+            name='mappingset1',
+        )
+        mapping = Mapping.objects.create(
+            mappingset=mappingset,
+            definition={'entities': {}, 'mapping': []},
+            name='mapping1'
+        )
+
         artefacts = {
             'schema_decorators': str(schemadecorator.pk)
         }
@@ -103,3 +115,67 @@ class RedisTests(TransactionTestCase):
 
         _result = in_same_project_and_cache(artefacts, project)
         self.assertTrue(_result)
+
+        for i in range(5):
+            submission = Submission.objects.create(
+                payload={},
+                mappingset=mappingset,
+                project=project
+            )
+            artefacts = {
+                'schema_decorators': str(schemadecorator.pk),
+                'submissions': str(submission.pk),
+                'mappings': str(mapping.pk),
+            }
+            _result = in_same_project_and_cache(artefacts, project)
+            self.assertTrue(_result)
+
+        artefacts = {
+            'schema_decorators': str(schemadecorator.pk),
+            'submissions': 'wrong-submission-id',
+            'mappings': str(mapping.pk),
+        }
+        _result = in_same_project_and_cache(artefacts, project)
+        self.assertFalse(_result)
+
+        redis_mock = {
+            'schema_decorators': [str(schemadecorator.pk), ],
+            'submissions': [str(submission.pk), ],
+            'mappings': [str(mapping.pk), ],
+        }
+
+        artefacts = {
+            'schema_decorators': str(schemadecorator.pk),
+            'submissions': str(submission.pk),
+            'mappings': str(mapping.pk),
+        }
+
+        _result = are_all_items_in_object(redis_mock, artefacts, str(submission.project.pk))
+        self.assertTrue(_result)
+
+        _result = are_all_items_in_object(redis_mock, artefacts, 'different-project-id')
+        self.assertFalse(_result)
+
+        artefacts = {
+            'schema_decorators': str(schemadecorator.pk),
+            'submissions': 'extracted-submission-id',
+            'mappings': str(mapping.pk),
+        }
+
+        redis_mock = {
+            'schema_decorators': [str(schemadecorator.pk), ],
+            'submissions': [str(submission.pk), 'extracted-submission-id'],
+            'mappings': [str(mapping.pk), ],
+        }
+
+        _result = are_all_items_in_object(redis_mock, artefacts)
+        self.assertTrue(_result)
+
+        artefacts = {
+            'schema_decorators': str(schemadecorator.pk),
+            'submissions': 'extracted-submission-missing',
+            'mappings': str(mapping.pk),
+        }
+
+        _result = are_all_items_in_object(redis_mock, artefacts)
+        self.assertFalse(_result)

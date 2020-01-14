@@ -141,12 +141,21 @@ function test_coverage {
     rm -R /code/.coverage* 2>/dev/null || true
 
     coverage run \
-        --concurrency=multiprocessing \
-        --parallel-mode \
         manage.py test \
         --parallel ${TEST_PARALLEL:-} \
+        --exclude-tag=nonparallel \
         --noinput \
         "${@:1}"
+
+    # the functions that already use multiprocessing cannot be tested in parallel
+    # also the tests linked to attachments
+    #   TypeError: Cannot serialize socket object
+    coverage run \
+        manage.py test \
+        --tag=nonparallel \
+        --noinput \
+        "${@:1}"
+
     coverage combine --append
     coverage report
     coverage erase
@@ -160,6 +169,7 @@ export APP_MODULE=aether.kernel
 export DJANGO_SETTINGS_MODULE="${APP_MODULE}.settings"
 
 export STORAGE_REQUIRED=true
+export REDIS_REQUIRED=true
 
 case "$1" in
     bash )

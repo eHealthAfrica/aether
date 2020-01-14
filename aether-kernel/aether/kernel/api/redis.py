@@ -60,9 +60,18 @@ def get_redis_project_artefacts(project):
         return None
 
 
-def are_all_items_in_object(obj, items):
+def are_all_items_in_object(obj, items, pid=None):
     for n in items:
-        if items[n] and n in obj and items[n] not in obj[n]:
+        if items[n] and n == 'submissions':
+            _key = f'_submissions:{settings.DEFAULT_REALM}:{items[n]}'
+            try:
+                cached_submission = REDIS_TASK.get_by_key(_key)
+                if cached_submission['project'] != pid:
+                    return False
+            except ValueError:
+                if items[n] not in obj[n]:
+                    return False
+        elif items[n] and n in obj and items[n] not in obj[n]:
             return False
     return True
 
@@ -71,9 +80,9 @@ def in_same_project_and_cache(artefacts, project):
     _project_id = str(project.pk)
     _key = f'_{PROJECT_ARTEFACT_CACHE}:{settings.DEFAULT_REALM}:{_project_id}'
     try:
-        redis_artefacts = REDIS_TASK.get_by_key(_key)['data']
-        return are_all_items_in_object(redis_artefacts, artefacts)
+        redis_artefacts = REDIS_TASK.get_by_key(_key)
+        return are_all_items_in_object(redis_artefacts['data'], artefacts, _project_id)
     except Exception:
         cache_project_artefacts(project)
-        redis_artefacts = REDIS_TASK.get_by_key(_key)['data']
-        return are_all_items_in_object(redis_artefacts, artefacts)
+        redis_artefacts = REDIS_TASK.get_by_key(_key)
+        return are_all_items_in_object(redis_artefacts['data'], artefacts, _project_id)

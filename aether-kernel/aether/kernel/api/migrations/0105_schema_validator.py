@@ -28,11 +28,6 @@ class Migration(migrations.Migration):
                 verbose_name='mapping rules'
             ),
         ),
-        migrations.AddField(
-            model_name='submission',
-            name='is_extracted',
-            field=models.BooleanField(default=False, verbose_name='entity extracted?'),
-        ),
         migrations.AlterField(
             model_name='mappingset',
             name='schema',
