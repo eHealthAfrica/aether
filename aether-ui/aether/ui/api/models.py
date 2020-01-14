@@ -20,6 +20,7 @@ import uuid
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
@@ -125,11 +126,11 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel, MtMo
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
 
-    @property
+    @cached_property
     def schema_prettified(self):
         return json_prettified(self.schema)
 
-    @property
+    @cached_property
     def input_prettified(self):
         return json_prettified(self.input)
 
@@ -145,6 +146,11 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel, MtMo
         # revalidate linked contracts against updated fields
         contracts = Contract.objects.filter(pipeline=self)
         [contract.save() for contract in contracts]
+
+        # invalidates cached properties
+        for p in ['input_prettified', 'schema_prettified']:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     def get_mt_instance(self):
         return self.project
@@ -285,27 +291,27 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
 
     is_identity = models.BooleanField(default=False, verbose_name=_('is identity?'))
 
-    @property
+    @cached_property
     def entity_types_prettified(self):
         return json_prettified(self.entity_types)
 
-    @property
+    @cached_property
     def mapping_rules_prettified(self):
         return json_prettified(self.mapping_rules)
 
-    @property
+    @cached_property
     def mapping_errors_prettified(self):
         return json_prettified(self.mapping_errors)
 
-    @property
+    @cached_property
     def output_errors_prettified(self):
         return json_prettified(self.output)
 
-    @property
+    @cached_property
     def kernel_refs_errors_prettified(self):
         return json_prettified(self.kernel_refs)
 
-    @property
+    @cached_property
     def kernel_rules(self):
         '''
         The contract mapping_rules property corresponds
@@ -325,6 +331,18 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
         self.output = output
 
         super(Contract, self).save(*args, **kwargs)
+
+        # invalidates cached properties
+        for p in [
+            'entity_types_prettified',
+            'mapping_rules_prettified',
+            'mapping_errors_prettified',
+            'output_errors_prettified',
+            'kernel_refs_errors_prettified',
+            'kernel_rules',
+        ]:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     def get_mt_instance(self):
         return self.pipeline.project
