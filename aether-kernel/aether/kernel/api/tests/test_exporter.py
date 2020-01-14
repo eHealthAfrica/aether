@@ -875,6 +875,71 @@ class ExporterViewsTest(TransactionTestCase):
                 'data_format': 'split',
             })
 
+    def test_submissions_export__attachments__exclude(self):
+        submission = models.Submission.objects.first()
+        models.Attachment.objects.create(
+            submission=submission,
+            attachment_file=SimpleUploadedFile('submission.xml', b'a'),
+        )
+        models.Attachment.objects.create(
+            submission=submission,
+            attachment_file=SimpleUploadedFile('audit.csv', b'b'),
+        )
+        models.Attachment.objects.create(
+            submission=submission,
+            attachment_file=SimpleUploadedFile('c.txt', b'c'),
+        )
+        self.assertEqual(models.Attachment.objects.count(), 3)
+
+        response = self.client.post(
+            reverse('submission-csv') +
+            '?generate_attachments=t&exclude_files=(audit\\.csv|\\.xml)$'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        task = models.ExportTask.objects.first()
+
+        self.assertEqual(task.status_attachments, 'DONE', task.error_attachments)
+        self.assertEqual(task.files.count(), 1)
+
+        # check attachments
+        attachments_file = task.files.first()
+        with tempfile.NamedTemporaryFile() as fa:
+            with open(fa.name, 'wb') as fpa:
+                fpa.write(attachments_file.get_content().getvalue())
+
+            _attach_files = zipfile.ZipFile(fa).namelist()
+
+            self.assertEqual(len(_attach_files), 2, _attach_files)
+            self.assertIn(f'{submission.pk}/', _attach_files)
+            self.assertIn(f'{submission.pk}/c.txt', _attach_files)
+
+    def test_submissions_export__attachments__exclude__all(self):
+        submission = models.Submission.objects.first()
+        models.Attachment.objects.create(
+            submission=submission,
+            attachment_file=SimpleUploadedFile('submission.xml', b'a'),
+        )
+        models.Attachment.objects.create(
+            submission=submission,
+            attachment_file=SimpleUploadedFile('audit.csv', b'b'),
+        )
+        self.assertEqual(models.Attachment.objects.count(), 2)
+
+        response = self.client.post(
+            reverse('submission-csv') +
+            '?generate_attachments=t&exclude_files=(audit\\.csv$|\\.xml$)'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(models.ExportTask.objects.count(), 1)
+        task = models.ExportTask.objects.first()
+
+        self.assertEqual(task.status_attachments, 'ERROR', task.error_attachments)
+        self.assertEqual(task.error_attachments, 'No attachments found!')
+        self.assertEqual(task.files.count(), 0)
+
     # -----------------------------
     # ENTITIES
     # -----------------------------
@@ -1154,7 +1219,7 @@ class ExporterViewsTest(TransactionTestCase):
         submission = models.Submission.objects.first()
         models.Attachment.objects.create(
             submission=submission,
-            attachment_file=SimpleUploadedFile('a.txt', b'123'),
+            attachment_file=SimpleUploadedFile('a.txt', b'a123'),
         )
         entity_1 = submission.entities.first()
 
@@ -1165,11 +1230,11 @@ class ExporterViewsTest(TransactionTestCase):
 
         models.Attachment.objects.create(
             submission=submission,
-            attachment_file=SimpleUploadedFile('b.txt', b'123'),
+            attachment_file=SimpleUploadedFile('b.txt', b'b123'),
         )
         models.Attachment.objects.create(
             submission=submission,
-            attachment_file=SimpleUploadedFile('c.txt', b'123'),
+            attachment_file=SimpleUploadedFile('c.txt', b'c123'),
         )
         self.assertEqual(models.Attachment.objects.count(), 3)
 
@@ -1237,6 +1302,10 @@ class ExporterViewsTest(TransactionTestCase):
             self.assertIn(f'{entity_2.pk}/', _attach_files)
             self.assertIn(f'{entity_2.pk}/b.txt', _attach_files)
             self.assertIn(f'{entity_2.pk}/c.txt', _attach_files)
+
+    # -----------------------------
+    # Export Task view
+    # -----------------------------
 
     def test_exporttask_view(self):
         task = models.ExportTask.objects.create(

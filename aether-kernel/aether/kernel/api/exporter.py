@@ -196,6 +196,7 @@ class ExporterMixin():
             - ``background``, indicates if instead of returning the file returns
               the task id linked to this export and continue the export process
               in background.
+              Will be removed in release 2.0.
 
         - Data filtering:
 
@@ -213,6 +214,12 @@ class ExporterMixin():
 
             - ``{json_field}__xxx``, json field filters.
               Handled by the ``get_queryset`` method.
+
+            - ``exclude_files``, in case of generate attachments includes the
+              regular expression of file names to exclude from the final zip file.
+              Like: ``(audit\\.csv|\\.xml)$`` (this is the regex for ODK internal files)
+
+              Read more in: https://www.postgresql.org/docs/9.6/functions-matching.html
 
         - File options:
 
@@ -369,19 +376,21 @@ class ExporterMixin():
             self.attachment_field and
             self.attachment_parent_field
         )
-        if (
-            generate_attachments and
-            queryset.exclude(**{self.attachment_field: None}).count() > 0
-        ):
-            with connection.cursor() as cursor:
-                sql, params = queryset.values(EXPORT_FIELD_ID).query.sql_with_params()
-                query = cursor.mogrify(sql, params).decode('utf-8')
+        if generate_attachments:
+            exclude_files = self.__get(request, 'exclude_files')
 
-            export_settings['attachments'] = {
-                'query': query,
-                'filename': f'{filename}-attachments',
-                'parent_field': self.attachment_parent_field,
-            }
+            queryset_attachs = queryset.exclude(**{self.attachment_field: None})
+            if queryset_attachs.count() > 0:
+                with connection.cursor() as cursor:
+                    sql, params = queryset.values(EXPORT_FIELD_ID).query.sql_with_params()
+                    query = cursor.mogrify(sql, params).decode('utf-8')
+
+                export_settings['attachments'] = {
+                    'query': query,
+                    'filename': f'{filename}-attachments',
+                    'parent_field': self.attachment_parent_field,
+                    'exclude_files': exclude_files,
+                }
 
         generate_records = not generate_attachments or self.__get_bool(request, 'generate_records')
         if generate_records:
@@ -637,7 +646,7 @@ def execute_records_task(task_id):
 
 
 def execute_attachments_task(task_id):
-    def _fetch_attachs(_start, _stop, counter):
+    def _fetch_attachs(_start, _stop, counter, counter_attachs):
         try:
             logger.debug(f'Downloading attachments from {_start} to {_stop}')
 
@@ -654,6 +663,9 @@ def execute_attachments_task(task_id):
                     # get attachments
                     for _parent_id in _parent_ids:
                         _attachments = Attachment.objects.filter(**{parent_field: _parent_id})
+                        if exclude_files:
+                            _attachments = _attachments.exclude(name__iregex=exclude_files)
+
                         if _attachments.count():
                             _directory = f'{temp_dir}/files/{_parent_id}'
                             os.makedirs(_directory, exist_ok=True)
@@ -664,6 +676,8 @@ def execute_attachments_task(task_id):
                                 _aname = _attachment.name.split('/')[-1]
                                 with open(f'{_directory}/{_aname}', 'wb') as _file:
                                     _file.write(_attachment.get_content().getvalue())
+                                with counter_attachs.get_lock():
+                                    counter_attachs.value += 1
 
                         with counter.get_lock():
                             counter.value += 1
@@ -697,6 +711,7 @@ def execute_attachments_task(task_id):
             filename = _settings['filename']
             sql = _settings['query']
             parent_field = _settings['parent_field']
+            exclude_files = _settings['exclude_files']
 
             task.set_status_attachments('WIP')
             logger.info(f'Preparing attachments file: offset {offset}, limit {limit}')
@@ -706,6 +721,7 @@ def execute_attachments_task(task_id):
             connection.close()
             processes = []
             counter = Value('i', 0)
+            counter_attachs = Value('i', 0)
 
             data_from = offset
             while data_from < limit:
@@ -714,7 +730,7 @@ def execute_attachments_task(task_id):
                 processes.append(
                     Process(
                         target=_fetch_attachs,
-                        args=(data_from, data_to, counter,),
+                        args=(data_from, data_to, counter, counter_attachs,),
                         name=f'task-attachments:{task_id}:{data_from}:{data_to}',
                     )
                 )
@@ -744,6 +760,10 @@ def execute_attachments_task(task_id):
                 p.close()
 
             if failure or not ExportTask.objects.filter(pk=task_id).exists():
+                return
+
+            if counter_attachs.value == 0:
+                task.set_error_attachments(_('No attachments found!'))
                 return
 
             logger.debug('All attachments downloaded!')
