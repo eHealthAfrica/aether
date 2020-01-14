@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('kernel', '0107_attachment_file_max_length'),
+        ('kernel', '0108_submission_is_extracted'),
     ]
 
     operations = [
