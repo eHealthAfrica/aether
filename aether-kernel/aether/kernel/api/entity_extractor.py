@@ -17,7 +17,8 @@
 # under the License.
 
 from django.db import transaction
-from aether.python.entity.extractor import extract_create_entities
+
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS, extract_create_entities
 from . import models
 
 
@@ -28,6 +29,11 @@ def run_entity_extraction(submission, overwrite=False):
         # there should be a better way to detect the generated entities and
         # replace their payloads with the new ones
         submission.entities.all().delete()
+        payload = submission.payload
+        del payload[ENTITY_EXTRACTION_ERRORS]
+        submission.payload = payload
+        submission.is_extracted = False
+        submission.save(update_fields=['payload', 'is_extracted'])
 
     # Extract entity for each mapping in the submission.mappingset
     mappings = submission.mappingset \
@@ -73,4 +79,5 @@ def run_entity_extraction(submission, overwrite=False):
     #   to create the entities.
     # - ``aether_extractor_enrichment``, with the generated values that allow us
     #   to re-execute this process again with the same result.
-    submission.save()
+    submission.is_extracted = submission.entities.count() > 0
+    submission.save(update_fields=['payload', 'is_extracted'])

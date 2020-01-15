@@ -122,7 +122,7 @@ function setup {
     mkdir -p $STATIC_ROOT
 
     # cleaning local
-    local STATIC_DIR=/code/aether/sync/static
+    local STATIC_DIR=/code/aether/odk/static
     rm -r -f $STATIC_DIR && mkdir -p $STATIC_DIR
 
     # expose version number (if exists)
