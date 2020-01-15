@@ -59,11 +59,11 @@ Data model schema:
 +==================+       +==================+       +==================+       +=====================+
 | Base fields      |<---+  | Base fields      |<---+  | Base fields      |<---+  | Base fields         |
 | active           |    |  | input            |    |  | payload          |    |  | attachment_file     |
-| salad_schema     |    |  | schema           |    |  +::::::::::::::::::+    |  | md5sum              |
-| jsonld_context   |    |  +::::::::::::::::::+    +-<| mappingset       |    |  +:::::::::::::::::::::+
-| rdf_definition   |    +-<| project          |    |  | project(**)      |    +-<| submission          |
-+::::::::::::::::::+    |  +------------------+    |  +------------------+    |  | submission_revision |
-| organizations(*) |    |                          |                          |  +---------------------+
+| salad_schema     |    |  | schema           |    |  | is_extracted     |    |  | md5sum              |
+| jsonld_context   |    |  +::::::::::::::::::+    |  +::::::::::::::::::+    |  +:::::::::::::::::::::+
+| rdf_definition   |    +-<| project          |    +-<| mappingset       |    +-<| submission          |
++::::::::::::::::::+    |  +------------------+    |  | project(**)      |    |  | submission_revision |
+| organizations(*) |    |                          |  +------------------+    |  +---------------------+
 +------------------+    |                          |                          |
                         |                          |                          |
 +------------------+    |  +------------------+    |  +------------------+    |  +------------------+
@@ -269,9 +269,10 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
-    :ivar JSON        payload:     Submission content.
-    :ivar MappingSet  mappingset:  Mapping set.
-    :ivar Project     project:     Project (redundant but speed up queries).
+    :ivar JSON        payload:      Submission content.
+    :ivar bool        is_extracted: Entities extracted.
+    :ivar MappingSet  mappingset:   Mapping set.
+    :ivar Project     project:      Project (redundant but speed up queries).
 
     '''
 
@@ -290,6 +291,8 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         on_delete=models.CASCADE,
         verbose_name=_('project'),
     )
+
+    is_extracted = models.BooleanField(default=False, verbose_name=_('entities extracted?'))
 
     @cached_property
     def payload_prettified(self):
