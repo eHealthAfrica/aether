@@ -3,6 +3,13 @@
 from django.db import migrations, models
 
 
+def migrate__update_submissions(apps, schema_editor):
+    Submissions = apps.get_model('kernel', 'Submission')
+    for submission in Submissions.objects.all():
+        submission.is_extracted = submission.entities.count() > 0
+        submission.save(update_fields=['is_extracted'])
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -13,6 +20,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='submission',
             name='is_extracted',
-            field=models.BooleanField(default=False, verbose_name='entity extracted?'),
+            field=models.BooleanField(default=False, verbose_name='entities extracted?'),
+        ),
+        migrations.RunPython(
+            code=migrate__update_submissions,
+            reverse_code=migrations.RunPython.noop,
+            # The optional elidable argument determines whether or not the operation
+            # will be removed (elided) when squashing migrations.
+            elidable=True,
         ),
     ]
