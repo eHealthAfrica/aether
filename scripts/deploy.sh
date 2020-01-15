@@ -50,9 +50,13 @@ LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /#}`
 
 if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
 
-    DOCKER_VERSION=${TRAVIS_TAG}
-    GCS_VERSION=${TRAVIS_TAG}
-    GCS_PROJECTS="eha-data"
+    echo "${LINE}"
+    echo "Skipping production deployment (temporary)"
+    exit 0
+
+    # DOCKER_VERSION=${TRAVIS_TAG}
+    # GCS_VERSION=${TRAVIS_TAG}
+    # GCS_PROJECTS="eha-data"
 
 elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
 
