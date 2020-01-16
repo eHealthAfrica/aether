@@ -23,7 +23,7 @@ matrix:
       stage: test
       env: 'TEST_MODE=core'
 
-    - name: "Aether modules tests (ODK and CouchDB-Sync)"
+    - name: "Aether modules tests (ODK)"
       stage: test
       env: 'TEST_MODE=modules'
 
