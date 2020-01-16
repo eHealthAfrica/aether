@@ -39,7 +39,6 @@ case "$1" in
 
     modules)
         ./scripts/test_container.sh odk
-        ./scripts/test_container.sh couchdb-sync
     ;;
 
     integration)
