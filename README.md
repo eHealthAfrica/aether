@@ -18,7 +18,6 @@
     - [Aether Kernel](#aether-kernel)
     - [Aether ODK Module](#aether-odk-module)
     - [Aether UI](#aether-ui)
-    - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
 
 - [Usage](#usage)
   - [Start the app](#start-the-app)
@@ -292,9 +291,6 @@ MULTITENANCY=
   - All the schemas are accessible to all tenants.
   - The entities without project are not accessible using the REST API.
 
-- In Aether CouchDB-Sync module:
-  - Devices are not restricted by realm but its user account is.
-
 *[Return to TOC](#table-of-contents)*
 
 #### uWSGI
@@ -372,20 +368,6 @@ The default values for the export feature:
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 - `CDN_URL`: e.g `https://storage.cloud.google.com/bucket_name` CDN url to access uploaded files.
 
-
-*[Return to TOC](#table-of-contents)*
-
-#### Aether CouchDB Sync Module
-
-- `COUCHDB_SERVER_URL`: CouchDB Server url to send back to Mobile App to authenticated users.
-- `GOOGLE_CLIENT_ID`: `generate_it_in_your_google_developer_console`
-  Token used to verify the device identity with Google.
-  See more in https://developers.google.com/identity/protocols/OAuth2
-- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_TOKEN_TEST`: `kernel_any_user_auth_token` Token to connect to testing kernel server.
-- `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
-- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
-
 *[Return to TOC](#table-of-contents)*
 
 ## Usage
@@ -404,8 +386,7 @@ Options:
   - `--clean` | `-c`   stop and remove all running containers and volumes before start
   - `--force` | `-f`   ensure that the container will be restarted if needed
   - `--kill`  | `-k`   kill all running containers before start
-  - `name` expected values: `kernel`, `odk`, `ui`, `couchdb-sync` or `sync`
-    (alias of `couchdb-sync`).
+  - `name` expected values: `kernel`, `odk`, `ui`.
     Any other value will start all containers.
 
 This will start:
@@ -416,20 +397,19 @@ This will start:
 
 - **Aether ODK Module** on `http://aether.local/odk/`.
 
-- **Aether CouchDB Sync Module** on `http://aether.local/sync/`.
-
 If you generated an `.env` file during installation, passwords for all superusers can be found there.
 
 To start any container separately:
 
 ```bash
-./scripts/docker_start.sh kernel          # starts Aether Kernel app and its dependencies
+# starts Aether Kernel app and its dependencies
+./scripts/docker_start.sh kernel
 
-./scripts/docker_start.sh odk             # starts Aether ODK module and its dependencies
+# starts Aether ODK module and its dependencies
+./scripts/docker_start.sh odk
 
-./scripts/docker_start.sh ui              # starts Aether UI and its dependencies
-
-./scripts/docker_start.sh couchdb-sync    # starts Aether CouchDB Sync module and its dependencies
+# starts Aether UI and its dependencies
+./scripts/docker_start.sh ui
 ```
 
 *[Return to TOC](#table-of-contents)*
@@ -492,10 +472,11 @@ The communication between Aether ODK Module and ODK Collect is done via
 The internal communication between the containers is done via
 [token authentication](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
 
-In the case of `aether-odk-module`, `aether-ui` and `aether-couchdb-sync-module`
-there is a global token to connect to `aether-kernel` set in the **required**
-environment variable `AETHER_KERNEL_TOKEN`. Take in mind that this token
-belongs to an active `aether-kernel` user but not necessarily to an admin user.
+In the case of `aether-odk-module` and `aether-ui` there is a global token
+to connect to `aether-kernel` set in the **required** environment variable
+`AETHER_KERNEL_TOKEN`.
+Take in mind that this token belongs to an active `aether-kernel` user
+but not necessarily to an admin user.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -508,7 +489,7 @@ This means that the authentication is handled by a third party system
 (like [Kong](https://konghq.com)) that includes in each request the JSON Web
 Token (JWT) in the `GATEWAY_HEADER_TOKEN` header (defaults to `X-Oauth-Token`).
 The `GATEWAY_SERVICE_ID` indicates the gateway service, usually matches the
-app/module name like `kernel`, `odk`, `ui`, `sync`.
+app/module name like `kernel`, `odk`, `ui`.
 
 In this case the app urls can be reached in several ways:
 
@@ -661,10 +642,7 @@ starting the `aether-odk-module` to have ODK Collect submissions posted to Aethe
 If a valid `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` combination is not set,
 the server will still start, but ODK Collect submissions will fail.
 
-This also applies for `aether-ui` and `aether-couchdb-sync-module`.
-
-In the case of `aether-couchdb-sync-module` a valid `GOOGLE_CLIENT_ID`
-environment variable is necessary to verify the device credentials as well.
+This also applies for `aether-ui`.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -709,13 +687,11 @@ The list of the main containers:
 | Container         | Description                                                             |
 | ----------------- | ----------------------------------------------------------------------- |
 | db                | [PostgreSQL](https://www.postgresql.org/) database                      |
-| couchdb           | [CouchDB](http://couchdb.apache.org/) database for sync                 |
 | redis             | [Redis](https://redis.io/) for task queueing and task result storage    |
 | keycloak          | [Keycloak](https://www.keycloak.org/) for authentication                |
 | nginx             | [NGINX](https://www.nginx.com/) the web server                          |
 | **kernel**        | Aether Kernel                                                           |
 | **odk**           | Aether ODK module (imports data from ODK Collect)                       |
-| **couchdb-sync**  | Aether CouchDB Sync module (imports data from Aether Mobile app)        |
 | **ui**            | Aether Kernel UI (advanced mapping functionality)                       |
 | **ui-assets**     | Auxiliary service to develop Aether Kernel UI assets                    |
 
@@ -755,7 +731,6 @@ To execute tests in just one container:
   - `client`
   - `ui`
   - `odk`
-  - `couchdb-sync`
   - `producer`
   - `integration`
 
@@ -785,7 +760,7 @@ docker-compose -f docker-compose-test.yml run --rm <container-name> test_coverag
 The e2e tests are run against different containers, the config file used
 for them is [docker-compose-test.yml](docker-compose-test.yml).
 
-Before running `odk`, `ui` or `couchdb-sync` you should start the needed test containers.
+Before running `odk` or `ui` you should start the needed test containers.
 
 ```bash
 docker-compose -f docker-compose-test.yml up -d <container-name>-test
@@ -793,7 +768,7 @@ docker-compose -f docker-compose-test.yml up -d <container-name>-test
 
 **WARNING**
 
-Never run `odk`, `ui` or `couchdb-sync` tests against any PRODUCTION server.
+Never run `odk` or `ui` tests against any PRODUCTION server.
 The tests clean up would **DELETE ALL PROJECTS!!!**
 
 Look into [docker-compose-test.yml](docker-compose-test.yml), the variable

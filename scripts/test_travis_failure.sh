@@ -27,6 +27,8 @@ case "$1" in
     core)
         $DC db-test
         echo "${LINE}"
+        $DC redis-test
+        echo "${LINE}"
 
         $DC kernel-test
         echo "${LINE}"
@@ -37,8 +39,6 @@ case "$1" in
     modules)
         $DC db-test
         echo "${LINE}"
-        $DC couchdb-test
-        echo "${LINE}"
         $DC redis-test
         echo "${LINE}"
 
@@ -46,12 +46,12 @@ case "$1" in
         echo "${LINE}"
         $DC odk-test
         echo "${LINE}"
-        $DC couchdb-sync-test
-        echo "${LINE}"
     ;;
 
     integration)
         $DC db-test
+        echo "${LINE}"
+        $DC redis-test
         echo "${LINE}"
 
         $DC kafka-test
@@ -69,6 +69,8 @@ case "$1" in
 
     ui)
         $DC db-test
+        echo "${LINE}"
+        $DC redis-test
         echo "${LINE}"
 
         $DC kernel-test
