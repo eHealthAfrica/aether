@@ -24,7 +24,7 @@ import requests
 from unittest import TestCase, mock
 from ..manager import ExtractionManager
 from . import MAPPINGS, MAPPINGSET, TENANT, SCHEMA_DECORATORS, SCHEMAS, SUBMISSION
-from ..utils import KERNEL_ARTEFACT_NAMES, Task
+from ..utils import KERNEL_ARTEFACT_NAMES, Task, remove_from_redis
 
 import fakeredis
 
@@ -166,3 +166,11 @@ class ExtractionManagerTests(TestCase):
             'mappings': ['1', '2']
         })
         manager.push_to_kernel()
+
+    def test_remove_from_redis(self):
+        _key = build_key(KERNEL_ARTEFACT_NAMES.mappingsets, TENANT, MAPPINGSET['id'])
+        _cache = self.redis.get(_key)
+        self.assertIsNotNone(_cache)
+        remove_from_redis(MAPPINGSET['id'], KERNEL_ARTEFACT_NAMES.mappingsets, TENANT, self.redis)
+        _cache = self.redis.get(_key)
+        self.assertIsNone(_cache)
