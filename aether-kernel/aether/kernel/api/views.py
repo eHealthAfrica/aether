@@ -768,12 +768,14 @@ class SubmissionStatsMixin(MtViewSetMixin):
 class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectStatsSerializer
+    filter_class = filters.ProjectFilter
     entities_fk = 'project'
 
 
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
+    filter_class = filters.MappingSetFilter
     mt_field = 'project'
 
 
