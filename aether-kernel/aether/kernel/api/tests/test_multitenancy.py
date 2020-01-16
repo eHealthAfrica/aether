@@ -168,6 +168,26 @@ class MultitenancyTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        # try to create an entity linked to a project that belongs to another realm
+        response = self.client.post(
+            reverse('entity-list'),
+            {
+                'project': obj2.pk,
+                'name': 'playing with realms',
+                'status': 'Pending Approval',
+                'payload': {
+                    'name': 'running into troubles',
+                }
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        self.assertIn('project', data)
+        self.assertEqual(
+            data['project'],
+            [f'Invalid pk "{str(obj2.pk)}" - object does not exist.'],
+        )
+
     def test_views__project(self):
         url = reverse('project-list')
         response = self.client.post(
