@@ -4,10 +4,10 @@
 #  * Databases + Minio + Keycloak + NGINX containers (use same settings in all files)
 #  * Aether Kernel
 #  * ODK Module
-#  * CouchDB Sync Module
 #  * Aether UI & UI Assets
 #  * Zookeper & Kafka
 #  * Aether Kafka Producer
+#  * Aether Entity Extractor
 #
 # These container will be extended in the other DC files with dependencies and networks.
 # Volumes and environment variables can be overriden in those files too.
@@ -31,15 +31,6 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
-
-  couchdb-base:
-    image: couchdb:2.3
-    environment:
-      COUCHDB_USER: ${COUCHDB_USER}
-      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
-    volumes:
-      # enable cors for mobile app in-browser development:
-      - ./local-setup/couchdb/config.ini:/usr/local/etc/couchdb/local.ini
 
   redis-base:
     image: redis:alpine
@@ -243,73 +234,6 @@ services:
 
 
   # ---------------------------------
-  # CouchDB Sync module
-  # ---------------------------------
-
-  couchdb-sync-base:
-    image: aether-couchdb-sync
-    build: ./aether-couchdb-sync-module
-    stdin_open: true
-    tty: true
-    environment:
-      CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
-      DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
-      LOGGING_FORMATTER: verbose
-      HTML_SELECT_CUTOFF: 10
-      PROFILING_ENABLED: "true"
-
-      KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
-      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
-      KEYCLOAK_BEHIND_SCENES: ${KEYCLOAK_BEHIND_SCENES}
-
-      MULTITENANCY: ${MULTITENANCY}
-      DEFAULT_REALM: ${DEFAULT_REALM}
-      REALM_COOKIE: ${REALM_COOKIE}
-
-      APP_NAME: Aether CouchDB-Sync
-      APP_URL: /sync
-      STATIC_URL: /static/sync/
-
-      ADMIN_USERNAME: ${COUCHDB_SYNC_ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${COUCHDB_SYNC_ADMIN_PASSWORD}
-      ADMIN_TOKEN: ${COUCHDB_SYNC_ADMIN_TOKEN}
-
-      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
-      AETHER_KERNEL_URL_TEST: http://kernel-test:9100
-
-      GOOGLE_CLIENT_ID: ${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
-
-      COUCHDB_SERVER_URL: http://${NETWORK_DOMAIN}/_couchdb
-      COUCHDB_URL: http://couchdb:5984
-      COUCHDB_USER: ${COUCHDB_USER}
-      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
-
-      DB_NAME: couchdb-sync
-      PGHOST: db
-      PGPASSWORD: ${COUCHDB_SYNC_DB_PASSWORD}
-      PGPORT: 5432
-      PGUSER: postgres
-
-      REDIS_DB: 0
-      REDIS_HOST: redis
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_PORT: 6379
-
-      WEB_SERVER_PORT: 8106
-    volumes:
-      - ./aether-couchdb-sync-module:/code
-      # to speed up SDK development changes
-      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
-
-      # static folder
-      - ./.persistent_data/static/sync:/var/www/static
-      # backup folder
-      - ./.persistent_data/backups/sync:/backups
-    command: start_dev
-
-
-  # ---------------------------------
   # Aether UI
   # ---------------------------------
 
@@ -444,7 +368,8 @@ services:
       - ./aether-producer:/code
     command: start
 
-# ---------------------------------
+
+  # ---------------------------------
   # Aether Entity Extractor
   # ---------------------------------
 

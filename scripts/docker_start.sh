@@ -40,7 +40,7 @@ function show_help {
         --help  | -h   show this message
 
         <name>
-            Expected values: kernel, odk, ui, couchdb-sync or sync (alias of couchdb-sync).
+            Expected values: kernel, odk, ui.
             Any other value will start all containers.
 
     """
@@ -124,13 +124,6 @@ case $app in
         SETUP_CONTAINERS=(kernel ui exm)
     ;;
 
-    sync|couchdb-sync)
-        app=couchdb-sync
-
-        PRE_CONTAINERS=(db couchdb redis nginx minio keycloak redis)
-        SETUP_CONTAINERS=(kernel couchdb-sync exm)
-    ;;
-
     exm)
         PRE_CONTAINERS=(redis)
         SETUP_CONTAINERS=(exm)
@@ -139,8 +132,8 @@ case $app in
     *)
         app=
 
-        PRE_CONTAINERS=(ui-assets db couchdb redis nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel odk ui couchdb-sync exm)
+        PRE_CONTAINERS=(ui-assets db redis nginx minio keycloak)
+        SETUP_CONTAINERS=(kernel odk ui exm)
     ;;
 esac
 

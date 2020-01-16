@@ -74,19 +74,18 @@ function release_gcs {
 
     if [ "$VERSION" == "alpha" ]; then
         GCS_PROJECTS="alpha"
+        openssl aes-256-cbc \
+            -K $encrypted_9112fb2807d4_key \
+            -iv $encrypted_9112fb2807d4_iv \
+            -in gcs_key.json.enc \
+            -out gcs_key.json -d
+
+        pip install -q google-cloud-storage
+
+        python ./scripts/push_version.py --version $GCS_VERSION --projects $GCS_PROJECTS
     else
-        GCS_PROJECTS="eha-data"
+        echo "version: $VERSION has no trigger deployment"
     fi
-
-    openssl aes-256-cbc \
-        -K $encrypted_9112fb2807d4_key \
-        -iv $encrypted_9112fb2807d4_iv \
-        -in gcs_key.json.enc \
-        -out gcs_key.json -d
-
-    pip install -q google-cloud-storage
-
-    python ./scripts/push_version.py --version $GCS_VERSION --projects $GCS_PROJECTS
 }
 
 function release_process {
@@ -94,7 +93,7 @@ function release_process {
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
     IMAGE_REPO='ehealthafrica'
-    RELEASE_APPS=( kernel exm odk couchdb-sync ui producer integration-test )
+    RELEASE_APPS=( kernel exm odk ui producer integration-test )
 
     echo "${LINE}"
     echo "Release version:   $VERSION"

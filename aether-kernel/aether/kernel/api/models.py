@@ -315,9 +315,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         try:
             send_model_item_to_redis(self)
         except Exception as e:  # pragma: no cover : rollback if redis is offline
-            raise ValidationError(
-                str(e)
-            )
+            raise ValidationError(str(e))
 
         # invalidates cached properties
         for p in ['payload_prettified']:  # pragma: no cover
