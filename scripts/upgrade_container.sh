@@ -37,14 +37,14 @@ function show_help {
         --help   | -h   show this message
 
         <name>
-            Expected values: kernel, odk, ui, couchdb-sync or producer.
+            Expected values: kernel, odk, ui or producer.
             If no name indicated then all the containers will be upgraded.
     """
 }
 
 # default values
 build=no
-containers=( kernel odk couchdb-sync ui producer )
+containers=( kernel odk ui producer )
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
