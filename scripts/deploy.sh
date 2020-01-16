@@ -128,7 +128,7 @@ GCR_IMAGE_REPO="eu.gcr.io/development-223016/aether"
 if [[ $TRAVIS_BRANCH = "develop" ]]; then
     IMAGE_REPO="eu.gcr.io"
     PROJECT="development-223016"
-    docker login -u _json_key -p "$(cat gcp-key.json)" $GCR_REPO_URL
+    docker login -u _json_key -p "$(cat gcs_key.json)" $GCR_REPO_URL
 
     push_images
 fi
