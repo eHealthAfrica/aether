@@ -116,15 +116,19 @@ fi
 # ===========================================================
 # push images to deployment repository
 
+if
+
 ### GCR_URL="https://eu.gcr.io"
-### GCR_IMAGE_REPO="eu.gcr.io/${GCS_PROJECTS}"
-GCR_IMAGE_REPO=${DOCKER_IMAGE_REPO}
+GCR_REPO_URL="http://eu.gcr.io"
+GCR_IMAGE_REPO="eu.gcr.io/development-223016/aether"
 
 ### docker login -u _json_key -p "$(cat gcs_key.json)" ${GCR_URL}
 
 # Note: pushing only the alpha commit (tags are already in docker hub)
 if [[ $TRAVIS_BRANCH = "develop" ]]; then
-    docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+    IMAGE_REPO="eu.gcr.io"
+    PROJECT="development-223016"
+    docker login -u _json_key -p "$(cat gcp-key.json)" $GCR_REPO_URL
 
     push_images
 fi
