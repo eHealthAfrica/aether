@@ -246,9 +246,13 @@ class ViewsTest(TestCase):
 
         response = self.client.get(
             url,
-            {'omit': 'first_submission,last_submission,submissions_count,entities_count'}
+            {'omit': 'created,first_submission,last_submission,submissions_count,entities_count'}
         )
         data = response.json()
+        self.assertIn('id', data)
+        self.assertIn('name', data)
+        self.assertIn('active', data)
+        self.assertNotIn('created', data)
         self.assertNotIn('first_submission', data)
         self.assertNotIn('last_submission', data)
         self.assertNotIn('submissions_count', data)
@@ -256,6 +260,10 @@ class ViewsTest(TestCase):
 
         response = self.client.get(url, {'fields': 'entities_count'})
         data = response.json()
+        self.assertNotIn('id', data)
+        self.assertNotIn('name', data)
+        self.assertNotIn('active', data)
+        self.assertNotIn('created', data)
         self.assertNotIn('first_submission', data)
         self.assertNotIn('last_submission', data)
         self.assertNotIn('submissions_count', data)
@@ -264,10 +272,14 @@ class ViewsTest(TestCase):
         response = self.client.get(
             url,
             {
-                'fields': 'entities_count,submissions_count',
-                'omit': 'submissions_count'
+                'fields': 'id,entities_count,submissions_count',
+                'omit': 'id,active,submissions_count'
             })
         data = response.json()
+        self.assertNotIn('id', data)
+        self.assertNotIn('name', data)
+        self.assertNotIn('active', data)
+        self.assertNotIn('created', data)
         self.assertNotIn('first_submission', data)
         self.assertNotIn('last_submission', data)
         self.assertNotIn('submissions_count', data)
