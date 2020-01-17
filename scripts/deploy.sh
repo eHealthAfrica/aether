@@ -23,6 +23,11 @@ set -Eo pipefail
 
 LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /#}`
 
+DEPLOY_APPS=( kernel odk ui producer )
+
+export RELEASE_BUCKET="aether-releases"
+export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
+
 if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
 
     echo "${LINE}"
@@ -60,13 +65,6 @@ else
 
 fi
 
-DOCKER_IMAGE_REPO="ehealthafrica"
-
-DEPLOY_APPS=( kernel odk ui producer )
-
-export RELEASE_BUCKET="aether-releases"
-export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
-
 echo "${LINE}"
 echo "Docker images:        ${DEPLOY_APPS[@]}"
 echo "Docker images tag:    $DOCKER_VERSION"
@@ -90,6 +88,8 @@ pip install -q google-cloud-storage push-app-version
 
 # ===========================================================
 # pull images from public docker hub
+
+DOCKER_IMAGE_REPO="ehealthafrica"
 
 for APP in "${DEPLOY_APPS[@]}"; do
     AETHER_APP="aether-${APP}"
