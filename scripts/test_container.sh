@@ -64,8 +64,7 @@ function _wait_for {
 
 function start_exm_test {
     build_container exm
-    echo_message "Starting Entity Extractor"
-    $DC_TEST up -d redis-test
+    echo_message "Starting extractor"
     $DC_TEST up -d exm-test
     echo_message "extractor ready!"
 }
@@ -107,6 +106,7 @@ fi
 
 echo_message "Starting databases + Minio Storage server"
 $DC_TEST up -d db-test minio-test redis-test
+
 if [[ $1 = "integration" ]]; then
     echo_message "Starting Zookeeper and Kafka"
     $DC_TEST up -d zookeeper-test kafka-test
@@ -115,19 +115,18 @@ fi
 
 if [[ $1 == "kernel" ]]; then
     start_exm_test
-fi
 
-if [[ $1 == "exm" ]]; then
-    $DC_TEST up -d redis-test
-fi
+else
 
-if [[ $1 != "kernel" && $1 != "exm" ]]; then
     # rename kernel test database in each case
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")
 
     build_container kernel
     start_kernel_test
-    start_exm_test
+
+    if [[ $1 != "exm" ]]; then
+        start_exm_test
+    fi
 
     if [[ $1 = "client" || $1 == "integration" ]]; then
         echo_message "Creating client user on Kernel"
