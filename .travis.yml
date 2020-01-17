@@ -15,6 +15,39 @@ branches:
     - /^release\-[0-9]+\.[0-9]+$/
     - /^[0-9]+(\.[0-9]+){2}$/
 
+
+# define stages and their execution order
+stages:
+  - name: test
+
+  # release only in:
+  #   - branch   develop
+  #   - branch   release-#.#
+  #   - tag      #.#.#
+  #   - never in forks or pull requests
+  - name: release
+    if: |
+      fork IS false AND \
+      type != pull_request AND \
+      ((branch = develop) OR \
+      (branch =~ ^release\-[0-9]+\.[0-9]+$) OR \
+      (tag =~ ^[0-9]+(\.[0-9]+){2}$))
+
+  # Trigger deployment on GCS
+  # only in:
+  #   - branch   develop
+  #   - branch   release-#.#
+  #   - tag      #.#.#
+  #   - never in forks or pull requests
+  - name: deploy
+    if: |
+      fork IS false AND \
+      type != pull_request AND \
+      ((branch = develop) OR \
+      (branch =~ ^release\-[0-9]+\.[0-9]+$) OR \
+      (tag =~ ^[0-9]+(\.[0-9]+){2}$))
+
+
 # use matrix to parallelize tests
 matrix:
   fast_finish: true
@@ -35,21 +68,13 @@ matrix:
       stage: test
       env: 'TEST_MODE=integration'
 
-    # execute only to deploy
-    - name: "Aether release"
-      stage: deploy
-      # release only in:
-      #   - branch   develop
-      #   - branch   release-#.#
-      #   - tag      #.#.#
-      #   - never in forks or pull requests
-      if: |
-        fork IS false AND \
-        type != pull_request AND \
-        ((branch = develop) OR \
-        (branch =~ ^release\-[0-9]+\.[0-9]+$) OR \
-        (tag =~ ^[0-9]+(\.[0-9]+){2}$))
+    - name: "Release"
+      stage: release
       script: ./scripts/release.sh
+
+    - name: "Deployment"
+      stage: deploy
+      script: ./scripts/deploy.sh
 
 install: true
 
@@ -57,4 +82,4 @@ script:
   - ./scripts/test_travis.sh $TEST_MODE
 
 after_failure:
-  - ./scripts/test_travis_failure.sh $TEST_MODE
+  - ./scripts/test_travis_failure.sh ${TEST_MODE:-}
