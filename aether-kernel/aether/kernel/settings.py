@@ -37,17 +37,10 @@ ROOT_URLCONF = 'aether.kernel.urls'
 INSTALLED_APPS += [
     'django_filters',
     'drf_yasg',
-    'django_pickling',
-    'nolastlogin',
+    'django_pickling'
 ]
 
-NO_UPDATE_LAST_LOGIN = True
-
 if REDIS_REQUIRED:
-    # REDIS_HOST = get_required('REDIS_HOST')
-    # REDIS_PORT = get_required('REDIS_PORT')
-    # REDIS_DB = int(os.environ.get('REDIS_DB', 0))
-    # REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', None)
     SESSION_REDIS = {
         'host': REDIS_HOST,
         'port': REDIS_PORT,
@@ -58,7 +51,6 @@ if REDIS_REQUIRED:
         'retry_on_timeout': True
     }
     SESSION_ENGINE = 'redis_sessions.session'
-    print('Using Redis Sessions')
 
 MULTITENANCY_MODEL = 'kernel.Project'
 MIGRATION_MODULES['kernel'] = 'aether.kernel.api.migrations'
@@ -68,15 +60,6 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     'django_filters.rest_framework.DjangoFilterBackend',
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
-
-# if os.environ.get('BEHIND_GATEWAY', '').lower() in ['true', 't']:
-#     try:
-#         # INSTALLED_APPS.remove('django.middleware.csrf.CsrfViewMiddleware')
-#         # INSTALLED_APPS.remove('corsheaders')
-#         print('removed CSRF?')
-#     except ValueError:
-#         print('Could not remove CSRF from Django.')
-#         print(INSTALLED_APPS)
 
 # Upload files
 # ------------------------------------------------------------------------------
@@ -111,7 +94,7 @@ if PROFILING_ENABLED:
     def ignore_entities_post(request):
         return request.method != 'POST' or '/entities' not in request.path
 
-    # SILKY_INTERCEPT_FUNC = ignore_entities_post
+    SILKY_INTERCEPT_FUNC = ignore_entities_post
     SILKY_PYTHON_PROFILER_BINARY = True
     SILKY_PYTHON_PROFILER_RESULT_PATH = '/tmp/'
     SILKY_META = True
@@ -119,29 +102,13 @@ if PROFILING_ENABLED:
 
 CACHEOPS_DEGRADE_ON_FAILURE = False
 
-'''
-    # users and roles
-    'auth.*': {'ops': 'all'},
-    'authtoken.*': {'ops': 'all'},
-    # # content types
-    'contenttypes.*': {
-        'local_get': True,
-        'timeout': 60 * 60 * 24,  # one day
-    },
-    '''
-
-_modules = [
-    # 'admin.logentry',
+_CACHED_MODULES = [
     'auth.*'
-    'auth.user.*',
-    # ^ roll-up into one
-    # 'auth.permission',
-    # 'auth.group',
-    # 'auth.user',
+    'auth.user',
+    'auth.permission',
+    'auth.group',
     'contenttypes.contenttype',
     'sessions.*',
-    # ^ roll-up into one
-    # 'sessions.session',
     'authtoken.token',
     'kernel.project',
     'kernel.mappingset',
@@ -152,13 +119,10 @@ _modules = [
     'kernel.mapping',
     # 'kernel.entity',
     'multitenancy.mtinstance',
-    # 'silk.request',
-    # 'silk.response',
-    # 'silk.sqlquery',
-    # 'silk.profile'
 ]
 
-CACHEOPS = {i: {'ops': 'all'} for i in _modules}
+# CACHEOPS = {i: {'ops': 'all'} for i in _modules}
+CACHEOPS = {i: {'ops': ('fetch', 'get', 'exists')} for i in _CACHED_MODULES}
 
 # Swagger workaround
 # ------------------------------------------------------------------------------
