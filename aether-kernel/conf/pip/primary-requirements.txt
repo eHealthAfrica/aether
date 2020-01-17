@@ -21,10 +21,12 @@ aether.sdk[cache,server,storage,test]
 # Aether Python library
 aether.python
 
-
 # Django specific
 django-filter
 django-model-utils
+django-pickling
+django-no-last-login
+django-redis-sessions
 drf-yasg
 python-dateutil
 
