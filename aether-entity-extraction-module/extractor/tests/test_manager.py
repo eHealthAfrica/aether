@@ -23,7 +23,16 @@ import copy
 import requests
 from unittest import TestCase, mock
 from ..manager import ExtractionManager
-from . import MAPPINGS, MAPPINGSET, TENANT, SCHEMA_DECORATORS, SCHEMAS, SUBMISSION
+from . import (
+    MAPPINGS,
+    MAPPINGSET,
+    TENANT,
+    SCHEMA_DECORATORS,
+    SCHEMAS,
+    SUBMISSION,
+    WRONG_SUBMISSION,
+    SUBMISSION_WRONG_MAPPING
+)
 from ..utils import KERNEL_ARTEFACT_NAMES, Task, remove_from_redis, SUBMISSION_PAYLOAD_FIELD
 from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 
@@ -72,7 +81,6 @@ def load_redis(redis):
 
 
 class ExtractionManagerTests(TestCase):
-    redis = fakeredis.FakeStrictRedis()
     NO_OF_SUBMISSIONS = 10
     data = SUBMISSION
     data['id'] = str(uuid.uuid4())
@@ -82,6 +90,24 @@ class ExtractionManagerTests(TestCase):
         type=f'_{SUBMISSION_CHANNEL}',
         tenant=TENANT
     )
+
+    wrong_task = Task(
+        id=str(uuid.uuid4()),
+        data=WRONG_SUBMISSION,
+        type=f'_{SUBMISSION_CHANNEL}',
+        tenant=TENANT
+    )
+
+    wrong_mapping_task = Task(
+        id=str(uuid.uuid4()),
+        data=SUBMISSION_WRONG_MAPPING,
+        type=f'_{SUBMISSION_CHANNEL}',
+        tenant=TENANT
+    )
+
+    def setUp(self):
+        self.redis = fakeredis.FakeStrictRedis()
+        load_redis(self.redis)
 
     def test_init_extraction_manager(self):
         manager = ExtractionManager()
@@ -93,7 +119,6 @@ class ExtractionManagerTests(TestCase):
         self.assertIsNone(manager.redis)
 
     def test_handle_pending_submissions(self):
-        load_redis(self.redis)
         self.assertEqual(len(self.redis.execute_command('keys', '*')), 9)
 
         manager = ExtractionManager(self.redis)
@@ -134,7 +159,6 @@ class ExtractionManagerTests(TestCase):
         self.assertTrue(manager.extraction_thread.is_alive())
 
     def test_entity_extraction(self):
-        load_redis(self.redis)
         manager = ExtractionManager(self.redis)
         self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 0)
         self.assertEqual(manager.realm_entities, {})
@@ -150,6 +174,15 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 1)
         self.assertEqual(len(manager.realm_entities[TENANT]), 3)
 
+        manager = ExtractionManager(self.redis)
+        manager.entity_extraction(self.wrong_task)
+        self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 1)
+        self.assertNotIn(TENANT, manager.realm_entities)
+        with self.assertRaises(Exception):
+            manager.entity_extraction(self.wrong_mapping_task)
+            self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 2)
+        self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 1)
+
     @mock.patch(
         'extractor.utils.kernel_data_request'
     )
@@ -157,7 +190,7 @@ class ExtractionManagerTests(TestCase):
         mock_response = requests.Response()
         mock_response.status_code = 500
         mock_kernel_data_request.return_value = mock_response
-        manager = ExtractionManager()
+        manager = ExtractionManager(self.redis)
         manager.realm_entities[TENANT] = collections.deque()
         manager.realm_entities[TENANT].appendleft({'name': 'test entity', 'submission': 'id_1'})
         manager.PROCESSED_SUBMISSIONS.appendleft({
@@ -177,7 +210,7 @@ class ExtractionManagerTests(TestCase):
         self.assertIsNone(_cache)
 
     def test_flag_invalid_submission(self):
-        manager = ExtractionManager()
+        manager = ExtractionManager(self.redis)
         errors = {
             ENTITY_EXTRACTION_ERRORS: ['error1', 'error2']
         }
@@ -186,4 +219,4 @@ class ExtractionManagerTests(TestCase):
             SUBMISSION_PAYLOAD_FIELD: {ENTITY_EXTRACTION_ERRORS: []}
         }
         failed_submission = manager.flag_invalid_submission(submission, errors, exception)
-        self.assertEquals(len(failed_submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ERRORS]), 3)
+        self.assertEqual(len(failed_submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ERRORS]), 3)
