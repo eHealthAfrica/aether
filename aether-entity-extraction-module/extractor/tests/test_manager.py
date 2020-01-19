@@ -24,7 +24,8 @@ import requests
 from unittest import TestCase, mock
 from ..manager import ExtractionManager
 from . import MAPPINGS, MAPPINGSET, TENANT, SCHEMA_DECORATORS, SCHEMAS, SUBMISSION
-from ..utils import KERNEL_ARTEFACT_NAMES, Task, remove_from_redis
+from ..utils import KERNEL_ARTEFACT_NAMES, Task, remove_from_redis, SUBMISSION_PAYLOAD_FIELD
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 
 import fakeredis
 
@@ -174,3 +175,15 @@ class ExtractionManagerTests(TestCase):
         remove_from_redis(MAPPINGSET['id'], KERNEL_ARTEFACT_NAMES.mappingsets, TENANT, self.redis)
         _cache = self.redis.get(_key)
         self.assertIsNone(_cache)
+
+    def test_flag_invalid_submission(self):
+        manager = ExtractionManager()
+        errors = {
+            ENTITY_EXTRACTION_ERRORS: ['error1', 'error2']
+        }
+        exception = Exception('Test exception')
+        submission = {
+            SUBMISSION_PAYLOAD_FIELD: {ENTITY_EXTRACTION_ERRORS: []}
+        }
+        failed_submission = manager.flag_invalid_submission(submission, errors, exception)
+        self.assertEquals(len(failed_submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ERRORS]), 3)
