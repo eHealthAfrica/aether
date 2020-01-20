@@ -37,4 +37,4 @@ docker volume create ${DB_VOLUME} || true
 echo "${DB_VOLUME} volume is ready."
 
 # refresh the docker images
-docker-compose pull db nginx redis couchdb minio
+docker-compose pull db nginx redis minio

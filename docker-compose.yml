@@ -4,7 +4,6 @@
 #  * Databases + NGINX + Minio + Keycloak
 #  * Aether Kernel
 #  * ODK Module
-#  * CouchDB Sync Module
 #  * Aether UI & UI Assets
 # ------------------------------------------------------------------------------
 
@@ -36,13 +35,6 @@ services:
       service: postgres-base
     volumes:
       - database_data:/var/lib/postgresql/data
-    networks:
-      - internal
-
-  couchdb:
-    extends:
-      file: ./docker-compose-base.yml
-      service: couchdb-base
     networks:
       - internal
 
@@ -170,32 +162,6 @@ services:
     extra_hosts:
       - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
-
-  # ---------------------------------
-  # CouchDB Sync module
-  # ---------------------------------
-
-  couchdb-sync:
-    extends:
-      file: ./docker-compose-base.yml
-      service: couchdb-sync-base
-    depends_on:
-      db:
-        condition: service_healthy
-      nginx:
-        condition: service_healthy
-      keycloak:
-        condition: service_started
-      couchdb:
-        condition: service_started
-      redis:
-        condition: service_started
-      kernel:
-        condition: service_started
-    networks:
-      - internal
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
   exm:
     extends:
