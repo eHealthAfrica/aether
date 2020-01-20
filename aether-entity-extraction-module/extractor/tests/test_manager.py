@@ -17,6 +17,7 @@
 # under the License.
 
 import collections
+import fakeredis
 import json
 import uuid
 import copy
@@ -24,10 +25,21 @@ import copy
 from unittest import TestCase, mock
 
 from ..manager import ExtractionManager
-from . import MAPPINGS, MAPPINGSET, TENANT, SCHEMA_DECORATORS, SCHEMAS, SUBMISSION
-from ..utils import KERNEL_ARTEFACT_NAMES, Task
+from ..utils import (
+    KERNEL_ARTEFACT_NAMES,
+    Task,
+)
 
-import fakeredis
+from . import (
+    MAPPINGS,
+    MAPPINGSET,
+    TENANT,
+    SCHEMA_DECORATORS,
+    SCHEMAS,
+    SUBMISSION,
+    WRONG_SUBMISSION,
+    SUBMISSION_WRONG_MAPPING
+)
 
 SUBMISSION_CHANNEL = 'test_submissions'
 
@@ -84,6 +96,20 @@ class ExtractionManagerTests(TestCase):
             data=data,
             type=f'_{SUBMISSION_CHANNEL}',
             tenant=TENANT,
+        )
+
+        self.wrong_task = Task(
+            id=str(uuid.uuid4()),
+            data=WRONG_SUBMISSION,
+            type=f'_{SUBMISSION_CHANNEL}',
+            tenant=TENANT
+        )
+
+        self.wrong_mapping_task = Task(
+            id=str(uuid.uuid4()),
+            data=SUBMISSION_WRONG_MAPPING,
+            type=f'_{SUBMISSION_CHANNEL}',
+            tenant=TENANT
         )
 
         self.redis = fakeredis.FakeStrictRedis()
@@ -153,32 +179,13 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(len(self.manager.PROCESSED_SUBMISSIONS), 1)
         self.assertEqual(len(self.manager.realm_entities[TENANT]), 3)
 
-    @mock.patch('extractor.manager.kernel_data_request', side_effect=Exception)
-    def test_push_to_kernel__error(self, mock_kernel_data_request):
-        self.manager.realm_entities[TENANT] = collections.deque()
-        self.manager.realm_entities[TENANT].appendleft({'name': 'test entity', 'submission': 'id_1'})
-        self.manager.PROCESSED_SUBMISSIONS.appendleft({
-            'name': 'test submission',
-            'tenant': TENANT,
-            'id': 'id_1',
-            'mappings': ['1', '2']
-        })
-
-        self.manager.push_to_kernel()
-
-        mock_kernel_data_request.assert_has_calls([
-            mock.call(
-                url='entities/',
-                method='post',
-                data=[{'name': 'test entity', 'submission': 'id_1'}],
-                realm=TENANT,
-            ),
-            mock.call(
-                url='submissions/bulk_update_extracted/',
-                method='patch',
-                data=[{'name': 'test submission', 'id': 'id_1'}],
-            ),
-        ])
+    def test_entity_extraction__error(self):
+        self.manager.entity_extraction(self.wrong_task)
+        self.assertEqual(len(self.manager.PROCESSED_SUBMISSIONS), 1)
+        self.assertNotIn(TENANT, self.manager.realm_entities)
+        with self.assertRaises(Exception):
+            self.manager.entity_extraction(self.wrong_mapping_task)
+        self.assertEqual(len(self.manager.PROCESSED_SUBMISSIONS), 1)
 
     @mock.patch('extractor.manager.kernel_data_request', return_value={})
     @mock.patch('extractor.manager.cache_failed_entities')
@@ -208,3 +215,30 @@ class ExtractionManagerTests(TestCase):
             ),
         ])
         mock_cache_failed_entities.assert_not_called()
+
+    @mock.patch('extractor.manager.kernel_data_request', side_effect=Exception)
+    def test_push_to_kernel__error(self, mock_kernel_data_request):
+        self.manager.realm_entities[TENANT] = collections.deque()
+        self.manager.realm_entities[TENANT].appendleft({'name': 'test entity', 'submission': 'id_1'})
+        self.manager.PROCESSED_SUBMISSIONS.appendleft({
+            'name': 'test submission',
+            'tenant': TENANT,
+            'id': 'id_1',
+            'mappings': ['1', '2']
+        })
+
+        self.manager.push_to_kernel()
+
+        mock_kernel_data_request.assert_has_calls([
+            mock.call(
+                url='entities/',
+                method='post',
+                data=[{'name': 'test entity', 'submission': 'id_1'}],
+                realm=TENANT,
+            ),
+            mock.call(
+                url='submissions/bulk_update_extracted/',
+                method='patch',
+                data=[{'name': 'test submission', 'id': 'id_1'}],
+            ),
+        ])

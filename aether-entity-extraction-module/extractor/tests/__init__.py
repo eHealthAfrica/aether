@@ -33,6 +33,10 @@ PAYLOAD = {
     'facility_name': 'Primary Health Care Abuja'
 }
 
+WRONG_PAYLOAD = {
+    'wrong_field': 'Primary Health Care Abuja'
+}
+
 MAPPINGSET = {
     'id': MAPPINGSET_ID,
     'name': 'Dummy',
@@ -185,10 +189,7 @@ SCHEMA_DECORATORS = [
                 },
                 {
                     'name': 'facility_name',
-                    'type': [
-                        'null',
-                        'string'
-                    ]
+                    'type': 'string'
                 },
                 {
                     'name': 'staff',
@@ -276,10 +277,7 @@ SCHEMA_DECORATORS = [
                 },
                 {
                     'name': 'name',
-                    'type': [
-                        'null',
-                        'string'
-                    ]
+                    'type': 'string'
                 },
                 {
                     'name': 'staff',
@@ -310,10 +308,7 @@ SCHEMAS = [
                 },
                 {
                     'name': 'facility_name',
-                    'type': [
-                        'null',
-                        'string'
-                    ]
+                    'type': 'string'
                 },
                 {
                     'name': 'staff',
@@ -427,5 +422,21 @@ SUBMISSION = {
     'mappings': [
         '0d4a9cc6-291c-4f9a-a409-1ba87cc93c57',
         '3ae8649f-2d5d-4703-82d3-94baaee4914e'
+    ]
+}
+
+WRONG_SUBMISSION = {
+    'mappingset': MAPPINGSET_ID,
+    'payload': WRONG_PAYLOAD,
+    'mappings': [
+        '0d4a9cc6-291c-4f9a-a409-1ba87cc93c57'
+    ]
+}
+
+SUBMISSION_WRONG_MAPPING = {
+    'mappingset': MAPPINGSET_ID,
+    'payload': WRONG_PAYLOAD,
+    'mappings': [
+        'wrong-mapping-id'
     ]
 }
