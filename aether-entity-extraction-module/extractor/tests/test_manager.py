@@ -20,7 +20,6 @@ import collections
 import json
 import uuid
 import copy
-import requests
 from unittest import TestCase, mock
 from ..manager import ExtractionManager
 from . import (
@@ -33,7 +32,11 @@ from . import (
     WRONG_SUBMISSION,
     SUBMISSION_WRONG_MAPPING
 )
-from ..utils import KERNEL_ARTEFACT_NAMES, Task, remove_from_redis, SUBMISSION_PAYLOAD_FIELD
+from ..utils import (
+    KERNEL_ARTEFACT_NAMES,
+    Task,
+    SUBMISSION_PAYLOAD_FIELD,
+)
 from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 
 import fakeredis
@@ -180,16 +183,9 @@ class ExtractionManagerTests(TestCase):
         self.assertNotIn(TENANT, manager.realm_entities)
         with self.assertRaises(Exception):
             manager.entity_extraction(self.wrong_mapping_task)
-            self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 2)
         self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 1)
 
-    @mock.patch(
-        'extractor.utils.kernel_data_request'
-    )
-    def test_push_to_kernel(self, mock_kernel_data_request):
-        mock_response = requests.Response()
-        mock_response.status_code = 500
-        mock_kernel_data_request.return_value = mock_response
+    def test_push_to_kernel(self):
         manager = ExtractionManager(self.redis)
         manager.realm_entities[TENANT] = collections.deque()
         manager.realm_entities[TENANT].appendleft({'name': 'test entity', 'submission': 'id_1'})
@@ -201,13 +197,31 @@ class ExtractionManagerTests(TestCase):
         })
         manager.push_to_kernel()
 
-    def test_remove_from_redis(self):
-        _key = build_key(KERNEL_ARTEFACT_NAMES.mappingsets, TENANT, MAPPINGSET['id'])
-        _cache = self.redis.get(_key)
-        self.assertIsNotNone(_cache)
-        remove_from_redis(MAPPINGSET['id'], KERNEL_ARTEFACT_NAMES.mappingsets, TENANT, self.redis)
-        _cache = self.redis.get(_key)
-        self.assertIsNone(_cache)
+    @mock.patch('extractor.manager.kernel_data_request', side_effect=Exception)
+    def test_push_to_kernel__error(self, mock_kernel_data_request):
+        manager = ExtractionManager(self.redis)
+        manager.realm_entities[TENANT] = collections.deque()
+        manager.realm_entities[TENANT].appendleft({'name': 'test entity', 'submission': 'id_1'})
+        manager.PROCESSED_SUBMISSIONS.appendleft({
+            'name': 'test submission',
+            'tenant': TENANT,
+            'id': 'id_1',
+            'mappings': ['1', '2']
+        })
+        manager.push_to_kernel()
+        mock_kernel_data_request.assert_has_calls([
+            mock.call(
+                url='entities/',
+                method='post',
+                data=mock.ANY,
+                realm=TENANT,
+            ),
+            mock.call(
+                url='submissions/bulk_update_extracted/',
+                method='patch',
+                data=mock.ANY,
+            ),
+        ])
 
     def test_flag_invalid_submission(self):
         manager = ExtractionManager(self.redis)

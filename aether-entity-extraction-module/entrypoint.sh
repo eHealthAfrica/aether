@@ -46,7 +46,6 @@ function test {
     coverage run \
     --concurrency=multiprocessing \
     --parallel-mode \
-    --parallel \
     -m pytest "${@:1}"
 
     coverage combine --append
