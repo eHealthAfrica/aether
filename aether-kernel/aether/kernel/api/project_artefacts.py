@@ -23,11 +23,11 @@ from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 
 from .constants import NAMESPACE
-from .models import Project, Schema, SchemaDecorator, MappingSet, Mapping, Submission
+from .models import Project, Schema, SchemaDecorator, MappingSet, Mapping
 from aether.python.avro.tools import avro_schema_to_passthrough_artefacts as parser
 
 
-def get_project_artefacts(project, include_submissions=False):
+def get_project_artefacts(project):
     '''
     Returns the list of project and all its artefact ids by type.
     '''
@@ -47,11 +47,6 @@ def get_project_artefacts(project, include_submissions=False):
     for schema_decorator in SchemaDecorator.objects.filter(project=project):
         results['schemas'].add(str(schema_decorator.schema.pk))
         results['schema_decorators'].add(str(schema_decorator.pk))
-
-    if include_submissions:
-        results['submissions'] = set()
-        for submission in Submission.objects.filter(project=project):
-            results['submissions'].add(str(submission.pk))
 
     return results
 

@@ -19,9 +19,3 @@
 LINKED_DATA_MAX_DEPTH = 3
 
 NAMESPACE = 'org.ehealthafrica.aether'
-
-SUBMISSION_BULK_UPDATEABLE_FIELDS = ['payload', 'is_extracted']
-
-MAX_WORKERS = 5
-
-PROJECT_ARTEFACT_CACHE = 'project_artefacts'

@@ -366,42 +366,6 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
     search_fields = ('project__name', 'mappingset__name',)
     mt_field = 'project'
 
-    def get_serializer(self, *args, **kwargs):
-        if 'data' in kwargs:
-            kwargs['many'] = isinstance(kwargs.get('data'), list)
-        return super(SubmissionViewSet, self).get_serializer(*args, **kwargs)
-
-    @action(detail=False, methods=['patch'])
-    def bulk_update_extracted(self, request, *args, **kwargs):
-        '''
-        Updates `is_extracted`, and `payload` for the supplied subbmissions,
-
-        Reachable at ``PATCH /submissions/bulk-update-extracted/``
-
-        expected body:
-
-        [
-            {
-                'id': 'uuid',
-                'payload': {},
-                'is_extracted': True|False
-
-            },
-            ...
-        ]
-        '''
-        try:
-            result = utils.submissions_flag_extracted(request.data)
-            return Response(
-                result,
-                status=status.HTTP_200_OK
-            )
-        except Exception as e:
-            return Response(
-                str(e),
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
     def check_realm_permission(self, request, mappingset):
         return is_accessible_by_realm(request, mappingset)
 

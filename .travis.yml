@@ -52,7 +52,7 @@ stages:
 matrix:
   fast_finish: true
   include:
-    - name: "Aether CORE tests (Extractor, Kernel, Client)"
+    - name: "Aether CORE tests (Kernel, Client)"
       stage: test
       env: 'TEST_MODE=core'
 

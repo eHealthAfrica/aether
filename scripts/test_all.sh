@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-containers=( kernel exm client ui odk producer integration )
+containers=( kernel client ui odk producer integration )
 
 for container in "${containers[@]}"; do
     ./scripts/test_container.sh $container

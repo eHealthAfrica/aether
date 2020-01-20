@@ -69,8 +69,7 @@ def run_entity_extraction(submission, overwrite=False):
                 schemadecorator=schemadecorator,
                 submission=submission,
                 mapping=mapping,
-                mapping_revision=mapping.revision,
-                project=submission.project,
+                mapping_revision=mapping.revision
             )
             entity_instance.save()
 
