@@ -99,6 +99,12 @@ if DJANGO_USE_CACHE:
 
     for k in _CACHED_MODULES:
         CACHEOPS[k] = {'ops': ('fetch', 'get', 'exists')}
+        # put Django user model into local cache for faster recall
+        CACHEOPS['auth.user'] = {
+            'ops': ('fetch', 'get', 'exists'),
+            'local_get': True,
+        }
+
 
 # Swagger workaround
 # ------------------------------------------------------------------------------
