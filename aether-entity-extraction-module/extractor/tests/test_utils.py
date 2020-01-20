@@ -16,39 +16,45 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import requests
 import fakeredis
 import json
+import requests
+
 from unittest import TestCase, mock
+
 from ..settings import KERNEL_URL
 from ..utils import kernel_data_request, remove_from_redis, KERNEL_ARTEFACT_NAMES
+
 from . import TENANT, MAPPINGSET
 
 
 class UtilsTests(TestCase):
 
-    @mock.patch(
-        'extractor.utils.request'
-    )
-    def test_kernel_request(self, mock_request):
+    @mock.patch('extractor.utils.request')
+    def test_kernel_request__raise_for_status(self, mock_request):
         mock_response = requests.Response()
         mock_response.status_code = 400
         mock_request.return_value = mock_response
+
         with self.assertRaises(Exception) as e:
-            res = kernel_data_request('test-url/', realm=TENANT)
-        self.assertTrue('400 Client Error' in str(e.exception))
+            kernel_data_request('test-url/', realm=TENANT)
+            self.assertTrue('400 Client Error' in str(e.exception))
+
         mock_request.assert_has_calls([
             mock.call(
                 url=f'{KERNEL_URL}/test-url/',
                 method='get',
+                json={},
                 headers={
                     'Authorization': mock.ANY,
                     'aether-realm': TENANT,
                 },
-                json={},
             ),
         ])
 
+    @mock.patch('extractor.utils.request')
+    def test_kernel_request(self, mock_request):
+        mock_response = requests.Response()
         mock_response.status_code, mock_response.encoding, mock_response._content = 200, 'utf8', b'{"key": "a"}'
         mock_request.return_value = mock_response
 
@@ -58,12 +64,9 @@ class UtilsTests(TestCase):
     def test_remove_from_redis(self):
         redis = fakeredis.FakeStrictRedis()
         _key = f'_{KERNEL_ARTEFACT_NAMES.mappingsets}:{TENANT}:{MAPPINGSET["id"]}'
-        redis.set(
-            _key,
-            json.dumps(MAPPINGSET)
-        )
-        _cache = redis.get(_key)
-        self.assertIsNotNone(_cache)
+
+        redis.set(_key, json.dumps(MAPPINGSET))
+        self.assertIsNotNone(redis.get(_key))
+
         remove_from_redis(MAPPINGSET['id'], KERNEL_ARTEFACT_NAMES.mappingsets, TENANT, redis)
-        _cache = redis.get(_key)
-        self.assertIsNone(_cache)
+        self.assertIsNone(redis.get(_key))

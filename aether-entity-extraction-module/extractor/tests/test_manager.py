@@ -98,20 +98,6 @@ class ExtractionManagerTests(TestCase):
             tenant=TENANT,
         )
 
-        self.wrong_task = Task(
-            id=str(uuid.uuid4()),
-            data=WRONG_SUBMISSION,
-            type=f'_{SUBMISSION_CHANNEL}',
-            tenant=TENANT
-        )
-
-        self.wrong_mapping_task = Task(
-            id=str(uuid.uuid4()),
-            data=SUBMISSION_WRONG_MAPPING,
-            type=f'_{SUBMISSION_CHANNEL}',
-            tenant=TENANT
-        )
-
         self.redis = fakeredis.FakeStrictRedis()
         load_redis(self.redis)
 
@@ -180,12 +166,26 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(len(self.manager.realm_entities[TENANT]), 3)
 
     def test_entity_extraction__error(self):
-        self.manager.entity_extraction(self.wrong_task)
+        wrong_task = Task(
+            id=str(uuid.uuid4()),
+            data=WRONG_SUBMISSION,
+            type=f'_{SUBMISSION_CHANNEL}',
+            tenant=TENANT,
+        )
+        self.assertEqual(len(self.manager.PROCESSED_SUBMISSIONS), 0)
+        self.manager.entity_extraction(wrong_task)
         self.assertEqual(len(self.manager.PROCESSED_SUBMISSIONS), 1)
         self.assertNotIn(TENANT, self.manager.realm_entities)
-        with self.assertRaises(Exception):
-            self.manager.entity_extraction(self.wrong_mapping_task)
-        self.assertEqual(len(self.manager.PROCESSED_SUBMISSIONS), 1)
+
+        wrong_mapping_task = Task(
+            id=str(uuid.uuid4()),
+            data=SUBMISSION_WRONG_MAPPING,
+            type=f'_{SUBMISSION_CHANNEL}',
+            tenant=TENANT,
+        )
+        self.manager.entity_extraction(wrong_mapping_task)
+        self.assertEqual(len(self.manager.PROCESSED_SUBMISSIONS), 2)
+        self.assertNotIn(TENANT, self.manager.realm_entities)
 
     @mock.patch('extractor.manager.kernel_data_request', return_value={})
     @mock.patch('extractor.manager.cache_failed_entities')

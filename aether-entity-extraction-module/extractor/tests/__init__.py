@@ -33,10 +33,6 @@ PAYLOAD = {
     'facility_name': 'Primary Health Care Abuja'
 }
 
-WRONG_PAYLOAD = {
-    'wrong_field': 'Primary Health Care Abuja'
-}
-
 MAPPINGSET = {
     'id': MAPPINGSET_ID,
     'name': 'Dummy',
@@ -423,6 +419,10 @@ SUBMISSION = {
         '0d4a9cc6-291c-4f9a-a409-1ba87cc93c57',
         '3ae8649f-2d5d-4703-82d3-94baaee4914e'
     ]
+}
+
+WRONG_PAYLOAD = {
+    'wrong_field': 'Primary Health Care Abuja'
 }
 
 WRONG_SUBMISSION = {
