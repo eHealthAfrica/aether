@@ -23,13 +23,13 @@ import threading
 import time
 
 from aether.python.entity.extractor import (
-    extract_create_entities,
     ENTITY_EXTRACTION_ERRORS,
     ENTITY_EXTRACTION_ENRICHMENT,
+    extract_create_entities,
 )
 
-from . import settings
-from .utils import (
+from extractor import settings
+from extractor.utils import (
     KERNEL_ARTEFACT_NAMES,
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
@@ -53,6 +53,7 @@ class ExtractionManager():
     def __init__(self, redis=None):
         self.SUBMISSION_QUEUE = collections.deque()
         self.PROCESSED_SUBMISSIONS = collections.deque()
+
         self.realm_entities = {}
         self.is_extracting = False
         self.is_pushing_to_kernel = False
@@ -204,12 +205,10 @@ class ExtractionManager():
 
         logger.debug('Pushing to kernel')
         while self.realm_has_entities() or self.PROCESSED_SUBMISSIONS or self.is_extracting:
-            submissions_length = len(self.PROCESSED_SUBMISSIONS)
-            current_submission_size = _get_size(submissions_length)
+            current_submission_size = _get_size(len(self.PROCESSED_SUBMISSIONS))
 
             for realm in self.realm_entities:
-                available_length = len(self.realm_entities[realm])
-                current_entity_size = _get_size(available_length)
+                current_entity_size = _get_size(len(self.realm_entities[realm]))
                 if current_entity_size:
                     entities = [self.realm_entities[realm].pop() for _ in range(current_entity_size)]
                     # post entities to kernel per realm

@@ -19,26 +19,28 @@
 import json
 import collections
 import logging
+from typing import Dict, NamedTuple, Union
+
 from aether.python.redis.task import TaskHelper
 from aether.python.utils import request
+
 from extractor import settings
-from typing import (
-    Dict,
-    NamedTuple,
-    Union,
+
+Constants = collections.namedtuple(
+    'Constants',
+    (
+        'projects',
+        'mappingsets',
+        'mappings',
+        'schemas',
+        'single_schema',
+        'schema_definition',
+        'schemadecorators',
+        'submissions',
+    )
 )
 
-EXTERNAL_APP_KERNEL = 'aether-kernel'
-SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
-SUBMISSION_PAYLOAD_FIELD = 'payload'
-FAILED_ENTITIES_KEY = '_aether_failed_entities'
-CONSTANTS = collections.namedtuple(
-    'CONSTANTS',
-    'projects mappingsets mappings schemas single_schema \
-    schema_definition schemadecorators submissions'
-)
-
-KERNEL_ARTEFACT_NAMES = CONSTANTS(
+KERNEL_ARTEFACT_NAMES = Constants(
     projects='projects',
     mappingsets='mappingsets',
     mappings='mappings',
@@ -49,7 +51,11 @@ KERNEL_ARTEFACT_NAMES = CONSTANTS(
     submissions='submissions',
 )
 
-REDIS_TASK = TaskHelper(settings, None)
+SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
+SUBMISSION_PAYLOAD_FIELD = 'payload'
+
+_FAILED_ENTITIES_KEY = '_aether_failed_entities'
+_REDIS_TASK = TaskHelper(settings, None)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
@@ -63,7 +69,7 @@ class Task(NamedTuple):
 
 
 def get_redis(redis):
-    return TaskHelper(settings, redis) if redis else REDIS_TASK
+    return TaskHelper(settings, redis) if redis else _REDIS_TASK
 
 
 def kernel_data_request(url='', method='get', data=None, headers=None, realm=None):
@@ -98,19 +104,19 @@ def get_from_redis_or_kernel(id, model_type, tenant, redis=None):
     tenant: the current tenant
     '''
 
-    redis = get_redis(redis)
+    redis_instance = get_redis(redis)
 
     try:
         # Get from redis
-        return redis.get(id, model_type, tenant)
+        return redis_instance.get(id, model_type, tenant)
 
     except Exception:
-        # get from kernel
-        url = f'{model_type}/{id}/'
         try:
-            resource = kernel_data_request(url, realm=tenant)
+            # get from kernel
+            resource = kernel_data_request(f'{model_type}/{id}/', realm=tenant)
             # cache on redis
-            redis.add(task=resource, type=model_type, tenant=tenant)
+            redis_instance.add(task=resource, type=model_type, tenant=tenant)
+
             return resource
         except Exception as e:
             logger.error(str(e))
@@ -131,22 +137,13 @@ def get_redis_subscribed_message(key, redis=None):
         key = key if isinstance(key, str) else key.decode()
         _type, tenant, _id = key.split(':')
 
-        return Task(
-            id=_id,
-            tenant=tenant,
-            type=_type,
-            data=doc
-        )
+        return Task(id=_id, tenant=tenant, type=_type, data=doc)
     except Exception:
         return None
 
 
 def redis_subscribe(callback, pattern, redis=None):
-    return get_redis(redis).subscribe(
-        callback=callback,
-        pattern=pattern,
-        keep_alive=True,
-    )
+    return get_redis(redis).subscribe(callback=callback, pattern=pattern, keep_alive=True)
 
 
 def redis_stop(redis):
@@ -154,12 +151,12 @@ def redis_stop(redis):
 
 
 def cache_failed_entities(entities, realm, redis=None):
-    redis = get_redis(redis)
+    redis_instance = get_redis(redis)
 
     try:
-        failed_entities = redis.get_by_key(FAILED_ENTITIES_KEY)
+        failed_entities = redis_instance.get_by_key(_FAILED_ENTITIES_KEY)
         failed_entities[realm].append(entities)
     except Exception:
         failed_entities = {realm: entities}
 
-    redis.redis.set(FAILED_ENTITIES_KEY, json.dumps(failed_entities))
+    redis_instance.redis.set(_FAILED_ENTITIES_KEY, json.dumps(failed_entities))

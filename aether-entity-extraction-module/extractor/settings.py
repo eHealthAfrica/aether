@@ -39,9 +39,9 @@ REALM_COOKIE = os.environ.get('REALM_COOKIE')
 GATEWAY_PUBLIC_REALM = os.environ.get('GATEWAY_PUBLIC_REALM', '-')
 
 # Extractor settings
-PUSH_TO_KERNEL_INTERVAL = 0.05
-MAX_WORKERS = 10
-MAX_PUSH_SIZE = 100
+PUSH_TO_KERNEL_INTERVAL = float(os.environ.get('PUSH_TO_KERNEL_INTERVAL', 0.05))
+MAX_WORKERS = int(os.environ.get('MAX_WORKERS', 10))
+MAX_PUSH_SIZE = int(os.environ.get('MAX_PUSH_SIZE', 100))
 
 
 # https://docs.python.org/3.7/library/logging.html#levels
