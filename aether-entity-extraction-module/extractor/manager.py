@@ -175,7 +175,7 @@ class ExtractionManager():
             except Exception as e:
                 current_submission = self.flag_invalid_submission(
                     current_submission,
-                    submission_data,
+                    [],
                     e
                 )
 

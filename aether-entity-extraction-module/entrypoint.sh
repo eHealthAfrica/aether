@@ -43,9 +43,15 @@ function test_flake8 {
 
 function test {
     rm -R /code/.coverage* 2>/dev/null || true
-    coverage run -m pytest "${@:1}"
+    coverage run \
+    --concurrency=multiprocessing \
+    --parallel-mode \
+    -m pytest "${@:1}"
+
+    coverage combine --append
     coverage report
     coverage erase
+
     cat /code/conf/extras/good_job.txt
     rm -R .pytest_cache
     rm -rf extractor/tests/__pycache__
