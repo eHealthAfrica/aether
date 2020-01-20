@@ -61,6 +61,8 @@ services:
       TESTING: "true"
       UWSGI_PROCESSES: "1"
       WEB_SERVER_PORT: 9100
+      REDIS_HOST: redis-test
+      DEFAULT_REALM: test
     volumes:
       # volumes in tests
       - ./tmp/test/kernel/static:/var/www/static
@@ -108,6 +110,7 @@ services:
       TEST_PARALLEL: ${TEST_PARALLEL}
       TESTING: "true"
       WEB_SERVER_PORT: 9102
+      DEFAULT_REALM: test
     volumes:
       # volumes in tests
       - ./tmp/test/odk/static:/var/www/static
@@ -214,3 +217,21 @@ services:
     volumes:
       - ./test-aether-integration-module:/code
     command: test
+
+
+  # ---------------------------------
+  # Aether Entity Extraction Tests
+  # ---------------------------------
+
+  exm-test:
+    extends:
+      file: ./docker-compose-base.yml
+      service: exm-base
+    environment:
+      # These variables will override the ones indicated in the settings file
+      LOGGING_LEVEL: DEBUG
+      AETHER_KERNEL_URL: http://kernel-test:9100
+      REDIS_HOST: redis-test
+      DEFAULT_REALM: test
+
+    command: start

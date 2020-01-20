@@ -115,6 +115,7 @@ def generate_entities(client, mappingset):  # noqa: F811
             mappingset=mappingset.id
         )
         instance = client.submissions.create(data=submission)
+        sleep(2)
         for entity in client.entities.paginated('list', submission=instance.id):
             entities.append(entity)
     return entities

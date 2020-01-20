@@ -66,7 +66,7 @@ function release_process {
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
     IMAGE_REPO="ehealthafrica"
-    RELEASE_APPS=( kernel odk ui producer integration-test )
+    RELEASE_APPS=( kernel exm odk ui producer integration-test )
 
     echo "${LINE}"
     echo "Release version:   $VERSION"

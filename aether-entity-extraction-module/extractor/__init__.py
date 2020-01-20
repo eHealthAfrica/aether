@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-#
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,11 +15,17 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-containers=( kernel exm client ui odk producer integration )
+from .manager import ExtractionManager
 
-for container in "${containers[@]}"; do
-    ./scripts/test_container.sh $container
-done
+SUBMISSION_CHANNEL = '_submissions*'
+
+
+def main():
+    extractor = ExtractionManager()
+    extractor.handle_pending_submissions(SUBMISSION_CHANNEL)
+    extractor.subscribe_to_redis_channel(
+        callback=extractor.add_to_queue,
+        channel=SUBMISSION_CHANNEL
+    )
+    return extractor

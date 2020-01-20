@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-#
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,11 +15,17 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-containers=( kernel exm client ui odk producer integration )
+import collections
+from unittest import TestCase
+from .. import main
 
-for container in "${containers[@]}"; do
-    ./scripts/test_container.sh $container
-done
+
+class InitTests(TestCase):
+
+    def test_manager_setup(self):
+        container = main()
+        self.assertEqual(container.SUBMISSION_QUEUE, collections.deque())
+        self.assertEqual(container.PROCESSED_SUBMISSIONS, collections.deque())
+        self.assertEqual(container.realm_entities, {})
+        container.stop()
