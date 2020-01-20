@@ -36,21 +36,8 @@ ROOT_URLCONF = 'aether.kernel.urls'
 
 INSTALLED_APPS += [
     'django_filters',
-    'drf_yasg',
-    'django_pickling'
+    'drf_yasg'
 ]
-
-if REDIS_REQUIRED:
-    SESSION_REDIS = {
-        'host': REDIS_HOST,
-        'port': REDIS_PORT,
-        'db': REDIS_DB,
-        'password': REDIS_PASSWORD,
-        'prefix': 'session',
-        'socket_timeout': 3,
-        'retry_on_timeout': True
-    }
-    SESSION_ENGINE = 'redis_sessions.session'
 
 MULTITENANCY_MODEL = 'kernel.Project'
 MIGRATION_MODULES['kernel'] = 'aether.kernel.api.migrations'
@@ -91,38 +78,27 @@ EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
 # In the meantime we will disable silk for those requests.
 
 if PROFILING_ENABLED:
-    def ignore_entities_post(request):
-        return request.method != 'POST' or '/entities' not in request.path
+    if TESTING:
+        def ignore_entities_post(request):
+            return request.method != 'POST' or '/entities' not in request.path
 
-    SILKY_INTERCEPT_FUNC = ignore_entities_post
-    SILKY_PYTHON_PROFILER_BINARY = True
-    SILKY_PYTHON_PROFILER_RESULT_PATH = '/tmp/'
-    SILKY_META = True
+        SILKY_INTERCEPT_FUNC = ignore_entities_post
 
+if DJANGO_USE_CACHE:
+    CACHEOPS_DEGRADE_ON_FAILURE = True
+    _CACHED_MODULES = [
+        'kernel.entity',
+        'kernel.project',
+        'kernel.mappingset',
+        'kernel.submission',
+        'kernel.attachment',
+        'kernel.schema',
+        'kernel.schemadecorator',
+        'kernel.mapping',
+    ]
 
-CACHEOPS_DEGRADE_ON_FAILURE = False
-
-_CACHED_MODULES = [
-    'auth.*'
-    'auth.user',
-    'auth.permission',
-    'auth.group',
-    'contenttypes.contenttype',
-    'sessions.*',
-    'authtoken.token',
-    'kernel.project',
-    'kernel.mappingset',
-    'kernel.submission',
-    'kernel.attachment',
-    'kernel.schema',
-    'kernel.schemadecorator',
-    'kernel.mapping',
-    # 'kernel.entity',
-    'multitenancy.mtinstance',
-]
-
-# CACHEOPS = {i: {'ops': 'all'} for i in _modules}
-CACHEOPS = {i: {'ops': ('fetch', 'get', 'exists')} for i in _CACHED_MODULES}
+    for k in _CACHED_MODULES:
+        CACHEOPS[k] = {'ops': ('fetch', 'get', 'exists')}
 
 # Swagger workaround
 # ------------------------------------------------------------------------------
