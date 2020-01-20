@@ -1,4 +1,0 @@
-gcc
-gettext-base
-gnupg
-wget

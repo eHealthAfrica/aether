@@ -40,7 +40,7 @@ function show_help {
         --help  | -h   show this message
 
         <name>
-            Expected values: kernel, odk, ui, couchdb-sync or sync (alias of couchdb-sync).
+            Expected values: kernel, odk, ui.
             Any other value will start all containers.
 
     """
@@ -110,37 +110,25 @@ done
 
 case $app in
     kernel)
-        PRE_CONTAINERS=(db nginx minio keycloak redis)
+        PRE_CONTAINERS=(db redis nginx minio keycloak)
         SETUP_CONTAINERS=(kernel exm)
     ;;
 
     odk)
-        PRE_CONTAINERS=(db nginx minio keycloak redis)
-        SETUP_CONTAINERS=(kernel odk exm)
+        PRE_CONTAINERS=(db redis nginx minio keycloak)
+        SETUP_CONTAINERS=(kernel exm odk)
     ;;
 
     ui)
-        PRE_CONTAINERS=(ui-assets db nginx minio keycloak redis)
-        SETUP_CONTAINERS=(kernel ui exm)
-    ;;
-
-    sync|couchdb-sync)
-        app=couchdb-sync
-
-        PRE_CONTAINERS=(db couchdb redis nginx minio keycloak redis)
-        SETUP_CONTAINERS=(kernel couchdb-sync exm)
-    ;;
-
-    exm)
-        PRE_CONTAINERS=(redis)
-        SETUP_CONTAINERS=(exm)
+        PRE_CONTAINERS=(ui-assets db redis nginx minio keycloak)
+        SETUP_CONTAINERS=(kernel exm ui)
     ;;
 
     *)
         app=
 
-        PRE_CONTAINERS=(ui-assets db couchdb redis nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel odk ui couchdb-sync exm)
+        PRE_CONTAINERS=(ui-assets db redis nginx minio keycloak)
+        SETUP_CONTAINERS=(kernel exm odk ui)
     ;;
 esac
 
