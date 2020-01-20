@@ -16,11 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime
 from django.utils.translation import gettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from aether.sdk.drf.serializers import (
+    DynamicFieldsSerializer,
     DynamicFieldsModelSerializer,
     FilteredHyperlinkedRelatedField,
     HyperlinkedIdentityField,
@@ -290,7 +292,13 @@ class EntityListSerializer(serializers.ListSerializer):
         return models.Entity.objects.bulk_create(entities)
 
 
-class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
+# class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
+class EntitySerializer(DynamicFieldsMixin, DynamicFieldsSerializer):
+
+    modified = serializers.DateTimeField(read_only=True)
+    payload = serializers.JSONField()
+    status = serializers.CharField(max_length=20)
+    mapping_revision = serializers.CharField(allow_null=True, default=None)
 
     url = HyperlinkedIdentityField(view_name='entity-detail')
     project_url = HyperlinkedRelatedField(
@@ -375,8 +383,8 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
             raise serializers.ValidationError(e)
 
     class Meta:
-        model = models.Entity
-        fields = '__all__'
+        # model = models.Entity
+        # fields = '__all__'
         list_serializer_class = EntityListSerializer
 
 
