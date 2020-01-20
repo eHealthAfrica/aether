@@ -49,19 +49,10 @@ KERNEL_ARTEFACT_NAMES = CONSTANTS(
     submissions='submissions',
 )
 
-MAX_WORKERS = 10
+REDIS_TASK = TaskHelper(settings, None)
 
-MAX_PUSH_SIZE = 100
-
-REDIS_INSTANCE = None
-
-REDIS_TASK = TaskHelper(settings, REDIS_INSTANCE)
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
-
-
-def get_redis(redis):
-    return TaskHelper(settings, redis) if redis else REDIS_TASK
 
 
 class Task(NamedTuple):
@@ -71,27 +62,29 @@ class Task(NamedTuple):
     data: Union[Dict, None] = None
 
 
+def get_redis(redis):
+    return TaskHelper(settings, redis) if redis else REDIS_TASK
+
+
 def kernel_data_request(url='', method='get', data=None, headers=None, realm=None):
     '''
     Handle request calls to the kernel server
     '''
 
-    kernel_url = settings.KERNEL_URL
     headers = headers or {}
     headers['Authorization'] = f'Token {settings.KERNEL_TOKEN}'
-    _realm = realm if realm else settings.GATEWAY_PUBLIC_REALM
 
+    _realm = realm if realm else settings.GATEWAY_PUBLIC_REALM
     headers[settings.REALM_COOKIE] = _realm
 
     res = request(
         method=method,
-        url=f'{kernel_url}/{url}',
+        url=f'{settings.KERNEL_URL}/{url}',
         json=data or {},
         headers=headers,
     )
-
     res.raise_for_status()
-    return json.loads(res.content.decode('utf-8'))
+    return res.json()
 
 
 def get_from_redis_or_kernel(id, model_type, tenant, redis=None):
@@ -110,6 +103,7 @@ def get_from_redis_or_kernel(id, model_type, tenant, redis=None):
     try:
         # Get from redis
         return redis.get(id, model_type, tenant)
+
     except Exception:
         # get from kernel
         url = f'{model_type}/{id}/'
@@ -124,21 +118,19 @@ def get_from_redis_or_kernel(id, model_type, tenant, redis=None):
 
 
 def remove_from_redis(id, model_type, tenant, redis=None):
-    redis = get_redis(redis)
-    return redis.remove(id, model_type, tenant)
+    return get_redis(redis).remove(id, model_type, tenant)
 
 
 def get_redis_keys_by_pattern(pattern, redis=None):
-    redis = get_redis(redis)
-    return redis.get_keys(pattern)
+    return get_redis(redis).get_keys(pattern)
 
 
 def get_redis_subscribed_message(key, redis=None):
-    redis = get_redis(redis)
     try:
-        doc = redis.get_by_key(key)
+        doc = get_redis(redis).get_by_key(key)
         key = key if isinstance(key, str) else key.decode()
         _type, tenant, _id = key.split(':')
+
         return Task(
             id=_id,
             tenant=tenant,
@@ -150,8 +142,7 @@ def get_redis_subscribed_message(key, redis=None):
 
 
 def redis_subscribe(callback, pattern, redis=None):
-    redis = get_redis(redis)
-    return redis.subscribe(
+    return get_redis(redis).subscribe(
         callback=callback,
         pattern=pattern,
         keep_alive=True,
@@ -159,16 +150,16 @@ def redis_subscribe(callback, pattern, redis=None):
 
 
 def redis_stop(redis):
-    redis = get_redis(redis)
-    redis.stop()
+    get_redis(redis).stop()
 
 
 def cache_failed_entities(entities, realm, redis=None):
     redis = get_redis(redis)
-    failed_entities = {}
+
     try:
         failed_entities = redis.get_by_key(FAILED_ENTITIES_KEY)
         failed_entities[realm].append(entities)
     except Exception:
-        failed_entities[realm] = entities
+        failed_entities = {realm: entities}
+
     redis.redis.set(FAILED_ENTITIES_KEY, json.dumps(failed_entities))

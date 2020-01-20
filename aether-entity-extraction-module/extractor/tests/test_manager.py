@@ -71,6 +71,7 @@ def load_redis(redis):
 
 
 class ExtractionManagerTests(TestCase):
+
     redis = fakeredis.FakeStrictRedis()
     NO_OF_SUBMISSIONS = 10
     data = SUBMISSION
@@ -105,16 +106,14 @@ class ExtractionManagerTests(TestCase):
             publish_key = f'__keyspace@0__:{key}'
             data = json.dumps(SUBMISSION)
             self.redis.set(key, data)
-            self.redis.publish(
-                publish_key,
-                data
-            )
+            self.redis.publish(publish_key, data)
 
         self.assertEqual(
             len(self.redis.execute_command('keys', f'_{SUBMISSION_CHANNEL}*')),
             self.NO_OF_SUBMISSIONS
         )
         self.assertEqual(len(manager.SUBMISSION_QUEUE), 0)
+
         manager.handle_pending_submissions(f'_{SUBMISSION_CHANNEL}*')
         self.assertNotEqual(len(manager.SUBMISSION_QUEUE), 0)
 
@@ -137,6 +136,7 @@ class ExtractionManagerTests(TestCase):
         manager = ExtractionManager(self.redis)
         self.assertEqual(len(manager.PROCESSED_SUBMISSIONS), 0)
         self.assertEqual(manager.realm_entities, {})
+
         # test extraction with missing schema definition in schema decorator
         remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
         for sd in remove_definitions:

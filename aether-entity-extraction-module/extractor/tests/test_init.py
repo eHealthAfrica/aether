@@ -18,6 +18,7 @@
 
 import collections
 from unittest import TestCase
+
 from .. import main
 
 

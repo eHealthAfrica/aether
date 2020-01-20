@@ -23,20 +23,26 @@ import logging
 DEBUG = bool(os.environ.get('DEBUG'))
 TESTING = bool(os.environ.get('TESTING'))
 
-LANGUAGE_CODE = os.environ.get('LANGUAGE_CODE', 'en-us')
-TIME_ZONE = os.environ.get('TIME_ZONE', 'UTC')
-
+# Redis server
 REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
 REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_DB = os.environ.get('REDIS_DB', 0)
-REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
-REDIS_INSTANCE = os.environ.get('REDIS_INSTANCE')
-KERNEL_TOKEN = os.environ.get('AETHER_KERNEL_TOKEN', '')
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD')
+
+# Aether kernel
 KERNEL_URL = os.environ.get('AETHER_KERNEL_URL', '')
+KERNEL_TOKEN = os.environ.get('AETHER_KERNEL_TOKEN', '')
+
+# Multitenancy
 DEFAULT_REALM = os.environ.get('DEFAULT_REALM', '-')
 REALM_COOKIE = os.environ.get('REALM_COOKIE')
 GATEWAY_PUBLIC_REALM = os.environ.get('GATEWAY_PUBLIC_REALM', '-')
 
+# Extractor settings
+PUSH_TO_KERNEL_INTERVAL = 0.05
+MAX_WORKERS = 10
+MAX_PUSH_SIZE = 100
+
+
+# https://docs.python.org/3.7/library/logging.html#levels
 LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
-WEB_SERVER_PORT = os.environ.get('SERVER_PORT', 5007)
-HOST = os.environ.get('HOST', '0.0.0.0')

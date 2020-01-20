@@ -18,6 +18,7 @@
 
 TENANT = 'test'
 MAPPINGSET_ID = '41282431-50bb-4309-92bf-ef9359494dc6'
+
 PAYLOAD = {
     'id': 'a5336669-605c-4a65-ab4c-c0318e28115b',
     'staff': {
@@ -31,6 +32,7 @@ PAYLOAD = {
     'opening_hour': '7AM working days',
     'facility_name': 'Primary Health Care Abuja'
 }
+
 MAPPINGSET = {
     'id': MAPPINGSET_ID,
     'name': 'Dummy',
@@ -418,6 +420,7 @@ SCHEMAS = [
         'family': None
     }
 ]
+
 SUBMISSION = {
     'mappingset': MAPPINGSET_ID,
     'payload': PAYLOAD,
