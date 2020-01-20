@@ -61,33 +61,6 @@ function release_app {
     echo "${LINE}"
 }
 
-function release_gcs {
-    # notify to Google Cloud Storage the new image
-    export RELEASE_BUCKET="aether-releases"
-    export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
-
-    if [ -z "$TRAVIS_TAG" ]; then
-        GCS_VERSION=$TRAVIS_COMMIT
-    else
-        GCS_VERSION=$VERSION
-    fi
-
-    if [ "$VERSION" == "alpha" ]; then
-        GCS_PROJECTS="alpha"
-        openssl aes-256-cbc \
-            -K $encrypted_9112fb2807d4_key \
-            -iv $encrypted_9112fb2807d4_iv \
-            -in gcs_key.json.enc \
-            -out gcs_key.json -d
-
-        pip install -q google-cloud-storage
-
-        python ./scripts/push_version.py --version $GCS_VERSION --projects $GCS_PROJECTS
-    else
-        echo "version: $VERSION has no trigger deployment"
-    fi
-}
-
 function release_process {
     # Login in dockerhub with write permissions (repos are public)
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
@@ -107,14 +80,7 @@ function release_process {
     for APP in "${RELEASE_APPS[@]}"; do
         build_app $APP
         release_app $APP $VERSION
-
-        if [ -z "$TRAVIS_TAG" ]; then
-            # develop branch or release candidate
-            release_app $APP $TRAVIS_COMMIT
-        fi
     done
-
-    release_gcs
 }
 
 # Usage: increment_version <version> [<position>]
