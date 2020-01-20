@@ -88,16 +88,17 @@ def validate_entity_project(validated_data):
     _schema_decorator = validated_data.get('schemadecorator')
     _submission = validated_data.get('submission')
     _mapping = validated_data.get('mapping')
-    _possible_project = None
+
+    _possible_project = validated_data.get('project')
+    if not _possible_project:
+        if _schema_decorator:
+            _possible_project = Project.objects.filter(schemadecorators__pk=_schema_decorator.pk).first()
+        elif _submission:
+            _possible_project = Project.objects.filter(submissions__pk=_submission.pk).first()
+        elif _mapping:
+            _possible_project = Project.objects.filter(mappings__pk=_mapping.pk).first()
+
     _artefacts_in_same_project = True
-
-    if _schema_decorator:
-        _possible_project = Project.objects.filter(schemadecorators__pk=_schema_decorator.pk).first()
-    elif _submission:
-        _possible_project = Project.objects.filter(submissions__pk=_submission.pk).first()
-    elif _mapping:
-        _possible_project = Project.objects.filter(mappings__pk=_mapping.pk).first()
-
     if _possible_project:
         _artefact_dict = {
             'schema_decorators': str(_schema_decorator.pk) if _schema_decorator else None,
