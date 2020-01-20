@@ -285,6 +285,7 @@ class EntityListSerializer(serializers.ListSerializer):
             except Exception as err:
                 # either the generated or passed ID.
                 errors.append((e.id, err))
+                break
         if errors:
             # reject ALL if ANY invalid entities are included
             raise(serializers.ValidationError(errors))
@@ -365,7 +366,7 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsSerializer):
         # remove helper field
         validated_data.pop('merge')
         try:
-            return super(EntitySerializer, self).create(validated_data)
+            return models.Entity.objects.create(**validated_data)
         except Exception as e:
             raise serializers.ValidationError(e)
 
@@ -378,7 +379,7 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsSerializer):
                 direction=validated_data.pop('merge', DEFAULT_MERGE),
             )
         try:
-            return super(EntitySerializer, self).update(instance, validated_data)
+            return models.Entity.objects.update(instance, validated_data)
         except Exception as e:
             raise serializers.ValidationError(e)
 
