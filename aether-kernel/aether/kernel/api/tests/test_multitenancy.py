@@ -168,6 +168,59 @@ class MultitenancyTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        # try to create an entity linked to a project that belongs to this realm
+        entity_data_1 = {
+            'project': str(obj1.pk),
+            'name': 'playing with realms',
+            'status': 'Pending Approval',
+            'payload': {
+                'id': str(obj1.pk),
+            }
+        }
+        response = self.client.post(
+            reverse('entity-list'),
+            json.dumps(entity_data_1),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
+        entity_1 = response.json()['id']
+
+        # try to assign entity 1 to a project that belongs to another realm
+        response = self.client.patch(
+            reverse('entity-detail', kwargs={'pk': entity_1}),
+            json.dumps({'project': str(obj2.pk)}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        self.assertIn('project', data)
+        self.assertEqual(
+            data['project'],
+            [f'Invalid pk "{str(obj2.pk)}" - object does not exist.'],
+        )
+
+        # try to create an entity linked to a project that belongs to another realm
+        entity_data_2 = {
+            'project': str(obj2.pk),
+            'name': 'playing with realms',
+            'status': 'Pending Approval',
+            'payload': {
+                'id': str(obj2.pk),
+            }
+        }
+        response = self.client.post(
+            reverse('entity-list'),
+            json.dumps(entity_data_2),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        self.assertIn('project', data)
+        self.assertEqual(
+            data['project'],
+            [f'Invalid pk "{str(obj2.pk)}" - object does not exist.'],
+        )
+
     def test_views__project(self):
         url = reverse('project-list')
         response = self.client.post(

@@ -685,6 +685,7 @@ class SubmissionStatsMixin(MtViewSetMixin):
 
     submissions_field = 'submissions'
     entities_fk = 'submission__mappingset'
+    fields_list = ('id', 'name', 'created',)
 
     def get_queryset(self):
         def _get_list_param(name):
@@ -698,7 +699,7 @@ class SubmissionStatsMixin(MtViewSetMixin):
             )
 
         qs = super(SubmissionStatsMixin, self).get_queryset()
-        qs = qs.values('id', 'name', 'created')
+        qs = qs.values(*self.fields_list)
 
         _fields = _get_list_param('fields')
         _omit = _get_list_param('omit')
@@ -779,6 +780,7 @@ class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     filter_class = filters.ProjectFilter
     search_fields = ('name',)
     entities_fk = 'project'
+    fields_list = ('id', 'name', 'created', 'active',)
 
 
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):

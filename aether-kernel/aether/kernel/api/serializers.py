@@ -392,7 +392,7 @@ class ProjectStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     class Meta:
         model = models.Project
         fields = (
-            'id', 'name', 'created',
+            'id', 'name', 'created', 'active',
             'first_submission', 'last_submission',
             'submissions_count', 'attachments_count', 'entities_count',
         )
