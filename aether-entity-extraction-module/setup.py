@@ -28,7 +28,7 @@ def read(f):
 
 setup(
     version=read('/var/tmp/VERSION').strip(),
-    name='aether.entity_extractor',
+    name='extractor',
     decription='Entity Extractor for Aether',
 
     url='https://github.com/eHealthAfrica/aether',
@@ -37,11 +37,14 @@ setup(
     license='Apache2 License',
     keywords=['aet', 'aether', 'redis', 'extraction', 'entity'],
 
-    setup_requires=['pytest'],
+    setup_requires=['aether.python'],
     tests_require=[
+        'coverage',
+        'fakeredis',
+        'flake8-quotes',
+        'gevent',
         'pytest',
-        'requests',
-        'sqlalchemy',
+        'tblib',
     ],
     packages=find_packages(),
 )
