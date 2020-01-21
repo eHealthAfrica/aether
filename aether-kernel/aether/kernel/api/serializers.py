@@ -325,7 +325,6 @@ class EntityListSerializer(serializers.ListSerializer):
 class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
     payload = serializers.JSONField()
     status = serializers.CharField(max_length=20)
-    # mapping_revision = serializers.CharField(allow_null=True, default=None)
     mapping_revision = serializers.CharField(read_only=True)
 
     url = HyperlinkedIdentityField(view_name='entity-detail')

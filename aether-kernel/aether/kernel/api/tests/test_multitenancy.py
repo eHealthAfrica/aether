@@ -120,6 +120,24 @@ class MultitenancyTests(TestCase):
 
     def test_views(self):
         # create data assigned to different realms
+        _simple_schema = {
+            'name': 'Perf',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'id',
+                    'type': 'string'
+                },
+                {
+                    'name': 'body',
+                    'type': [
+                        'null',
+                        'string'
+                    ]
+                }
+            ]
+        }
+
         obj1 = models.Project.objects.create(name='one')
         child1 = models.MappingSet.objects.create(name='child1', project=obj1)
         obj1.add_to_realm(self.request)
@@ -129,6 +147,8 @@ class MultitenancyTests(TestCase):
         obj2 = models.Project.objects.create(name='two')
         MtInstance.objects.create(instance=obj2, realm='another')
         child2 = models.MappingSet.objects.create(name='child2', project=obj2)
+        schema2 = models.Schema.objects.create(name='schema2', definition=_simple_schema)
+        schemadecorator2 = models.SchemaDecorator.objects.create(name='sd2', project=obj2, schema=schema2)
         self.assertEqual(obj2.mt.realm, 'another')
 
         self.assertEqual(models.Project.objects.count(), 2)
@@ -170,7 +190,7 @@ class MultitenancyTests(TestCase):
 
         # try to create an entity linked to a project that belongs to this realm
         entity_data_1 = {
-            'project': str(obj1.pk),
+            'schemadecorator': str(schemadecorator2.pk),
             'name': 'playing with realms',
             'status': 'Pending Approval',
             'payload': {
@@ -183,7 +203,7 @@ class MultitenancyTests(TestCase):
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
-        entity_1 = response.json()['id']  # FAIL KeyError
+        entity_1 = response.json()['id']
 
         # try to assign entity 1 to a project that belongs to another realm
         response = self.client.patch(
