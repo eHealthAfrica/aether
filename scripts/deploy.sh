@@ -62,7 +62,7 @@ elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
     # deploy release candidates in ???
     GCS_PROJECT="alpha"
     GCR_PROJECT="development-223016"
-    export RELEASE_BUCKET="aether-releases"
+    export RELEASE_BUCKET="aether-releases-dev"
 
 else
 
