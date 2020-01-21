@@ -79,7 +79,7 @@ def kernel_data_request(url='', method='get', data=None, headers=None, realm=Non
     kernel_url = settings.KERNEL_URL
     headers = headers or {}
     headers['Authorization'] = f'Token {settings.KERNEL_TOKEN}'
-    _realm = realm if realm else settings.GATEWAY_PUBLIC_REALM
+    _realm = realm if realm else settings.DEFAULT_REALM
 
     headers[settings.REALM_COOKIE] = _realm
 
