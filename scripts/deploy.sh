@@ -70,7 +70,7 @@ else
     GCR_VERSION=${TRAVIS_COMMIT}
     GCS_PROJECT="alpha"
     GCR_PROJECT="development-223016"
-    RELEASE_BUCKET="aether-releases"
+    RELEASE_BUCKET="aether-releases-dev"
 
     openssl aes-256-cbc \
         -K $encrypted_17d8de6bf835_key \
