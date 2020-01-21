@@ -1,0 +1,55 @@
+################################################################################
+#
+#                              Frozen requirements
+#
+#                               DO NOT CHANGE !!!
+#
+# To check the outdated dependencies run
+#     docker-compose run --rm --no-deps exm eval pip list --outdated
+#
+# To update this first update 'primary-requirements.txt' then run
+#     docker-compose run --rm --no-deps exm pip_freeze
+#
+################################################################################
+
+aether.python==1.0.17
+attrs==19.3.0
+certifi==2019.11.28
+cffi==1.13.2
+chardet==3.0.4
+coverage==5.0.3
+cryptography==2.8
+decorator==4.4.1
+eha-jsonpath==0.5.1
+entrypoints==0.3
+fakeredis==1.1.0
+flake8==3.7.9
+flake8-quotes==2.1.1
+gevent==1.4.0
+greenlet==0.4.15
+idna==2.8
+importlib-metadata==1.4.0
+jsonpath-ng==1.4.3
+jsonschema==3.2.0
+mccabe==0.6.1
+more-itertools==8.1.0
+packaging==20.0
+pluggy==0.13.1
+ply==3.11
+py==1.8.1
+pycodestyle==2.5.0
+pycparser==2.19
+pyflakes==2.1.1
+pyOpenSSL==19.1.0
+pyparsing==2.4.6
+pyrsistent==0.15.7
+pytest==5.3.3
+redis==3.3.11
+requests==2.22.0
+six==1.14.0
+sortedcontainers==2.1.0
+spavro==1.1.22
+tblib==1.6.0
+urllib3==1.25.7
+wcwidth==0.1.8
+zipp==2.0.0

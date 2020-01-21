@@ -25,7 +25,6 @@ from aether.sdk.conf.settings_aether import *  # noqa
 from aether.sdk.conf.settings_aether import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
-    PROFILING_ENABLED,
     REST_FRAMEWORK,
 )
 
@@ -70,14 +69,14 @@ EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR', '/')
 EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
 
 
-# Profiling workaround
+# Redis Configuration
 # ------------------------------------------------------------------------------
 #
 # Issue: The entities bulk creation is failing with Silk enabled.
 # The reported bug, https://github.com/jazzband/django-silk/issues/348,
 # In the meantime we will disable silk for those requests.
 
-if PROFILING_ENABLED:
+if PROFILING_ENABLED:  # noqa (From SDK.settings)
     if TESTING:   # noqa (From SDK.settings)
         def ignore_entities_post(request):
             return request.method != 'POST' or '/entities' not in request.path
@@ -104,6 +103,8 @@ if DJANGO_USE_CACHE:  # noqa (From SDK.settings)
         'ops': ('fetch', 'get', 'exists'),
         'local_get': True,
     }
+
+WRITE_ENTITIES_TO_REDIS = bool(os.environ.get('WRITE_ENTITIES_TO_REDIS'))
 
 
 # Swagger workaround

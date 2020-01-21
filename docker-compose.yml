@@ -5,6 +5,7 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * Aether UI & UI Assets
+#  * Aether Entity Extractor
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -79,6 +80,26 @@ services:
 
 
   # ---------------------------------
+  # Aether Entity Extractor
+  # ---------------------------------
+
+  exm:
+    extends:
+      file: ./docker-compose-base.yml
+      service: exm-base
+    depends_on:
+      redis:
+        condition: service_started
+      nginx:
+        condition: service_healthy
+    networks:
+      - internal
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
+
+
+
+  # ---------------------------------
   # Aether Kernel
   # ---------------------------------
 
@@ -94,6 +115,10 @@ services:
       keycloak:
         condition: service_started
       minio:
+        condition: service_started
+      redis:
+        condition: service_started
+      exm:
         condition: service_started
     networks:
       - internal
