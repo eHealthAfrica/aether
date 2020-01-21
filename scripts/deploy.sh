@@ -127,6 +127,6 @@ docker logout ${GCR_REPO_URL} || true
 # ===========================================================
 # notify to Google Cloud Storage the new images
 
-python ./scripts/push_version.py \
+push-app-version \
     --version $GCR_VERSION \
     --projects $GCS_PROJECTS
