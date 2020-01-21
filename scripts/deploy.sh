@@ -23,7 +23,7 @@ set -Eo pipefail
 
 LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /#}`
 
-DEPLOY_APPS=( kernel odk ui producer )
+DEPLOY_APPS=( kernel exm odk ui producer )
 
 export RELEASE_BUCKET="aether-releases"
 export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
