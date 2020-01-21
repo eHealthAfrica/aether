@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from datetime import datetime
+import uuid
 from django.utils.translation import gettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
@@ -47,6 +47,16 @@ MERGE_CHOICES = (
     (MERGE_OPTIONS.fww.value, _('First Write Wins (Source to Target)'))
 )
 DEFAULT_MERGE = MERGE_OPTIONS.overwrite.value
+
+
+class KernelBaseSerializer(DynamicFieldsSerializer):
+    '''
+    Base field for Serializers that don't inherit from
+    ModelSerializer via DynamicFieldsModelSerializer
+    '''
+    id = serializers.UUIDField(required=False, default=uuid.uuid4)
+    revision = serializers.CharField(required=False, default='1')
+    modified = serializers.DateTimeField(read_only=True)
 
 
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
@@ -293,13 +303,11 @@ class EntityListSerializer(serializers.ListSerializer):
         return models.Entity.objects.bulk_create(entities)
 
 
-# class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
-class EntitySerializer(DynamicFieldsMixin, DynamicFieldsSerializer):
-
-    modified = serializers.DateTimeField(read_only=True)
+class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
     payload = serializers.JSONField()
     status = serializers.CharField(max_length=20)
-    mapping_revision = serializers.CharField(allow_null=True, default=None)
+    # mapping_revision = serializers.CharField(allow_null=True, default=None)
+    mapping_revision = serializers.CharField(read_only=True)
 
     url = HyperlinkedIdentityField(view_name='entity-detail')
     project_url = HyperlinkedRelatedField(
@@ -362,6 +370,8 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsSerializer):
         required=False,
     )
 
+    _user_updatable = ['status', 'revision']
+
     def create(self, validated_data):
         # remove helper field
         validated_data.pop('merge')
@@ -373,19 +383,21 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsSerializer):
     def update(self, instance, validated_data):
         # find out payload
         if validated_data.get('payload'):
-            validated_data['payload'] = utils.merge_objects(
-                source=instance.payload,
-                target=validated_data.get('payload'),
+            instance.payload = utils.merge_objects(
+                source=validated_data.get('payload'),
+                target=instance.payload,
                 direction=validated_data.pop('merge', DEFAULT_MERGE),
             )
+        for k in EntitySerializer._user_updatable:
+            if validated_data.get(k):
+                setattr(instance, k, validated_data.get(k))
         try:
-            return models.Entity.objects.update(instance, validated_data)
+            instance.save()
+            return instance
         except Exception as e:
             raise serializers.ValidationError(e)
 
     class Meta:
-        # model = models.Entity
-        # fields = '__all__'
         list_serializer_class = EntityListSerializer
 
 

@@ -78,13 +78,13 @@ EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
 # In the meantime we will disable silk for those requests.
 
 if PROFILING_ENABLED:
-    if TESTING:
+    if TESTING:   # noqa (From SDK.settings)
         def ignore_entities_post(request):
             return request.method != 'POST' or '/entities' not in request.path
 
         SILKY_INTERCEPT_FUNC = ignore_entities_post
 
-if DJANGO_USE_CACHE:
+if DJANGO_USE_CACHE:  # noqa (From SDK.settings)
     CACHEOPS_DEGRADE_ON_FAILURE = True
     _CACHED_MODULES = [
         'kernel.entity',
@@ -98,12 +98,12 @@ if DJANGO_USE_CACHE:
     ]
 
     for k in _CACHED_MODULES:
-        CACHEOPS[k] = {'ops': ('fetch', 'get', 'exists')}
+        CACHEOPS[k] = {'ops': ('fetch', 'get', 'exists')}  # noqa (From SDK.settings)
         # put Django user model into local cache for faster recall
-        CACHEOPS['auth.user'] = {
-            'ops': ('fetch', 'get', 'exists'),
-            'local_get': True,
-        }
+    CACHEOPS['auth.user'] = {  # noqa (From SDK.settings)
+        'ops': ('fetch', 'get', 'exists'),
+        'local_get': True,
+    }
 
 
 # Swagger workaround
