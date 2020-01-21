@@ -38,7 +38,7 @@ if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
     GCR_VERSION=${TRAVIS_TAG}
     GCS_PROJECT="eha-data"
     GCR_PROJECT="production-228613"
-    RELEASE_BUCKET="aether-releases"
+    export RELEASE_BUCKET="aether-releases"
 
     openssl aes-256-cbc \
         -K $encrypted_17d8de6bf835_key \
