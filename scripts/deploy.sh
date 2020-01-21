@@ -25,7 +25,6 @@ LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /#}`
 
 DEPLOY_APPS=( kernel odk ui producer )
 
-export RELEASE_BUCKET="aether-releases"
 export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
 
 if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
@@ -39,6 +38,7 @@ if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
     GCR_VERSION=${TRAVIS_TAG}
     GCS_PROJECT="eha-data"
     GCR_PROJECT="production-228613"
+    RELEASE_BUCKET="aether-releases"
 
     openssl aes-256-cbc \
     -K $encrypted_17d8de6bf835_key \
@@ -62,6 +62,7 @@ elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
     # deploy release candidates in ???
     GCS_PROJECT="alpha"
     GCR_PROJECT="development-223016"
+    RELEASE_BUCKET="aether-releases"
 
 else
 
@@ -69,6 +70,8 @@ else
     GCR_VERSION=${TRAVIS_COMMIT}
     GCS_PROJECT="alpha"
     GCR_PROJECT="development-223016"
+    RELEASE_BUCKET="aether-releases"
+
     openssl aes-256-cbc \
         -K $encrypted_17d8de6bf835_key \
         -iv $encrypted_17d8de6bf835_iv \
