@@ -1,4 +1,4 @@
-## Aether Enitity Extraction
+## Aether Entity Extraction
 
 #### Purpose
 
