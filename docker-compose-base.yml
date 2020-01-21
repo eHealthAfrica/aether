@@ -182,8 +182,9 @@ services:
       DEFAULT_REALM: ${DEFAULT_REALM}
       REALM_COOKIE: ${REALM_COOKIE}
 
+      # use internal url, this happens behind the curtains
+      AETHER_KERNEL_URL: http://kernel:8100
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
 
       REDIS_DB: 0
       REDIS_HOST: redis

@@ -89,12 +89,8 @@ services:
     depends_on:
       redis:
         condition: service_started
-      nginx:
-        condition: service_healthy
     networks:
       - internal
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
 
   # ---------------------------------
