@@ -130,4 +130,4 @@ docker logout ${GCR_REPO_URL} || true
 
 push-app-version \
     --version $GCR_VERSION \
-    --projects $GCS_PROJECTS
+    --project $GCS_PROJECTS
