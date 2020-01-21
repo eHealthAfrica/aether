@@ -107,7 +107,8 @@ done
 GCR_REPO_URL="https://eu.gcr.io"
 GCR_IMAGE_REPO="eu.gcr.io/${GCR_PROJECT}/aether"
 
-docker login -u _json_key -p "$(cat gcs_key.json)" $GCR_REPO_URL
+# https://cloud.google.com/container-registry/docs/advanced-authentication#json_key_file
+cat gcs_key.json | docker login -u _json_key --password-stdin $GCR_REPO_URL
 
 for APP in "${DEPLOY_APPS[@]}"; do
     AETHER_APP="aether-${APP}"
