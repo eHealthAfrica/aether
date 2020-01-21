@@ -41,11 +41,11 @@ if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
     RELEASE_BUCKET="aether-releases"
 
     openssl aes-256-cbc \
-    -K $encrypted_17d8de6bf835_key \
-    -iv $encrypted_17d8de6bf835_iv \
-    -in prod.json.enc \
-    -out gcs_key.json \
-    -d
+        -K $encrypted_17d8de6bf835_key \
+        -iv $encrypted_17d8de6bf835_iv \
+        -in prod.json.enc \
+        -out gcs_key.json \
+        -d
 
 elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
 
