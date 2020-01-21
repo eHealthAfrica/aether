@@ -20,6 +20,7 @@ import uuid
 from django.utils.translation import gettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
+from django.conf import settings
 
 from aether.sdk.drf.serializers import (
     DynamicFieldsSerializer,
@@ -33,10 +34,9 @@ from aether.sdk.multitenancy.serializers import (
     MtModelSerializer,
 )
 
+from .utils import send_model_item_to_redis
 from aether.python import utils
 from aether.python.constants import MergeOptions as MERGE_OPTIONS
-from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
-from .entity_extractor import run_entity_extraction
 
 from . import models, validators
 
@@ -162,6 +162,21 @@ class AttachmentSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         fields = '__all__'
 
 
+class SubmissionListSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        submissions = [models.Submission(**s) for s in validated_data]
+        for submission in submissions:
+            submission.project = submission.mappingset.project
+
+        # bulk database operation
+        results = models.Submission.objects.bulk_create(submissions)
+        # send to redis
+        submission_list = list(submissions)
+        for s in submission_list:
+            send_model_item_to_redis(s)
+        return results
+
+
 class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='submission-detail')
@@ -212,18 +227,12 @@ class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
                 {'mappingset': [_('Mapping set must be provided on initial submission')]}
             )
 
-        instance = super(SubmissionSerializer, self).create(validated_data)
-        try:
-            run_entity_extraction(instance)
-        except Exception as e:
-            instance.payload[ENTITY_EXTRACTION_ERRORS] = instance.payload.get(ENTITY_EXTRACTION_ERRORS, [])
-            instance.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]
-            instance.save()
-        return instance
+        return super(SubmissionSerializer, self).create(validated_data)
 
     class Meta:
         model = models.Submission
         fields = '__all__'
+        list_serializer_class = SubmissionListSerializer
 
 
 class SchemaSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
@@ -284,23 +293,33 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
 class EntityListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
-        # remove helper field
-        [i.pop('merge') for i in validated_data]
-        entities = [models.Entity(**e) for e in validated_data]
         errors = []
-        for e in entities:
+        entities = []
+        # remove helper field and validate entity
+        for i in validated_data:
+            i.pop('merge')
             try:
-                # validate entities
-                e.clean()
-            except Exception as err:
-                # either the generated or passed ID.
-                errors.append((e.id, err))
+                # set ignore_submission_check to True to avoid a race condition on bulk submissions
+                i['project'] = validators.validate_entity_project(i)
+                entity = models.Entity(**i)
+                entity.clean()
+                entities.append(entity)
+            except Exception as e:
+                errors.append(str(e))
                 break
         if errors:
             # reject ALL if ANY invalid entities are included
             raise(serializers.ValidationError(errors))
         # bulk database operation
-        return models.Entity.objects.bulk_create(entities)
+        try:
+            created_entities = models.Entity.objects.bulk_create(entities)
+            if settings.WRITE_ENTITIES_TO_REDIS:  # pragma: no cover : .env setting
+                # send created entities to redis
+                for entity in entities:
+                    send_model_item_to_redis(entity)
+            return created_entities
+        except Exception as e:  # pragma: no cover : happens only when redis is offline
+            raise(serializers.ValidationError(e))
 
 
 class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
@@ -375,7 +394,9 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
     def create(self, validated_data):
         # remove helper field
         validated_data.pop('merge')
+
         try:
+            validated_data['project'] = validators.validate_entity_project(validated_data)
             return models.Entity.objects.create(**validated_data)
         except Exception as e:
             raise serializers.ValidationError(e)

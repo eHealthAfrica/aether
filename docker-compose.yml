@@ -3,6 +3,7 @@
 #
 #  * Databases + NGINX + Minio + Keycloak
 #  * Aether Kernel
+#  * Entity Extractor
 #  * ODK Module
 #  * Aether UI & UI Assets
 # ------------------------------------------------------------------------------
@@ -79,6 +80,20 @@ services:
 
 
   # ---------------------------------
+  # Entity Extractor
+  # ---------------------------------
+  exm:
+    extends:
+      file: ./docker-compose-base.yml
+      service: exm-base
+    depends_on:
+      redis:
+        condition: service_started
+    networks:
+      - internal
+
+
+  # ---------------------------------
   # Aether Kernel
   # ---------------------------------
 
@@ -94,6 +109,10 @@ services:
       keycloak:
         condition: service_started
       minio:
+        condition: service_started
+      redis:
+        condition: service_started
+      exm:
         condition: service_started
     networks:
       - internal

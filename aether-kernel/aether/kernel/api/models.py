@@ -24,7 +24,7 @@ from hashlib import md5
 
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.db import models, IntegrityError
+from django.db import models, IntegrityError, transaction
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -38,6 +38,7 @@ from aether.python.exceptions import ValidationError as AetherValidationError
 from aether.python.validators import validate_entity_payload
 
 from .constants import NAMESPACE
+from .utils import send_model_item_to_redis
 from .validators import (
     wrapper_validate_mapping_definition,
     wrapper_validate_schema_definition,
@@ -49,7 +50,6 @@ ENTITY_STATUS_CHOICES = (
     ('Pending Approval', _('Pending Approval')),
     ('Publishable', _('Publishable')),
 )
-
 
 '''
 Data model schema:
@@ -159,6 +159,10 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
         ),
     )
 
+    def save(self, *args, **kwargs):
+        super(Project, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
+
     def delete(self, *args, **kwargs):
         # find the linked passthrough schemas
         for schema in Schema.objects.filter(family=str(self.pk)):
@@ -246,6 +250,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
             raise IntegrityError(ve)
 
         super(MappingSet, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
 
         # invalidates cached properties
         for p in ['input_prettified', 'schema_prettified']:  # pragma: no cover
@@ -303,9 +308,16 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         name = self.mappingset.name if self.mappingset else self.id
         return f'{self.project.name}-{name}'
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project if self.mappingset else self.project
         super(Submission, self).save(*args, **kwargs)
+        try:
+            send_model_item_to_redis(self)
+        except Exception as e:  # pragma: no cover : rollback if redis is offline
+            raise ValidationError(
+                str(e)
+            )
 
         # invalidates cached properties
         for p in ['payload_prettified']:  # pragma: no cover
@@ -433,6 +445,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
 
     def save(self, *args, **kwargs):
         super(Schema, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
 
         # invalidates cached properties
         for p in ['definition_prettified', 'schema_name']:  # pragma: no cover
@@ -487,6 +500,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
         if self.topic is None:
             self.topic = {'name': self.name}
         super(SchemaDecorator, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
 
         # invalidates cached properties
         for p in ['topic_prettified']:  # pragma: no cover
@@ -573,6 +587,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
             SchemaDecorator.objects.get(pk=entity_pk, project=self.project)
             for entity_pk in self.definition.get('entities', {}).values()
         ])
+        send_model_item_to_redis(self)
 
     def get_mt_instance(self):
         # because project can be null we need to override the method
@@ -686,27 +701,6 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
     def clean(self):
         super(Entity, self).clean()
 
-        # check linked projects
-        project_ids = set()
-        possible_project = None
-        if self.schemadecorator:
-            project_ids.add(self.schemadecorator.project.pk)
-            possible_project = self.schemadecorator.project
-        if self.submission:
-            project_ids.add(self.submission.project.pk)
-            possible_project = self.submission.project
-        if self.mapping:
-            project_ids.add(self.mapping.project.pk)
-            possible_project = self.mapping.project
-
-        if len(project_ids) > 1:
-            raise ValidationError(_('Submission, Mapping and Schema Decorator MUST belong to the same Project'))
-        elif len(project_ids) == 1:
-            self.project = possible_project
-
-        if self.schemadecorator:  # redundant values taken from schema decorator
-            self.schema = self.schemadecorator.schema
-
         if self.mapping and not self.mapping_revision:
             self.mapping_revision = self.mapping.revision
 
@@ -714,6 +708,9 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
         else:
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
+
+        if self.schemadecorator:
+            self.schema = self.schemadecorator.schema  # redundant values taken from schema decorator
 
         if self.schema:
             try:
@@ -726,11 +723,14 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     def save(self, *args, **kwargs):
         try:
-            self.full_clean()
+            # avoid full_clean(). it revalidates all fields which is resource intensive.
+            # linked artefacts validation is already implemented on the serializer
+            self.clean()
         except Exception as ve:
             raise IntegrityError(ve)
 
         super(Entity, self).save(*args, **kwargs)
+        send_model_item_to_redis(self)
 
         # invalidates cached properties
         for p in ['payload_prettified']:  # pragma: no cover

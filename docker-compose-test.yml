@@ -2,6 +2,7 @@
 # Config file for ALL TESTING containers:
 #
 #  * Aether Kernel
+#  * Entity Extractor
 #  * Aether Kernel Client
 #  * ODK Module
 #  * Aether UI
@@ -61,10 +62,28 @@ services:
       TESTING: "true"
       UWSGI_PROCESSES: "1"
       WEB_SERVER_PORT: 9100
+      REDIS_HOST: redis-test
+      DEFAULT_REALM: test
     volumes:
       # volumes in tests
       - ./tmp/test/kernel/static:/var/www/static
       - ./tmp/test/kernel/tmp:/tmp
+    command: start
+
+
+  # ---------------------------------
+  # Entity Extractor Tests
+  # ---------------------------------
+
+  exm-test:
+    extends:
+      file: ./docker-compose-base.yml
+      service: exm-base
+    environment:
+      LOGGING_LEVEL: ERROR
+      AETHER_KERNEL_URL: http://kernel-test:9100
+      REDIS_HOST: redis-test
+      DEFAULT_REALM: test
     command: start
 
 
@@ -108,6 +127,7 @@ services:
       TEST_PARALLEL: ${TEST_PARALLEL}
       TESTING: "true"
       WEB_SERVER_PORT: 9102
+      DEFAULT_REALM: test
     volumes:
       # volumes in tests
       - ./tmp/test/odk/static:/var/www/static

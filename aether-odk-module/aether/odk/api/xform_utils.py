@@ -677,7 +677,7 @@ def __get_xform_instance_skeleton(xml_definition):
             'required': False,
             'label': __get_xform_label(xform_dict, xpath, itexts)
         }
-
+    AET_TAG = f'@{AETHER__XML_NAMESPACE}'
     for entries in __find_in_dict(xform_dict, 'bind'):
         entries = __wrap_as_list(entries)
         for bind_entry in entries:
