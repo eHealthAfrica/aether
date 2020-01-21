@@ -37,7 +37,7 @@ if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
 
     DOCKER_VERSION=${TRAVIS_TAG}
     GCR_VERSION=${TRAVIS_TAG}
-    GCS_PROJECTS="eha-data"
+    GCS_PROJECT="eha-data"
     GCR_PROJECT="production-228613"
 
 elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
@@ -53,14 +53,14 @@ elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
     GCR_VERSION="${DOCKER_VERSION}-${TRAVIS_COMMIT}"
 
     # deploy release candidates in ???
-    GCS_PROJECTS="alpha"
+    GCS_PROJECT="alpha"
     GCR_PROJECT="development-223016"
 
 else
 
     DOCKER_VERSION="alpha"
     GCR_VERSION=${TRAVIS_COMMIT}
-    GCS_PROJECTS="alpha"
+    GCS_PROJECT="alpha"
     GCR_PROJECT="development-223016"
 
 fi
@@ -69,8 +69,8 @@ echo "${LINE}"
 echo "Docker images:        ${DEPLOY_APPS[@]}"
 echo "Docker images tag:    $DOCKER_VERSION"
 echo "Deployment version:   $GCR_VERSION"
-echo "Deployment project:   $GCR_PROJECT"
-echo "Kubernetes projects:  $GCS_PROJECTS"
+echo "Repository project:   $GCR_PROJECT"
+echo "Storage project:      $GCS_PROJECT"
 echo "${LINE}"
 
 
@@ -130,4 +130,4 @@ docker logout ${GCR_REPO_URL} || true
 
 push-app-version \
     --version $GCR_VERSION \
-    --projects $GCS_PROJECTS
+    --project $GCS_PROJECT
