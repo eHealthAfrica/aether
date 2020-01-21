@@ -77,8 +77,8 @@ echo "${LINE}"
 # ===========================================================
 # install dependencies and create GC credentials files
 openssl aes-256-cbc \
-    -K $encrypted_9112fb2807d4_key \
-    -iv $encrypted_9112fb2807d4_iv \
+    -K $encrypted_17d8de6bf835_key \
+    -iv $encrypted_17d8de6bf835_iv \
     -in gcs_key.json.enc \
     -out gcs_key.json \
     -d
