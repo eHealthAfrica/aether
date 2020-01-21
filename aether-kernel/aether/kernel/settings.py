@@ -76,12 +76,11 @@ EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
 # The reported bug, https://github.com/jazzband/django-silk/issues/348,
 # In the meantime we will disable silk for those requests.
 
-if PROFILING_ENABLED:  # noqa (From SDK.settings)
-    if TESTING:   # noqa (From SDK.settings)
-        def ignore_entities_post(request):
-            return request.method != 'POST' or '/entities' not in request.path
+if PROFILING_ENABLED and TESTING:  # noqa (From SDK.settings)
+    def ignore_entities_post(request):
+        return request.method != 'POST' or '/entities' not in request.path
 
-        SILKY_INTERCEPT_FUNC = ignore_entities_post
+    SILKY_INTERCEPT_FUNC = ignore_entities_post
 
 if DJANGO_USE_CACHE:  # noqa (From SDK.settings)
     CACHEOPS_DEGRADE_ON_FAILURE = True

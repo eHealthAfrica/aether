@@ -183,7 +183,7 @@ class MultitenancyTests(TestCase):
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
-        entity_1 = response.json()['id']  # FAIL KeyError
+        entity_1 = response.json()['id']
 
         # try to assign entity 1 to a project that belongs to another realm
         response = self.client.patch(
