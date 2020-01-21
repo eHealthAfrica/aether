@@ -41,26 +41,22 @@ function test_flake8 {
     flake8 /code/. --config=/code/setup.cfg
 }
 
-function test {
+function test_py {
+    rm -R .pytest_cache || true
+    rm -rf extractor/tests/__pycache__ || true
     rm -R /code/.coverage* 2>/dev/null || true
-    coverage run \
-    --concurrency=multiprocessing \
-    --parallel-mode \
-    -m pytest "${@:1}"
+
+    coverage run -m pytest "${@:1}"
 
     coverage combine --append
     coverage report
+
     coverage erase
+    rm -R .pytest_cache || true
+    rm -rf extractor/tests/__pycache__ || true
 
     cat /code/conf/extras/good_job.txt
-    rm -R .pytest_cache
-    rm -rf extractor/tests/__pycache__
 }
-
-function test_all {
-    test
-}
-
 
 case "$1" in
     bash )
@@ -96,11 +92,10 @@ case "$1" in
 
     test )
         test_flake8
-        if [ -z "$2" ]
-        then
-            test_all
+        if [ -z "$2" ]; then
+            test_py
         else
-            test "$2"
+            test_py "$2"
         fi
     ;;
 
