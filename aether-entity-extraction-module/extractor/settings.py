@@ -20,19 +20,26 @@ import os
 import logging
 
 
+def get_required(name):
+    try:
+        return os.environ[name]
+    except KeyError:
+        raise RuntimeError(f'Missing {name} environment variable!')
+
+
 # https://docs.python.org/3.7/library/logging.html#levels
 LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
 
 # Redis server
-REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
-REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
-REDIS_DB = os.environ.get('REDIS_DB', 0)
-REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
+REDIS_HOST = get_required('REDIS_HOST')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
+REDIS_DB = int(os.environ.get('REDIS_DB', 0))
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD')
 
 # Aether kernel
-KERNEL_TOKEN = os.environ.get('AETHER_KERNEL_TOKEN', '')
-KERNEL_URL = os.environ.get('AETHER_KERNEL_URL', '')
+KERNEL_TOKEN = get_required('AETHER_KERNEL_TOKEN')
+KERNEL_URL = get_required('AETHER_KERNEL_URL')
 
 # Multitenancy
-DEFAULT_REALM = os.environ.get('DEFAULT_REALM', '-')
-REALM_COOKIE = os.environ.get('REALM_COOKIE')
+DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'eha')
+REALM_COOKIE = os.environ.get('REALM_COOKIE', 'eha-realm')
