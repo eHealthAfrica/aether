@@ -3,6 +3,7 @@
 #
 #  * Databases + Minio + Keycloak + NGINX containers (use same settings in all files)
 #  * Aether Kernel
+#  * Entity Extractor
 #  * ODK Module
 #  * Aether UI & UI Assets
 #  * Zookeper & Kafka
@@ -166,6 +167,33 @@ services:
       # backup folder
       - ./.persistent_data/backups/kernel:/backups
     command: start_dev
+
+
+  # ---------------------------------
+  # Entity Extractor
+  # ---------------------------------
+
+  exm-base:
+    image: aether-exm
+    build: ./aether-entity-extraction-module
+    stdin_open: true
+    tty: true
+    environment:
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
+
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
+      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
+
+      REDIS_DB: 0
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+    volumes:
+      - ./aether-entity-extraction-module:/code
+      # to speed up Aether Python Library development changes
+      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.7/site-packages/aether/python
+    command: start
 
 
   # ---------------------------------
@@ -365,33 +393,4 @@ services:
       SERVER_PORT: 5005
     volumes:
       - ./aether-producer:/code
-    command: start
-
-# ---------------------------------
-  # Aether Entity Extractor
-  # ---------------------------------
-
-  exm-base:
-    image: aether-exm
-    build: ./aether-entity-extraction-module
-    stdin_open: true
-    tty: true
-    environment:
-      DEFAULT_REALM: ${DEFAULT_REALM}
-      REALM_COOKIE: ${REALM_COOKIE}
-
-      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
-
-      REDIS_DB: 0
-      REDIS_HOST: redis
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_PORT: 6379
-
-      SERVER_PORT: 5007
-    volumes:
-      - ./aether-entity-extraction-module:/code
-      # to speed up Aether Python Library development changes
-      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.7/site-packages/aether/python
-
     command: start
