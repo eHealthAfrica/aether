@@ -64,6 +64,13 @@ elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
     GCR_PROJECT="development-223016"
     export RELEASE_BUCKET="aether-releases-dev"
 
+    openssl aes-256-cbc \
+        -K $encrypted_17d8de6bf835_key \
+        -iv $encrypted_17d8de6bf835_iv \
+        -in dev.json.enc \
+        -out gcs_key.json \
+        -d
+
 else
 
     DOCKER_VERSION="alpha"
