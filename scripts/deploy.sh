@@ -64,6 +64,13 @@ elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
     GCR_PROJECT="development-223016"
     export RELEASE_BUCKET="aether-releases-dev"
 
+    openssl aes-256-cbc \
+        -K $encrypted_17d8de6bf835_key \
+        -iv $encrypted_17d8de6bf835_iv \
+        -in dev.json.enc \
+        -out gcs_key.json \
+        -d
+
 else
 
     DOCKER_VERSION="alpha"
@@ -113,7 +120,7 @@ done
 # push images to deployment repository
 
 GCR_REPO_URL="https://eu.gcr.io"
-GCR_IMAGE_REPO="eu.gcr.io/${GCR_PROJECT}/aether"
+GCR_IMAGE_REPO="eu.gcr.io/${GCR_PROJECT}"
 
 # https://cloud.google.com/container-registry/docs/advanced-authentication#json_key_file
 cat gcs_key.json | docker login -u _json_key --password-stdin $GCR_REPO_URL
