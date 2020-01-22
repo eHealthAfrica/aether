@@ -16,52 +16,47 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 import collections
+import json
 import logging
+from typing import Dict, NamedTuple, Union
+
 from aether.python.redis.task import TaskHelper
 from aether.python.utils import request
+
 from extractor import settings
-from typing import (
-    Dict,
-    NamedTuple,
-    Union,
+
+Constants = collections.namedtuple(
+    'Constants',
+    (
+        'mappings',
+        'mappingsets',
+        'schemas',
+        'schemadecorators',
+        'submissions',
+        'schema_id',
+        'schema_definition',
+    )
 )
 
-EXTERNAL_APP_KERNEL = 'aether-kernel'
-SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
-SUBMISSION_PAYLOAD_FIELD = 'payload'
-FAILED_ENTITIES_KEY = '_aether_failed_entities'
-CONSTANTS = collections.namedtuple(
-    'CONSTANTS',
-    'projects mappingsets mappings schemas single_schema \
-    schema_definition schemadecorators submissions'
-)
-
-KERNEL_ARTEFACT_NAMES = CONSTANTS(
-    projects='projects',
-    mappingsets='mappingsets',
+ARTEFACT_NAMES = Constants(
     mappings='mappings',
+    mappingsets='mappingsets',
     schemas='schemas',
-    single_schema='schema',
-    schema_definition='schema_definition',
     schemadecorators='schemadecorators',
     submissions='submissions',
+    schema_id='schema',
+    schema_definition='schema_definition',
 )
 
-MAX_WORKERS = 10
+SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
+SUBMISSION_PAYLOAD_FIELD = 'payload'
 
-MAX_PUSH_SIZE = 100
+_FAILED_ENTITIES_KEY = '_aether_failed_entities'
+_REDIS_TASK = TaskHelper(settings, None)
 
-REDIS_INSTANCE = None
-
-REDIS_TASK = TaskHelper(settings, REDIS_INSTANCE)
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
-
-
-def get_redis(redis):
-    return TaskHelper(settings, redis) if redis else REDIS_TASK
 
 
 class Task(NamedTuple):
@@ -71,30 +66,32 @@ class Task(NamedTuple):
     data: Union[Dict, None] = None
 
 
+def get_redis(redis):
+    return TaskHelper(settings, redis) if redis else _REDIS_TASK
+
+
 def kernel_data_request(url='', method='get', data=None, headers=None, realm=None):
     '''
     Handle request calls to the kernel server
     '''
 
-    kernel_url = settings.KERNEL_URL
     headers = headers or {}
     headers['Authorization'] = f'Token {settings.KERNEL_TOKEN}'
-    _realm = realm if realm else settings.DEFAULT_REALM
 
+    _realm = realm if realm else settings.DEFAULT_REALM
     headers[settings.REALM_COOKIE] = _realm
 
     res = request(
         method=method,
-        url=f'{kernel_url}/{url}',
+        url=f'{settings.KERNEL_URL}/{url}',
         json=data or {},
         headers=headers,
     )
-
     res.raise_for_status()
-    return json.loads(res.content.decode('utf-8'))
+    return res.json()
 
 
-def get_from_redis_or_kernel(id, model_type, tenant, redis=None):
+def get_from_redis_or_kernel(id, model_type, tenant=None, redis=None):
     '''
     Get resource from redis by key or fetch from kernel and cache in redis.
 
@@ -105,70 +102,64 @@ def get_from_redis_or_kernel(id, model_type, tenant, redis=None):
     tenant: the current tenant
     '''
 
-    redis = get_redis(redis)
-
-    try:
-        # Get from redis
-        return redis.get(id, model_type, tenant)
-    except Exception:
-        # get from kernel
-        url = f'{model_type}/{id}/'
+    def _get_from_kernel():
         try:
-            resource = kernel_data_request(url, realm=tenant)
-            # cache on redis
-            redis.add(task=resource, type=model_type, tenant=tenant)
-            return resource
+            return kernel_data_request(f'{model_type}/{id}.json', realm=tenant)
         except Exception as e:
             logger.error(str(e))
             return None
 
+    redis_instance = get_redis(redis)
+    value = None
+
+    try:
+        # get from redis or kernel
+        value = redis_instance.get(id, model_type, tenant) or _get_from_kernel()
+    except Exception:
+        # in case of redis error
+        value = _get_from_kernel()
+    finally:
+        try:
+            redis_instance.add(task=value, type=model_type, tenant=tenant)
+        except Exception:
+            pass  # problems with redis or `value` is None
+    return value
+
 
 def remove_from_redis(id, model_type, tenant, redis=None):
-    redis = get_redis(redis)
-    return redis.remove(id, model_type, tenant)
+    return get_redis(redis).remove(id, model_type, tenant)
 
 
 def get_redis_keys_by_pattern(pattern, redis=None):
-    redis = get_redis(redis)
-    return redis.get_keys(pattern)
+    return get_redis(redis).get_keys(pattern)
 
 
 def get_redis_subscribed_message(key, redis=None):
-    redis = get_redis(redis)
     try:
-        doc = redis.get_by_key(key)
+        doc = get_redis(redis).get_by_key(key)
         key = key if isinstance(key, str) else key.decode()
         _type, tenant, _id = key.split(':')
-        return Task(
-            id=_id,
-            tenant=tenant,
-            type=_type,
-            data=doc
-        )
+
+        return Task(id=_id, tenant=tenant, type=_type, data=doc)
     except Exception:
         return None
 
 
 def redis_subscribe(callback, pattern, redis=None):
-    redis = get_redis(redis)
-    return redis.subscribe(
-        callback=callback,
-        pattern=pattern,
-        keep_alive=True,
-    )
-
-
-def redis_stop(redis):
-    redis = get_redis(redis)
-    redis.stop()
+    return get_redis(redis).subscribe(callback=callback, pattern=pattern, keep_alive=True)
 
 
 def cache_failed_entities(entities, realm, redis=None):
-    redis = get_redis(redis)
-    failed_entities = {}
+    redis_instance = get_redis(redis)
+
     try:
-        failed_entities = redis.get_by_key(FAILED_ENTITIES_KEY)
+        failed_entities = redis_instance.get_by_key(_FAILED_ENTITIES_KEY)
         failed_entities[realm].append(entities)
     except Exception:
-        failed_entities[realm] = entities
-    redis.redis.set(FAILED_ENTITIES_KEY, json.dumps(failed_entities))
+        failed_entities = {realm: entities}
+
+    redis_instance.redis.set(_FAILED_ENTITIES_KEY, json.dumps(failed_entities))
+
+
+def get_bulk_size(size):
+    return settings.MAX_PUSH_SIZE if size > settings.MAX_PUSH_SIZE else size

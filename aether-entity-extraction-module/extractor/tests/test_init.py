@@ -18,14 +18,15 @@
 
 import collections
 from unittest import TestCase
-from .. import main
+
+from extractor import main
 
 
 class InitTests(TestCase):
 
     def test_manager_setup(self):
         container = main()
-        self.assertEqual(container.SUBMISSION_QUEUE, collections.deque())
-        self.assertEqual(container.PROCESSED_SUBMISSIONS, collections.deque())
-        self.assertEqual(container.realm_entities, {})
+        self.assertEqual(container.pending_submissions, collections.deque())
+        self.assertEqual(container.processed_submissions, {})
+        self.assertEqual(container.extracted_entities, {})
         container.stop()
