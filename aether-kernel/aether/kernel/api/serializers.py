@@ -295,14 +295,11 @@ class EntityListSerializer(serializers.ListSerializer):
     def create(self, validated_data):
         entities = []
         # remove helper field and validate entity
-        # only do this once since all schema decoratos are the same.
-        if validated_data:
-            _project = validators.validate_entity_project(validated_data[0])
         for i in validated_data:
             i.pop('merge')
             try:
                 # set ignore_submission_check to True to avoid a race condition on bulk submissions
-                i['project'] = _project
+                i['project'] = validators.validate_entity_project(i)
                 entity = models.Entity(**i)
                 entity.clean()
                 entities.append(entity)
