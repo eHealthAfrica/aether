@@ -65,7 +65,7 @@ function release_process {
     # Login in dockerhub with write permissions (repos are public)
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
-    IMAGE_REPO='ehealthafrica'
+    IMAGE_REPO="ehealthafrica"
     RELEASE_APPS=( kernel exm odk ui producer integration-test )
 
     echo "${LINE}"

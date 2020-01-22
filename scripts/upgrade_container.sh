@@ -44,7 +44,7 @@ function show_help {
 
 # default values
 build=no
-containers=( kernel odk ui producer )
+containers=( kernel exm odk ui producer )
 
 while [[ $# -gt 0 ]]; do
     case "$1" in

@@ -117,7 +117,6 @@ if [[ $1 == "kernel" ]]; then
     start_exm_test
 
 else
-
     # rename kernel test database in each case
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")
 
@@ -153,13 +152,11 @@ else
     fi
 fi
 
-
 echo_message "Preparing $1 container"
 build_container $1
 echo_message "$1 ready!"
 start_database_test
 $DC_RUN "$1"-test test
 echo_message "$1 tests passed!"
-
 
 kill_test

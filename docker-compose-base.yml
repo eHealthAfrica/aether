@@ -3,11 +3,11 @@
 #
 #  * Databases + Minio + Keycloak + NGINX containers (use same settings in all files)
 #  * Aether Kernel
+#  * Entity Extractor
 #  * ODK Module
 #  * Aether UI & UI Assets
 #  * Zookeper & Kafka
 #  * Aether Kafka Producer
-#  * Aether Entity Extractor
 #
 # These container will be extended in the other DC files with dependencies and networks.
 # Volumes and environment variables can be overriden in those files too.
@@ -170,7 +170,7 @@ services:
 
 
   # ---------------------------------
-  # Aether Entity Extractor
+  # Entity Extractor
   # ---------------------------------
 
   exm-base:
@@ -182,15 +182,14 @@ services:
       DEFAULT_REALM: ${DEFAULT_REALM}
       REALM_COOKIE: ${REALM_COOKIE}
 
+      # use internal url, this happens behind the curtains
+      AETHER_KERNEL_URL: http://kernel:8100
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
 
       REDIS_DB: 0
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
-
-      SERVER_PORT: 5007
     volumes:
       - ./aether-entity-extraction-module:/code
       # to speed up Aether Python Library development changes

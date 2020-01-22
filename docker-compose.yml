@@ -3,9 +3,9 @@
 #
 #  * Databases + NGINX + Minio + Keycloak
 #  * Aether Kernel
+#  * Entity Extractor
 #  * ODK Module
 #  * Aether UI & UI Assets
-#  * Aether Entity Extractor
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -80,7 +80,7 @@ services:
 
 
   # ---------------------------------
-  # Aether Entity Extractor
+  # Entity Extractor
   # ---------------------------------
 
   exm:
@@ -90,13 +90,8 @@ services:
     depends_on:
       redis:
         condition: service_started
-      nginx:
-        condition: service_healthy
     networks:
       - internal
-    extra_hosts:
-      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
-
 
 
   # ---------------------------------

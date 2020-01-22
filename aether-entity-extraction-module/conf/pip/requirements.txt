@@ -43,7 +43,7 @@ pyflakes==2.1.1
 pyOpenSSL==19.1.0
 pyparsing==2.4.6
 pyrsistent==0.15.7
-pytest==5.3.3
+pytest==5.3.4
 redis==3.3.11
 requests==2.22.0
 six==1.14.0
