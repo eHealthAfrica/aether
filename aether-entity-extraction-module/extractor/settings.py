@@ -43,3 +43,9 @@ KERNEL_URL = get_required('AETHER_KERNEL_URL')
 # Multitenancy
 DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'eha')
 REALM_COOKIE = os.environ.get('REALM_COOKIE', 'eha-realm')
+
+# Extractor settings
+SUBMISSION_CHANNEL = os.environ.get('SUBMISSION_CHANNEL', '_submissions*')
+PUSH_TO_KERNEL_INTERVAL = float(os.environ.get('PUSH_TO_KERNEL_INTERVAL', 0.05))
+MAX_WORKERS = int(os.environ.get('MAX_WORKERS', 10))
+MAX_PUSH_SIZE = int(os.environ.get('MAX_PUSH_SIZE', 100))

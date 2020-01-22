@@ -16,8 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-TENANT = 'test'
 MAPPINGSET_ID = '41282431-50bb-4309-92bf-ef9359494dc6'
+
 PAYLOAD = {
     'id': 'a5336669-605c-4a65-ab4c-c0318e28115b',
     'staff': {
@@ -31,9 +31,7 @@ PAYLOAD = {
     'opening_hour': '7AM working days',
     'facility_name': 'Primary Health Care Abuja'
 }
-WRONG_PAYLOAD = {
-    'wrong_field': 'Primary Health Care Abuja'
-}
+
 MAPPINGSET = {
     'id': MAPPINGSET_ID,
     'name': 'Dummy',
@@ -412,6 +410,7 @@ SCHEMAS = [
         'family': None
     }
 ]
+
 SUBMISSION = {
     'mappingset': MAPPINGSET_ID,
     'payload': PAYLOAD,
@@ -421,18 +420,20 @@ SUBMISSION = {
     ]
 }
 
-WRONG_SUBMISSION = {
+WRONG_SUBMISSION_PAYLOAD = {
     'mappingset': MAPPINGSET_ID,
-    'payload': WRONG_PAYLOAD,
+    'payload': {
+        'unkwon_field': 'Who am I'
+    },
     'mappings': [
         '0d4a9cc6-291c-4f9a-a409-1ba87cc93c57'
     ]
 }
 
-SUBMISSION_WRONG_MAPPING = {
+WRONG_SUBMISSION_MAPPING = {
     'mappingset': MAPPINGSET_ID,
-    'payload': WRONG_PAYLOAD,
+    'payload': PAYLOAD,
     'mappings': [
-        'wrong-mapping-id'
+        'unknown-mapping-id'
     ]
 }
