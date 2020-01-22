@@ -141,6 +141,8 @@ class MultitenancyTests(TestCase):
         obj1 = models.Project.objects.create(name='one')
         child1 = models.MappingSet.objects.create(name='child1', project=obj1)
         obj1.add_to_realm(self.request)
+        schema1 = models.Schema.objects.create(name='schema1', definition=_simple_schema)
+        schemadecorator1 = models.SchemaDecorator.objects.create(name='sd1', project=obj1, schema=schema1)
         self.assertEqual(obj1.mt.realm, CURRENT_REALM)
 
         # change realm
@@ -202,6 +204,21 @@ class MultitenancyTests(TestCase):
             json.dumps(entity_data_1),
             content_type='application/json'
         )
+        # SD2 Does not exists on Realm1
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.json())
+        data = response.json()
+        self.assertIn('schemadecorator', data)
+        self.assertEqual(
+            data['schemadecorator'],
+            [f'Invalid pk "{str(schemadecorator2.pk)}" - object does not exist.'],
+        )
+        entity_data_1['schemadecorator'] = str(schemadecorator1.pk)
+        response = self.client.post(
+            reverse('entity-list'),
+            json.dumps(entity_data_1),
+            content_type='application/json'
+        )
+        # Correct Realm
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
         entity_1 = response.json()['id']
 

@@ -388,12 +388,9 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
         required=False,
     )
 
-    _user_updatable = ['status', 'revision']
-
     def create(self, validated_data):
         # remove helper field
         validated_data.pop('merge')
-
         try:
             validated_data['project'] = validators.validate_entity_project(validated_data)
             return models.Entity.objects.create(**validated_data)
@@ -401,14 +398,17 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
             raise serializers.ValidationError(e)
 
     def update(self, instance, validated_data):
-        # find out payload
+        # apply update policy if there's a payload
         if validated_data.get('payload'):
             instance.payload = utils.merge_objects(
-                source=validated_data.get('payload'),
-                target=instance.payload,
+                source=instance.payload,
+                target=validated_data.get('payload'),
                 direction=validated_data.pop('merge', DEFAULT_MERGE),
             )
-        for k in EntitySerializer._user_updatable:
+        # the metadata should always be applied from the new version
+        # keep this local, only referenced here
+        _user_updatable_metadata = ['status', 'revision']
+        for k in _user_updatable_metadata:
             if validated_data.get(k):
                 setattr(instance, k, validated_data.get(k))
         try:
