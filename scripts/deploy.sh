@@ -113,7 +113,7 @@ done
 # push images to deployment repository
 
 GCR_REPO_URL="https://eu.gcr.io"
-GCR_IMAGE_REPO="eu.gcr.io/${GCR_PROJECT}/aether"
+GCR_IMAGE_REPO="eu.gcr.io/${GCR_PROJECT}"
 
 # https://cloud.google.com/container-registry/docs/advanced-authentication#json_key_file
 cat gcs_key.json | docker login -u _json_key --password-stdin $GCR_REPO_URL
