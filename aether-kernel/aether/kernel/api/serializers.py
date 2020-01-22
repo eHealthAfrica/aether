@@ -293,7 +293,6 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
 class EntityListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
-        errors = []
         entities = []
         # remove helper field and validate entity
         # only do this once since all schema decoratos are the same.
@@ -308,11 +307,7 @@ class EntityListSerializer(serializers.ListSerializer):
                 entity.clean()
                 entities.append(entity)
             except Exception as e:
-                errors.append(str(e))
-                break
-        if errors:
-            # reject ALL if ANY invalid entities are included
-            raise(serializers.ValidationError(errors))
+                raise(serializers.ValidationError(str(e)))
         # bulk database operation
         try:
             created_entities = models.Entity.objects.bulk_create(entities)
