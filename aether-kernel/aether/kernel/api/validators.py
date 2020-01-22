@@ -20,7 +20,7 @@ from django.core.exceptions import ValidationError
 from aether.python import exceptions, validators
 from django.utils.translation import ugettext as _
 
-# from .redis import in_same_project_and_cache
+from .redis import in_same_project_and_cache
 
 
 def wrapper_validate_schemas(data):
@@ -83,9 +83,38 @@ def wrapper_validate_schema_input_definition(data):
 
 
 def validate_entity_project(validated_data):
+    '''
+    Used to validate:
+    - the artifacts Associated with an Entity submission
+
+    Checks that:
+    - a SchemaDecorator is present
+    - all artifacts belong to the same project
+    '''
+
     _schema_decorator = validated_data.get('schemadecorator')
     if not _schema_decorator:
         raise ValidationError(
             _('Schema Decorator MUST be provided with entities')
         )
-    return _schema_decorator.project
+    # this artifact is the most relevant, so we'll use it's project as reference
+    _project = _schema_decorator.project
+    _submission = validated_data.get('submission')
+    _mapping = validated_data.get('mapping')
+
+    # if we have other artifacts, check all for consistency
+    if _submission or _mapping:
+        _artefacts_in_same_project = in_same_project_and_cache(
+            {
+                'submissions': str(_submission.pk) if _submission else None,
+                'mappings': str(_mapping.pk) if _mapping else None,
+            },
+            _project
+        )
+
+        if not _artefacts_in_same_project:
+            raise ValidationError(
+                _('Submission, Mapping and Schema Decorator MUST belong to the same Project')
+            )
+
+    return _project

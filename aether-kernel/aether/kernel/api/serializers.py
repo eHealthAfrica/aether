@@ -56,7 +56,7 @@ class KernelBaseSerializer(DynamicFieldsSerializer):
     '''
     id = serializers.UUIDField(required=False, default=uuid.uuid4)
     revision = serializers.CharField(required=False, default='1')
-    modified = serializers.DateTimeField(read_only=True)
+    modified = serializers.CharField(read_only=True)
 
 
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
@@ -296,11 +296,14 @@ class EntityListSerializer(serializers.ListSerializer):
         errors = []
         entities = []
         # remove helper field and validate entity
+        # only do this once since all schema decoratos are the same.
+        if validated_data:
+            _project = validators.validate_entity_project(validated_data[0])
         for i in validated_data:
             i.pop('merge')
             try:
                 # set ignore_submission_check to True to avoid a race condition on bulk submissions
-                i['project'] = validators.validate_entity_project(i)
+                i['project'] = _project
                 entity = models.Entity(**i)
                 entity.clean()
                 entities.append(entity)
