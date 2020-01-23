@@ -243,6 +243,18 @@ class SerializersTests(TestCase):
         # save the submission and check that no entities were created
         submission.save()
 
+        # Create submission that fails validation
+        submission_bad = serializers.SubmissionSerializer(
+            data={
+                'mappingset': mappingset.data['id'],
+                'project': project.data['id'],
+                'payload': EXAMPLE_SOURCE_DATA,
+                'is_extracted': 'non-boolean'
+            },
+            context={'request': self.request},
+        )
+        self.assertFalse(submission_bad.is_valid(), submission_bad.errors)
+
         # check the submission without entity extraction errors
         submission = serializers.SubmissionSerializer(
             data={

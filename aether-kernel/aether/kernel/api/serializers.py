@@ -177,7 +177,7 @@ class SubmissionListSerializer(serializers.ListSerializer):
         return results
 
 
-class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
+class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
 
     url = HyperlinkedIdentityField(view_name='submission-detail')
     project_url = HyperlinkedRelatedField(
@@ -210,10 +210,14 @@ class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         read_only=True,
     )
 
+    payload = serializers.JSONField()
+
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
         required=False,
     )
+
+    is_extracted = serializers.BooleanField(default=False)
 
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
@@ -226,12 +230,12 @@ class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
             raise serializers.ValidationError(
                 {'mappingset': [_('Mapping set must be provided on initial submission')]}
             )
-
-        return super(SubmissionSerializer, self).create(validated_data)
+        try:
+            return models.Submission.objects.create(**validated_data)
+        except Exception as e:                      # pragma: no cover : don't know how to trigger
+            raise serializers.ValidationError(e)    # without first triggering VE on the serializer
 
     class Meta:
-        model = models.Submission
-        fields = '__all__'
         list_serializer_class = SubmissionListSerializer
 
 
