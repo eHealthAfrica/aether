@@ -347,10 +347,10 @@ class SerializersTests(TestCase):
         self.assertTrue(entity_6.is_valid(), entity_6.errors)
         with self.assertRaises(ValidationError) as ve:
             entity_6.save()
-        self.assertIn(
-            'Schema Decorator MUST be provided with entities',
-            str(ve.exception)
-        )
+            self.assertIn(
+                'Schema Decorator MUST be provided with entities',
+                str(ve.exception)
+            )
 
         entity_7 = serializers.EntitySerializer(
             data={
