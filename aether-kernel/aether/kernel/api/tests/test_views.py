@@ -1013,7 +1013,6 @@ class ViewsTest(TestCase):
         )
         response_data = response.json()
         filtered_list = models.Entity.objects.filter(mapping=mapping.pk)
-
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('is not a valid choice', response_data)
 
@@ -1031,10 +1030,24 @@ class ViewsTest(TestCase):
             url,
             content_type='application/json',
             data={
-                'payload': {'test': 'test-name'}
+                'payload': {'villageID': 'test-name'}
             },
         )
+        # Overwriting payload breaks record schema conformation
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response_data = response.json()
+        self.assertIn('record did not conform to registered schema', str(response_data))
+        response = self.client.patch(
+            url,
+            content_type='application/json',
+            data={
+                'merge': 'last_write_wins',
+                'payload': {'villageID': 'test-name'}
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(data.get('payload', {}).get('villageID'), 'test-name')
         response = self.client.patch(
             url,
             content_type='application/json',

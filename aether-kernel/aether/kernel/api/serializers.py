@@ -16,12 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import uuid
 from django.utils.translation import gettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 from django.conf import settings
 
 from aether.sdk.drf.serializers import (
+    DynamicFieldsSerializer,
     DynamicFieldsModelSerializer,
     FilteredHyperlinkedRelatedField,
     HyperlinkedIdentityField,
@@ -45,6 +47,16 @@ MERGE_CHOICES = (
     (MERGE_OPTIONS.fww.value, _('First Write Wins (Source to Target)'))
 )
 DEFAULT_MERGE = MERGE_OPTIONS.overwrite.value
+
+
+class KernelBaseSerializer(DynamicFieldsSerializer):
+    '''
+    Base field for Serializers that don't inherit from
+    ModelSerializer via DynamicFieldsModelSerializer
+    '''
+    id = serializers.UUIDField(required=False, default=uuid.uuid4)
+    revision = serializers.CharField(required=False, default='1')
+    modified = serializers.CharField(read_only=True)
 
 
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
@@ -281,7 +293,6 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
 class EntityListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
-        errors = []
         entities = []
         # remove helper field and validate entity
         for i in validated_data:
@@ -293,11 +304,7 @@ class EntityListSerializer(serializers.ListSerializer):
                 entity.clean()
                 entities.append(entity)
             except Exception as e:
-                errors.append(str(e))
-
-        if errors:
-            # reject ALL if ANY invalid entities are included
-            raise(serializers.ValidationError(errors))
+                raise(serializers.ValidationError(str(e)))
         # bulk database operation
         try:
             created_entities = models.Entity.objects.bulk_create(entities)
@@ -310,7 +317,10 @@ class EntityListSerializer(serializers.ListSerializer):
             raise(serializers.ValidationError(e))
 
 
-class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
+class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
+    payload = serializers.JSONField()
+    status = serializers.ChoiceField(choices=models.ENTITY_STATUS_CHOICES)
+    mapping_revision = serializers.CharField(read_only=True)
 
     url = HyperlinkedIdentityField(view_name='entity-detail')
     project_url = HyperlinkedRelatedField(
@@ -376,29 +386,33 @@ class EntitySerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     def create(self, validated_data):
         # remove helper field
         validated_data.pop('merge')
-
         try:
             validated_data['project'] = validators.validate_entity_project(validated_data)
-            return super(EntitySerializer, self).create(validated_data)
+            return models.Entity.objects.create(**validated_data)
         except Exception as e:
             raise serializers.ValidationError(e)
 
     def update(self, instance, validated_data):
-        # find out payload
+        # apply update policy if there's a payload
         if validated_data.get('payload'):
-            validated_data['payload'] = utils.merge_objects(
+            instance.payload = utils.merge_objects(
                 source=instance.payload,
                 target=validated_data.get('payload'),
                 direction=validated_data.pop('merge', DEFAULT_MERGE),
             )
+        # the metadata should always be applied from the new version
+        # keep this local, only referenced here
+        _user_updatable_metadata = ['status', 'revision']
+        for k in _user_updatable_metadata:
+            if validated_data.get(k):
+                setattr(instance, k, validated_data.get(k))
         try:
-            return super(EntitySerializer, self).update(instance, validated_data)
+            instance.save()
+            return instance
         except Exception as e:
             raise serializers.ValidationError(e)
 
     class Meta:
-        model = models.Entity
-        fields = '__all__'
         list_serializer_class = EntityListSerializer
 
 

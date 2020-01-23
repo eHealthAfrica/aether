@@ -35,7 +35,7 @@ ROOT_URLCONF = 'aether.kernel.urls'
 
 INSTALLED_APPS += [
     'django_filters',
-    'drf_yasg',
+    'drf_yasg'
 ]
 
 MULTITENANCY_MODEL = 'kernel.Project'
@@ -71,6 +71,37 @@ EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
 
 # Redis Configuration
 # ------------------------------------------------------------------------------
+#
+# Issue: The entities bulk creation is failing with Silk enabled.
+# The reported bug, https://github.com/jazzband/django-silk/issues/348,
+# In the meantime we will disable silk for those requests.
+
+if PROFILING_ENABLED and TESTING:  # noqa (From SDK.settings)
+    def ignore_entities_post(request):
+        return request.method != 'POST' or '/entities' not in request.path
+
+    SILKY_INTERCEPT_FUNC = ignore_entities_post
+
+if DJANGO_USE_CACHE:  # noqa (From SDK.settings)
+    CACHEOPS_DEGRADE_ON_FAILURE = True
+    _CACHED_MODULES = [
+        'kernel.entity',
+        'kernel.project',
+        'kernel.mappingset',
+        'kernel.submission',
+        'kernel.attachment',
+        'kernel.schema',
+        'kernel.schemadecorator',
+        'kernel.mapping',
+    ]
+
+    for k in _CACHED_MODULES:
+        CACHEOPS[k] = {'ops': ('fetch', 'get', 'exists')}  # noqa (From SDK.settings)
+        # put Django user model into local cache for faster recall
+    CACHEOPS['auth.user'] = {  # noqa (From SDK.settings)
+        'ops': ('fetch', 'get', 'exists'),
+        'local_get': True,
+    }
 
 WRITE_ENTITIES_TO_REDIS = bool(os.environ.get('WRITE_ENTITIES_TO_REDIS'))
 
