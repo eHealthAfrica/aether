@@ -117,15 +117,15 @@ class UtilsTests(TestCase):
 
     def test_remove_from_redis(self):
         redis = fakeredis.FakeStrictRedis()
-        _key = '_a:b:c'
+        _key = '_model:tenant:id'
 
         redis.set(_key, 'testing')
         self.assertEqual(redis.get(_key), b'testing')
 
-        remove_from_redis('c', 'a', 'b', redis)
+        remove_from_redis('id', 'model', 'tenant', redis)
         self.assertIsNone(redis.get(_key))
 
-    def get_redis_subscribed_message(self):
+    def test_get_redis_subscribed_message(self):
         server = fakeredis.FakeServer()
         server.connected = True
         redis = fakeredis.FakeStrictRedis(server=server)
@@ -134,16 +134,19 @@ class UtilsTests(TestCase):
         message = get_redis_subscribed_message('_s_b_c', redis)
         self.assertIsNone(message)
 
-        _key = '_a:b:c'
+        _key = '_model:tenant:id'
 
         # not in redis yet
         message = get_redis_subscribed_message(_key, redis)
         self.assertIsNone(message)
 
         # in redis
-        redis.set(_key, 'something')
-        message = get_redis_subscribed_message(_key, redis)
-        self.assertEqual(message, 'something')
+        redis.set(_key, b'{"id": "id"}')
+        task = get_redis_subscribed_message(_key, redis)
+        self.assertEqual(task.id, 'id')
+        self.assertEqual(task.tenant, 'tenant')
+        self.assertEqual(task.type, '_model')
+        self.assertEqual(task.data, {'id': 'id'})
 
         # server disconnected (exception)
         server.connected = False
