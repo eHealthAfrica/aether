@@ -104,10 +104,6 @@ class ExtractionManagerTests(TestCase):
             tenant=TENANT,
         )
 
-    def tearDown(self):
-        self.manager.stop()
-        super(ExtractionManagerTests, self).tearDown()
-
     def test_init_extraction_manager(self):
         manager = ExtractionManager()
         self.assertIsNone(manager.redis)
@@ -208,7 +204,7 @@ class ExtractionManagerTests(TestCase):
         self.assertNotIn(ENTITY_EXTRACTION_ENRICHMENT, submission[SUBMISSION_PAYLOAD_FIELD])
         self.assertIn(ENTITY_EXTRACTION_ERRORS, submission[SUBMISSION_PAYLOAD_FIELD])
 
-    @mock.patch('extractor.manager.kernel_data_request', return_value=list)
+    @mock.patch('extractor.manager.kernel_data_request', return_value=[])
     @mock.patch('extractor.manager.cache_failed_entities')
     def test_push_entities_to_kernel(self, mock_cache_failed_entities, mock_kernel_data_request):
         self.manager._add_to_tenant_queue(
@@ -260,7 +256,7 @@ class ExtractionManagerTests(TestCase):
             ),
         ])
 
-    @mock.patch('extractor.manager.kernel_data_request', return_value=list)
+    @mock.patch('extractor.manager.kernel_data_request', return_value=[])
     def test_push_submissions_to_kernel(self, mock_kernel_data_request):
         self.manager._add_to_tenant_queue(
             TENANT, self.manager.processed_submissions, {'name': 'test submission 1'})

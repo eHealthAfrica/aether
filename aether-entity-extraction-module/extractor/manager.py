@@ -65,7 +65,6 @@ class ExtractionManager():
     def stop(self):
         self.is_extracting = False
         self.is_pushing_to_kernel = False
-        print('stop')
 
     def subscribe_to_redis_channel(self, callback: callable, channel: str):
         redis_subscribe(callback=callback, pattern=channel, redis=self.redis)
@@ -79,6 +78,8 @@ class ExtractionManager():
             return
 
         self.pending_submissions.put(task)
+        logger.debug(f'Added to queue {task.id}')
+
         if not self.is_extracting:
             self.is_extracting = True
             mp.Process(target=self.extraction, name='extraction').start()
@@ -224,9 +225,8 @@ class ExtractionManager():
         logger.debug(f'Pushing extracted entities for tenant {realm}')
 
         extracted_entities = self.extracted_entities.pop(realm)
-
-        current_entity_size = get_bulk_size(len(extracted_entities))
-        while current_entity_size:
+        while len(extracted_entities):
+            current_entity_size = get_bulk_size(len(extracted_entities))
             entities = [
                 extracted_entities.pop()
                 for _ in range(current_entity_size)
@@ -246,32 +246,29 @@ class ExtractionManager():
 
             # wait and check again later
             time.sleep(settings.PUSH_TO_KERNEL_INTERVAL)
-            # next bunch of extracted entitites
-            current_entity_size = get_bulk_size(len(extracted_entities))
 
     def push_submissions_to_kernel(self, realm):
         logger.debug(f'Pushing processed submissions for tenant {realm}')
 
         processed_submissions = self.processed_submissions.pop(realm)
-
-        current_submission_size = get_bulk_size(len(processed_submissions))
-        while current_submission_size:
+        while len(processed_submissions):
+            current_submission_size = get_bulk_size(len(processed_submissions))
             submissions = [
                 processed_submissions.pop()
                 for _ in range(current_submission_size)
             ]
             # post submissions to kernel
             try:
-                submission_ids = kernel_data_request(
+                kernel_data_request(
                     url='submissions/bulk_update_extracted.json',
                     method='patch',
                     data=submissions,
                     realm=realm,
                 )
                 # remove submissions from redis
-                for submission_id in submission_ids:
+                for submission in submissions:
                     remove_from_redis(
-                        id=submission_id,
+                        id=submission['id'],
                         model_type=ARTEFACT_NAMES.submissions,
                         tenant=realm,
                         redis=self.redis,
@@ -283,8 +280,6 @@ class ExtractionManager():
 
             # wait and check again later
             time.sleep(settings.PUSH_TO_KERNEL_INTERVAL)
-            # next bunch of processed submissions
-            current_submission_size = get_bulk_size(len(processed_submissions))
 
     def _add_to_tenant_queue(self, tenant, queue, element):
         try:
