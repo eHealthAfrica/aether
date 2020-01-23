@@ -27,7 +27,6 @@ function show_help {
     bash              : run bash
     eval              : eval shell command
 
-    flake8            : check against code style guidelines
     pip_freeze        : freeze pip dependencies and write to requirements.txt
 
     start             : start extractor with settings from extractor
@@ -38,7 +37,7 @@ function show_help {
 }
 
 function test_flake8 {
-    flake8 /code/. --config=/code/setup.cfg
+    flake8
 }
 
 function test_py {
@@ -65,10 +64,6 @@ case "$1" in
 
     eval )
         eval "${@:2}"
-    ;;
-
-    flake8 )
-        test_flake8
     ;;
 
     pip_freeze )

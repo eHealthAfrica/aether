@@ -16,12 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import collections
 import logging
 import time
 
-from concurrent.futures import ThreadPoolExecutor
-from threading import Thread
+from collections import deque
+from concurrent.futures import ProcessPoolExecutor, wait
+import multiprocessing as mp
 
 from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ERRORS,
@@ -51,11 +51,11 @@ logger.setLevel(settings.LOGGING_LEVEL)
 class ExtractionManager():
 
     def __init__(self, redis=None):
-        self.pending_submissions = collections.deque()
+        self.pending_submissions = mp.SimpleQueue()
         # save the submissions and entities by their realm
         # this is required to push them back to kernel
-        self.processed_submissions = {}
-        self.extracted_entities = {}
+        self.processed_submissions = dict()
+        self.extracted_entities = dict()
 
         self.redis = redis
 
@@ -65,6 +65,7 @@ class ExtractionManager():
     def stop(self):
         self.is_extracting = False
         self.is_pushing_to_kernel = False
+        print('stop')
 
     def subscribe_to_redis_channel(self, callback: callable, channel: str):
         redis_subscribe(callback=callback, pattern=channel, redis=self.redis)
@@ -77,14 +78,58 @@ class ExtractionManager():
         if not task:
             return
 
-        self.pending_submissions.appendleft(task)
+        self.pending_submissions.put(task)
         if not self.is_extracting:
             self.is_extracting = True
-            Thread(target=self.process, name='extraction-thread').start()
+            mp.Process(target=self.extraction, name='extraction').start()
 
         if not self.is_pushing_to_kernel:
             self.is_pushing_to_kernel = True
-            Thread(target=self.push_to_kernel, name='push-to-kernel-thread').start()
+            mp.Process(target=self.push_to_kernel, name='push-to-kernel').start()
+
+    def extraction(self):
+        logger.debug('Extracting entities')
+        with ProcessPoolExecutor(max_workers=settings.MAX_WORKERS) as executor:
+            processes = []
+            while not self.pending_submissions.empty():
+                processes.append(
+                    executor.submit(self.entity_extraction, self.pending_submissions.get())
+                )
+            wait(processes)
+
+        if self.is_extracting and not self.pending_submissions.empty():
+            self.extraction()
+        else:
+            self.is_extracting = False
+        logger.debug('Entity extraction process finished!')
+
+    def push_to_kernel(self):
+        logger.debug('Pushing to kernel')
+        with ProcessPoolExecutor(max_workers=settings.MAX_WORKERS) as executor:
+            processes = []
+
+            entity_realms = list(self.extracted_entities.keys())
+            for realm in entity_realms:
+                processes.append(
+                    executor.submit(self.push_entities_to_kernel, realm)
+                )
+
+            submission_realms = list(self.processed_submissions.keys())
+            for realm in submission_realms:
+                processes.append(
+                    executor.submit(self.push_submissions_to_kernel, realm)
+                )
+
+            wait(processes)
+
+        if self.is_pushing_to_kernel and (self.extracted_entities or self.processed_submissions):
+            # wait and check again later
+            time.sleep(settings.PUSH_TO_KERNEL_INTERVAL)
+            self.push_to_kernel()
+        else:
+            # continue pushing if entities extraction is in progress
+            self.is_pushing_to_kernel = self.is_extracting
+        logger.debug('Push to kernel process finished!')
 
     def entity_extraction(self, task):
         # get artifacts from redis
@@ -94,13 +139,10 @@ class ExtractionManager():
         tenant = task.tenant
         submission = task.data
         payload = submission[SUBMISSION_PAYLOAD_FIELD]
-
         submission_entities = []
 
-        mapping_ids = submission[ARTEFACT_NAMES.mappings]
-        for mapping_id in mapping_ids:
-            schemas = {}
-            schema_decorators = {}
+        # extract entities for each linked mapping
+        for mapping_id in submission[ARTEFACT_NAMES.mappings]:
             mapping = get_from_redis_or_kernel(
                 id=mapping_id,
                 model_type=ARTEFACT_NAMES.mappings,
@@ -108,10 +150,11 @@ class ExtractionManager():
                 redis=self.redis,
             )
 
-            if mapping and ARTEFACT_NAMES.schemadecorators in mapping:
-                schemadecorator_ids = mapping[ARTEFACT_NAMES.schemadecorators]
+            try:
+                # get required artefacts
+                schemas = {}
                 schema_decorators = mapping['definition']['entities']
-                for shemadecorator_id in schemadecorator_ids:
+                for shemadecorator_id in mapping[ARTEFACT_NAMES.schemadecorators]:
                     sd = get_from_redis_or_kernel(
                         id=shemadecorator_id,
                         model_type=ARTEFACT_NAMES.schemadecorators,
@@ -123,9 +166,9 @@ class ExtractionManager():
                     if sd and ARTEFACT_NAMES.schema_definition in sd:
                         schema_definition = sd[ARTEFACT_NAMES.schema_definition]
 
-                    elif sd and ARTEFACT_NAMES.single_schema in sd:
+                    elif sd and ARTEFACT_NAMES.schema_id in sd:
                         schema = get_from_redis_or_kernel(
-                            id=sd[ARTEFACT_NAMES.single_schema],
+                            id=sd[ARTEFACT_NAMES.schema_id],
                             model_type=ARTEFACT_NAMES.schemas,
                             tenant=settings.DEFAULT_REALM,
                             redis=self.redis,
@@ -136,15 +179,14 @@ class ExtractionManager():
                     if schema_definition:
                         schemas[sd['name']] = schema_definition
 
-            # perform entity extraction
-            try:
-                submission_data, entities = extract_create_entities(
+                # perform entity extraction
+                _, extracted_entities = extract_create_entities(
                     submission_payload=payload,
                     mapping_definition=mapping['definition'],
                     schemas=schemas,
                 )
 
-                for entity in entities:
+                for entity in extracted_entities:
                     submission_entities.append({
                         'payload': entity.payload,
                         'status': entity.status,
@@ -167,7 +209,7 @@ class ExtractionManager():
             for entity in submission_entities:
                 self._add_to_tenant_queue(tenant, self.extracted_entities, entity)
 
-        # add to processed submission queue (only the required fields)
+        # add to processed submission queue (but only the required fields)
         self._add_to_tenant_queue(
             tenant,
             self.processed_submissions,
@@ -178,91 +220,74 @@ class ExtractionManager():
             }
         )
 
-    def process(self):
-        with ThreadPoolExecutor(max_workers=settings.MAX_WORKERS) as executor:
-            while self.pending_submissions:
-                executor.submit(self.entity_extraction, self.pending_submissions.pop())
+    def push_entities_to_kernel(self, realm):
+        logger.debug(f'Pushing extracted entities for tenant {realm}')
 
-        if self.pending_submissions:
-            self.process()
-        else:
-            self.is_extracting = False
+        extracted_entities = self.extracted_entities.pop(realm)
 
-    def push_entities_to_kernel(self):
-        logger.debug('Pushing extracted entities')
-        for realm in self.extracted_entities:
-            current_entity_size = get_bulk_size(len(self.extracted_entities[realm]))
-            while current_entity_size:
-                entities = [
-                    self.extracted_entities[realm].pop()
-                    for _ in range(current_entity_size)
-                ]
-                # post entities to kernel per realm
-                try:
-                    kernel_data_request(
-                        url='entities.json',
-                        method='post',
-                        data=entities,
-                        realm=realm,
+        current_entity_size = get_bulk_size(len(extracted_entities))
+        while current_entity_size:
+            entities = [
+                extracted_entities.pop()
+                for _ in range(current_entity_size)
+            ]
+            # post entities to kernel per realm
+            try:
+                kernel_data_request(
+                    url='entities.json',
+                    method='post',
+                    data=entities,
+                    realm=realm,
+                )
+            except Exception as e:
+                logger.error(str(e))
+                # cache failed entities on redis for retries later
+                cache_failed_entities(entities, realm)
+
+            # wait and check again later
+            time.sleep(settings.PUSH_TO_KERNEL_INTERVAL)
+            # next bunch of extracted entitites
+            current_entity_size = get_bulk_size(len(extracted_entities))
+
+    def push_submissions_to_kernel(self, realm):
+        logger.debug(f'Pushing processed submissions for tenant {realm}')
+
+        processed_submissions = self.processed_submissions.pop(realm)
+
+        current_submission_size = get_bulk_size(len(processed_submissions))
+        while current_submission_size:
+            submissions = [
+                processed_submissions.pop()
+                for _ in range(current_submission_size)
+            ]
+            # post submissions to kernel
+            try:
+                submission_ids = kernel_data_request(
+                    url='submissions/bulk_update_extracted.json',
+                    method='patch',
+                    data=submissions,
+                    realm=realm,
+                )
+                # remove submissions from redis
+                for submission_id in submission_ids:
+                    remove_from_redis(
+                        id=submission_id,
+                        model_type=ARTEFACT_NAMES.submissions,
+                        tenant=realm,
+                        redis=self.redis,
                     )
-                except Exception as e:
-                    logger.error(str(e))
-                    # cache failed entities on redis for retries later
-                    cache_failed_entities(entities, realm)
+            except Exception as e:
+                logger.error(str(e))
+                # back to the queue ???
+                # self.processed_submissions[realm].extendleft(submissions)
 
-                # wait and check again later
-                time.sleep(settings.PUSH_TO_KERNEL_INTERVAL)
-                # next bunch of entitites
-                current_entity_size = get_bulk_size(len(self.extracted_entities[realm]))
-
-        logger.debug('Pushed all entities to kernel')
-
-    def push_submissions_to_kernel(self):
-        logger.debug('Pushing processed submissions')
-        for realm in self.processed_submissions:
-            current_submission_size = get_bulk_size(len(self.processed_submissions[realm]))
-            while current_submission_size:
-                submissions = [
-                    self.processed_submissions[realm].pop()
-                    for _ in range(current_submission_size)
-                ]
-                # post submissions to kernel
-                try:
-                    submission_ids = kernel_data_request(
-                        url='submissions/bulk_update_extracted.json',
-                        method='patch',
-                        data=submissions,
-                        realm=realm,
-                    )
-                    # remove submissions from redis
-                    for submission_id in submission_ids:
-                        remove_from_redis(
-                            id=submission_id,
-                            model_type=ARTEFACT_NAMES.submissions,
-                            tenant=realm,
-                            redis=self.redis,
-                        )
-                except Exception as e:
-                    logger.error(str(e))
-                    # back to the queue ???
-                    # self.processed_submissions[realm].extendleft(submissions)
-
-                # wait and check again later
-                time.sleep(settings.PUSH_TO_KERNEL_INTERVAL)
-                # next bunch of submissions
-                current_submission_size = get_bulk_size(len(self.processed_submissions[realm]))
-
-        logger.debug('Pushed all submissions to kernel')
-
-    def push_to_kernel(self):
-        logger.debug('Pushing to kernel')
-        if self.is_pushing_to_kernel:
-            with ThreadPoolExecutor(max_workers=settings.MAX_WORKERS) as executor:
-                executor.submit(self.push_entities_to_kernel)
-                executor.submit(self.push_submissions_to_kernel)
+            # wait and check again later
+            time.sleep(settings.PUSH_TO_KERNEL_INTERVAL)
+            # next bunch of processed submissions
+            current_submission_size = get_bulk_size(len(processed_submissions))
 
     def _add_to_tenant_queue(self, tenant, queue, element):
         try:
             queue[tenant].appendleft(element)
         except KeyError:
-            queue[tenant] = collections.deque([element])
+            queue[tenant] = deque([element])

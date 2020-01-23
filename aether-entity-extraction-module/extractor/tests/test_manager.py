@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import collections
 import copy
 import fakeredis
 import json
@@ -113,9 +112,9 @@ class ExtractionManagerTests(TestCase):
         manager = ExtractionManager()
         self.assertIsNone(manager.redis)
 
-        self.assertEqual(manager.pending_submissions, collections.deque())
-        self.assertEqual(manager.processed_submissions, {})
-        self.assertEqual(manager.extracted_entities, {})
+        self.assertTrue(manager.pending_submissions.empty())
+        self.assertEqual(len(manager.processed_submissions.keys()), 0)
+        self.assertEqual(len(manager.extracted_entities.keys()), 0)
 
         self.assertFalse(manager.is_extracting)
         self.assertFalse(manager.is_pushing_to_kernel)
@@ -130,18 +129,18 @@ class ExtractionManagerTests(TestCase):
             submission = copy.deepcopy(SUBMISSION)
             submission['id'] = str(uuid.uuid4())
             key = build_redis_key(SUBMISSION_CHANNEL, TENANT, submission['id'])
-            publish_key = f'__keyspace@0__:{key}'
+
             data = json.dumps(submission)
             self.redis.set(key, data)
-            self.redis.publish(publish_key, data)
+            self.redis.publish(f'__keyspace@0__:{key}', data)
 
         self.assertEqual(
             len(self.redis.execute_command('keys', f'_{SUBMISSION_CHANNEL}*')),
             NO_OF_SUBMISSIONS
         )
-        self.assertEqual(len(self.manager.pending_submissions), 0)
+        self.assertTrue(self.manager.pending_submissions.empty())
         self.manager.handle_pending_submissions(f'_{SUBMISSION_CHANNEL}*')
-        self.assertNotEqual(len(self.manager.pending_submissions), 0)
+        self.assertFalse(self.manager.pending_submissions.empty())
 
     def test_add_to_queue(self):
         self.manager.add_to_queue(None)
@@ -153,8 +152,8 @@ class ExtractionManagerTests(TestCase):
         self.assertTrue(self.manager.is_pushing_to_kernel)
 
     def test_entity_extraction(self):
-        self.assertEqual(self.manager.processed_submissions, {})
-        self.assertEqual(self.manager.extracted_entities, {})
+        self.assertEqual(len(self.manager.processed_submissions.keys()), 0)
+        self.assertEqual(len(self.manager.extracted_entities.keys()), 0)
 
         # test extraction with missing schema definition in schema decorator
         self.assertEqual(len(SCHEMA_DECORATORS), 3)
@@ -212,10 +211,13 @@ class ExtractionManagerTests(TestCase):
     @mock.patch('extractor.manager.kernel_data_request', return_value=list)
     @mock.patch('extractor.manager.cache_failed_entities')
     def test_push_entities_to_kernel(self, mock_cache_failed_entities, mock_kernel_data_request):
-        self.manager.extracted_entities[TENANT] = collections.deque([{'name': 'test entity 1'}])
-        self.manager.extracted_entities[TENANT_2] = collections.deque([{'name': 'test entity 2'}])
+        self.manager._add_to_tenant_queue(
+            TENANT, self.manager.extracted_entities, {'name': 'test entity 1'})
+        self.manager._add_to_tenant_queue(
+            TENANT_2, self.manager.extracted_entities, {'name': 'test entity 2'})
 
-        self.manager.push_entities_to_kernel()
+        self.manager.push_entities_to_kernel(TENANT)
+        self.manager.push_entities_to_kernel(TENANT_2)
 
         mock_kernel_data_request.assert_has_calls([
             mock.call(
@@ -234,12 +236,14 @@ class ExtractionManagerTests(TestCase):
         mock_cache_failed_entities.assert_not_called()
 
     @mock.patch('extractor.manager.kernel_data_request', side_effect=Exception)
-    @mock.patch('extractor.manager.cache_failed_entities')
-    def test_push_entities_to_kernel__error(self, mock_cache_failed_entities, mock_kernel_data_request):
-        self.manager.extracted_entities[TENANT] = collections.deque([{'name': 'test entity 1'}])
-        self.manager.extracted_entities[TENANT_2] = collections.deque([{'name': 'test entity 2'}])
+    def test_push_entities_to_kernel__error(self, mock_kernel_data_request):
+        self.manager._add_to_tenant_queue(
+            TENANT, self.manager.extracted_entities, {'name': 'test entity 1'})
+        self.manager._add_to_tenant_queue(
+            TENANT_2, self.manager.extracted_entities, {'name': 'test entity 2'})
 
-        self.manager.push_entities_to_kernel()
+        self.manager.push_entities_to_kernel(TENANT)
+        self.manager.push_entities_to_kernel(TENANT_2)
 
         mock_kernel_data_request.assert_has_calls([
             mock.call(
@@ -255,14 +259,16 @@ class ExtractionManagerTests(TestCase):
                 realm=TENANT_2,
             ),
         ])
-        mock_cache_failed_entities.assert_called()
 
     @mock.patch('extractor.manager.kernel_data_request', return_value=list)
     def test_push_submissions_to_kernel(self, mock_kernel_data_request):
-        self.manager.processed_submissions[TENANT] = collections.deque([{'name': 'test submission 1'}])
-        self.manager.processed_submissions[TENANT_2] = collections.deque([{'name': 'test submission 2'}])
+        self.manager._add_to_tenant_queue(
+            TENANT, self.manager.processed_submissions, {'name': 'test submission 1'})
+        self.manager._add_to_tenant_queue(
+            TENANT_2, self.manager.processed_submissions, {'name': 'test submission 2'})
 
-        self.manager.push_submissions_to_kernel()
+        self.manager.push_submissions_to_kernel(TENANT)
+        self.manager.push_submissions_to_kernel(TENANT_2)
 
         mock_kernel_data_request.assert_has_calls([
             mock.call(
@@ -281,10 +287,13 @@ class ExtractionManagerTests(TestCase):
 
     @mock.patch('extractor.manager.kernel_data_request', side_effect=Exception)
     def test_push_submissions_to_kernel__error(self, mock_kernel_data_request):
-        self.manager.processed_submissions[TENANT] = collections.deque([{'name': 'test submission 1'}])
-        self.manager.processed_submissions[TENANT_2] = collections.deque([{'name': 'test submission 2'}])
+        self.manager._add_to_tenant_queue(
+            TENANT, self.manager.processed_submissions, {'name': 'test submission 1'})
+        self.manager._add_to_tenant_queue(
+            TENANT_2, self.manager.processed_submissions, {'name': 'test submission 2'})
 
-        self.manager.push_submissions_to_kernel()
+        self.manager.push_submissions_to_kernel(TENANT)
+        self.manager.push_submissions_to_kernel(TENANT_2)
 
         mock_kernel_data_request.assert_has_calls([
             mock.call(
