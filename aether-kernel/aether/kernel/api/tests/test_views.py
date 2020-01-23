@@ -1013,8 +1013,8 @@ class ViewsTest(TestCase):
         )
         response_data = response.json()
         filtered_list = models.Entity.objects.filter(mapping=mapping.pk)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('updated', response_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('is not a valid choice', response_data)
 
         response = self.client.patch(
             url,

@@ -319,7 +319,7 @@ class EntityListSerializer(serializers.ListSerializer):
 
 class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
     payload = serializers.JSONField()
-    status = serializers.CharField(max_length=20)
+    status = serializers.ChoiceField(choices=models.ENTITY_STATUS_CHOICES)
     mapping_revision = serializers.CharField(read_only=True)
 
     url = HyperlinkedIdentityField(view_name='entity-detail')

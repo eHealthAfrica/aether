@@ -324,6 +324,8 @@ class SerializersTests(TestCase):
 
         entity_5 = serializers.EntitySerializer(
             data={
+                'submission': submission.data['id'],
+                'mapping': mapping.data['id'],
                 'schemadecorator': schemadecorator.data['id'],
                 'status': 'Publishable',
                 'payload': EXAMPLE_SOURCE_DATA_ENTITY,
@@ -336,6 +338,7 @@ class SerializersTests(TestCase):
 
         entity_6 = serializers.EntitySerializer(
             data={
+                'mapping': mapping.data['id'],
                 'status': 'Pending Approval',
                 'payload': EXAMPLE_SOURCE_DATA_ENTITY,
             },
@@ -346,6 +349,38 @@ class SerializersTests(TestCase):
             entity_6.save()
         self.assertIn(
             'Schema Decorator MUST be provided with entities',
+            str(ve.exception)
+        )
+
+        entity_7 = serializers.EntitySerializer(
+            data={
+                'status': 'Pending Approval',
+                'payload': EXAMPLE_SOURCE_DATA_ENTITY,
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(entity_7.is_valid(), entity_7.errors)
+        with self.assertRaises(ValidationError) as ve:
+            entity_7.save()
+        self.assertIn(
+            'Schema Decorator MUST be provided with entities',
+            str(ve.exception)
+        )
+        entity_8 = serializers.EntitySerializer(
+            data={
+                'submission': submission.data['id'],
+                'schemadecorator': schemadecorator.data['id'],
+                'mapping': mapping_1.data['id'],
+                'status': 'Pending Approval',
+                'payload': EXAMPLE_SOURCE_DATA_ENTITY,
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(entity_8.is_valid(), entity_8.errors)
+        with self.assertRaises(ValidationError) as ve:
+            entity_8.save()
+        self.assertIn(
+            'Submission, Mapping and Schema Decorator MUST belong to the same Project',
             str(ve.exception)
         )
 
