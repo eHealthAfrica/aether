@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import collections
 from unittest import TestCase
 
 from extractor import main
@@ -26,7 +25,7 @@ class InitTests(TestCase):
 
     def test_manager_setup(self):
         container = main()
-        self.assertEqual(container.pending_submissions, collections.deque())
-        self.assertEqual(container.processed_submissions, {})
-        self.assertEqual(container.extracted_entities, {})
+        self.assertTrue(container.pending_submissions.empty())
+        self.assertEqual(len(container.processed_submissions.keys()), 0)
+        self.assertEqual(len(container.extracted_entities.keys()), 0)
         container.stop()
