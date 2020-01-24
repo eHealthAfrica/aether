@@ -163,7 +163,3 @@ def cache_failed_entities(entities, realm, redis=None):
         failed_entities = {realm: entities}
 
     redis_instance.redis.set(_FAILED_ENTITIES_KEY, json.dumps(failed_entities))
-
-
-def get_bulk_size(size):
-    return settings.MAX_PUSH_SIZE if size > settings.MAX_PUSH_SIZE else size

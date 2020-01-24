@@ -35,7 +35,6 @@ from extractor.utils import (
     SUBMISSION_PAYLOAD_FIELD,
 
     cache_failed_entities,
-    get_bulk_size,
     get_from_redis_or_kernel,
     get_redis_keys_by_pattern,
     get_redis_subscribed_message,
@@ -240,7 +239,7 @@ class ExtractionManager():
 
         extracted_entities = self.extracted_entities.pop(realm)
         while len(extracted_entities):
-            current_entity_size = get_bulk_size(len(extracted_entities))
+            current_entity_size = self._get_bulk_size(len(extracted_entities))
             entities = [
                 extracted_entities.popleft()
                 for _ in range(current_entity_size)
@@ -266,7 +265,7 @@ class ExtractionManager():
 
         processed_submissions = self.processed_submissions.pop(realm)
         while len(processed_submissions):
-            current_submission_size = get_bulk_size(len(processed_submissions))
+            current_submission_size = self._get_bulk_size(len(processed_submissions))
             submissions = [
                 processed_submissions.popleft()
                 for _ in range(current_submission_size)
@@ -298,3 +297,6 @@ class ExtractionManager():
             queue[tenant].append(element)
         except KeyError:
             queue[tenant] = deque([element])
+
+    def _get_bulk_size(self, size):
+        return settings.MAX_PUSH_SIZE if size > settings.MAX_PUSH_SIZE else size
