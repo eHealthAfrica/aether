@@ -20,8 +20,8 @@ import logging
 import time
 
 from collections import deque
-from concurrent.futures import ProcessPoolExecutor, wait
-import multiprocessing as mp
+from concurrent.futures import ThreadPoolExecutor as PoolExecutor, wait
+from threading import Thread as Job
 
 from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ERRORS,
@@ -51,16 +51,15 @@ logger.setLevel(settings.LOGGING_LEVEL)
 class ExtractionManager():
 
     def __init__(self, redis=None):
+        self.redis = redis
+        self.is_running = False
+
         self.pending_submissions = deque()
+
         # save the submissions and entities by their realm
         # this is required to push them back to kernel
-        self.processed_submissions = dict()
-        self.extracted_entities = dict()
-
-        self.redis = redis
-
-        self.is_extracting = False
-        self.is_pushing_to_kernel = False
+        self.processed_submissions = {}
+        self.extracted_entities = {}
 
     def start(self):
         # include the tasks that are already in the redis channel
@@ -76,73 +75,50 @@ class ExtractionManager():
             redis=self.redis,
         )
 
+        self.is_running = True
+        Job(target=self.extraction, name='extraction').start()
+
+        logger.info('Extractor started!')
+
     def stop(self):
-        self.is_extracting = False
-        self.is_pushing_to_kernel = False
+        self.is_running = False
         # without this the redis thread will keep alive forever
         redis_unsubscribe(self.redis)
+        logger.info('Extractor stopped!')
 
     def handle_pending_submissions(self, channel='*'):
         for key in get_redis_keys_by_pattern(channel, self.redis):
             self.add_to_queue(get_redis_subscribed_message(key=key, redis=self.redis))
 
     def add_to_queue(self, task):
-        if not task:
-            return
-
-        self.pending_submissions.append(task)
-
-        if not self.is_extracting:
-            self.is_extracting = True
-            mp.Process(target=self.extraction, name='extraction').start()
-
-        if not self.is_pushing_to_kernel:
-            self.is_pushing_to_kernel = True
-            mp.Process(target=self.push_to_kernel, name='push-to-kernel').start()
+        if task:
+            self.pending_submissions.appendleft(task)
 
     def extraction(self):
-        logger.debug('Extracting entities')
-        with ProcessPoolExecutor(max_workers=settings.MAX_WORKERS) as executor:
-            processes = []
-            while self.pending_submissions:
-                processes.append(
-                    executor.submit(self.entity_extraction, self.pending_submissions.popleft())
-                )
-            wait(processes)
+        with PoolExecutor(max_workers=settings.MAX_WORKERS) as executor:
+            while self.is_running:
+                processes = []
 
-        if self.is_extracting and self.pending_submissions:
-            self.extraction()
-        else:
-            self.is_extracting = False
-        logger.debug('Entity extraction process finished!')
+                bulk_size = self._get_bulk_size(len(self.pending_submissions))
+                for _ in range(bulk_size):
+                    processes.append(
+                        executor.submit(self.entity_extraction, self.pending_submissions.pop())
+                    )
 
-    def push_to_kernel(self):
-        logger.debug('Pushing to kernel')
-        with ProcessPoolExecutor(max_workers=settings.MAX_WORKERS) as executor:
-            processes = []
+                for realm in self.extracted_entities.keys():
+                    processes.append(
+                        executor.submit(self.push_entities_to_kernel, realm)
+                    )
 
-            entity_realms = list(self.extracted_entities.keys())
-            for realm in entity_realms:
-                processes.append(
-                    executor.submit(self.push_entities_to_kernel, realm)
-                )
+                for realm in self.processed_submissions.keys():
+                    processes.append(
+                        executor.submit(self.push_submissions_to_kernel, realm)
+                    )
 
-            submission_realms = list(self.processed_submissions.keys())
-            for realm in submission_realms:
-                processes.append(
-                    executor.submit(self.push_submissions_to_kernel, realm)
-                )
+                wait(processes, timeout=settings.CHECK_INTERVAL)
 
-            wait(processes)
-
-        if self.is_pushing_to_kernel and (self.extracted_entities or self.processed_submissions):
-            # wait and check again later
-            time.sleep(settings.PUSH_TO_KERNEL_INTERVAL)
-            self.push_to_kernel()
-        else:
-            # continue pushing if entities extraction is in progress
-            self.is_pushing_to_kernel = self.is_extracting
-        logger.debug('Push to kernel process finished!')
+                # wait and check again later
+                time.sleep(settings.CHECK_INTERVAL)
 
     def entity_extraction(self, task):
         # get artifacts from redis
@@ -237,7 +213,7 @@ class ExtractionManager():
         logger.debug(f'Pushing extracted entities for tenant {realm}')
 
         extracted_entities = self.extracted_entities.pop(realm)
-        while len(extracted_entities):
+        while extracted_entities:
             current_entity_size = self._get_bulk_size(len(extracted_entities))
             entities = [
                 extracted_entities.popleft()
@@ -263,7 +239,7 @@ class ExtractionManager():
         logger.debug(f'Pushing processed submissions for tenant {realm}')
 
         processed_submissions = self.processed_submissions.pop(realm)
-        while len(processed_submissions):
+        while processed_submissions:
             current_submission_size = self._get_bulk_size(len(processed_submissions))
             submissions = [
                 processed_submissions.popleft()
@@ -298,4 +274,4 @@ class ExtractionManager():
             queue[tenant] = deque([element])
 
     def _get_bulk_size(self, size):
-        return settings.MAX_PUSH_SIZE if size > settings.MAX_PUSH_SIZE else size
+        return settings.MAX_BULK_SIZE if size > settings.MAX_BULK_SIZE else size

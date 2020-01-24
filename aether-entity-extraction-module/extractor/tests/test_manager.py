@@ -112,8 +112,7 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(len(manager.processed_submissions.keys()), 0)
         self.assertEqual(len(manager.extracted_entities.keys()), 0)
 
-        self.assertFalse(manager.is_extracting)
-        self.assertFalse(manager.is_pushing_to_kernel)
+        self.assertFalse(manager.is_running)
 
     def test_handle_pending_submissions(self):
         NO_OF_SUBMISSIONS = 10
@@ -140,12 +139,10 @@ class ExtractionManagerTests(TestCase):
 
     def test_add_to_queue(self):
         self.manager.add_to_queue(None)
-        self.assertFalse(self.manager.is_extracting)
-        self.assertFalse(self.manager.is_pushing_to_kernel)
+        self.assertEqual(len(self.manager.pending_submissions), 0)
 
         self.manager.add_to_queue(self.submission_task)
-        self.assertTrue(self.manager.is_extracting)
-        self.assertTrue(self.manager.is_pushing_to_kernel)
+        self.assertNotEqual(len(self.manager.pending_submissions), 0)
 
     def test_entity_extraction(self):
         self.assertEqual(len(self.manager.processed_submissions.keys()), 0)

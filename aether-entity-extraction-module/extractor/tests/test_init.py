@@ -28,5 +28,6 @@ class InitTests(TestCase):
         self.assertEqual(len(manager.pending_submissions), 0)
         self.assertEqual(len(manager.processed_submissions.keys()), 0)
         self.assertEqual(len(manager.extracted_entities.keys()), 0)
+        self.assertTrue(manager.is_running)
         # without this the redis thread will keep alive forever
         manager.stop()

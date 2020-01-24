@@ -46,6 +46,7 @@ REALM_COOKIE = os.environ.get('REALM_COOKIE', 'eha-realm')
 
 # Extractor settings
 SUBMISSION_CHANNEL = os.environ.get('SUBMISSION_CHANNEL', '_submissions*')
+CHECK_INTERVAL = float(os.environ.get('CHECK_INTERVAL', .1))
 PUSH_TO_KERNEL_INTERVAL = float(os.environ.get('PUSH_TO_KERNEL_INTERVAL', 0.05))
 MAX_WORKERS = int(os.environ.get('MAX_WORKERS', 10))
-MAX_PUSH_SIZE = int(os.environ.get('MAX_PUSH_SIZE', 100))
+MAX_BULK_SIZE = int(os.environ.get('MAX_BULK_SIZE', 100))
