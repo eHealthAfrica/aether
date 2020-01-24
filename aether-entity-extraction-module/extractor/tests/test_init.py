@@ -24,8 +24,9 @@ from extractor import main
 class InitTests(TestCase):
 
     def test_manager_setup(self):
-        container = main()
-        self.assertTrue(container.pending_submissions.empty())
-        self.assertEqual(len(container.processed_submissions.keys()), 0)
-        self.assertEqual(len(container.extracted_entities.keys()), 0)
-        container.stop()
+        manager = main()
+        self.assertEqual(len(manager.pending_submissions), 0)
+        self.assertEqual(len(manager.processed_submissions.keys()), 0)
+        self.assertEqual(len(manager.extracted_entities.keys()), 0)
+        # without this the redis thread will keep alive forever
+        manager.stop()

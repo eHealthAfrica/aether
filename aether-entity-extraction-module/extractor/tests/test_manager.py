@@ -108,7 +108,7 @@ class ExtractionManagerTests(TestCase):
         manager = ExtractionManager()
         self.assertIsNone(manager.redis)
 
-        self.assertTrue(manager.pending_submissions.empty())
+        self.assertEqual(len(manager.pending_submissions), 0)
         self.assertEqual(len(manager.processed_submissions.keys()), 0)
         self.assertEqual(len(manager.extracted_entities.keys()), 0)
 
@@ -134,9 +134,9 @@ class ExtractionManagerTests(TestCase):
             len(self.redis.execute_command('keys', f'_{SUBMISSION_CHANNEL}*')),
             NO_OF_SUBMISSIONS
         )
-        self.assertTrue(self.manager.pending_submissions.empty())
+        self.assertEqual(len(self.manager.pending_submissions), 0)
         self.manager.handle_pending_submissions(f'_{SUBMISSION_CHANNEL}*')
-        self.assertFalse(self.manager.pending_submissions.empty())
+        self.assertNotEqual(len(self.manager.pending_submissions), 0)
 
     def test_add_to_queue(self):
         self.manager.add_to_queue(None)
@@ -187,7 +187,8 @@ class ExtractionManagerTests(TestCase):
         self.assertNotIn(ENTITY_EXTRACTION_ENRICHMENT, submission[SUBMISSION_PAYLOAD_FIELD])
         self.assertNotIn(ENTITY_EXTRACTION_ERRORS, submission[SUBMISSION_PAYLOAD_FIELD])
 
-    def test_entity_extraction__unknown_mapping(self):
+    @mock.patch('extractor.manager.get_from_redis_or_kernel', return_value=None)
+    def test_entity_extraction__unknown_mapping(self, mock_get_from_redis_or_kernel):
         task = Task(
             id=str(uuid.uuid4()),
             data=WRONG_SUBMISSION_MAPPING,
@@ -203,6 +204,13 @@ class ExtractionManagerTests(TestCase):
         self.assertFalse(submission[SUBMISSION_EXTRACTION_FLAG])
         self.assertNotIn(ENTITY_EXTRACTION_ENRICHMENT, submission[SUBMISSION_PAYLOAD_FIELD])
         self.assertIn(ENTITY_EXTRACTION_ERRORS, submission[SUBMISSION_PAYLOAD_FIELD])
+
+        mock_get_from_redis_or_kernel.assert_called_with(
+            id=WRONG_SUBMISSION_MAPPING[ARTEFACT_NAMES.mappings][0],
+            model_type=ARTEFACT_NAMES.mappings,
+            tenant=TENANT,
+            redis=self.redis,
+        )
 
     @mock.patch('extractor.manager.kernel_data_request', return_value=[])
     @mock.patch('extractor.manager.cache_failed_entities')
@@ -231,7 +239,8 @@ class ExtractionManagerTests(TestCase):
         ])
         mock_cache_failed_entities.assert_not_called()
 
-    @mock.patch('extractor.manager.kernel_data_request', side_effect=Exception)
+    @mock.patch('extractor.manager.kernel_data_request',
+                side_effect=Exception('Error in entities'))
     def test_push_entities_to_kernel__error(self, mock_kernel_data_request):
         self.manager._add_to_tenant_queue(
             TENANT, self.manager.extracted_entities, {'name': 'test entity 1'})
@@ -259,9 +268,9 @@ class ExtractionManagerTests(TestCase):
     @mock.patch('extractor.manager.kernel_data_request', return_value=[])
     def test_push_submissions_to_kernel(self, mock_kernel_data_request):
         self.manager._add_to_tenant_queue(
-            TENANT, self.manager.processed_submissions, {'name': 'test submission 1'})
+            TENANT, self.manager.processed_submissions, {'id': '1', 'name': 'test submission 1'})
         self.manager._add_to_tenant_queue(
-            TENANT_2, self.manager.processed_submissions, {'name': 'test submission 2'})
+            TENANT_2, self.manager.processed_submissions, {'id': '2', 'name': 'test submission 2'})
 
         self.manager.push_submissions_to_kernel(TENANT)
         self.manager.push_submissions_to_kernel(TENANT_2)
@@ -270,23 +279,24 @@ class ExtractionManagerTests(TestCase):
             mock.call(
                 url='submissions/bulk_update_extracted.json',
                 method='patch',
-                data=[{'name': 'test submission 1'}],
+                data=[{'id': '1', 'name': 'test submission 1'}],
                 realm=TENANT,
             ),
             mock.call(
                 url='submissions/bulk_update_extracted.json',
                 method='patch',
-                data=[{'name': 'test submission 2'}],
+                data=[{'id': '2', 'name': 'test submission 2'}],
                 realm=TENANT_2,
             ),
         ])
 
-    @mock.patch('extractor.manager.kernel_data_request', side_effect=Exception)
+    @mock.patch('extractor.manager.kernel_data_request',
+                side_effect=Exception('Error in submissions'))
     def test_push_submissions_to_kernel__error(self, mock_kernel_data_request):
         self.manager._add_to_tenant_queue(
-            TENANT, self.manager.processed_submissions, {'name': 'test submission 1'})
+            TENANT, self.manager.processed_submissions, {'id': '1', 'name': 'test submission 1'})
         self.manager._add_to_tenant_queue(
-            TENANT_2, self.manager.processed_submissions, {'name': 'test submission 2'})
+            TENANT_2, self.manager.processed_submissions, {'id': '2', 'name': 'test submission 2'})
 
         self.manager.push_submissions_to_kernel(TENANT)
         self.manager.push_submissions_to_kernel(TENANT_2)
@@ -295,13 +305,13 @@ class ExtractionManagerTests(TestCase):
             mock.call(
                 url='submissions/bulk_update_extracted.json',
                 method='patch',
-                data=[{'name': 'test submission 1'}],
+                data=[{'id': '1', 'name': 'test submission 1'}],
                 realm=TENANT,
             ),
             mock.call(
                 url='submissions/bulk_update_extracted.json',
                 method='patch',
-                data=[{'name': 'test submission 2'}],
+                data=[{'id': '2', 'name': 'test submission 2'}],
                 realm=TENANT_2,
             ),
         ])

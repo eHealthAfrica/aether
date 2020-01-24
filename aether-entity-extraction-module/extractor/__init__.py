@@ -16,15 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from extractor import settings
 from extractor.manager import ExtractionManager
 
 
 def main():
     extractor = ExtractionManager()
-    extractor.handle_pending_submissions(settings.SUBMISSION_CHANNEL)
-    extractor.subscribe_to_redis_channel(
-        callback=extractor.add_to_queue,
-        channel=settings.SUBMISSION_CHANNEL,
-    )
+    extractor.start()
     return extractor

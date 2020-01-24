@@ -149,6 +149,10 @@ def redis_subscribe(callback, pattern, redis=None):
     return get_redis(redis).subscribe(callback=callback, pattern=pattern, keep_alive=True)
 
 
+def redis_unsubscribe(redis):
+    get_redis(redis).stop()
+
+
 def cache_failed_entities(entities, realm, redis=None):
     redis_instance = get_redis(redis)
 

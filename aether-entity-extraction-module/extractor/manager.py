@@ -40,8 +40,9 @@ from extractor.utils import (
     get_redis_keys_by_pattern,
     get_redis_subscribed_message,
     kernel_data_request,
-    remove_from_redis,
     redis_subscribe,
+    redis_unsubscribe,
+    remove_from_redis,
 )
 
 logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ logger.setLevel(settings.LOGGING_LEVEL)
 class ExtractionManager():
 
     def __init__(self, redis=None):
-        self.pending_submissions = mp.SimpleQueue()
+        self.pending_submissions = deque()
         # save the submissions and entities by their realm
         # this is required to push them back to kernel
         self.processed_submissions = dict()
@@ -62,12 +63,25 @@ class ExtractionManager():
         self.is_extracting = False
         self.is_pushing_to_kernel = False
 
+    def start(self):
+        # include the tasks that are already in the redis channel
+        self.handle_pending_submissions(settings.SUBMISSION_CHANNEL)
+
+        # creates a thread that reads the new tasks from the redis channel
+        # and adds them to our `pending_submissions` queue.
+        # WARNING: This thread keeps alive.
+        #          It's neccessary to unsubscribe from redis to terminate it.
+        redis_subscribe(
+            callback=self.add_to_queue,
+            pattern=settings.SUBMISSION_CHANNEL,
+            redis=self.redis,
+        )
+
     def stop(self):
         self.is_extracting = False
         self.is_pushing_to_kernel = False
-
-    def subscribe_to_redis_channel(self, callback: callable, channel: str):
-        redis_subscribe(callback=callback, pattern=channel, redis=self.redis)
+        # without this the redis thread will keep alive forever
+        redis_unsubscribe(self.redis)
 
     def handle_pending_submissions(self, channel='*'):
         for key in get_redis_keys_by_pattern(channel, self.redis):
@@ -77,7 +91,7 @@ class ExtractionManager():
         if not task:
             return
 
-        self.pending_submissions.put(task)
+        self.pending_submissions.append(task)
         logger.debug(f'Added to queue {task.id}')
 
         if not self.is_extracting:
@@ -92,13 +106,13 @@ class ExtractionManager():
         logger.debug('Extracting entities')
         with ProcessPoolExecutor(max_workers=settings.MAX_WORKERS) as executor:
             processes = []
-            while not self.pending_submissions.empty():
+            while self.pending_submissions:
                 processes.append(
-                    executor.submit(self.entity_extraction, self.pending_submissions.get())
+                    executor.submit(self.entity_extraction, self.pending_submissions.popleft())
                 )
             wait(processes)
 
-        if self.is_extracting and not self.pending_submissions.empty():
+        if self.is_extracting and self.pending_submissions:
             self.extraction()
         else:
             self.is_extracting = False
@@ -228,7 +242,7 @@ class ExtractionManager():
         while len(extracted_entities):
             current_entity_size = get_bulk_size(len(extracted_entities))
             entities = [
-                extracted_entities.pop()
+                extracted_entities.popleft()
                 for _ in range(current_entity_size)
             ]
             # post entities to kernel per realm
@@ -254,7 +268,7 @@ class ExtractionManager():
         while len(processed_submissions):
             current_submission_size = get_bulk_size(len(processed_submissions))
             submissions = [
-                processed_submissions.pop()
+                processed_submissions.popleft()
                 for _ in range(current_submission_size)
             ]
             # post submissions to kernel
@@ -275,14 +289,12 @@ class ExtractionManager():
                     )
             except Exception as e:
                 logger.error(str(e))
-                # back to the queue ???
-                # self.processed_submissions[realm].extendleft(submissions)
 
             # wait and check again later
             time.sleep(settings.PUSH_TO_KERNEL_INTERVAL)
 
     def _add_to_tenant_queue(self, tenant, queue, element):
         try:
-            queue[tenant].appendleft(element)
+            queue[tenant].append(element)
         except KeyError:
             queue[tenant] = deque([element])
