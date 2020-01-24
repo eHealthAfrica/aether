@@ -30,6 +30,8 @@ case "$1" in
         $DC redis-test
         echo "${LINE}"
 
+        $DC exm-test
+        echo "${LINE}"
         $DC kernel-test
         echo "${LINE}"
         $DC client-test
@@ -42,6 +44,8 @@ case "$1" in
         $DC redis-test
         echo "${LINE}"
 
+        $DC exm-test
+        echo "${LINE}"
         $DC kernel-test
         echo "${LINE}"
         $DC odk-test
@@ -59,6 +63,8 @@ case "$1" in
         $DC zookeeper-test
         echo "${LINE}"
 
+        $DC exm-test
+        echo "${LINE}"
         $DC kernel-test
         echo "${LINE}"
         $DC producer-test
