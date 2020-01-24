@@ -28,7 +28,19 @@ def get_required(name):
 
 
 # https://docs.python.org/3.7/library/logging.html#levels
-LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+
+
+def get_logger(name):
+    logger = logging.getLogger(name)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter(
+        f'%(asctime)s [{name}] %(levelname)-8s %(message)s'))
+    logger.addHandler(handler)
+    level = logging.getLevelName(LOG_LEVEL)
+    logger.setLevel(level)
+    return logger
+
 
 # Redis server
 REDIS_HOST = get_required('REDIS_HOST')

@@ -18,7 +18,6 @@
 
 import collections
 import json
-import logging
 from typing import Dict, NamedTuple, Union
 
 from aether.python.redis.task import TaskHelper
@@ -52,11 +51,10 @@ ARTEFACT_NAMES = Constants(
 SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
 SUBMISSION_PAYLOAD_FIELD = 'payload'
 
-_FAILED_ENTITIES_KEY = '_aether_failed_entities'
+_FAILED_ENTITIES_KEY = 'exm_failed_entities'
 _REDIS_TASK = TaskHelper(settings, None)
 
-logger = logging.getLogger(__name__)
-logger.setLevel(settings.LOGGING_LEVEL)
+logger = settings.get_logger('Utils')
 
 
 class Task(NamedTuple):
@@ -66,7 +64,7 @@ class Task(NamedTuple):
     data: Union[Dict, None] = None
 
 
-def get_redis(redis):
+def get_redis(redis=None):
     return TaskHelper(settings, redis) if redis else _REDIS_TASK
 
 
@@ -87,7 +85,27 @@ def kernel_data_request(url='', method='get', data=None, headers=None, realm=Non
         json=data or {},
         headers=headers,
     )
-    res.raise_for_status()
+    try:
+        res.raise_for_status()
+    except Exception as err:
+        logger.error([err, res.content])
+        logger.error(headers)
+        c = collections.defaultdict(int)
+        if isinstance(data, list):
+            for i in data:
+                _t = [
+                    'schemadecorator',
+                    # 'submission',
+                    'mapping'
+                ]
+                print(type(i))
+                key = ':::'.join([i.get(t) for t in _t])
+                c[key] += 1
+            logger.error(data[0])
+            logger.error(c)
+        else:
+            logger.error(data)
+        raise err
     return res.json()
 
 
@@ -149,16 +167,41 @@ def redis_subscribe(callback, pattern, redis=None):
     return get_redis(redis).subscribe(callback=callback, pattern=pattern, keep_alive=True)
 
 
+def get_failed_entities(redis=None) -> dict:
+    # TODO don't put all these in one list on Redis
+    redis_instance = get_redis(redis)
+    failed = redis_instance.list(_FAILED_ENTITIES_KEY)
+    failed = [i.split(':') for i in failed]  # split "{tenant}:{_id}"
+    cache_result = collections.defaultdict(list)
+    for tenant, _id in failed:
+        res = redis_instance.get(_id, _FAILED_ENTITIES_KEY, tenant)
+        if res:
+            cache_result[tenant].append(res)
+        else:
+            logger.error(f'Could not fetch entity {tenant}:{_id}')
+    return cache_result
+
+
 def cache_failed_entities(entities, realm, redis=None):
+    logger.info(f'Caching {len(entities)} failed entities for realm {realm}')
     redis_instance = get_redis(redis)
 
     try:
-        failed_entities = redis_instance.get_by_key(_FAILED_ENTITIES_KEY)
-        failed_entities[realm].append(entities)
-    except Exception:
-        failed_entities = {realm: entities}
+        for e in entities:
+            assert('id' in e), e.keys()
+            redis_instance.add(e, _FAILED_ENTITIES_KEY, realm)
+    except Exception as err:
+        logger.critical(f'Could not save failed entities to REDIS {err}')
 
-    redis_instance.redis.set(_FAILED_ENTITIES_KEY, json.dumps(failed_entities))
+
+def remove_from_failed_cache(entity, realm, redis=None):
+    _id = entity['id']
+    redis_instance = get_redis(redis)
+    if redis_instance.exists(_id, _FAILED_ENTITIES_KEY, realm):
+        redis_instance.remove(_id, _FAILED_ENTITIES_KEY, realm)
+        return True
+    else:
+        return False
 
 
 def get_bulk_size(size):
