@@ -91,7 +91,6 @@ class ExtractionManager():
             return
 
         self.pending_submissions.append(task)
-        logger.debug(f'Added to queue {task.id}')
 
         if not self.is_extracting:
             self.is_extracting = True
