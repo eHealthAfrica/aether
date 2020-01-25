@@ -167,19 +167,27 @@ def redis_subscribe(callback, pattern, redis=None):
     return get_redis(redis).subscribe(callback=callback, pattern=pattern, keep_alive=True)
 
 
-def get_failed_entities(redis=None) -> dict:
-    # TODO don't put all these in one list on Redis
+def get_failed_entities(queue, max_size=100, redis=None) -> dict:
     redis_instance = get_redis(redis)
     failed = redis_instance.list(_FAILED_ENTITIES_KEY)
     failed = [i.split(':') for i in failed]  # split "{tenant}:{_id}"
     cache_result = collections.defaultdict(list)
+    total = 0
     for tenant, _id in failed:
         res = redis_instance.get(_id, _FAILED_ENTITIES_KEY, tenant)
         if res:
+            del res['modified']
+            queue.put(tuple([
+                tenant,
+                res
+            ]))
             cache_result[tenant].append(res)
+            total += 1
+            if total >= max_size:
+                break
         else:
             logger.error(f'Could not fetch entity {tenant}:{_id}')
-    return cache_result
+    return queue
 
 
 def cache_failed_entities(entities, realm, redis=None):

@@ -18,8 +18,7 @@
 
 import time
 
-from collections import deque, defaultdict
-from concurrent.futures import ProcessPoolExecutor, wait
+from collections import defaultdict
 from queue import Empty
 import multiprocessing as mp
 from threading import Thread
@@ -59,20 +58,10 @@ class ExtractionManager():
         self.stopped = False
         self.pool = mp.Pool()
         self.manager = mp.Manager()
-        self.pending_submissions = self.manager.Queue()
         self.processed_submissions = self.manager.Queue()
         self.extracted_entities = self.manager.Queue()
         self.redis = redis
-        self.is_extracting = False
-        self.is_pushing_to_kernel = False
-        # previously_failed = get_failed_entities(self.redis)
-        previously_failed = None
-        if previously_failed:
-            for k, v in previously_failed.items():
-                self.extracted_entities.put((k, v),)
-                logger.debug(f'Loaded {len(v)} failed entities for tenant: {k}')
-        else:
-            logger.debug('No failed entity submissions to process')
+        # run the main worker loop in a new thread, no need to MP it.
         Thread(target=self.worker).start()
         logger.debug(f'Manager Ready.')
 
@@ -90,14 +79,6 @@ class ExtractionManager():
         return res
 
     def worker(self):
-        self.loader = mp.Process(
-            target=self.entity_extraction,
-            args=(
-                self.pending_submissions,
-                self.extracted_entities,
-                self.processed_submissions
-            ),
-        ).start()
         while not self.stopped:
             logger.debug('Looking for work')
             read_subs = self.get_prepared(self.processed_submissions)
@@ -108,8 +89,17 @@ class ExtractionManager():
                     self.pool.apply_async(
                         push_submissions_to_kernel,
                         (k, read_subs[k]),
-                        callback=cb)
-            read_entities = self.get_prepared(self.extracted_entities)
+                        callback=cb_s)
+            # try to load a queue with failed entities
+            failed_entities = get_failed_entities(
+                self.manager.Queue(),
+                settings.MAX_PUSH_SIZE
+            )
+            if failed_entities.qsize() > 0:
+                logger.info(f'getting failed entities: {failed_entities.qsize()}')
+                read_entities = self.get_prepared(failed_entities)
+            else:
+                read_entities = self.get_prepared(self.extracted_entities)
             if read_entities:
                 count = sum([len(v) for v in read_entities.values()])
                 logger.info(f'pushing {count}')
@@ -140,112 +130,111 @@ class ExtractionManager():
         if not task:
             logger.info('No task to enqueue')
             return
-        # logger.info(f'Added task: {task}')
-        self.pending_submissions.put(task)
+        logger.info(f'Adding task: {task.id}')
+        self.pool.apply_async(
+            entity_extraction,
+            (
+                task,
+                self.extracted_entities,
+                self.processed_submissions),
+            callback=cb_ingress)
         # enqueue work
 
-    def entity_extraction(self, task_queue, entity_queue, submission_queue):
-        # get artifacts from redis
-        # if not found on redis, get from kernel and cache on redis
-        # if not found on kernel ==> flag submission as invalid and skip extraction
-        while not self.stopped:
+
+def entity_extraction(task, entity_queue, submission_queue):
+    # get artifacts from redis
+    # if not found on redis, get from kernel and cache on redis
+    # if not found on kernel ==> flag submission as invalid and skip extraction
+    logger.info(f'handling {task.id}')
+    try:
+        tenant = task.tenant
+        submission = task.data
+        payload = submission[SUBMISSION_PAYLOAD_FIELD]
+        submission_entities = []
+        logger.info(f'Got extraction Task: {task.id}')
+        # extract entities for each linked mapping
+        for mapping_id in submission[ARTEFACT_NAMES.mappings]:
+            mapping = get_from_redis_or_kernel(
+                id=mapping_id,
+                model_type=ARTEFACT_NAMES.mappings,
+                tenant=tenant
+            )
             try:
-                try:
-                    task = task_queue.get_nowait()
-                except Empty:
-                    time.sleep(1)
-                    continue
-                tenant = task.tenant
-                submission = task.data
-                payload = submission[SUBMISSION_PAYLOAD_FIELD]
-                submission_entities = []
-                logger.info(f'Got extraction Task: {task.id}')
-                # extract entities for each linked mapping
-                for mapping_id in submission[ARTEFACT_NAMES.mappings]:
-                    mapping = get_from_redis_or_kernel(
-                        id=mapping_id,
-                        model_type=ARTEFACT_NAMES.mappings,
-                        tenant=tenant,
-                        redis=self.redis,
+                # get required artefacts
+                schemas = {}
+                schema_decorators = mapping['definition']['entities']
+                for shemadecorator_id in mapping[ARTEFACT_NAMES.schemadecorators]:
+                    sd = get_from_redis_or_kernel(
+                        id=shemadecorator_id,
+                        model_type=ARTEFACT_NAMES.schemadecorators,
+                        tenant=tenant
                     )
-                    try:
-                        # get required artefacts
-                        schemas = {}
-                        schema_decorators = mapping['definition']['entities']
-                        for shemadecorator_id in mapping[ARTEFACT_NAMES.schemadecorators]:
-                            sd = get_from_redis_or_kernel(
-                                id=shemadecorator_id,
-                                model_type=ARTEFACT_NAMES.schemadecorators,
-                                tenant=tenant,
-                                redis=self.redis,
-                            )
 
-                            schema_definition = None
-                            if sd and ARTEFACT_NAMES.schema_definition in sd:
-                                schema_definition = sd[ARTEFACT_NAMES.schema_definition]
+                    schema_definition = None
+                    if sd and ARTEFACT_NAMES.schema_definition in sd:
+                        schema_definition = sd[ARTEFACT_NAMES.schema_definition]
 
-                            elif sd and ARTEFACT_NAMES.schema_id in sd:
-                                schema = get_from_redis_or_kernel(
-                                    id=sd[ARTEFACT_NAMES.schema_id],
-                                    model_type=ARTEFACT_NAMES.schemas,
-                                    tenant=settings.DEFAULT_REALM,
-                                    redis=self.redis,
-                                )
-                                if schema and schema.get('definition'):
-                                    schema_definition = schema['definition']
-
-                            if schema_definition:
-                                schemas[sd['name']] = schema_definition
-
-                        # perform entity extraction
-                        _, extracted_entities = extract_create_entities(
-                            submission_payload=payload,
-                            mapping_definition=mapping['definition'],
-                            schemas=schemas,
+                    elif sd and ARTEFACT_NAMES.schema_id in sd:
+                        schema = get_from_redis_or_kernel(
+                            id=sd[ARTEFACT_NAMES.schema_id],
+                            model_type=ARTEFACT_NAMES.schemas,
+                            tenant=settings.DEFAULT_REALM
                         )
+                        if schema and schema.get('definition'):
+                            schema_definition = schema['definition']
 
-                        for entity in extracted_entities:
-                            submission_entities.append({
-                                # 'id': entity.payload['id'],
-                                'payload': entity.payload,
-                                'status': entity.status,
-                                'schemadecorator': schema_decorators[entity.schemadecorator_name],
-                                'submission': task.id,
-                                'mapping': mapping_id,
-                                'mapping_revision': mapping['revision'],
-                            })
+                    if schema_definition:
+                        schemas[sd['name']] = schema_definition
 
-                    except Exception as e:
-                        logger.error(f'Extraction error {e}')
-                        try:
-                            payload[ENTITY_EXTRACTION_ERRORS].append(str(e))
-                        except KeyError:
-                            payload[ENTITY_EXTRACTION_ERRORS] = [str(e)]
+                # perform entity extraction
+                _, extracted_entities = extract_create_entities(
+                    submission_payload=payload,
+                    mapping_definition=mapping['definition'],
+                    schemas=schemas,
+                )
 
-                is_extracted = False
-                if not payload.get(ENTITY_EXTRACTION_ERRORS):
-                    payload.pop(ENTITY_EXTRACTION_ERRORS, None)
-                    is_extracted = True
-                    for e in submission_entities:
-                        entity_queue.put((task.tenant, e), )
-                # add to processed submission queue (but only the required fields)
-                submission_queue.put((task.tenant, {
+                for entity in extracted_entities:
+                    submission_entities.append({
+                        'id': entity.payload['id'],
+                        'payload': entity.payload,
+                        'status': entity.status,
+                        'schemadecorator': schema_decorators[entity.schemadecorator_name],
+                        'submission': task.id,
+                        'mapping': mapping_id,
+                        'mapping_revision': mapping['revision'],
+                    })
+
+            except Exception as e:
+                logger.error(f'Extraction error {e}')
+                try:
+                    payload[ENTITY_EXTRACTION_ERRORS].append(str(e))
+                except KeyError:
+                    payload[ENTITY_EXTRACTION_ERRORS] = [str(e)]
+
+        is_extracted = False
+        if not payload.get(ENTITY_EXTRACTION_ERRORS):
+            payload.pop(ENTITY_EXTRACTION_ERRORS, None)
+            is_extracted = True
+            for e in submission_entities:
+                entity_queue.put(
+                    tuple([
+                        task.tenant,
+                        e
+                    ]))
+        # add to processed submission queue (but only the required fields)
+        submission_queue.put(
+            tuple([
+                task.tenant, {
                     'id': task.id,
                     SUBMISSION_PAYLOAD_FIELD: payload,
                     SUBMISSION_EXTRACTION_FLAG: is_extracted,
-                }),)
-                logger.info(f'finsihed task {task.id}')
-            except Exception as err:
-                logger.error(f'extractor ERROR!: {err}')
-            # self._add_to_tenant_queue(
-            #     tenant,
-            #     self.processed_submissions,
-            #     {
-            #         'id': task.id,
-            #         SUBMISSION_PAYLOAD_FIELD: payload,
-            #         SUBMISSION_EXTRACTION_FLAG: is_extracted,
-            #     }
-            # )
+                }
+            ]))
+        logger.info(f'finished task {task.id}')
+        return 1
+    except Exception as err:
+        logger.error(f'extractor ERROR!: {err}')
+        return 0
 
 
 def push_entities_to_kernel(realm, entities):
@@ -279,38 +268,46 @@ def push_submissions_to_kernel(realm, submissions):
         logger.info(f'popped {len(submissions)}')
 
     try:
-        submission_ids = kernel_data_request(
-            url='submissions/bulk_update_extracted.json',
-            method='patch',
-            data=submissions,
-            realm=realm,
-        )
+        # submission_ids = kernel_data_request(
+        #     url='submissions/bulk_update_extracted.json',
+        #     method='patch',
+        #     data=submissions,
+        #     realm=realm,
+        # )
         # remove submissions from redis
-        for submission_id in submission_ids:
-            remove_from_redis(
-                id=submission_id,
-                model_type=ARTEFACT_NAMES.submissions,
-                tenant=realm,
-                redis=get_redis(),
-            )
-        return len(submission_ids)
+        # for submission_id in submission_ids:
+        #     remove_from_redis(
+        #         id=submission_id,
+        #         model_type=ARTEFACT_NAMES.submissions,
+        #         tenant=realm,
+        #         redis=get_redis(),
+        #     )
+        # return len(submission_ids)
+        return len(submissions)
     except Exception as e:
         logger.error(str(e))
         return 0
         # back to the queue ???
 
 
+total_arrived = 0
 total_cut = 0
 total_sent = 0
 
 
-def cb(result):
+def cb_ingress(result):
+    global total_arrived
+    total_arrived += int(result)
+    logger.debug(['IN', result, total_arrived])
+
+
+def cb_s(result):
     global total_cut
     total_cut += int(result)
-    logger.info([result, total_cut])
+    logger.debug(['O-SUB', result, total_cut])
 
 
 def cb_e(result):
     global total_sent
-    total_sent += result
-    logger.info(f'entities {total_sent}')
+    total_sent += int(result)
+    logger.debug(['O-ENT', result, total_sent])
