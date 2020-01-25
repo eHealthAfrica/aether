@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import sys
 import time
 
 from collections import defaultdict
@@ -23,6 +24,7 @@ from queue import Empty
 import multiprocessing as mp
 from threading import Thread
 
+from redis.exceptions import ConnectionError as RedisConnectionError
 from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ERRORS,
     extract_create_entities,
@@ -33,15 +35,14 @@ from extractor.utils import (
     ARTEFACT_NAMES,
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
-
-    cache_failed_entities,
-    get_redis,
-    get_failed_entities,
+    Artifact,
+    cache_objects,
+    get_failed_objects,
     get_from_redis_or_kernel,
     get_redis_keys_by_pattern,
     get_redis_subscribed_message,
     kernel_data_request,
-    remove_from_failed_cache,
+    remove_from_cache,
     remove_from_redis,
     redis_subscribe,
 )
@@ -61,12 +62,26 @@ class ExtractionManager():
         self.processed_submissions = self.manager.Queue()
         self.extracted_entities = self.manager.Queue()
         self.redis = redis
+        # load failed from redis. When running will cycle back into
+        # queue on failure.
+        try:
+            self.load_failed()
+        except RedisConnectionError as err:
+            logger.critical(f'Cannot connect to Redis. Fatal: {err}')
+            sys.exit(1)
         # run the main worker loop in a new thread, no need to MP it.
         Thread(target=self.worker).start()
         logger.debug(f'Manager Ready.')
 
     def callback(self, result):
         logger.info(result)
+
+    def load_failed(self):
+        get_failed_objects(self.processed_submissions, Artifact.SUBMISSION)
+        get_failed_objects(self.extracted_entities, Artifact.ENTITY)
+        fc_sub = self.processed_submissions.qsize()
+        fc_ent = self.extracted_entities.qsize()
+        logger.info(f'Loaded failed: s:{fc_sub}, e:{fc_ent}')
 
     def get_prepared(self, queue, size=settings.MAX_PUSH_SIZE):
         res = defaultdict(list)
@@ -84,29 +99,28 @@ class ExtractionManager():
             read_subs = self.get_prepared(self.processed_submissions)
             if read_subs:
                 count = sum([len(v) for v in read_subs.values()])
-                logger.info(f'pushing {count}')
+                logger.info(f'pushing Subs {count}')
                 for k in read_subs.keys():
                     self.pool.apply_async(
                         push_submissions_to_kernel,
-                        (k, read_subs[k]),
+                        (
+                            k,
+                            read_subs[k],
+                            self.processed_submissions
+                        ),
                         callback=cb_s)
-            # try to load a queue with failed entities
-            failed_entities = get_failed_entities(
-                self.manager.Queue(),
-                settings.MAX_PUSH_SIZE
-            )
-            if failed_entities.qsize() > 0:
-                logger.info(f'getting failed entities: {failed_entities.qsize()}')
-                read_entities = self.get_prepared(failed_entities)
-            else:
-                read_entities = self.get_prepared(self.extracted_entities)
+            read_entities = self.get_prepared(self.extracted_entities)
             if read_entities:
                 count = sum([len(v) for v in read_entities.values()])
-                logger.info(f'pushing {count}')
+                logger.info(f'pushing Ent {count}')
                 for k in read_entities.keys():
                     self.pool.apply_async(
                         push_entities_to_kernel,
-                        (k, read_entities[k]),
+                        (
+                            k,
+                            read_entities[k],
+                            self.extracted_entities
+                        ),
                         callback=cb_e)
             time.sleep(1)
         logger.info('Manager caught stop signal')
@@ -123,14 +137,13 @@ class ExtractionManager():
 
     def handle_pending_submissions(self, channel='*'):
         for key in get_redis_keys_by_pattern(channel, self.redis):
-            # logger.info(f'new pending submission {key}')
             self.add_to_queue(get_redis_subscribed_message(key=key, redis=self.redis))
 
     def add_to_queue(self, task):
         if not task:
             logger.info('No task to enqueue')
             return
-        logger.info(f'Adding task: {task.id}')
+        # enqueue work
         self.pool.apply_async(
             entity_extraction,
             (
@@ -138,7 +151,6 @@ class ExtractionManager():
                 self.extracted_entities,
                 self.processed_submissions),
             callback=cb_ingress)
-        # enqueue work
 
 
 def entity_extraction(task, entity_queue, submission_queue):
@@ -215,21 +227,33 @@ def entity_extraction(task, entity_queue, submission_queue):
         if not payload.get(ENTITY_EXTRACTION_ERRORS):
             payload.pop(ENTITY_EXTRACTION_ERRORS, None)
             is_extracted = True
-            for e in submission_entities:
-                entity_queue.put(
-                    tuple([
-                        task.tenant,
-                        e
-                    ]))
+            # Let's assume it's going to fail so we don't reextract if kernel
+            # can't accept the results. Otherwise we'll get different IDs
+            cache_objects(
+                submission_entities,
+                task.tenant,
+                Artifact.ENTITY,
+                entity_queue
+            )
         # add to processed submission queue (but only the required fields)
-        submission_queue.put(
-            tuple([
-                task.tenant, {
-                    'id': task.id,
-                    SUBMISSION_PAYLOAD_FIELD: payload,
-                    SUBMISSION_EXTRACTION_FLAG: is_extracted,
-                }
-            ]))
+        # Let's assume it's going to fail so we don't reextract if kernel
+        # can't accept the results.
+        cache_objects(
+            [{
+                'id': task.id,
+                SUBMISSION_PAYLOAD_FIELD: payload,
+                SUBMISSION_EXTRACTION_FLAG: is_extracted,
+            }],
+            task.tenant,
+            Artifact.SUBMISSION,
+            submission_queue
+        )
+        # remove original submissions from redis
+        remove_from_redis(
+            id=task.id,
+            model_type=ARTEFACT_NAMES.submissions,
+            tenant=task.tenant
+        )
         logger.info(f'finished task {task.id}')
         return 1
     except Exception as err:
@@ -237,7 +261,7 @@ def entity_extraction(task, entity_queue, submission_queue):
         return 0
 
 
-def push_entities_to_kernel(realm, entities):
+def push_entities_to_kernel(realm, entities, entity_queue):
     if not entities:
         logger.info(f'Entities queue for realm {realm} was empty')
         return
@@ -251,16 +275,25 @@ def push_entities_to_kernel(realm, entities):
         )
         logger.info(f'{len(entities)} accepted by {realm}')
         for i in entities:
-            remove_from_failed_cache(i, realm)
+            remove_from_cache(
+                i,
+                realm,
+                Artifact.ENTITY
+            )
         return len(entities)
     except Exception as e:
         logger.error(str(e))
         # cache failed entities on redis for retries later
-        cache_failed_entities(entities, realm)
+        cache_objects(
+            entities,
+            realm,
+            Artifact.ENTITY,
+            entity_queue
+        )
         return 0
 
 
-def push_submissions_to_kernel(realm, submissions):
+def push_submissions_to_kernel(realm, submissions, submission_queue):
     if not submissions:
         logger.info(f'Submissions queue for realm {realm} was empty')
         return
@@ -274,17 +307,21 @@ def push_submissions_to_kernel(realm, submissions):
         #     data=submissions,
         #     realm=realm,
         # )
-        # remove submissions from redis
-        # for submission_id in submission_ids:
-        #     remove_from_redis(
-        #         id=submission_id,
-        #         model_type=ARTEFACT_NAMES.submissions,
-        #         tenant=realm,
-        #         redis=get_redis(),
+        # for submission in submissions:
+        #     remove_from_cache(
+        #         submission,
+        #         realm,
+        #         Artifact.SUBMISSION
         #     )
         # return len(submission_ids)
         return len(submissions)
     except Exception as e:
+        cache_objects(
+            submissions,
+            realm,
+            Artifact.SUBMISSION,
+            submission_queue
+        )
         logger.error(str(e))
         return 0
         # back to the queue ???

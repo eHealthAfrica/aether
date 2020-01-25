@@ -17,8 +17,16 @@
 # under the License.
 
 import collections
-import json
-from typing import Dict, NamedTuple, Union
+from enum import Enum
+from multiprocessing import Queue
+from typing import (
+    Any,
+    Dict,
+    List,
+    Mapping,
+    NamedTuple,
+    Union
+)
 
 from aether.python.redis.task import TaskHelper
 from aether.python.utils import request
@@ -51,10 +59,20 @@ ARTEFACT_NAMES = Constants(
 SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
 SUBMISSION_PAYLOAD_FIELD = 'payload'
 
-_FAILED_ENTITIES_KEY = 'exm_failed_entities'
 _REDIS_TASK = TaskHelper(settings, None)
 
 logger = settings.get_logger('Utils')
+
+
+class Artifact(Enum):
+    ENTITY = 1
+    SUBMISSION = 2
+
+
+REDIS_KEYS = {
+    Artifact.ENTITY: 'exm_failed_entities',
+    Artifact.SUBMISSION: 'exm_failed_submissions'
+}
 
 
 class Task(NamedTuple):
@@ -167,46 +185,58 @@ def redis_subscribe(callback, pattern, redis=None):
     return get_redis(redis).subscribe(callback=callback, pattern=pattern, keep_alive=True)
 
 
-def get_failed_entities(queue, max_size=100, redis=None) -> dict:
+def get_failed_objects(
+    queue: Queue,
+    _type: Artifact,
+    redis=None
+) -> dict:
+    _key = REDIS_KEYS[_type]
     redis_instance = get_redis(redis)
-    failed = redis_instance.list(_FAILED_ENTITIES_KEY)
+    failed = redis_instance.list(_key)
     failed = [i.split(':') for i in failed]  # split "{tenant}:{_id}"
-    cache_result = collections.defaultdict(list)
-    total = 0
     for tenant, _id in failed:
-        res = redis_instance.get(_id, _FAILED_ENTITIES_KEY, tenant)
+        res = redis_instance.get(_id, _key, tenant)
         if res:
             del res['modified']
             queue.put(tuple([
                 tenant,
                 res
             ]))
-            cache_result[tenant].append(res)
-            total += 1
-            if total >= max_size:
-                break
         else:
-            logger.error(f'Could not fetch entity {tenant}:{_id}')
-    return queue
+            logger.error(f'Could not fetch {_type} {tenant}:{_id}')
 
 
-def cache_failed_entities(entities, realm, redis=None):
-    logger.info(f'Caching {len(entities)} failed entities for realm {realm}')
+def cache_objects(
+    objects: List[Any],
+    realm,
+    _type: Artifact,
+    queue: Queue,
+    redis=None
+):
+    logger.info(f'Caching {len(objects)} object {_type} for realm {realm}')
+    _key = REDIS_KEYS[_type]
     redis_instance = get_redis(redis)
 
     try:
-        for e in entities:
+        for e in objects:
             assert('id' in e), e.keys()
-            redis_instance.add(e, _FAILED_ENTITIES_KEY, realm)
+            redis_instance.add(e, _key, realm)
+            queue.put(tuple([realm, e]))
     except Exception as err:
-        logger.critical(f'Could not save failed entities to REDIS {err}')
+        logger.critical(f'Could not save failed objects to REDIS {err}')
 
 
-def remove_from_failed_cache(entity, realm, redis=None):
-    _id = entity['id']
+def remove_from_cache(
+    object: Mapping[Any, Any],
+    realm: str,
+    _type: Artifact,
+    redis=None
+):
+    _id = object['id']
+    _key = REDIS_KEYS[_type]
     redis_instance = get_redis(redis)
-    if redis_instance.exists(_id, _FAILED_ENTITIES_KEY, realm):
-        redis_instance.remove(_id, _FAILED_ENTITIES_KEY, realm)
+    if redis_instance.exists(_id, _key, realm):
+        redis_instance.remove(_id, _key, realm)
         return True
     else:
         return False
