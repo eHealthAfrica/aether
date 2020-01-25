@@ -107,17 +107,14 @@ class SubmissionFilter(filters.FilterSet):
     class Meta:
         exclude = ('payload',)
         model = models.Submission
-        filter_overrides = {
-            model.created: {
-                'filter_class': filters.IsoDateTimeFilter
-            },
-        }
         # since we can't use __all__ and then extend the syntax on specific
         # fields, we have to enumerate all fields and give them the exact
         # filter
-        fields = {str(k.name): ('exact',)
-                  for k in model._meta.get_fields()
-                  if k.name not in ['payload']}  # exclude not accessible from here
+        fields = {
+            str(k.name): ('exact',)
+            for k in model._meta.get_fields()
+            if k.name not in ['payload']  # exclude not accessible from here
+        }
         fields['created'] = ('lt', 'gt', 'lte', 'gte', 'exact',)
         fields['modified'] = ('lt', 'gt', 'lte', 'gte', 'exact',)
 
@@ -226,17 +223,14 @@ class EntityFilter(filters.FilterSet):
     class Meta:
         exclude = ('payload',)
         model = models.Entity
-        filter_overrides = {
-            model.created: {
-                'filter_class': filters.IsoDateTimeFilter
-            },
-        }
         # since we can't use __all__ and then extend the syntax on specific
         # fields, we have to enumerate all fields and give them the exact
         # filter
-        fields = {str(k.name): ('exact',)
-                  for k in model._meta.get_fields()
-                  if k.name not in ['payload']}  # exclude not accessible from here
+        fields = {
+            str(k.name): ('exact',)
+            for k in model._meta.get_fields()
+            if k.name not in ['payload']  # exclude not accessible from here
+        }
         fields['created'] = ('lt', 'gt', 'lte', 'gte', 'exact',)
         fields['modified'] = ('lt', 'gt', 'lte', 'gte', 'exact',)
 
@@ -248,3 +242,20 @@ def is_uuid(value):
     except ValueError:
         # `value` is not a valid UUID
         return False
+
+
+class ExportTaskFilter(filters.FilterSet):
+
+    class Meta:
+        exclude = ('files', 'settings',)
+        model = models.ExportTask
+        # since we can't use __all__ and then extend the syntax on specific
+        # fields, we have to enumerate all fields and give them the exact
+        # filter
+        fields = {
+            str(k.name): ('exact',)
+            for k in model._meta.get_fields()
+            if k.name not in ['files', 'settings']  # exclude not accessible from here
+        }
+        fields['created'] = ('lt', 'gt', 'lte', 'gte', 'exact',)
+        fields['modified'] = ('lt', 'gt', 'lte', 'gte', 'exact',)

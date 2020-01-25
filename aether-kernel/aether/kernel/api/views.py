@@ -23,7 +23,7 @@ from django.shortcuts import get_object_or_404
 from aether.sdk.multitenancy.utils import filter_by_realm, is_accessible_by_realm
 from rest_framework.exceptions import PermissionDenied
 
-from rest_framework import viewsets, permissions, status
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import (
     action,
@@ -42,7 +42,7 @@ from aether.python.entity.extractor import (
 from aether.python.avro.tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH
 from .entity_extractor import run_entity_extraction
-from .exporter import ExporterViewSet
+from .exporter import ExporterMixin
 from .mapping_validation import validate_mappings
 
 from . import (
@@ -359,12 +359,18 @@ class MappingViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
         return Response(topics)
 
 
-class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
+class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.ModelViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
     search_fields = ('project__name', 'mappingset__name',)
     mt_field = 'project'
+
+    # Exporter required fields
+    schema_field = 'mappingset__schema'
+    schema_order = '-mappingset__created'
+    attachment_field = 'attachments__id'
+    attachment_parent_field = 'submission__id'
 
     def get_serializer(self, *args, **kwargs):
         if 'data' in kwargs:
@@ -640,7 +646,7 @@ class SchemaDecoratorViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSe
         })
 
 
-class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
+class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.ModelViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
@@ -650,6 +656,8 @@ class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterViewSet):
     # Exporter required fields
     schema_field = 'schema__definition'
     schema_order = '-schema__created'
+    attachment_field = 'submission__attachments__id'
+    attachment_parent_field = 'submission__entities__id'
 
     def get_serializer(self, *args, **kwargs):
         if 'data' in kwargs:
@@ -806,6 +814,7 @@ class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectStatsSerializer
     filter_class = filters.ProjectFilter
+    search_fields = ('name',)
     entities_fk = 'project'
     fields_list = ('id', 'name', 'created', 'active',)
 
@@ -814,7 +823,26 @@ class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
     filter_class = filters.MappingSetFilter
+    search_fields = ('name',)
     mt_field = 'project'
+
+
+class ExportTaskViewSet(MtViewSetMixin, viewsets.ReadOnlyModelViewSet, mixins.DestroyModelMixin):
+    queryset = models.ExportTask.objects.all()
+    serializer_class = serializers.ExportTaskSerializer
+    filter_class = filters.ExportTaskFilter
+    mt_field = 'project'
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_name='file_content',
+        url_path='file-content/(?P<file_pk>[^/.]+)',
+    )
+    def file_content(self, request, pk=None, file_pk=None, *args, **kwargs):
+        task = self.get_object_or_404(pk=pk)
+        _file = task.files.get(pk=file_pk)
+        return _file.get_content(as_attachment=True)
 
 
 @api_view(['POST'])

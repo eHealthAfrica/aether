@@ -25,7 +25,6 @@ LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /#}`
 
 DEPLOY_APPS=( kernel exm odk ui producer )
 
-export RELEASE_BUCKET="aether-releases"
 export GOOGLE_APPLICATION_CREDENTIALS="gcs_key.json"
 
 if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
@@ -37,8 +36,16 @@ if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
 
     DOCKER_VERSION=${TRAVIS_TAG}
     GCR_VERSION=${TRAVIS_TAG}
-    GCS_PROJECTS="eha-data"
+    GCS_PROJECT="eha-data"
     GCR_PROJECT="production-228613"
+    export RELEASE_BUCKET="aether-releases"
+
+    openssl aes-256-cbc \
+        -K $encrypted_17d8de6bf835_key \
+        -iv $encrypted_17d8de6bf835_iv \
+        -in prod.json.enc \
+        -out gcs_key.json \
+        -d
 
 elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
 
@@ -53,36 +60,44 @@ elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
     GCR_VERSION="${DOCKER_VERSION}-${TRAVIS_COMMIT}"
 
     # deploy release candidates in ???
-    GCS_PROJECTS="alpha"
+    GCS_PROJECT="alpha"
     GCR_PROJECT="development-223016"
+    export RELEASE_BUCKET="aether-releases-dev"
+
+    openssl aes-256-cbc \
+        -K $encrypted_17d8de6bf835_key \
+        -iv $encrypted_17d8de6bf835_iv \
+        -in dev.json.enc \
+        -out gcs_key.json \
+        -d
 
 else
 
     DOCKER_VERSION="alpha"
     GCR_VERSION=${TRAVIS_COMMIT}
-    GCS_PROJECTS="alpha"
+    GCS_PROJECT="alpha"
     GCR_PROJECT="development-223016"
+    export RELEASE_BUCKET="aether-releases-dev"
 
+    openssl aes-256-cbc \
+        -K $encrypted_17d8de6bf835_key \
+        -iv $encrypted_17d8de6bf835_iv \
+        -in dev.json.enc \
+        -out gcs_key.json \
+        -d
 fi
 
 echo "${LINE}"
 echo "Docker images:        ${DEPLOY_APPS[@]}"
 echo "Docker images tag:    $DOCKER_VERSION"
 echo "Deployment version:   $GCR_VERSION"
-echo "Deployment project:   $GCR_PROJECT"
-echo "Kubernetes projects:  $GCS_PROJECTS"
+echo "Repository project:   $GCR_PROJECT"
+echo "Storage project:      $GCS_PROJECT"
 echo "${LINE}"
 
 
 # ===========================================================
 # install dependencies and create GC credentials files
-openssl aes-256-cbc \
-    -K $encrypted_9112fb2807d4_key \
-    -iv $encrypted_9112fb2807d4_iv \
-    -in gcs_key.json.enc \
-    -out gcs_key.json \
-    -d
-
 pip install -q google-cloud-storage push-app-version
 
 
@@ -105,9 +120,10 @@ done
 # push images to deployment repository
 
 GCR_REPO_URL="https://eu.gcr.io"
-GCR_IMAGE_REPO="eu.gcr.io/${GCR_PROJECT}/aether"
+GCR_IMAGE_REPO="eu.gcr.io/${GCR_PROJECT}"
 
-docker login -u _json_key -p "$(cat gcs_key.json)" $GCR_REPO_URL
+# https://cloud.google.com/container-registry/docs/advanced-authentication#json_key_file
+cat gcs_key.json | docker login -u _json_key --password-stdin $GCR_REPO_URL
 
 for APP in "${DEPLOY_APPS[@]}"; do
     AETHER_APP="aether-${APP}"
@@ -127,6 +143,6 @@ docker logout ${GCR_REPO_URL} || true
 # ===========================================================
 # notify to Google Cloud Storage the new images
 
-python ./scripts/push_version.py \
+push-app-version \
     --version $GCR_VERSION \
-    --projects $GCS_PROJECTS
+    --project $GCS_PROJECT
