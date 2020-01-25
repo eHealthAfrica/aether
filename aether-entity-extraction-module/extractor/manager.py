@@ -105,12 +105,14 @@ class ExtractionManager():
                         executor.submit(self.entity_extraction, self.pending_submissions.pop())
                     )
 
-                for realm in self.extracted_entities.keys():
+                entity_realms = list(self.extracted_entities.keys())
+                for realm in entity_realms:
                     processes.append(
                         executor.submit(self.push_entities_to_kernel, realm)
                     )
 
-                for realm in self.processed_submissions.keys():
+                submission_realms = list(self.processed_submissions.keys())
+                for realm in submission_realms:
                     processes.append(
                         executor.submit(self.push_submissions_to_kernel, realm)
                     )
