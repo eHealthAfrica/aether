@@ -117,8 +117,7 @@ class ExtractionManager():
                             k,
                             read_subs[k],
                             self.processed_submissions
-                        ),
-                        callback=cb_s)
+                        ))
             read_entities = self.get_prepared(self.extracted_entities)
             if read_entities:
                 count = sum([len(v) for v in read_entities.values()])
@@ -130,8 +129,7 @@ class ExtractionManager():
                             k,
                             read_entities[k],
                             self.extracted_entities
-                        ),
-                        callback=cb_e)
+                        ))
             time.sleep(1)
         logger.info('Manager caught stop signal')
 
@@ -161,8 +159,7 @@ class ExtractionManager():
             (
                 task,
                 self.extracted_entities,
-                self.processed_submissions),
-            callback=cb_ingress)
+                self.processed_submissions))
 
 
 def entity_extraction(task, entity_queue, submission_queue):
@@ -392,26 +389,3 @@ def halve_iterable(obj, _size):
     logger.debug(f'new chunk size {_chunk_size}')
     for i in range(0, len(obj), _chunk_size):
         yield obj[i:i + _chunk_size]
-
-
-total_arrived = 0
-total_cut = 0
-total_sent = 0
-
-
-def cb_ingress(result):
-    global total_arrived
-    total_arrived += int(result)
-    logger.debug(['IN', result, total_arrived])
-
-
-def cb_s(result):
-    global total_cut
-    total_cut += int(result)
-    logger.debug(['O-SUB', result, total_cut])
-
-
-def cb_e(result):
-    global total_sent
-    total_sent += int(result)
-    logger.debug(['O-ENT', result, total_sent])
