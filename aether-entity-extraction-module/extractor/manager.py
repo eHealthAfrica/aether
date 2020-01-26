@@ -20,10 +20,15 @@ import sys
 import time
 
 from collections import defaultdict
-from queue import Empty
+from queue import Queue, Empty
 import multiprocessing as mp
 from threading import Thread
 
+from typing import (
+    Any, Callable, List
+)
+
+from requests.exceptions import HTTPError
 from redis.exceptions import ConnectionError as RedisConnectionError
 from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ERRORS,
@@ -37,11 +42,13 @@ from extractor.utils import (
     SUBMISSION_PAYLOAD_FIELD,
     Artifact,
     cache_objects,
+    count_quarantined,
     get_failed_objects,
     get_from_redis_or_kernel,
     get_redis_keys_by_pattern,
     get_redis_subscribed_message,
     kernel_data_request,
+    quarantine,
     remove_from_cache,
     remove_from_redis,
     redis_subscribe,
@@ -57,13 +64,16 @@ class ExtractionManager():
         # save the submissions and entities by their realm
         # this is required to push them back to kernel
         self.stopped = False
-        self.pool = mp.Pool()
+        self.extraction_pool = mp.Pool()  # lots of power here
+        self.kernel_comm_pool = mp.Pool(processes=1)  # only one concurrent request to Kernel.
         self.manager = mp.Manager()
         self.processed_submissions = self.manager.Queue()
         self.extracted_entities = self.manager.Queue()
         self.redis = redis
         # load failed from redis. When running will cycle back into
         # queue on failure.
+        for _type in [Artifact.ENTITY, Artifact.SUBMISSION]:
+            logger.info(f'{_type} #{count_quarantined(_type)} in quarantine')
         try:
             self.load_failed()
         except RedisConnectionError as err:
@@ -101,7 +111,7 @@ class ExtractionManager():
                 count = sum([len(v) for v in read_subs.values()])
                 logger.info(f'pushing Subs {count}')
                 for k in read_subs.keys():
-                    self.pool.apply_async(
+                    self.kernel_comm_pool.apply_async(
                         push_submissions_to_kernel,
                         (
                             k,
@@ -114,7 +124,7 @@ class ExtractionManager():
                 count = sum([len(v) for v in read_entities.values()])
                 logger.info(f'pushing Ent {count}')
                 for k in read_entities.keys():
-                    self.pool.apply_async(
+                    self.kernel_comm_pool.apply_async(
                         push_entities_to_kernel,
                         (
                             k,
@@ -128,8 +138,10 @@ class ExtractionManager():
     def stop(self):
         print('stopping')
         self.stopped = True
-        self.pool.close()
-        self.pool.join()
+        self.extraction_pool.close()
+        self.kernel_comm_pool.close()
+        self.extraction_pool.join()
+        self.kernel_comm_pool.join()
         print('stopped')
 
     def subscribe_to_redis_channel(self, callback: callable, channel: str):
@@ -144,7 +156,7 @@ class ExtractionManager():
             logger.info('No task to enqueue')
             return
         # enqueue work
-        self.pool.apply_async(
+        self.extraction_pool.apply_async(
             entity_extraction,
             (
                 task,
@@ -154,7 +166,7 @@ class ExtractionManager():
 
 
 def entity_extraction(task, entity_queue, submission_queue):
-    # get artifacts from redis
+    # receive task from redis
     # if not found on redis, get from kernel and cache on redis
     # if not found on kernel ==> flag submission as invalid and skip extraction
     logger.info(f'handling {task.id}')
@@ -281,16 +293,15 @@ def push_entities_to_kernel(realm, entities, entity_queue):
                 Artifact.ENTITY
             )
         return len(entities)
-    except Exception as e:
-        logger.error(str(e))
-        # cache failed entities on redis for retries later
-        cache_objects(
+    except HTTPError as e:
+        return handle_kernel_errors(
+            e,
+            push_entities_to_kernel,
             entities,
             realm,
             Artifact.ENTITY,
             entity_queue
         )
-        return 0
 
 
 def push_submissions_to_kernel(realm, submissions, submission_queue):
@@ -301,30 +312,86 @@ def push_submissions_to_kernel(realm, submissions, submission_queue):
         logger.info(f'popped {len(submissions)}')
 
     try:
-        # submission_ids = kernel_data_request(
-        #     url='submissions/bulk_update_extracted.json',
-        #     method='patch',
-        #     data=submissions,
-        #     realm=realm,
-        # )
-        # for submission in submissions:
-        #     remove_from_cache(
-        #         submission,
-        #         realm,
-        #         Artifact.SUBMISSION
-        #     )
-        # return len(submission_ids)
+        kernel_data_request(
+            url='submissions/bulk_update_extracted.json',
+            method='patch',
+            data=submissions,
+            realm=realm,
+        )
+        for submission in submissions:
+            remove_from_cache(
+                submission,
+                realm,
+                Artifact.SUBMISSION
+            )
         return len(submissions)
-    except Exception as e:
-        cache_objects(
+    except HTTPError as e:
+        return handle_kernel_errors(
+            e,
+            push_submissions_to_kernel,
             submissions,
             realm,
             Artifact.SUBMISSION,
             submission_queue
         )
-        logger.error(str(e))
+
+
+def handle_kernel_errors(
+    e: Exception,
+    retry_fn: Callable,
+    objs: List[Any],
+    realm: str,
+    _type: Artifact,
+    queue: Queue
+):
+    _code = e.response.status_code
+    BAD_REQUEST = _code == 400
+    if not BAD_REQUEST:
+        logger.error(_code)
+    # if a small batch failed, cache it
+    _size = len(objs)
+    if _size > 1 and BAD_REQUEST:
+        # break down big failures and retry parts
+        # reducing by half each time
+        _chunks = halve_iterable(objs, _size)
+        logger.debug(f'Trying smaller chunks... than {_size}')
+        return sum([
+            retry_fn(
+                realm, c, queue
+            ) for c in _chunks
+        ])
+    elif BAD_REQUEST:
+        for i in objs:
+            remove_from_cache(
+                i,
+                realm,
+                _type
+            )
+        quarantine(
+            objs,
+            realm,
+            _type,
+        )
         return 0
-        # back to the queue ???
+    else:
+        logger.error(f'caching {_size} failed for {_code}')
+        cache_objects(
+            objs,
+            realm,
+            _type,
+            queue
+        )
+        return 0
+
+
+def halve_iterable(obj, _size):
+    # chop
+    _chunk_size = int(_size / 2) \
+        if (_size / 2 == int(_size / 2)) \
+        else int(_size / 2) + 1
+    logger.debug(f'new chunk size {_chunk_size}')
+    for i in range(0, len(obj), _chunk_size):
+        yield obj[i:i + _chunk_size]
 
 
 total_arrived = 0
