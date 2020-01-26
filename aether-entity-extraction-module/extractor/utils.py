@@ -75,7 +75,7 @@ NORMAL_CACHE = {
     Artifact.SUBMISSION: 'exm_failed_submissions'
 }
 
-QUARENTINE = {
+QUARENTINE_CACHE = {
     Artifact.ENTITY: 'exm_quarantine_entities',
     Artifact.SUBMISSION: 'exm_quarantine_submissions'
 }
@@ -232,14 +232,11 @@ def remove_from_cache(
         return False
 
 
-quarantine_count = 0
-
-
 def count_quarantined(
     _type: Artifact,
     redis=None
 ) -> dict:
-    _key = QUARENTINE[_type]
+    _key = QUARENTINE_CACHE[_type]
     redis_instance = get_redis(redis)
     return sum(1 for i in redis_instance.list(_key))
 
@@ -250,15 +247,12 @@ def quarantine(
     _type: Artifact,
     redis=None
 ):
-    global quarantine_count
-    logger.info(f'Quarantine {len(objects)} object {_type} for realm {realm}')
-    _key = QUARENTINE[_type]
+    logger.error(f'Quarantine {len(objects)} object {_type} for realm {realm}')
+    _key = QUARENTINE_CACHE[_type]
     redis_instance = get_redis(redis)
     try:
         for e in objects:
             assert('id' in e), e.keys()
-            quarantine_count += 1
-            logger.info(f'Quarantine now: {quarantine_count}')
             redis_instance.add(e, _key, realm)
     except Exception as err:
         logger.critical(f'Could not save quarantine objects to REDIS {err}')
@@ -266,3 +260,11 @@ def quarantine(
 
 def get_bulk_size(size):
     return settings.MAX_PUSH_SIZE if size > settings.MAX_PUSH_SIZE else size
+
+
+def halve_iterable(obj, _size):
+    _chunk_size = int(_size / 2) \
+        if (_size / 2 == int(_size / 2)) \
+        else int(_size / 2) + 1
+    for i in range(0, len(obj), _chunk_size):
+        yield obj[i:i + _chunk_size]

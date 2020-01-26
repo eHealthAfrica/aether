@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import signal
 import sys
 import time
 
@@ -45,6 +46,7 @@ from extractor.utils import (
     count_quarantined,
     get_failed_objects,
     get_from_redis_or_kernel,
+    get_redis,
     get_redis_keys_by_pattern,
     get_redis_subscribed_message,
     kernel_data_request,
@@ -70,17 +72,22 @@ class ExtractionManager():
         self.processed_submissions = self.manager.Queue()
         self.extracted_entities = self.manager.Queue()
         self.redis = redis
-        # load failed from redis. When running will cycle back into
-        # queue on failure.
+        # Report on permanently failed submissions / entities
+        # (Failed with 400 Bad Request)
         for _type in [Artifact.ENTITY, Artifact.SUBMISSION]:
             logger.info(f'{_type} #{count_quarantined(_type)} in quarantine')
+        # load failed from redis. When running will cycle back into
+        # queue on failure.
         try:
             self.load_failed()
         except RedisConnectionError as err:
             logger.critical(f'Cannot connect to Redis. Fatal: {err}')
             sys.exit(1)
+        signal.signal(signal.SIGINT, self.stop)
+        signal.signal(signal.SIGTERM, self.stop)
         # run the main worker loop in a new thread, no need to MP it.
-        Thread(target=self.worker).start()
+        self.worker_thread = Thread(target=self.worker)
+        self.worker_thread.start()
         logger.debug(f'Manager Ready.')
 
     def callback(self, result):
@@ -97,8 +104,8 @@ class ExtractionManager():
         res = defaultdict(list)
         for i in range(size):
             try:
-                k, v = queue.get_nowait()
-                res[k].append(v)
+                realm, msg = queue.get_nowait()
+                res[realm].append(msg)
             except Empty:
                 break
         return res
@@ -109,38 +116,41 @@ class ExtractionManager():
             read_subs = self.get_prepared(self.processed_submissions)
             if read_subs:
                 count = sum([len(v) for v in read_subs.values()])
-                logger.info(f'pushing Subs {count}')
-                for k in read_subs.keys():
+                logger.info(f'Publishing Updated Subs: {count}')
+                for realm in read_subs.keys():
                     self.kernel_comm_pool.apply_async(
                         push_submissions_to_kernel,
                         (
-                            k,
-                            read_subs[k],
+                            realm,
+                            read_subs[realm],
                             self.processed_submissions
                         ))
             read_entities = self.get_prepared(self.extracted_entities)
             if read_entities:
                 count = sum([len(v) for v in read_entities.values()])
-                logger.info(f'pushing Ent {count}')
-                for k in read_entities.keys():
+                logger.info(f'Publishing Updated Entities {count}')
+                for realm in read_entities.keys():
                     self.kernel_comm_pool.apply_async(
                         push_entities_to_kernel,
                         (
-                            k,
-                            read_entities[k],
+                            realm,
+                            read_entities[realm],
                             self.extracted_entities
                         ))
             time.sleep(1)
         logger.info('Manager caught stop signal')
 
-    def stop(self):
-        print('stopping')
+    def stop(self, *args, **kwargs):
+        logger.info('stopping')
         self.stopped = True
         self.extraction_pool.close()
         self.kernel_comm_pool.close()
+        get_redis().stop()
         self.extraction_pool.join()
         self.kernel_comm_pool.join()
-        print('stopped')
+        self.worker_thread.join()
+        logger.info('stopped')
+        # sys.exit(0)
 
     def subscribe_to_redis_channel(self, callback: callable, channel: str):
         redis_subscribe(callback=callback, pattern=channel, redis=self.redis)
@@ -164,8 +174,8 @@ class ExtractionManager():
 
 def entity_extraction(task, entity_queue, submission_queue):
     # receive task from redis
-    # if not found on redis, get from kernel and cache on redis
-    # if not found on kernel ==> flag submission as invalid and skip extraction
+    # if artifacts found on redis, get from kernel and cache on redis
+    # if artifacts not found on kernel ==> flag submission as invalid and skip extraction
     logger.info(f'handling {task.id}')
     try:
         tenant = task.tenant
@@ -263,7 +273,7 @@ def entity_extraction(task, entity_queue, submission_queue):
             model_type=ARTEFACT_NAMES.submissions,
             tenant=task.tenant
         )
-        logger.info(f'finished task {task.id}')
+        logger.debug(f'finished task {task.id}')
         return 1
     except Exception as err:
         logger.error(f'extractor ERROR!: {err}')
@@ -272,9 +282,7 @@ def entity_extraction(task, entity_queue, submission_queue):
 
 def push_entities_to_kernel(realm, entities, entity_queue):
     if not entities:
-        logger.info(f'Entities queue for realm {realm} was empty')
-        return
-    logger.info(f'Pushing #{len(entities)} chunk to {realm}')
+        return 0
     try:
         kernel_data_request(
             url='entities.json',
@@ -303,11 +311,7 @@ def push_entities_to_kernel(realm, entities, entity_queue):
 
 def push_submissions_to_kernel(realm, submissions, submission_queue):
     if not submissions:
-        logger.info(f'Submissions queue for realm {realm} was empty')
-        return
-    else:
-        logger.info(f'popped {len(submissions)}')
-
+        return 0
     try:
         kernel_data_request(
             url='submissions/bulk_update_extracted.json',
@@ -343,8 +347,6 @@ def handle_kernel_errors(
 ):
     _code = e.response.status_code
     BAD_REQUEST = _code == 400
-    if not BAD_REQUEST:
-        logger.error(_code)
     # if a small batch failed, cache it
     _size = len(objs)
     if _size > 1 and BAD_REQUEST:
@@ -358,6 +360,7 @@ def handle_kernel_errors(
             ) for c in _chunks
         ])
     elif BAD_REQUEST:
+        # Move bad object from cache to quarantine
         for i in objs:
             remove_from_cache(
                 i,
@@ -371,6 +374,7 @@ def handle_kernel_errors(
         )
         return 0
     else:
+        logger.error('Unexpected HTTP Status from Kernel: {_code}')
         logger.error(f'caching {_size} failed for {_code}')
         cache_objects(
             objs,
@@ -379,13 +383,3 @@ def handle_kernel_errors(
             queue
         )
         return 0
-
-
-def halve_iterable(obj, _size):
-    # chop
-    _chunk_size = int(_size / 2) \
-        if (_size / 2 == int(_size / 2)) \
-        else int(_size / 2) + 1
-    logger.debug(f'new chunk size {_chunk_size}')
-    for i in range(0, len(obj), _chunk_size):
-        yield obj[i:i + _chunk_size]
