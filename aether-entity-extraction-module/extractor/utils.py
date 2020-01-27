@@ -216,6 +216,19 @@ def cache_objects(
         logger.critical(f'Could not save failed objects to REDIS {err}')
 
 
+def cache_has_object(
+    _id: str,
+    realm: str,
+    _type: Artifact,
+    redis=None
+) -> bool:
+    redis_instance = get_redis(redis)
+    for _key in [NORMAL_CACHE[_type], QUARENTINE_CACHE[_type]]:
+        if redis_instance.exists(_id, _key, realm):
+            return True
+    return False
+
+
 def remove_from_cache(
     object: Mapping[Any, Any],
     realm: str,

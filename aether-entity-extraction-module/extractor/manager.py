@@ -26,7 +26,7 @@ import multiprocessing as mp
 from threading import Thread
 
 from typing import (
-    Any, Callable, List
+    Any, Callable, Dict, List
 )
 
 from requests.exceptions import HTTPError
@@ -42,6 +42,7 @@ from extractor.utils import (
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
     Artifact,
+    cache_has_object,
     cache_objects,
     count_quarantined,
     get_failed_objects,
@@ -49,6 +50,7 @@ from extractor.utils import (
     get_redis,
     get_redis_keys_by_pattern,
     get_redis_subscribed_message,
+    halve_iterable,
     kernel_data_request,
     quarantine,
     remove_from_cache,
@@ -93,46 +95,68 @@ class ExtractionManager():
     def callback(self, result):
         logger.info(result)
 
-    def load_failed(self):
+    def load_failed(self) -> None:
         get_failed_objects(self.processed_submissions, Artifact.SUBMISSION)
         get_failed_objects(self.extracted_entities, Artifact.ENTITY)
         fc_sub = self.processed_submissions.qsize()
         fc_ent = self.extracted_entities.qsize()
         logger.info(f'Loaded failed: s:{fc_sub}, e:{fc_ent}')
 
-    def get_prepared(self, queue, size=settings.MAX_PUSH_SIZE):
+    def get_prepared(
+            self,
+            queue: Queue,
+            _type: Artifact,
+            size=settings.MAX_PUSH_SIZE
+    ) -> Dict[str, Dict]:
         res = defaultdict(list)
+        excluded = []
         for i in range(size):
             try:
                 realm, msg = queue.get_nowait()
+                if _type is Artifact.ENTITY:
+                    # check to see if the related submission has been sent off.
+                    sub_id = msg.get('submission')
+                    if cache_has_object(sub_id, realm, Artifact.SUBMISSION):
+                        logger.debug(f'Ignoring entity {msg.get("id")};'
+                                     ' submission {sub_id} not sent')
+                        excluded.append(tuple([realm, msg]))
+                        continue
                 res[realm].append(msg)
             except Empty:
                 break
+        for item in excluded:
+            queue.put(item)
         return res
 
     def worker(self):
         while not self.stopped:
             logger.debug('Looking for work')
-            read_subs = self.get_prepared(self.processed_submissions)
+            read_subs = self.get_prepared(
+                self.processed_submissions,
+                Artifact.SUBMISSION)
             if read_subs:
                 count = sum([len(v) for v in read_subs.values()])
                 logger.info(f'Publishing Updated Subs: {count}')
                 for realm in read_subs.keys():
                     self.kernel_comm_pool.apply_async(
-                        push_submissions_to_kernel,
+                        push_to_kernel,
                         (
+                            Artifact.SUBMISSION,
                             realm,
                             read_subs[realm],
                             self.processed_submissions
                         ))
-            read_entities = self.get_prepared(self.extracted_entities)
+            read_entities = self.get_prepared(
+                self.extracted_entities,
+                Artifact.ENTITY)
             if read_entities:
                 count = sum([len(v) for v in read_entities.values()])
                 logger.info(f'Publishing Updated Entities {count}')
                 for realm in read_entities.keys():
                     self.kernel_comm_pool.apply_async(
-                        push_entities_to_kernel,
+                        push_to_kernel,
                         (
+                            Artifact.ENTITY,
                             realm,
                             read_entities[realm],
                             self.extracted_entities
@@ -280,60 +304,42 @@ def entity_extraction(task, entity_queue, submission_queue):
         return 0
 
 
-def push_entities_to_kernel(realm, entities, entity_queue):
-    if not entities:
+def push_to_kernel(
+    _type: Artifact,
+    realm: str,
+    objs: List[Any],
+    queue: Queue
+):
+    if not objs:
         return 0
+    if _type is Artifact.SUBMISSION:
+        url = 'submissions/bulk_update_extracted.json'
+        method = 'patch'
+    elif _type is Artifact.ENTITY:
+        url = 'entities.json'
+        method = 'post'
     try:
         kernel_data_request(
-            url='entities.json',
-            method='post',
-            data=entities,
+            url=url,
+            method=method,
+            data=objs,
             realm=realm,
         )
-        logger.info(f'{len(entities)} accepted by {realm}')
-        for i in entities:
+        for obj in objs:
             remove_from_cache(
-                i,
+                obj,
                 realm,
-                Artifact.ENTITY
+                _type
             )
-        return len(entities)
+        return len(objs)
     except HTTPError as e:
         return handle_kernel_errors(
             e,
-            push_entities_to_kernel,
-            entities,
+            push_to_kernel,
+            objs,
             realm,
-            Artifact.ENTITY,
-            entity_queue
-        )
-
-
-def push_submissions_to_kernel(realm, submissions, submission_queue):
-    if not submissions:
-        return 0
-    try:
-        kernel_data_request(
-            url='submissions/bulk_update_extracted.json',
-            method='patch',
-            data=submissions,
-            realm=realm,
-        )
-        for submission in submissions:
-            remove_from_cache(
-                submission,
-                realm,
-                Artifact.SUBMISSION
-            )
-        return len(submissions)
-    except HTTPError as e:
-        return handle_kernel_errors(
-            e,
-            push_submissions_to_kernel,
-            submissions,
-            realm,
-            Artifact.SUBMISSION,
-            submission_queue
+            _type,
+            queue
         )
 
 
@@ -356,7 +362,7 @@ def handle_kernel_errors(
         logger.debug(f'Trying smaller chunks... than {_size}')
         return sum([
             retry_fn(
-                realm, c, queue
+                _type, realm, c, queue
             ) for c in _chunks
         ])
     elif BAD_REQUEST:
