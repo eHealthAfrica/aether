@@ -35,7 +35,7 @@ ROOT_URLCONF = 'aether.kernel.urls'
 
 INSTALLED_APPS += [
     'django_filters',
-    'drf_yasg',
+    'drf_yasg'
 ]
 
 MULTITENANCY_MODEL = 'kernel.Project'
@@ -52,7 +52,7 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
 # https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-DATA_UPLOAD_MAX_MEMORY_SIZE
 # https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-FILE_UPLOAD_MAX_MEMORY_SIZE
 
-_max_size = 10 * 1024 * 1024  # 10MB
+_max_size = 20 * 1000 * 1000  # 20MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', _max_size))
 FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', _max_size))
 
@@ -60,17 +60,61 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', 
 # Export Configuration
 # ------------------------------------------------------------------------------
 
-EXPORT_CSV_ESCAPE = os.environ.get('EXPORT_CSV_ESCAPE', '\\')
-EXPORT_CSV_QUOTE = os.environ.get('EXPORT_CSV_QUOTE', '"')
-EXPORT_CSV_SEPARATOR = os.environ.get('EXPORT_CSV_SEPARATOR', ',')
-EXPORT_DATA_FORMAT = os.environ.get('EXPORT_DATA_FORMAT', 'split')
-EXPORT_HEADER_CONTENT = os.environ.get('EXPORT_HEADER_CONTENT', 'labels')
-EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR', '/')
-EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
+EXPORT_CSV_ESCAPE = os.environ.get('EXPORT_CSV_ESCAPE') or '\\'
+EXPORT_CSV_QUOTE = os.environ.get('EXPORT_CSV_QUOTE') or '"'
+EXPORT_CSV_SEPARATOR = os.environ.get('EXPORT_CSV_SEPARATOR') or ','
+EXPORT_DATA_FORMAT = os.environ.get('EXPORT_DATA_FORMAT', '').lower()
+if EXPORT_DATA_FORMAT != 'flatten':
+    EXPORT_DATA_FORMAT = 'split'
+EXPORT_HEADER_CONTENT = os.environ.get('EXPORT_HEADER_CONTENT', '').lower()
+if EXPORT_HEADER_CONTENT not in ('labels', 'paths', 'both'):
+    EXPORT_HEADER_CONTENT = 'labels'
+EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR') or '/'
+EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', '').lower()
+if EXPORT_HEADER_SHORTEN != 'yes':
+    EXPORT_HEADER_SHORTEN = 'no'
+
+try:
+    EXPORT_NUM_CHUNKS = int(os.environ.get('EXPORT_NUM_CHUNKS', 4))
+except ValueError:
+    EXPORT_NUM_CHUNKS = 4
+if EXPORT_NUM_CHUNKS < 1:
+    EXPORT_NUM_CHUNKS = 1
 
 
 # Redis Configuration
 # ------------------------------------------------------------------------------
+#
+# Issue: The entities bulk creation is failing with Silk enabled.
+# The reported bug, https://github.com/jazzband/django-silk/issues/348,
+# In the meantime we will disable silk for those requests.
+
+if PROFILING_ENABLED and TESTING:  # noqa (From SDK.settings)
+    def ignore_entities_post(request):
+        return request.method != 'POST' or '/entities' not in request.path
+
+    SILKY_INTERCEPT_FUNC = ignore_entities_post
+
+if DJANGO_USE_CACHE:  # noqa (From SDK.settings)
+    CACHEOPS_DEGRADE_ON_FAILURE = True
+    _CACHED_MODULES = [
+        'kernel.entity',
+        'kernel.project',
+        'kernel.mappingset',
+        'kernel.submission',
+        'kernel.attachment',
+        'kernel.schema',
+        'kernel.schemadecorator',
+        'kernel.mapping',
+    ]
+
+    for k in _CACHED_MODULES:
+        CACHEOPS[k] = {'ops': ('fetch', 'get', 'exists')}  # noqa (From SDK.settings)
+        # put Django user model into local cache for faster recall
+    CACHEOPS['auth.user'] = {  # noqa (From SDK.settings)
+        'ops': ('fetch', 'get', 'exists'),
+        'local_get': True,
+    }
 
 WRITE_ENTITIES_TO_REDIS = bool(os.environ.get('WRITE_ENTITIES_TO_REDIS'))
 
