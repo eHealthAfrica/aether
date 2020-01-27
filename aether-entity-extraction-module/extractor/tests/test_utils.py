@@ -32,6 +32,7 @@ from extractor.utils import (
     get_redis_subscribed_message,
     kernel_data_request,
     remove_from_redis,
+    halve_iterable
 )
 
 
@@ -149,3 +150,9 @@ class UtilsTests(TestCase):
         server.connected = False
         message = get_redis_subscribed_message(_key, redis)
         self.assertIsNone(message)
+
+    def test_halve_iterable(self):
+        _set = halve_iterable([1, 2, 3, 4])
+        i = [p for p in _set]
+        self.assertTrue(2 in i[0])
+        self.assertTrue(3 in i[1])

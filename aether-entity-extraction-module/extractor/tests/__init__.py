@@ -171,6 +171,7 @@ MAPPINGS = [
     }
 ]
 
+
 SCHEMA_DECORATORS = [
     {
         'id': 'cc3e081a-e802-47eb-a5ea-f1c056737453',

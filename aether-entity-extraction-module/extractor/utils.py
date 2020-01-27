@@ -72,7 +72,7 @@ class Artifact(Enum):
 
 class CacheType(Enum):
     NORMAL = 1
-    QUARENTINE = 2
+    QUARANTINE = 2
     NONE = 3
 
 
@@ -81,7 +81,7 @@ NORMAL_CACHE = {
     Artifact.SUBMISSION: 'exm_failed_submissions'
 }
 
-QUARENTINE_CACHE = {
+QUARANTINE_CACHE = {
     Artifact.ENTITY: 'exm_quarantine_entities',
     Artifact.SUBMISSION: 'exm_quarantine_submissions'
 }
@@ -138,7 +138,7 @@ def get_from_redis_or_kernel(id, model_type, tenant=None, redis=None):
         try:
             return kernel_data_request(f'{model_type}/{id}.json', realm=tenant)
         except Exception as e:
-            logger.error(str(e))
+            logger.warning(str(e))
             return None
 
     redis_instance = get_redis(redis)
@@ -199,7 +199,7 @@ def get_failed_objects(
                 res
             ]))
         else:
-            logger.error(f'Could not fetch {_type} {tenant}:{_id}')
+            logger.warning(f'Could not fetch {_type} {tenant}:{_id}')
 
 
 def cache_objects(
@@ -209,7 +209,7 @@ def cache_objects(
     queue: Queue,
     redis=None
 ):
-    logger.info(f'Caching {len(objects)} object {_type} for realm {realm}')
+    logger.debug(f'Caching {len(objects)} object {_type} for realm {realm}')
     _key = NORMAL_CACHE[_type]
     redis_instance = get_redis(redis)
 
@@ -231,7 +231,7 @@ def cache_has_object(
     redis_instance = get_redis(redis)
     for _cache_type, cache in [
         (CacheType.NORMAL, NORMAL_CACHE),
-        (CacheType.QUARENTINE, QUARENTINE_CACHE)
+        (CacheType.QUARANTINE, QUARANTINE_CACHE)
     ]:
         _key = cache[_type]
         if redis_instance.exists(_id, _key, realm):
@@ -259,7 +259,7 @@ def count_quarantined(
     _type: Artifact,
     redis=None
 ) -> dict:
-    _key = QUARENTINE_CACHE[_type]
+    _key = QUARANTINE_CACHE[_type]
     redis_instance = get_redis(redis)
     return sum(1 for i in redis_instance.list(_key))
 
@@ -270,8 +270,8 @@ def quarantine(
     _type: Artifact,
     redis=None
 ):
-    logger.error(f'Quarantine {len(objects)} object {_type} for realm {realm}')
-    _key = QUARENTINE_CACHE[_type]
+    logger.warning(f'Quarantine {len(objects)} object {_type} for realm {realm}')
+    _key = QUARANTINE_CACHE[_type]
     redis_instance = get_redis(redis)
     try:
         for e in objects:
@@ -285,7 +285,8 @@ def get_bulk_size(size):
     return settings.MAX_PUSH_SIZE if size > settings.MAX_PUSH_SIZE else size
 
 
-def halve_iterable(obj, _size):
+def halve_iterable(obj):
+    _size = len(obj)
     _chunk_size = int(_size / 2) \
         if (_size / 2 == int(_size / 2)) \
         else int(_size / 2) + 1

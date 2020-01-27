@@ -28,7 +28,7 @@ def get_required(name):
 
 
 # https://docs.python.org/3.7/library/logging.html#levels
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+LOG_LEVEL = os.environ.get('LOGGING_LEVEL', 'INFO')
 
 
 def get_logger(name):

@@ -70,7 +70,8 @@ class ExtractionManager():
         # this is required to push them back to kernel
         self.stopped = False
         self.extraction_pool = mp.Pool()  # lots of power here
-        self.kernel_comm_pool = mp.Pool(processes=1)  # only one concurrent request to Kernel.
+        # only one concurrent request to Kernel.
+        self.kernel_comm_pool = mp.Pool(processes=1)
         self.manager = mp.Manager()
         self.processed_submissions = self.manager.Queue()
         self.extracted_entities = self.manager.Queue()
@@ -110,8 +111,6 @@ class ExtractionManager():
                 self.processed_submissions,
                 Artifact.SUBMISSION)
             if read_subs:
-                count = sum([len(v) for v in read_subs.values()])
-                logger.info(f'Publishing Updated Subs: {count}')
                 for realm in read_subs.keys():
                     self.kernel_comm_pool.apply_async(
                         push_to_kernel,
@@ -125,8 +124,6 @@ class ExtractionManager():
                 self.extracted_entities,
                 Artifact.ENTITY)
             if read_entities:
-                count = sum([len(v) for v in read_entities.values()])
-                logger.info(f'Publishing Updated Entities {count}')
                 for realm in read_entities.keys():
                     self.kernel_comm_pool.apply_async(
                         push_to_kernel,
@@ -144,7 +141,10 @@ class ExtractionManager():
         self.stopped = True
         self.extraction_pool.close()
         self.kernel_comm_pool.close()
-        get_redis().stop()
+        try:
+            get_redis(self.redis).stop()
+        except AttributeError:
+            pass  # no pubsub active
         self.extraction_pool.join()
         self.kernel_comm_pool.join()
         self.worker_thread.join()
@@ -159,10 +159,6 @@ class ExtractionManager():
             self.add_to_queue(get_redis_subscribed_message(key=key, redis=self.redis))
 
     def add_to_queue(self, task):
-        if not task:
-            logger.info('No task to enqueue')
-            return
-        # enqueue work
         self.extraction_pool.apply_async(
             entity_extraction,
             (
@@ -202,7 +198,7 @@ def get_prepared(
     return res
 
 
-def entity_extraction(task, entity_queue, submission_queue):
+def entity_extraction(task, entity_queue, submission_queue, redis=None):
     # receive task from redis
     # if artifacts found on redis, get from kernel and cache on redis
     # if artifacts not found on kernel ==> flag submission as invalid and skip extraction
@@ -218,18 +214,24 @@ def entity_extraction(task, entity_queue, submission_queue):
             mapping = get_from_redis_or_kernel(
                 id=mapping_id,
                 model_type=ARTEFACT_NAMES.mappings,
-                tenant=tenant
+                tenant=tenant,
+                redis=redis
             )
+            if not mapping:
+                raise ValueError(f'Mapping {mapping_id} not found.')
             try:
                 # get required artefacts
                 schemas = {}
                 schema_decorators = mapping['definition']['entities']
-                for shemadecorator_id in mapping[ARTEFACT_NAMES.schemadecorators]:
+                for schemadecorator_id in mapping[ARTEFACT_NAMES.schemadecorators]:
                     sd = get_from_redis_or_kernel(
-                        id=shemadecorator_id,
+                        id=schemadecorator_id,
                         model_type=ARTEFACT_NAMES.schemadecorators,
-                        tenant=tenant
+                        tenant=tenant,
+                        redis=redis
                     )
+                    if not sd:
+                        raise ValueError(f'No schemadecorator with ID {schemadecorator_id} found')
 
                     schema_definition = None
                     if sd and ARTEFACT_NAMES.schema_definition in sd:
@@ -239,11 +241,11 @@ def entity_extraction(task, entity_queue, submission_queue):
                         schema = get_from_redis_or_kernel(
                             id=sd[ARTEFACT_NAMES.schema_id],
                             model_type=ARTEFACT_NAMES.schemas,
-                            tenant=settings.DEFAULT_REALM
+                            tenant=settings.DEFAULT_REALM,
+                            redis=redis
                         )
                         if schema and schema.get('definition'):
                             schema_definition = schema['definition']
-
                     if schema_definition:
                         schemas[sd['name']] = schema_definition
 
@@ -253,7 +255,6 @@ def entity_extraction(task, entity_queue, submission_queue):
                     mapping_definition=mapping['definition'],
                     schemas=schemas,
                 )
-
                 for entity in extracted_entities:
                     submission_entities.append({
                         'id': entity.payload['id'],
@@ -266,7 +267,7 @@ def entity_extraction(task, entity_queue, submission_queue):
                     })
 
             except Exception as e:
-                logger.error(f'Extraction error {e}')
+                logger.info(f'Extraction error {e}')
                 try:
                     payload[ENTITY_EXTRACTION_ERRORS].append(str(e))
                 except KeyError:
@@ -282,32 +283,41 @@ def entity_extraction(task, entity_queue, submission_queue):
                 submission_entities,
                 task.tenant,
                 Artifact.ENTITY,
-                entity_queue
+                entity_queue,
+                redis=redis
             )
         # add to processed submission queue (but only the required fields)
         # Let's assume it's going to fail so we don't reextract if kernel
         # can't accept the results.
-        cache_objects(
-            [{
-                'id': task.id,
-                SUBMISSION_PAYLOAD_FIELD: payload,
-                SUBMISSION_EXTRACTION_FLAG: is_extracted,
-            }],
-            task.tenant,
-            Artifact.SUBMISSION,
-            submission_queue
-        )
-        # remove original submissions from redis
-        remove_from_redis(
-            id=task.id,
-            model_type=ARTEFACT_NAMES.submissions,
-            tenant=task.tenant
-        )
+        processed_submission = {
+            'id': task.id,
+            SUBMISSION_PAYLOAD_FIELD: payload,
+            SUBMISSION_EXTRACTION_FLAG: is_extracted,
+        }
         logger.debug(f'finished task {task.id}')
         return 1
     except Exception as err:
-        logger.error(f'extractor ERROR!: {err}')
+        logger.info(f'extractor error: {err}')
+        processed_submission = {
+            'id': task.id,
+            SUBMISSION_PAYLOAD_FIELD: {ENTITY_EXTRACTION_ERRORS: [str(err)]},
+            SUBMISSION_EXTRACTION_FLAG: False,
+        }
         return 0
+    finally:
+        cache_objects(
+            [processed_submission],
+            task.tenant,
+            Artifact.SUBMISSION,
+            submission_queue,
+            redis=redis
+        )
+        remove_from_redis(
+            id=task.id,
+            model_type=ARTEFACT_NAMES.submissions,
+            tenant=task.tenant,
+            redis=redis
+        )
 
 
 def push_to_kernel(
@@ -364,7 +374,7 @@ def handle_kernel_errors(
     if _size > 1 and BAD_REQUEST:
         # break down big failures and retry parts
         # reducing by half each time
-        _chunks = halve_iterable(objs, _size)
+        _chunks = halve_iterable(objs)
         logger.debug(f'Trying smaller chunks... than {_size}')
         return sum([
             retry_fn(
@@ -386,12 +396,6 @@ def handle_kernel_errors(
         )
         return 0
     else:
-        logger.error('Unexpected HTTP Status from Kernel: {_code}')
-        logger.error(f'caching {_size} failed for {_code}')
-        cache_objects(
-            objs,
-            realm,
-            _type,
-            queue
-        )
+        logger.warning(f'Unexpected HTTP Status from Kernel: {_code}')
+        cache_objects(objs, realm, _type, queue)
         return 0

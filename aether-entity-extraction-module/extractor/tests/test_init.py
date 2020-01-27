@@ -19,13 +19,24 @@
 from unittest import TestCase
 
 from extractor import main
+from extractor.settings import get_logger
+
+
+logger = get_logger('InitTest')
 
 
 class InitTests(TestCase):
 
+    def setUp(self):
+        super(InitTests, self).setUp()
+        self.container = main()
+
     def test_manager_setup(self):
-        container = main()
-        self.assertTrue(container.pending_submissions.empty())
-        self.assertEqual(len(container.processed_submissions.keys()), 0)
-        self.assertEqual(len(container.extracted_entities.keys()), 0)
-        container.stop()
+        self.assertEqual(self.container.processed_submissions.qsize(), 0)
+        self.assertEqual(self.container.extracted_entities.qsize(), 0)
+
+    def tearDown(self):
+        logger.debug('tore down init container')
+        logger.debug(type(self.container))
+        self.container.stop()
+        super(InitTests, self).tearDown()
