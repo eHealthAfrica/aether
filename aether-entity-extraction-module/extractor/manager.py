@@ -42,6 +42,7 @@ from extractor.utils import (
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
     Artifact,
+    CacheType,
     cache_has_object,
     cache_objects,
     count_quarantined,
@@ -102,36 +103,10 @@ class ExtractionManager():
         fc_ent = self.extracted_entities.qsize()
         logger.info(f'Loaded failed: s:{fc_sub}, e:{fc_ent}')
 
-    def get_prepared(
-            self,
-            queue: Queue,
-            _type: Artifact,
-            size=settings.MAX_PUSH_SIZE
-    ) -> Dict[str, Dict]:
-        res = defaultdict(list)
-        excluded = []
-        for i in range(size):
-            try:
-                realm, msg = queue.get_nowait()
-                if _type is Artifact.ENTITY:
-                    # check to see if the related submission has been sent off.
-                    sub_id = msg.get('submission')
-                    if cache_has_object(sub_id, realm, Artifact.SUBMISSION):
-                        logger.debug(f'Ignoring entity {msg.get("id")};'
-                                     ' submission {sub_id} not sent')
-                        excluded.append(tuple([realm, msg]))
-                        continue
-                res[realm].append(msg)
-            except Empty:
-                break
-        for item in excluded:
-            queue.put(item)
-        return res
-
     def worker(self):
         while not self.stopped:
             logger.debug('Looking for work')
-            read_subs = self.get_prepared(
+            read_subs = get_prepared(
                 self.processed_submissions,
                 Artifact.SUBMISSION)
             if read_subs:
@@ -146,7 +121,7 @@ class ExtractionManager():
                             read_subs[realm],
                             self.processed_submissions
                         ))
-            read_entities = self.get_prepared(
+            read_entities = get_prepared(
                 self.extracted_entities,
                 Artifact.ENTITY)
             if read_entities:
@@ -194,6 +169,37 @@ class ExtractionManager():
                 task,
                 self.extracted_entities,
                 self.processed_submissions))
+
+
+def get_prepared(
+    queue: Queue,
+    _type: Artifact,
+    size=settings.MAX_PUSH_SIZE
+) -> Dict[str, Dict]:
+    res = defaultdict(list)
+    excluded = []
+    for i in range(size):
+        try:
+            realm, msg = queue.get_nowait()
+            if _type is Artifact.ENTITY:
+                # check to see if the related submission has been sent off.
+                sub_id = msg.get('submission')
+                _cache_found = cache_has_object(sub_id, realm, Artifact.SUBMISSION)
+                if _cache_found is CacheType.NORMAL:
+                    logger.debug(f'Ignoring entity {msg.get("id")};'
+                                 ' submission {sub_id} not sent')
+                    excluded.append(tuple([realm, msg]))
+                    continue
+                elif _cache_found is CacheType.QUARANTINE:
+                    logger.debug(f'Sending entity to Quarantine;'
+                                 ' associated with bad sub {sub_id}')
+                    quarantine([msg], realm, Artifact.ENTITY)
+            res[realm].append(msg)
+        except Empty:
+            break
+    for item in excluded:
+        queue.put(item)
+    return res
 
 
 def entity_extraction(task, entity_queue, submission_queue):

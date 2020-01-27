@@ -70,6 +70,12 @@ class Artifact(Enum):
     SUBMISSION = 2
 
 
+class CacheType(Enum):
+    NORMAL = 1
+    QUARENTINE = 2
+    NONE = 3
+
+
 NORMAL_CACHE = {
     Artifact.ENTITY: 'exm_failed_entities',
     Artifact.SUBMISSION: 'exm_failed_submissions'
@@ -221,12 +227,16 @@ def cache_has_object(
     realm: str,
     _type: Artifact,
     redis=None
-) -> bool:
+) -> CacheType:
     redis_instance = get_redis(redis)
-    for _key in [NORMAL_CACHE[_type], QUARENTINE_CACHE[_type]]:
+    for _cache_type, cache in [
+        (CacheType.NORMAL, NORMAL_CACHE),
+        (CacheType.QUARENTINE, QUARENTINE_CACHE)
+    ]:
+        _key = cache[_type]
         if redis_instance.exists(_id, _key, realm):
-            return True
-    return False
+            return _cache_type
+    return CacheType.NONE
 
 
 def remove_from_cache(
