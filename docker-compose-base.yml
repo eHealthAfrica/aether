@@ -146,8 +146,6 @@ services:
 
       # static folder
       - ./.persistent_data/static/kernel:/var/www/static
-      # temporary folder for Excel files
-      - ./.persistent_data/export/kernel:/tmp
       # backup folder
       - ./.persistent_data/backups/kernel:/backups
     command: start_dev
