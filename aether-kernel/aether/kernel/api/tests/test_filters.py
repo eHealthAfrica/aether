@@ -22,7 +22,7 @@ import string
 
 from autofixture import generators
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings, tag
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from aether.kernel.api import models
@@ -628,7 +628,6 @@ class TestFilters(TestCase):
         })
         self.assertEqual(json.loads(response.content)['count'], submissions_count)
 
-    @tag('nonparallel')
     def test_attachment_filter__by_project(self):
         url = reverse(viewname='attachment-list')
         # Generate projects.
