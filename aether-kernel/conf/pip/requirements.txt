@@ -13,15 +13,16 @@
 ################################################################################
 
 aether.python==1.0.17
-aether.sdk==1.2.17
+aether.sdk==1.2.19
 attrs==19.3.0
 autopep8==1.5
-boto3==1.11.7
-botocore==1.14.7
+boto3==1.11.9
+botocore==1.14.9
 cachetools==4.0.0
 certifi==2019.11.28
 cffi==1.13.2
 chardet==3.0.4
+configparser==4.0.2
 coreapi==2.3.3
 coreschema==0.0.4
 coverage==5.0.3
@@ -52,7 +53,7 @@ flake8==3.7.9
 flake8-quotes==2.1.1
 funcy==1.14
 google-api-core==1.16.0
-google-auth==1.10.2
+google-auth==1.11.0
 google-cloud-core==1.2.0
 google-cloud-storage==1.25.0
 google-resumable-media==0.5.0
@@ -63,17 +64,16 @@ importlib-metadata==1.4.0
 inflection==0.3.1
 itypes==1.1.0
 jdcal==1.4.1
-Jinja2==2.10.3
+Jinja2==2.11.0
 jmespath==0.9.4
 jsonpath-ng==1.4.3
 jsonschema==3.2.0
 lxml==4.4.2
 MarkupSafe==1.1.1
 mccabe==0.6.1
-minio==5.0.6
-more-itertools==8.1.0
+minio==5.0.7
 openpyxl==3.0.3
-packaging==20.0
+packaging==20.1
 ply==3.11
 prometheus-client==0.7.1
 protobuf==3.11.2
@@ -95,7 +95,7 @@ requests==2.22.0
 rsa==4.0
 ruamel.yaml==0.16.6
 ruamel.yaml.clib==0.2.0
-s3transfer==0.3.1
+s3transfer==0.3.2
 sentry-sdk==0.14.1
 six==1.14.0
 spavro==1.1.22
@@ -104,4 +104,4 @@ tblib==1.6.0
 uritemplate==3.0.1
 urllib3==1.25.8
 uWSGI==2.0.18
-zipp==2.0.1
+zipp==2.1.0
