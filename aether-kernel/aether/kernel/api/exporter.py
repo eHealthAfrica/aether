@@ -193,11 +193,6 @@ class ExporterMixin():
               records should be generated. If the attachments are not included
               this option is true.
 
-            - ``background``, indicates if instead of returning the file returns
-              the task id linked to this export and continue the export process
-              in background.
-              Will be removed in release 2.0.
-
         - Data filtering:
 
             - ``page_size``, size of the block of data.
@@ -501,36 +496,13 @@ class ExporterMixin():
         for p in processes:
             p.start()
 
-        # ----------------------------------------------------------------------
-        # Backward compatibility
-        # In release 2.0 all the export requests will be executed in background
-        # ----------------------------------------------------------------------
+        if settings.TESTING:  # pragma: no cover
+            # In tests wait for the processes to finish
+            for p in processes:
+                p.join()
+                p.close()
 
-        # always execute export in background if it generates the attachment files
-        if export_settings['attachments'] or self.__get_bool(request, 'background'):
-            if settings.TESTING:  # pragma: no cover
-                # In tests wait for the processes to finish
-                for p in processes:
-                    p.join()
-                    p.close()
-
-            return Response(data={'task': str(task_id)})
-
-        # from this point only records download expected
-        err_msg = _('Got an error while creating the file')
-
-        for p in processes:
-            p.join()   # join to main thread
-            p.close()  # release resources
-
-        if ExportTask.objects.filter(pk=task_id).exists():
-            task = ExportTask.objects.get(pk=task_id)
-            if task.status_records == 'DONE':
-                return task.files.first().get_content(as_attachment=True)
-            if task.error_records:
-                return Response(data={'detail': err_msg + ': ' + task.error_records}, status=500)
-
-        return Response(data={'detail': err_msg}, status=500)  # pragma: no cover
+        return Response(data={'task': str(task_id)})
 
 
 def execute_records_task(task_id):
