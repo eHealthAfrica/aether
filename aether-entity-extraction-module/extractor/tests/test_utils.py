@@ -30,9 +30,9 @@ from extractor.settings import (
 from extractor.utils import (
     get_from_redis_or_kernel,
     get_redis_subscribed_message,
+    halve_iterable,
     kernel_data_request,
     remove_from_redis,
-    halve_iterable
 )
 
 
@@ -118,15 +118,15 @@ class UtilsTests(TestCase):
 
     def test_remove_from_redis(self):
         redis = fakeredis.FakeStrictRedis()
-        _key = '_a:b:c'
+        _key = '_model:tenant:id'
 
         redis.set(_key, 'testing')
         self.assertEqual(redis.get(_key), b'testing')
 
-        remove_from_redis('c', 'a', 'b', redis)
+        remove_from_redis('id', 'model', 'tenant', redis)
         self.assertIsNone(redis.get(_key))
 
-    def get_redis_subscribed_message(self):
+    def test_get_redis_subscribed_message(self):
         server = fakeredis.FakeServer()
         server.connected = True
         redis = fakeredis.FakeStrictRedis(server=server)
@@ -135,16 +135,19 @@ class UtilsTests(TestCase):
         message = get_redis_subscribed_message('_s_b_c', redis)
         self.assertIsNone(message)
 
-        _key = '_a:b:c'
+        _key = '_model:tenant:id'
 
         # not in redis yet
         message = get_redis_subscribed_message(_key, redis)
         self.assertIsNone(message)
 
         # in redis
-        redis.set(_key, 'something')
-        message = get_redis_subscribed_message(_key, redis)
-        self.assertEqual(message, 'something')
+        redis.set(_key, b'{"id": "id"}')
+        task = get_redis_subscribed_message(_key, redis)
+        self.assertEqual(task.id, 'id')
+        self.assertEqual(task.tenant, 'tenant')
+        self.assertEqual(task.type, '_model')
+        self.assertEqual(task.data, {'id': 'id'})
 
         # server disconnected (exception)
         server.connected = False
@@ -152,7 +155,17 @@ class UtilsTests(TestCase):
         self.assertIsNone(message)
 
     def test_halve_iterable(self):
-        _set = halve_iterable([1, 2, 3, 4])
-        i = [p for p in _set]
-        self.assertTrue(2 in i[0])
-        self.assertTrue(3 in i[1])
+        _set_even = halve_iterable([1, 2, 3, 4])
+        half_1, half_2 = list(_set_even)
+        self.assertTrue(1 in half_1)
+        self.assertTrue(2 in half_1)
+        self.assertTrue(3 in half_2)
+        self.assertTrue(4 in half_2)
+
+        _set_odd = halve_iterable([1, 2, 3, 4, 5])
+        half_1, half_2 = list(_set_odd)
+        self.assertTrue(1 in half_1)
+        self.assertTrue(2 in half_1)
+        self.assertTrue(3 in half_1)
+        self.assertTrue(4 in half_2)
+        self.assertTrue(5 in half_2)
