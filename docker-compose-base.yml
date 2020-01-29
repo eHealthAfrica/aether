@@ -263,20 +263,7 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      #################################################
-      #                    WARNING                    #
-      # do not include the root folder as volume or   #
-      # `node_modules` folder will not be available   #
-      #################################################
-
-      # include all folders and root files manually :'(
-      - ./aether-ui/aether/ui/assets/apps:/code/apps
-      - ./aether-ui/aether/ui/assets/bundles:/code/bundles
-      - ./aether-ui/aether/ui/assets/conf:/code/conf
-      - ./aether-ui/aether/ui/assets/css:/code/css
-      - ./aether-ui/aether/ui/assets/tests:/code/tests
-      - ./aether-ui/aether/ui/assets/package.json:/code/package.json
-      # -------------------------------------------------------------
+      - ./aether-ui/aether/ui/assets/:/code/assets
     command: start_dev
 
 

@@ -11,9 +11,11 @@ WORKDIR /code/
 
 COPY ./package.json /code/package.json
 RUN npm install -q -g npm && npm install -q
+ENV PATH /code/node_modules/.bin:$PATH
 
-COPY ./ /code
+WORKDIR /code/assets
+COPY ./ /code/assets
 
 RUN apt-get autoremove && apt-get clean
 
-ENTRYPOINT ["/code/conf/entrypoint.sh"]
+ENTRYPOINT ["/code/assets/conf/entrypoint.sh"]
