@@ -1,9 +1,8 @@
-dist: xenial
-
+os: linux
+dist: bionic
 language: python
 python:
   - '3.7'
-
 services:
   - docker
 
@@ -49,7 +48,7 @@ stages:
 
 
 # use matrix to parallelize tests
-matrix:
+jobs:
   fast_finish: true
   include:
     - name: "Aether CORE tests (Extractor, Kernel, Client)"

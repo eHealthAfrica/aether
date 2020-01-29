@@ -104,8 +104,8 @@ if [[ $1 == "ui" ]]; then
     echo_message "Tested and built ui assets"
 fi
 
-echo_message "Starting databases + Minio Storage server"
-$DC_TEST up -d db-test minio-test redis-test
+echo_message "Starting databases"
+$DC_TEST up -d db-test redis-test
 
 if [[ $1 = "integration" ]]; then
     echo_message "Starting Zookeeper and Kafka"
