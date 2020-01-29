@@ -316,7 +316,7 @@ services:
   # Aether Kafka Producer
   # ---------------------------------
 
-  aether-producer-base:
+  producer-base:
     image: aether-producer
     build: ./aether-producer
     stdin_open: true
