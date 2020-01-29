@@ -23,7 +23,6 @@ https://docs.opendatakit.org/
 '''
 
 import datetime
-import json
 import logging
 
 from django.conf import settings
@@ -116,12 +115,12 @@ MSG_SUBMISSION_KERNEL_EXISTENT_INSTANCE_ID = _(
     'There is already a submission "{id}" in Aether Kernel with instance ID "{instance}".'
 )
 MSG_SUBMISSION_KERNEL_SUBMIT_ERR = _(
-    'Unexpected response {status} from Aether Kernel '
+    'Unexpected response ({status}) from Aether Kernel '
     'while submitting data of the xForm "{form_id}".'
 )
 MSG_SUBMISSION_KERNEL_SUBMIT_ATTACHMENT_ERR = _(
-    'Unexpected response {status} from Aether Kernel '
-    'while submitting attachment of the xForm "{form_id}".'
+    'Unexpected response ({status}) from Aether Kernel '
+    'while submitting attachment "{name}" of the xForm "{form_id}".'
 )
 MSG_SUBMISSION_SUBMIT_ERR = _(
     'Unexpected error from Aether Kernel '
@@ -433,11 +432,11 @@ def xform_submission(request, *args, **kwargs):
         )
 
     if request.method == 'HEAD':
-        response = HttpResponse(status=status.HTTP_204_NO_CONTENT)
+        head_response = HttpResponse(status=status.HTTP_204_NO_CONTENT)
         for k, v in OPEN_ROSA_HEADERS.items():
-            response[k] = v
-        response['Date'] = str(now())
-        return response
+            head_response[k] = v
+        head_response['Date'] = str(now())
+        return head_response
 
     if not request.FILES or XML_SUBMISSION_PARAM not in request.FILES:
         # missing submitted data
@@ -560,41 +559,40 @@ def xform_submission(request, *args, **kwargs):
             method='get',
             url=submissions_url,
             headers=auth_header,
-            params={'payload__meta__instanceID': instance_id},
+            params={'fields': 'id', 'payload__meta__instanceID': instance_id},
         )
-        previous_submissions = json.loads(previous_submissions_response.content.decode('utf-8'))
+        previous_submissions = previous_submissions_response.json()
         previous_submissions_count = previous_submissions['count']
 
         # If there are no previous submissions with the same instance id as
         # the current submission, post this submission and assign its id to
         # `submission_id`.
         if previous_submissions_count == 0:
-            submission_id = None
             # internal audit log
             data['_surveyor'] = unparse_username(request, request.user.username)
             data['_submitted_at'] = datetime.datetime.utcnow().isoformat()
 
-            response = exec_request(
+            submission_response = exec_request(
                 method='post',
                 url=submissions_url,
                 json={'payload': data, 'mappingset': str(xform.kernel_id)},
                 headers=auth_header,
             )
-            submission_content = response.content.decode('utf-8')
+            submission_content = submission_response.content.decode('utf-8')
 
-            if response.status_code != status.HTTP_201_CREATED:
-                msg = MSG_SUBMISSION_KERNEL_SUBMIT_ERR.format(status=response.status_code, form_id=form_id)
+            if submission_response.status_code != status.HTTP_201_CREATED:
+                msg = MSG_SUBMISSION_KERNEL_SUBMIT_ERR.format(
+                    status=submission_response.status_code, form_id=form_id,
+                )
                 logger.warning(msg)
                 logger.warning(submission_content)
                 return _send_response(
                     request=request,
                     nature=NATURE_SUBMIT_ERROR,
                     message=msg + '\n' + submission_content,
-                    status=response.status_code,
+                    status=submission_response.status_code,
                 )
-            # If there is one field with non ascii characters, the usual
-            # response.json() will throw a `UnicodeDecodeError`.
-            submission_id = json.loads(submission_content).get('id')
+            submission_id = submission_response.json()['id']
 
         # If there already exists a submission with for this instance id, we
         # need to retrieve its submission id in order to be able to associate
@@ -616,17 +614,17 @@ def xform_submission(request, *args, **kwargs):
                 else:
                     file_content = xf
 
-                response = exec_request(
+                attachment_response = exec_request(
                     method='post',
                     url=attachments_url,
                     data={'submission': submission_id},
                     files={'attachment_file': (xf.name, file_content, xf.content_type)},
                     headers=auth_header,
                 )
-                if response.status_code != status.HTTP_201_CREATED:
-                    attachment_content = response.content.decode('utf-8')
+                if attachment_response.status_code != status.HTTP_201_CREATED:
+                    attachment_content = attachment_response.content.decode('utf-8')
                     msg = MSG_SUBMISSION_KERNEL_SUBMIT_ATTACHMENT_ERR.format(
-                        status=response.status_code, form_id=form_id,
+                        status=attachment_response.status_code, form_id=form_id, name=name,
                     )
                     logger.warning(msg)
                     logger.warning(attachment_content)
@@ -638,7 +636,7 @@ def xform_submission(request, *args, **kwargs):
                         request=request,
                         nature=NATURE_SUBMIT_ERROR,
                         message=msg + '\n' + attachment_content,
-                        status=response.status_code,
+                        status=attachment_response.status_code,
                     )
 
         msg = MSG_SUBMISSION_SUBMIT_SUCCESS_ID.format(instance=instance_id, id=submission_id)
