@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import collections
+from collections import namedtuple
 from enum import Enum
 from multiprocessing import Queue
 from typing import (
@@ -28,13 +28,14 @@ from typing import (
     Union
 )
 
+from requests.exceptions import HTTPError
+
 from aether.python.redis.task import TaskHelper
 from aether.python.utils import request
 
-from requests.exceptions import HTTPError
 from extractor import settings
 
-Constants = collections.namedtuple(
+Constants = namedtuple(
     'Constants',
     (
         'mappings',
@@ -46,23 +47,6 @@ Constants = collections.namedtuple(
         'schema_definition',
     )
 )
-
-ARTEFACT_NAMES = Constants(
-    mappings='mappings',
-    mappingsets='mappingsets',
-    schemas='schemas',
-    schemadecorators='schemadecorators',
-    submissions='submissions',
-    schema_id='schema',
-    schema_definition='schema_definition',
-)
-
-SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
-SUBMISSION_PAYLOAD_FIELD = 'payload'
-
-_REDIS_TASK = TaskHelper(settings, None)
-
-logger = settings.get_logger('Utils')
 
 
 class Artifact(Enum):
@@ -76,22 +60,41 @@ class CacheType(Enum):
     NONE = 3
 
 
-NORMAL_CACHE = {
-    Artifact.ENTITY: 'exm_failed_entities',
-    Artifact.SUBMISSION: 'exm_failed_submissions'
-}
-
-QUARANTINE_CACHE = {
-    Artifact.ENTITY: 'exm_quarantine_entities',
-    Artifact.SUBMISSION: 'exm_quarantine_submissions'
-}
-
-
 class Task(NamedTuple):
     id: str
     tenant: str
     type: str
     data: Union[Dict, None] = None
+
+
+ARTEFACT_NAMES = Constants(
+    mappings='mappings',
+    mappingsets='mappingsets',
+    schemas='schemas',
+    schemadecorators='schemadecorators',
+    submissions='submissions',
+    schema_id='schema',
+    schema_definition='schema_definition',
+)
+
+_REDIS_TASK = TaskHelper(settings, None)
+
+_NORMAL_CACHE = {
+    Artifact.ENTITY: 'exm_failed_entities',
+    Artifact.SUBMISSION: 'exm_failed_submissions'
+}
+
+_QUARANTINE_CACHE = {
+    Artifact.ENTITY: 'exm_quarantine_entities',
+    Artifact.SUBMISSION: 'exm_quarantine_submissions'
+}
+
+_FAILED_CACHES = [
+    (CacheType.NORMAL, _NORMAL_CACHE),
+    (CacheType.QUARANTINE, _QUARANTINE_CACHE),
+]
+
+_logger = settings.get_logger('Utils')
 
 
 def get_redis(redis=None):
@@ -117,9 +120,9 @@ def kernel_data_request(url='', method='get', data=None, headers=None, realm=Non
     )
     try:
         res.raise_for_status()
-    except HTTPError as err:
-        logger.debug(err.response.status_code)
-        raise err
+    except HTTPError:
+        _logger.debug(res.status_code)
+        raise
     return res.json()
 
 
@@ -138,7 +141,7 @@ def get_from_redis_or_kernel(id, model_type, tenant=None, redis=None):
         try:
             return kernel_data_request(f'{model_type}/{id}.json', realm=tenant)
         except Exception as e:
-            logger.warning(str(e))
+            _logger.warning(str(e))
             return None
 
     redis_instance = get_redis(redis)
@@ -181,72 +184,54 @@ def redis_subscribe(callback, pattern, redis=None):
     return get_redis(redis).subscribe(callback=callback, pattern=pattern, keep_alive=True)
 
 
-def get_failed_objects(
-    queue: Queue,
-    _type: Artifact,
-    redis=None
-) -> dict:
-    _key = NORMAL_CACHE[_type]
+def redis_unsubscribe(redis=None):
+    try:
+        get_redis(redis).stop()
+    except Exception:
+        pass  # no pubsub active
+
+
+def get_failed_objects(queue: Queue, _type: Artifact, redis=None) -> dict:
+    _key = _NORMAL_CACHE[_type]
     redis_instance = get_redis(redis)
+
     failed = redis_instance.list(_key)
     failed = [i.split(':') for i in failed]  # split "{tenant}:{_id}"
     for tenant, _id in failed:
         res = redis_instance.get(_id, _key, tenant)
         if res:
             del res['modified']
-            queue.put(tuple([
-                tenant,
-                res
-            ]))
+            queue.put(tuple([tenant, res]))
         else:
-            logger.warning(f'Could not fetch {_type} {tenant}:{_id}')
+            _logger.warning(f'Could not fetch {_type} {tenant}:{_id}')
 
 
-def cache_objects(
-    objects: List[Any],
-    realm,
-    _type: Artifact,
-    queue: Queue,
-    redis=None
-):
-    logger.debug(f'Caching {len(objects)} object {_type} for realm {realm}')
-    _key = NORMAL_CACHE[_type]
+def cache_objects(objects: List[Any], realm, _type: Artifact, queue: Queue, redis=None):
+    _logger.debug(f'Caching {len(objects)} object {_type} for realm {realm}')
+
+    _key = _NORMAL_CACHE[_type]
     redis_instance = get_redis(redis)
-
     try:
-        for e in objects:
-            assert('id' in e), e.keys()
-            redis_instance.add(e, _key, realm)
-            queue.put(tuple([realm, e]))
+        for obj in objects:
+            assert ('id' in obj), obj.keys()
+            redis_instance.add(obj, _key, realm)
+            queue.put(tuple([realm, obj]))
     except Exception as err:
-        logger.critical(f'Could not save failed objects to REDIS {err}')
+        _logger.critical(f'Could not save failed objects to REDIS {str(err)}')
 
 
-def cache_has_object(
-    _id: str,
-    realm: str,
-    _type: Artifact,
-    redis=None
-) -> CacheType:
+def cache_has_object(_id: str, realm: str, _type: Artifact, redis=None) -> CacheType:
     redis_instance = get_redis(redis)
-    for _cache_type, cache in [
-        (CacheType.NORMAL, NORMAL_CACHE),
-        (CacheType.QUARANTINE, QUARANTINE_CACHE)
-    ]:
+    for _cache_type, cache in _FAILED_CACHES:
         _key = cache[_type]
         if redis_instance.exists(_id, _key, realm):
             return _cache_type
     return CacheType.NONE
 
 
-def remove_from_cache(
-    object: Mapping[Any, Any],
-    realm: str,
-    _type: Artifact,
-    redis=None
-):
-    _id = object['id']
-    _key = NORMAL_CACHE[_type]
+def remove_from_cache(obj: Mapping[Any, Any], realm: str, _type: Artifact, redis=None):
+    _id = obj['id']
+    _key = _NORMAL_CACHE[_type]
     redis_instance = get_redis(redis)
     if redis_instance.exists(_id, _key, realm):
         redis_instance.remove(_id, _key, realm)
@@ -255,40 +240,27 @@ def remove_from_cache(
         return False
 
 
-def count_quarantined(
-    _type: Artifact,
-    redis=None
-) -> dict:
-    _key = QUARANTINE_CACHE[_type]
+def count_quarantined(_type: Artifact, redis=None) -> dict:
+    _key = _QUARANTINE_CACHE[_type]
     redis_instance = get_redis(redis)
-    return sum(1 for i in redis_instance.list(_key))
+    return sum(1 for _ in redis_instance.list(_key))
 
 
-def quarantine(
-    objects: List[Any],
-    realm,
-    _type: Artifact,
-    redis=None
-):
-    logger.warning(f'Quarantine {len(objects)} object {_type} for realm {realm}')
-    _key = QUARANTINE_CACHE[_type]
+def quarantine(objects: List[Any], realm, _type: Artifact, redis=None):
+    _logger.warning(f'Quarantine {len(objects)} object {_type} for realm {realm}')
+
+    _key = _QUARANTINE_CACHE[_type]
     redis_instance = get_redis(redis)
     try:
-        for e in objects:
-            assert('id' in e), e.keys()
-            redis_instance.add(e, _key, realm)
+        for obj in objects:
+            assert ('id' in obj), obj.keys()
+            redis_instance.add(obj, _key, realm)
     except Exception as err:
-        logger.critical(f'Could not save quarantine objects to REDIS {err}')
-
-
-def get_bulk_size(size):
-    return settings.MAX_PUSH_SIZE if size > settings.MAX_PUSH_SIZE else size
+        _logger.critical(f'Could not save quarantine objects to REDIS {str(err)}')
 
 
 def halve_iterable(obj):
     _size = len(obj)
-    _chunk_size = int(_size / 2) \
-        if (_size / 2 == int(_size / 2)) \
-        else int(_size / 2) + 1
-    for i in range(0, len(obj), _chunk_size):
+    _chunk_size = int(_size / 2) + (_size % 2)
+    for i in range(0, _size, _chunk_size):
         yield obj[i:i + _chunk_size]
