@@ -138,16 +138,11 @@ services:
       WEB_SERVER_PORT: 8100
     volumes:
       - ./aether-kernel:/code
+      # -------------------------------------------------------------
       # to speed up SDK development changes
       # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
-
       # to speed up Aether Python Library development changes
       # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.7/site-packages/aether/python
-
-      # static folder
-      - ./.persistent_data/static/kernel:/var/www/static
-      # backup folder
-      - ./.persistent_data/backups/kernel:/backups
     command: start_dev
 
 
@@ -205,13 +200,9 @@ services:
       WEB_SERVER_PORT: 8102
     volumes:
       - ./aether-odk-module:/code
+      # -------------------------------------------------------------
       # to speed up SDK development changes
       # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
-
-      # static folder
-      - ./.persistent_data/static/odk:/var/www/static
-      # backup folder
-      - ./.persistent_data/backups/odk:/backups
     command: start_dev
 
 
@@ -261,13 +252,9 @@ services:
       WEB_SERVER_PORT: 8104
     volumes:
       - ./aether-ui:/code
+      # -------------------------------------------------------------
       # to speed up SDK development changes
       # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
-
-      # static folder
-      - ./.persistent_data/static/ui:/var/www/static
-      # backup folder
-      - ./.persistent_data/backups/ui:/backups
     command: start_dev
 
   ui-assets-base:
@@ -289,6 +276,7 @@ services:
       - ./aether-ui/aether/ui/assets/css:/code/css
       - ./aether-ui/aether/ui/assets/tests:/code/tests
       - ./aether-ui/aether/ui/assets/package.json:/code/package.json
+      # -------------------------------------------------------------
     command: start_dev
 
 
