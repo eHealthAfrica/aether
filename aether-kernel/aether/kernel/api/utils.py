@@ -22,7 +22,6 @@ from django.forms.models import model_to_dict
 from aether.python.redis.task import TaskHelper
 from django.conf import settings
 
-from .constants import SUBMISSION_BULK_UPDATEABLE_FIELDS
 from . import models, redis
 
 REDIS_TASK = TaskHelper(settings)
@@ -194,17 +193,3 @@ def send_model_item_to_redis(model_item):
         REDIS_TASK.add(obj, model_name, realm)
     else:
         REDIS_TASK.add(obj, model_name, realm)
-
-
-def submissions_flag_extracted(submissions):
-    updated_submissions = []
-    for submission in submissions:
-        s = models.Submission.objects.get(pk=submission['id'])
-        s.is_extracted = submission['is_extracted']
-        s.payload = submission['payload']
-        updated_submissions.append(s)
-
-    models.Submission.objects.bulk_update(updated_submissions, SUBMISSION_BULK_UPDATEABLE_FIELDS)
-    return [
-        s['id'] for s in submissions
-    ]

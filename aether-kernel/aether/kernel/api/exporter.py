@@ -133,12 +133,14 @@ class ExporterMixin():
             (k, v)
             for k, v in self.request.query_params.items()
             if k.startswith(json_filter)
-        ] + [
-            # POST method: data content
-            (k, v)
-            for k, v in self.request.data.items()
-            if k.startswith(json_filter)
         ]
+        if isinstance(self.request.data, dict):
+            filters += [
+                # POST method: data content
+                (k, v)
+                for k, v in self.request.data.items()
+                if k.startswith(json_filter)
+            ]
         queryset = self.queryset
         for k, v in filters:
             kwargs = {k: parse_value(v)}
