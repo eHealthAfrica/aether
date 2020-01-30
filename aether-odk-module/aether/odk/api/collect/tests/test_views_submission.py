@@ -35,7 +35,7 @@ from ...surveyors_utils import is_granted_surveyor
 
 from ..views import XML_SUBMISSION_PARAM
 
-WAIT_FOR_EXTRACTOR = 1
+WAIT_FOR_EXTRACTOR = 1  # in seconds
 
 
 @override_settings(MULTITENANCY=False)
@@ -166,9 +166,19 @@ class PostSubmissionTests(CustomTestCase):
 
         if succeed:
             submission = content['results'][0]
+            submisison_url = submission['url']
 
-            # get entities
-            time.sleep(WAIT_FOR_EXTRACTOR)
+            # -----------------------------------------
+            # get entities (try only 3 times)
+            count = 0
+            while count < 3:
+                if not submission['is_extracted']:
+                    count += 1
+                    time.sleep(WAIT_FOR_EXTRACTOR)
+                    # check again
+                    resp = requests.get(submisison_url, headers=self.KERNEL_HEADERS)
+                    submission = resp.json()
+
             response = requests.get(submission['entities_url'], headers=self.KERNEL_HEADERS)
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
             content = response.json()
