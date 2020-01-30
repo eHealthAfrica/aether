@@ -85,7 +85,7 @@ class ExtractionManager():
         # queue on failure.
         try:
             self.load_failed()
-        except RedisConnectionError as err:
+        except RedisConnectionError as err:  # pragma: no cover
             _logger.critical(f'Cannot connect to Redis. Fatal: {err}')
             sys.exit(1)
 
@@ -112,8 +112,7 @@ class ExtractionManager():
         # let the current jobs finish
         self.extraction_pool.join()
         self.kernel_comm_pool.join()
-        if self.worker_thread.is_alive():
-            self.worker_thread.join()
+        self.worker_thread.join()
 
         _logger.info('stopped')
 
@@ -125,16 +124,15 @@ class ExtractionManager():
             _logger.debug('Looking for work')
 
             read_subs = get_prepared(self.processed_submissions, self.redis)
-            if read_subs:
-                for realm, objs in read_subs.items():
-                    self.kernel_comm_pool.apply_async(
-                        func=push_to_kernel,
-                        args=(
-                            realm,
-                            objs,
-                            self.processed_submissions,
-                            self.redis,
-                        ))
+            for realm, objs in read_subs.items():
+                self.kernel_comm_pool.apply_async(
+                    func=push_to_kernel,
+                    args=(
+                        realm,
+                        objs,
+                        self.processed_submissions,
+                        self.redis,
+                    ))
 
             time.sleep(settings.WAIT_INTERVAL)
 
@@ -187,60 +185,52 @@ def entity_extraction(task, submission_queue, redis=None):
             if not mapping:
                 raise ValueError(f'Mapping {mapping_id} not found.')
 
-            try:
-                # get required artefacts
-                schemas = {}
-                schema_decorators = mapping['definition']['entities']
-                for schemadecorator_id in mapping[utils.ARTEFACT_NAMES.schemadecorators]:
-                    sd = utils.get_from_redis_or_kernel(
-                        id=schemadecorator_id,
-                        model_type=utils.ARTEFACT_NAMES.schemadecorators,
-                        tenant=tenant,
+            # get required artefacts
+            schemas = {}
+            schema_decorators = mapping['definition']['entities']
+            for schemadecorator_id in mapping[utils.ARTEFACT_NAMES.schemadecorators]:
+                sd = utils.get_from_redis_or_kernel(
+                    id=schemadecorator_id,
+                    model_type=utils.ARTEFACT_NAMES.schemadecorators,
+                    tenant=tenant,
+                    redis=redis,
+                )
+                if not sd:
+                    raise ValueError(f'No schemadecorator with ID {schemadecorator_id} found')
+
+                schema_definition = None
+                if sd and utils.ARTEFACT_NAMES.schema_definition in sd:
+                    schema_definition = sd[utils.ARTEFACT_NAMES.schema_definition]
+
+                elif sd and utils.ARTEFACT_NAMES.schema_id in sd:
+                    schema = utils.get_from_redis_or_kernel(
+                        id=sd[utils.ARTEFACT_NAMES.schema_id],
+                        model_type=utils.ARTEFACT_NAMES.schemas,
+                        tenant=settings.DEFAULT_REALM,
                         redis=redis,
                     )
-                    if not sd:
-                        raise ValueError(f'No schemadecorator with ID {schemadecorator_id} found')
+                    if schema and schema.get('definition'):
+                        schema_definition = schema['definition']
 
-                    schema_definition = None
-                    if sd and utils.ARTEFACT_NAMES.schema_definition in sd:
-                        schema_definition = sd[utils.ARTEFACT_NAMES.schema_definition]
+                if schema_definition:
+                    schemas[sd['name']] = schema_definition
 
-                    elif sd and utils.ARTEFACT_NAMES.schema_id in sd:
-                        schema = utils.get_from_redis_or_kernel(
-                            id=sd[utils.ARTEFACT_NAMES.schema_id],
-                            model_type=utils.ARTEFACT_NAMES.schemas,
-                            tenant=settings.DEFAULT_REALM,
-                            redis=redis,
-                        )
-                        if schema and schema.get('definition'):
-                            schema_definition = schema['definition']
-
-                    if schema_definition:
-                        schemas[sd['name']] = schema_definition
-
-                # perform entity extraction
-                _, extracted_entities = extract_create_entities(
-                    submission_payload=payload,
-                    mapping_definition=mapping['definition'],
-                    schemas=schemas,
-                )
-                for entity in extracted_entities:
-                    submission_entities.append({
-                        'id': entity.payload['id'],
-                        'payload': entity.payload,
-                        'status': entity.status,
-                        'schemadecorator': schema_decorators[entity.schemadecorator_name],
-                        'submission': task.id,
-                        'mapping': mapping_id,
-                        'mapping_revision': mapping['revision'],
-                    })
-
-            except Exception as e:
-                _logger.info(f'Extraction error {e}')
-                try:
-                    payload[ENTITY_EXTRACTION_ERRORS].append(str(e))
-                except KeyError:
-                    payload[ENTITY_EXTRACTION_ERRORS] = [str(e)]
+            # perform entity extraction
+            _, extracted_entities = extract_create_entities(
+                submission_payload=payload,
+                mapping_definition=mapping['definition'],
+                schemas=schemas,
+            )
+            for entity in extracted_entities:
+                submission_entities.append({
+                    'id': entity.payload['id'],
+                    'payload': entity.payload,
+                    'status': entity.status,
+                    'schemadecorator': schema_decorators[entity.schemadecorator_name],
+                    'submission': task.id,
+                    'mapping': mapping_id,
+                    'mapping_revision': mapping['revision'],
+                })
 
         if not payload.get(ENTITY_EXTRACTION_ERRORS):
             payload.pop(ENTITY_EXTRACTION_ERRORS, None)

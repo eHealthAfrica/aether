@@ -174,8 +174,8 @@ def redis_subscribe(callback, pattern, redis=None):
 def redis_unsubscribe(redis=None):
     try:
         get_redis(redis).stop()
-    except Exception:
-        pass  # no pubsub active
+    except Exception:  # pragma: no cover
+        pass
 
 
 def cache_objects(objects: List[Any], realm, queue: Queue, redis=None):
@@ -187,7 +187,7 @@ def cache_objects(objects: List[Any], realm, queue: Queue, redis=None):
             assert ('id' in obj), obj.keys()
             redis_instance.add(obj, _NORMAL_CACHE, realm)
             queue.put(tuple([realm, obj]))
-    except Exception as err:
+    except Exception as err:  # pragma: no cover
         _logger.critical(f'Could not save failed objects to REDIS {str(err)}')
 
 
@@ -199,7 +199,7 @@ def quarantine(objects: List[Any], realm, redis=None):
         for obj in objects:
             assert ('id' in obj), obj.keys()
             redis_instance.add(obj, _QUARANTINE_CACHE, realm)
-    except Exception as err:
+    except Exception as err:  # pragma: no cover
         _logger.critical(f'Could not save quarantine objects to REDIS {str(err)}')
 
 

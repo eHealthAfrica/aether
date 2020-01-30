@@ -35,7 +35,6 @@ from extractor.manager import (
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
     SUBMISSION_ENTITIES_FIELD,
-    ExtractionManager,
     entity_extraction,
     get_prepared,
     push_to_kernel,
@@ -135,11 +134,6 @@ class ExtractionManagerTests(TestCase):
         self.redis = fakeredis.FakeStrictRedis()
         load_redis(self.redis)
 
-        self.manager = ExtractionManager(self.redis, SUBMISSION_CHANNEL)
-        self.assertIsNotNone(self.manager.redis)
-        self.assertTrue(self.manager.stopped)
-        self.assertEqual(self.manager.processed_submissions.qsize(), 0)
-
         submission = copy.deepcopy(SUBMISSION)
         submission['id'] = str(uuid.uuid4())
         self.submission_task = Task(
@@ -220,8 +214,7 @@ class ExtractionManagerTests(TestCase):
         # included in cache
         self.assertEqual(cache_has_object(submission['id'], tenant, self.redis), CacheType.NORMAL)
 
-    @mock.patch('extractor.utils.kernel_data_request')
-    def test_push_submissions_to_kernel(self, mock_kernel_data_request):
+    def test_push_submissions_to_kernel(self):
         _obj_t1 = {'id': 'test_push_submissions_to_kernel1', 'name': 'test submission 1'}
         _obj_t2 = {'id': 'test_push_submissions_to_kernel2', 'name': 'test submission 2'}
         sub_queue = Queue()
@@ -233,24 +226,25 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
         self.assertEqual(dict(prepared), {TENANT: [_obj_t1], TENANT_2: [_obj_t1, _obj_t2]})
 
-        # emulate worker
-        for realm, objs in prepared.items():
-            push_to_kernel(realm, objs, self.manager.processed_submissions, self.redis)
+        with mock.patch('extractor.utils.kernel_data_request') as mock_kernel_data_request:
+            # emulate worker
+            for realm, objs in prepared.items():
+                push_to_kernel(realm, objs, sub_queue, self.redis)
 
-        mock_kernel_data_request.assert_has_calls([
-            mock.call(
-                url='submissions.json',
-                method='patch',
-                data=[_obj_t1],
-                realm=TENANT,
-            ),
-            mock.call(
-                url='submissions.json',
-                method='patch',
-                data=[_obj_t1, _obj_t2],
-                realm=TENANT_2,
-            ),
-        ])
+            mock_kernel_data_request.assert_has_calls([
+                mock.call(
+                    url='submissions.json',
+                    method='patch',
+                    data=[_obj_t1],
+                    realm=TENANT,
+                ),
+                mock.call(
+                    url='submissions.json',
+                    method='patch',
+                    data=[_obj_t1, _obj_t2],
+                    realm=TENANT_2,
+                ),
+            ])
 
         # no errors/quarantine
         self.assertEqual(count_quarantined(self.redis), 0)
@@ -280,7 +274,7 @@ class ExtractionManagerTests(TestCase):
         with mock.patch('extractor.utils.kernel_data_request') as mock_kernel_data_request:
             # emulate worker
             for realm, objs in prepared.items():
-                push_to_kernel(realm, objs, self.manager.processed_submissions, self.redis)
+                push_to_kernel(realm, objs, sub_queue, self.redis)
 
             mock_kernel_data_request.assert_has_calls([
                 mock.call(
@@ -296,6 +290,7 @@ class ExtractionManagerTests(TestCase):
         q = Queue()
         get_failed_objects(q, self.redis)
         self.assertEqual(q.qsize(), 0)
+        self.assertEqual(sub_queue.qsize(), 0)
 
     def test_workflow__error(self):
         # test extraction with missing schema definition in schema decorator
@@ -320,7 +315,7 @@ class ExtractionManagerTests(TestCase):
             mock_kernel_data_request.side_effect = HTTPError(response=mock.Mock(status_code=500))
             # emulate worker
             for realm, objs in prepared.items():
-                push_to_kernel(realm, objs, self.manager.processed_submissions, self.redis)
+                push_to_kernel(realm, objs, sub_queue, self.redis)
 
             mock_kernel_data_request.assert_has_calls([
                 mock.call(
@@ -335,6 +330,7 @@ class ExtractionManagerTests(TestCase):
         q = Queue()
         get_failed_objects(q, self.redis)
         self.assertEqual(q.qsize(), 1)
+        self.assertEqual(sub_queue.qsize(), 1)
 
     def test_workflow__quarantine(self):
         # test extraction with missing schema definition in schema decorator
@@ -359,7 +355,7 @@ class ExtractionManagerTests(TestCase):
             mock_kernel_data_request.side_effect = HTTPError(response=mock.Mock(status_code=400))
             # emulate worker
             for realm, objs in prepared.items():
-                push_to_kernel(realm, objs, self.manager.processed_submissions, self.redis)
+                push_to_kernel(realm, objs, sub_queue, self.redis)
 
             mock_kernel_data_request.assert_has_calls([
                 mock.call(
@@ -375,3 +371,4 @@ class ExtractionManagerTests(TestCase):
         q = Queue()
         get_failed_objects(q, self.redis)
         self.assertEqual(q.qsize(), 0)
+        self.assertEqual(sub_queue.qsize(), 0)

@@ -32,8 +32,17 @@ class InitTests(TestCase):
         self.assertTrue(self.container.is_alive())
         self.assertEqual(self.container.processed_submissions.qsize(), 0)
 
+        # try to start again
+        with self.assertRaises(RuntimeError):
+            self.container.start()
+
     def tearDown(self):
         self.container.stop()
         self.assertTrue(self.container.stopped)
         self.assertFalse(self.container.is_alive())
+
+        # try to start again
+        with self.assertRaises(RuntimeError):
+            self.container.stop()
+
         super(InitTests, self).tearDown()
