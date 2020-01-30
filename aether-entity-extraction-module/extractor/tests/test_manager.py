@@ -215,8 +215,14 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(cache_has_object(submission['id'], tenant, self.redis), CacheType.NORMAL)
 
     def test_push_submissions_to_kernel(self):
-        _obj_t1 = {'id': 'test_push_submissions_to_kernel1', 'name': 'test submission 1'}
-        _obj_t2 = {'id': 'test_push_submissions_to_kernel2', 'name': 'test submission 2'}
+        def _mock_fn_side_effect(url='', method='get', data=None, headers=None, realm=None):
+            # different responses depending on data
+            if any([x for x in data if x['id'] == '2']):
+                raise HTTPError(response=mock.Mock(status_code=400))
+            return
+
+        _obj_t1 = {'id': '1', 'name': 'test 1'}
+        _obj_t2 = {'id': '2', 'name': 'test 2'}
         sub_queue = Queue()
         sub_queue.put(tuple([TENANT, _obj_t1]))
         sub_queue.put(tuple([TENANT_2, _obj_t1]))
@@ -226,12 +232,13 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
         self.assertEqual(dict(prepared), {TENANT: [_obj_t1], TENANT_2: [_obj_t1, _obj_t2]})
 
-        with mock.patch('extractor.utils.kernel_data_request') as mock_kernel_data_request:
+        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+            _mock_fn.side_effect = _mock_fn_side_effect
             # emulate worker
             for realm, objs in prepared.items():
                 push_to_kernel(realm, objs, sub_queue, self.redis)
 
-            mock_kernel_data_request.assert_has_calls([
+            _mock_fn.assert_has_calls([
                 mock.call(
                     url='submissions.json',
                     method='patch',
@@ -244,10 +251,22 @@ class ExtractionManagerTests(TestCase):
                     data=[_obj_t1, _obj_t2],
                     realm=TENANT_2,
                 ),
+                # halve_iteration chunks
+                mock.call(
+                    url='submissions.json',
+                    method='patch',
+                    data=[_obj_t1],
+                    realm=TENANT_2,
+                ),
+                mock.call(
+                    url='submissions.json',
+                    method='patch',
+                    data=[_obj_t2],
+                    realm=TENANT_2,
+                ),
             ])
 
-        # no errors/quarantine
-        self.assertEqual(count_quarantined(self.redis), 0)
+        self.assertEqual(count_quarantined(self.redis), 1)
         q = Queue()
         get_failed_objects(q, self.redis)
         self.assertEqual(q.qsize(), 0)
@@ -271,12 +290,12 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
         self.assertIn(TENANT, dict(prepared))
 
-        with mock.patch('extractor.utils.kernel_data_request') as mock_kernel_data_request:
+        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
             # emulate worker
             for realm, objs in prepared.items():
                 push_to_kernel(realm, objs, sub_queue, self.redis)
 
-            mock_kernel_data_request.assert_has_calls([
+            _mock_fn.assert_has_calls([
                 mock.call(
                     url='submissions.json',
                     method='patch',
@@ -311,13 +330,13 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
         self.assertIn(TENANT, dict(prepared))
 
-        with mock.patch('extractor.utils.kernel_data_request') as mock_kernel_data_request:
-            mock_kernel_data_request.side_effect = HTTPError(response=mock.Mock(status_code=500))
+        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+            _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=500))
             # emulate worker
             for realm, objs in prepared.items():
                 push_to_kernel(realm, objs, sub_queue, self.redis)
 
-            mock_kernel_data_request.assert_has_calls([
+            _mock_fn.assert_has_calls([
                 mock.call(
                     url='submissions.json',
                     method='patch',
@@ -351,13 +370,13 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
         self.assertIn(TENANT, dict(prepared))
 
-        with mock.patch('extractor.utils.kernel_data_request') as mock_kernel_data_request:
-            mock_kernel_data_request.side_effect = HTTPError(response=mock.Mock(status_code=400))
+        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+            _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=400))
             # emulate worker
             for realm, objs in prepared.items():
                 push_to_kernel(realm, objs, sub_queue, self.redis)
 
-            mock_kernel_data_request.assert_has_calls([
+            _mock_fn.assert_has_calls([
                 mock.call(
                     url='submissions.json',
                     method='patch',

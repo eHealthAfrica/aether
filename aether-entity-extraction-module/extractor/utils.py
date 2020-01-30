@@ -191,18 +191,6 @@ def cache_objects(objects: List[Any], realm, queue: Queue, redis=None):
         _logger.critical(f'Could not save failed objects to REDIS {str(err)}')
 
 
-def quarantine(objects: List[Any], realm, redis=None):
-    _logger.warning(f'Quarantine {len(objects)} objects for realm {realm}')
-
-    redis_instance = get_redis(redis)
-    try:
-        for obj in objects:
-            assert ('id' in obj), obj.keys()
-            redis_instance.add(obj, _QUARANTINE_CACHE, realm)
-    except Exception as err:  # pragma: no cover
-        _logger.critical(f'Could not save quarantine objects to REDIS {str(err)}')
-
-
 def cache_has_object(_id: str, realm: str, redis=None) -> CacheType:
     redis_instance = get_redis(redis)
     for _cache_type, _key in _FAILED_CACHES:
@@ -230,6 +218,28 @@ def remove_from_cache(obj: Mapping[Any, Any], realm: str, redis=None):
     _id = obj['id']
     if redis_instance.exists(_id, _NORMAL_CACHE, realm):
         redis_instance.remove(_id, _NORMAL_CACHE, realm)
+        return True
+    else:
+        return False
+
+
+def quarantine(objects: List[Any], realm, redis=None):
+    _logger.warning(f'Quarantine {len(objects)} objects for realm {realm}')
+
+    redis_instance = get_redis(redis)
+    try:
+        for obj in objects:
+            assert ('id' in obj), obj.keys()
+            redis_instance.add(obj, _QUARANTINE_CACHE, realm)
+    except Exception as err:  # pragma: no cover
+        _logger.critical(f'Could not save quarantine objects to REDIS {str(err)}')
+
+
+def remove_from_quarantine(obj: Mapping[Any, Any], realm: str, redis=None):
+    redis_instance = get_redis(redis)
+    _id = obj['id']
+    if redis_instance.exists(_id, _QUARANTINE_CACHE, realm):
+        redis_instance.remove(_id, _QUARANTINE_CACHE, realm)
         return True
     else:
         return False

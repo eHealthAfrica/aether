@@ -298,6 +298,7 @@ def push_to_kernel(realm: str, objs: List[Any], queue: Queue, redis=None):
         utils.kernel_data_request(url='submissions.json', method='patch', data=objs, realm=realm)
         for obj in objs:
             utils.remove_from_cache(obj, realm, redis)
+            utils.remove_from_quarantine(obj, realm, redis)
         return len(objs)
     except HTTPError as e:
         if e.response.status_code == 400:
