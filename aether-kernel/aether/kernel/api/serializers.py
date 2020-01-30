@@ -462,7 +462,7 @@ class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
         try:
             instance.save()
             return instance
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise serializers.ValidationError(e)
 
     class Meta:
