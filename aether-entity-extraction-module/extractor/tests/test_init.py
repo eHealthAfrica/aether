@@ -31,7 +31,6 @@ class InitTests(TestCase):
         self.assertFalse(self.container.stopped)
         self.assertTrue(self.container.is_alive())
         self.assertEqual(self.container.processed_submissions.qsize(), 0)
-        self.assertEqual(self.container.extracted_entities.qsize(), 0)
 
     def tearDown(self):
         self.container.stop()

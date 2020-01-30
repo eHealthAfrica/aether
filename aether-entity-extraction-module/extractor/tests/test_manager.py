@@ -20,6 +20,8 @@ import copy
 import fakeredis
 import json
 import uuid
+
+from requests.exceptions import HTTPError
 from queue import Queue
 
 from unittest import TestCase, mock
@@ -32,6 +34,7 @@ from aether.python.entity.extractor import (
 from extractor.manager import (
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
+    SUBMISSION_ENTITIES_FIELD,
     ExtractionManager,
     entity_extraction,
     get_prepared,
@@ -40,15 +43,12 @@ from extractor.manager import (
 
 from extractor.utils import (
     ARTEFACT_NAMES,
-    Artifact,
     CacheType,
     Task,
     cache_has_object,
     count_quarantined,
     get_failed_objects,
     get_from_redis_or_kernel,
-    quarantine,
-    remove_from_cache,
 )
 
 from . import (
@@ -139,7 +139,6 @@ class ExtractionManagerTests(TestCase):
         self.assertIsNotNone(self.manager.redis)
         self.assertTrue(self.manager.stopped)
         self.assertEqual(self.manager.processed_submissions.qsize(), 0)
-        self.assertEqual(self.manager.extracted_entities.qsize(), 0)
 
         submission = copy.deepcopy(SUBMISSION)
         submission['id'] = str(uuid.uuid4())
@@ -162,21 +161,22 @@ class ExtractionManagerTests(TestCase):
             )
 
         sub_queue = Queue()
-        entity_queue = Queue()
-        self.assertEqual(entity_extraction(self.submission_task, entity_queue, sub_queue, self.redis), 1)
-
+        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
         self.assertEqual(sub_queue.qsize(), 1)
-        self.assertEqual(entity_queue.qsize(), 3)
 
         tenant, submission = sub_queue.get_nowait()
         self.assertEqual(tenant, TENANT)
         self.assertTrue(submission[SUBMISSION_EXTRACTION_FLAG])
         self.assertIn(ENTITY_EXTRACTION_ENRICHMENT, submission[SUBMISSION_PAYLOAD_FIELD])
         self.assertNotIn(ENTITY_EXTRACTION_ERRORS, submission[SUBMISSION_PAYLOAD_FIELD])
+        self.assertIn(SUBMISSION_ENTITIES_FIELD, submission)
+        self.assertEqual(len(submission[SUBMISSION_ENTITIES_FIELD]), 3)
+
+        # included in cache
+        self.assertEqual(cache_has_object(submission['id'], tenant, self.redis), CacheType.NORMAL)
 
     def test_entity_extraction__conform_no_mapping(self):
         sub_queue = Queue()
-        entity_queue = Queue()
         task = Task(
             id=str(uuid.uuid4()),
             data=WRONG_SUBMISSION_PAYLOAD,
@@ -184,19 +184,22 @@ class ExtractionManagerTests(TestCase):
             tenant=TENANT,
         )
 
-        self.assertEqual(entity_extraction(task, entity_queue, sub_queue, self.redis), 1)
+        self.assertEqual(entity_extraction(task, sub_queue, self.redis), 1)
         self.assertEqual(sub_queue.qsize(), 1)
-        self.assertEqual(entity_queue.qsize(), 0)
 
         tenant, submission = sub_queue.get_nowait()
         self.assertEqual(tenant, TENANT)
         self.assertTrue(submission[SUBMISSION_EXTRACTION_FLAG], submission)
         self.assertNotIn(ENTITY_EXTRACTION_ENRICHMENT, submission[SUBMISSION_PAYLOAD_FIELD])
         self.assertNotIn(ENTITY_EXTRACTION_ERRORS, submission[SUBMISSION_PAYLOAD_FIELD])
+        self.assertIn(SUBMISSION_ENTITIES_FIELD, submission)
+        self.assertEqual(len(submission[SUBMISSION_ENTITIES_FIELD]), 0)
+
+        # included in cache
+        self.assertEqual(cache_has_object(submission['id'], tenant, self.redis), CacheType.NORMAL)
 
     def test_entity_extraction__unknown_mapping(self):
         sub_queue = Queue()
-        entity_queue = Queue()
         task = Task(
             id=str(uuid.uuid4()),
             data=WRONG_SUBMISSION_MAPPING,
@@ -204,126 +207,171 @@ class ExtractionManagerTests(TestCase):
             tenant=TENANT,
         )
 
-        self.assertEqual(entity_extraction(task, entity_queue, sub_queue, self.redis), 0)
+        self.assertEqual(entity_extraction(task, sub_queue, self.redis), 0)
         self.assertEqual(sub_queue.qsize(), 1)
-        self.assertEqual(entity_queue.qsize(), 0)
 
         tenant, submission = sub_queue.get_nowait()
         self.assertEqual(tenant, TENANT)
         self.assertFalse(submission[SUBMISSION_EXTRACTION_FLAG])
         self.assertNotIn(ENTITY_EXTRACTION_ENRICHMENT, submission[SUBMISSION_PAYLOAD_FIELD])
         self.assertIn(ENTITY_EXTRACTION_ERRORS, submission[SUBMISSION_PAYLOAD_FIELD])
+        self.assertNotIn(SUBMISSION_ENTITIES_FIELD, submission)
 
-    @mock.patch('extractor.utils.kernel_data_request', return_value=list)
-    def test_push_entities_to_kernel(self, mock_kernel_data_request):
-        _obj_t1 = [{'id': 'test_push_entities_to_kernel1', 'name': 'test entity 1'}]
-        _obj_t2 = [{'id': 'test_push_entities_to_kernel2', 'name': 'test entity 2'}]
-
-        push_to_kernel(Artifact.ENTITY, TENANT, _obj_t1, self.manager.extracted_entities, self.redis)
-        push_to_kernel(Artifact.ENTITY, TENANT_2, _obj_t2, self.manager.extracted_entities, self.redis)
-        mock_kernel_data_request.assert_has_calls([
-            mock.call(
-                url='entities.json',
-                method='post',
-                data=[{'id': 'test_push_entities_to_kernel1', 'name': 'test entity 1'}],
-                realm=TENANT,
-            ),
-            mock.call(
-                url='entities.json',
-                method='post',
-                data=[{'id': 'test_push_entities_to_kernel2', 'name': 'test entity 2'}],
-                realm=TENANT_2,
-            ),
-        ])
+        # included in cache
+        self.assertEqual(cache_has_object(submission['id'], tenant, self.redis), CacheType.NORMAL)
 
     @mock.patch('extractor.utils.kernel_data_request')
-    def test_push_entities_to_kernel__error(self, mock_kernel_data_request):
-        _obj_t1 = [{'id': 'test_push_entities_to_kernel__error1', 'name': 'test entity 1'}]
-        _obj_t2 = [{'id': 'test_push_entities_to_kernel__error2', 'name': 'test entity 2'}]
-
-        push_to_kernel(Artifact.ENTITY, TENANT, _obj_t1, self.manager.extracted_entities, self.redis)
-        push_to_kernel(Artifact.ENTITY, TENANT_2, _obj_t2, self.manager.extracted_entities, self.redis)
-
-        mock_kernel_data_request.assert_has_calls([
-            mock.call(
-                url='entities.json',
-                method='post',
-                data=[{'id': 'test_push_entities_to_kernel__error1', 'name': 'test entity 1'}],
-                realm=TENANT,
-            ),
-            mock.call(
-                url='entities.json',
-                method='post',
-                data=[{'id': 'test_push_entities_to_kernel__error2', 'name': 'test entity 2'}],
-                realm=TENANT_2,
-            ),
-        ])
-
-    @mock.patch('extractor.utils.kernel_data_request', return_value=list)
     def test_push_submissions_to_kernel(self, mock_kernel_data_request):
-        _obj_t1 = [{'id': 'test_push_submissions_to_kernel1', 'name': 'test submission 1'}]
-        _obj_t2 = [{'id': 'test_push_submissions_to_kernel2', 'name': 'test submission 2'}]
-
-        push_to_kernel(Artifact.SUBMISSION, TENANT, _obj_t1, self.manager.processed_submissions, self.redis)
-        push_to_kernel(Artifact.SUBMISSION, TENANT_2, _obj_t2, self.manager.processed_submissions, self.redis)
-
-        mock_kernel_data_request.assert_has_calls([
-            mock.call(
-                url='submissions/bulk_update_extracted.json',
-                method='patch',
-                data=[{'id': 'test_push_submissions_to_kernel1', 'name': 'test submission 1'}],
-                realm=TENANT,
-            ),
-            mock.call(
-                url='submissions/bulk_update_extracted.json',
-                method='patch',
-                data=[{'id': 'test_push_submissions_to_kernel2', 'name': 'test submission 2'}],
-                realm=TENANT_2,
-            ),
-        ])
-
-    @mock.patch('extractor.utils.kernel_data_request')
-    def test_push_submissions_to_kernel__error(self, mock_kernel_data_request):
-        _obj_t1 = [{'id': 'test_push_submissions_to_kernel__error1', 'name': 'test submission 1'}]
-        _obj_t2 = [{'id': 'test_push_submissions_to_kernel__error2', 'name': 'test submission 2'}]
-
-        push_to_kernel(Artifact.SUBMISSION, TENANT, _obj_t1, self.manager.processed_submissions, self.redis)
-        push_to_kernel(Artifact.SUBMISSION, TENANT_2, _obj_t2, self.manager.processed_submissions, self.redis)
-
-        mock_kernel_data_request.assert_has_calls([
-            mock.call(
-                url='submissions/bulk_update_extracted.json',
-                method='patch',
-                data=[{'id': 'test_push_submissions_to_kernel__error1', 'name': 'test submission 1'}],
-                realm=TENANT,
-            ),
-            mock.call(
-                url='submissions/bulk_update_extracted.json',
-                method='patch',
-                data=[{'id': 'test_push_submissions_to_kernel__error2', 'name': 'test submission 2'}],
-                realm=TENANT_2,
-            ),
-        ])
-
-    def test_get_prepared(self):
-        e_queue = Queue()
+        _obj_t1 = {'id': 'test_push_submissions_to_kernel1', 'name': 'test submission 1'}
+        _obj_t2 = {'id': 'test_push_submissions_to_kernel2', 'name': 'test submission 2'}
         sub_queue = Queue()
-        self.assertEqual(entity_extraction(self.submission_task, e_queue, sub_queue, self.redis), 1)
+        sub_queue.put(tuple([TENANT, _obj_t1]))
+        sub_queue.put(tuple([TENANT_2, _obj_t1]))
+        sub_queue.put(tuple([TENANT_2, _obj_t2]))
 
-        for q_in, _type in [(sub_queue, Artifact.SUBMISSION), (e_queue, Artifact.ENTITY)]:
-            prepared = get_prepared(q_in, _type, self.redis)
-            self.assertEqual(push_to_kernel(_type, TENANT, prepared[TENANT], q_in, self.redis), 0)
-            self.assertEqual(count_quarantined(_type, self.redis), 0, _type)
+        prepared = get_prepared(sub_queue, self.redis)
+        self.assertEqual(sub_queue.qsize(), 0)
+        self.assertEqual(dict(prepared), {TENANT: [_obj_t1], TENANT_2: [_obj_t1, _obj_t2]})
 
-            q = Queue()
-            get_failed_objects(q, _type, self.redis)
-            self.assertTrue(q.qsize() > 0, _type)
+        # emulate worker
+        for realm, objs in prepared.items():
+            push_to_kernel(realm, objs, self.manager.processed_submissions, self.redis)
 
-            realm, sample = q.get_nowait()
-            self.assertEqual(cache_has_object(sample['id'], realm, _type, self.redis), CacheType.NORMAL)
+        mock_kernel_data_request.assert_has_calls([
+            mock.call(
+                url='submissions.json',
+                method='patch',
+                data=[_obj_t1],
+                realm=TENANT,
+            ),
+            mock.call(
+                url='submissions.json',
+                method='patch',
+                data=[_obj_t1, _obj_t2],
+                realm=TENANT_2,
+            ),
+        ])
 
-            remove_from_cache(sample, realm, _type, self.redis)
-            self.assertEqual(cache_has_object(sample['id'], realm, _type, self.redis), CacheType.NONE)
+        # no errors/quarantine
+        self.assertEqual(count_quarantined(self.redis), 0)
+        q = Queue()
+        get_failed_objects(q, self.redis)
+        self.assertEqual(q.qsize(), 0)
 
-            quarantine([sample], realm, _type)
-            self.assertEqual(count_quarantined(_type, self.redis), 0)
+    def test_workflow(self):
+        # test extraction with missing schema definition in schema decorator
+        self.assertEqual(len(SCHEMA_DECORATORS), 3)
+        remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
+        for sd in remove_definitions:
+            sd.pop(ARTEFACT_NAMES.schema_definition)
+            self.redis.set(
+                build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
+                json.dumps(sd)
+            )
+
+        sub_queue = Queue()
+        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
+        self.assertEqual(sub_queue.qsize(), 1)
+
+        prepared = get_prepared(sub_queue, self.redis)
+        self.assertEqual(sub_queue.qsize(), 0)
+        self.assertIn(TENANT, dict(prepared))
+
+        with mock.patch('extractor.utils.kernel_data_request') as mock_kernel_data_request:
+            # emulate worker
+            for realm, objs in prepared.items():
+                push_to_kernel(realm, objs, self.manager.processed_submissions, self.redis)
+
+            mock_kernel_data_request.assert_has_calls([
+                mock.call(
+                    url='submissions.json',
+                    method='patch',
+                    data=prepared[TENANT],
+                    realm=TENANT,
+                ),
+            ])
+
+        # no errors/quarantine
+        self.assertEqual(count_quarantined(self.redis), 0)
+        q = Queue()
+        get_failed_objects(q, self.redis)
+        self.assertEqual(q.qsize(), 0)
+
+    def test_workflow__error(self):
+        # test extraction with missing schema definition in schema decorator
+        self.assertEqual(len(SCHEMA_DECORATORS), 3)
+        remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
+        for sd in remove_definitions:
+            sd.pop(ARTEFACT_NAMES.schema_definition)
+            self.redis.set(
+                build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
+                json.dumps(sd)
+            )
+
+        sub_queue = Queue()
+        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
+        self.assertEqual(sub_queue.qsize(), 1)
+
+        prepared = get_prepared(sub_queue, self.redis)
+        self.assertEqual(sub_queue.qsize(), 0)
+        self.assertIn(TENANT, dict(prepared))
+
+        with mock.patch('extractor.utils.kernel_data_request') as mock_kernel_data_request:
+            mock_kernel_data_request.side_effect = HTTPError(response=mock.Mock(status_code=500))
+            # emulate worker
+            for realm, objs in prepared.items():
+                push_to_kernel(realm, objs, self.manager.processed_submissions, self.redis)
+
+            mock_kernel_data_request.assert_has_calls([
+                mock.call(
+                    url='submissions.json',
+                    method='patch',
+                    data=prepared[TENANT],
+                    realm=TENANT,
+                ),
+            ])
+
+        self.assertEqual(count_quarantined(self.redis), 0)
+        q = Queue()
+        get_failed_objects(q, self.redis)
+        self.assertEqual(q.qsize(), 1)
+
+    def test_workflow__quarantine(self):
+        # test extraction with missing schema definition in schema decorator
+        self.assertEqual(len(SCHEMA_DECORATORS), 3)
+        remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
+        for sd in remove_definitions:
+            sd.pop(ARTEFACT_NAMES.schema_definition)
+            self.redis.set(
+                build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
+                json.dumps(sd)
+            )
+
+        sub_queue = Queue()
+        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
+        self.assertEqual(sub_queue.qsize(), 1)
+
+        prepared = get_prepared(sub_queue, self.redis)
+        self.assertEqual(sub_queue.qsize(), 0)
+        self.assertIn(TENANT, dict(prepared))
+
+        with mock.patch('extractor.utils.kernel_data_request') as mock_kernel_data_request:
+            mock_kernel_data_request.side_effect = HTTPError(response=mock.Mock(status_code=400))
+            # emulate worker
+            for realm, objs in prepared.items():
+                push_to_kernel(realm, objs, self.manager.processed_submissions, self.redis)
+
+            mock_kernel_data_request.assert_has_calls([
+                mock.call(
+                    url='submissions.json',
+                    method='patch',
+                    data=prepared[TENANT],
+                    realm=TENANT,
+                ),
+            ])
+
+        # no errors but quarantine
+        self.assertEqual(count_quarantined(self.redis), 1)
+        q = Queue()
+        get_failed_objects(q, self.redis)
+        self.assertEqual(q.qsize(), 0)
