@@ -37,13 +37,15 @@ function test_flake8 {
 }
 
 function test_python {
-    # Python3 Tests
+    rm -R ./*.egg* || true
+    rm -R .pytest_cache || true
+
     export PYTHONDONTWRITEBYTECODE=1
     python3 setup.py -q test "${@:1}"
 
     cat /code/conf/extras/good_job.txt
-    rm -R ./*.egg*
-    rm -R .pytest_cache
+    rm -R ./*.egg* || true
+    rm -R .pytest_cache || true
 }
 
 

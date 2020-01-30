@@ -445,13 +445,6 @@ class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
         required=False,
     )
 
-    extracted_entities = EntitySerializer(
-        allow_null=True,
-        many=True,
-        required=False,
-        write_only=True,
-    )
-
     def create(self, validated_data):
         if not validated_data.get('mappingset'):
             raise serializers.ValidationError(
@@ -459,8 +452,8 @@ class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
             )
         try:
             return models.Submission.objects.create(**validated_data)
-        except Exception as e:                      # pragma: no cover : don't know how to trigger
-            raise serializers.ValidationError(e)    # without first triggering VE on the serializer
+        except Exception as e:                    # pragma: no cover : don't know how to trigger
+            raise serializers.ValidationError(e)  # without first triggering VE on the serializer
 
     def update(self, instance, validated_data):
         for k, v in validated_data.items():
