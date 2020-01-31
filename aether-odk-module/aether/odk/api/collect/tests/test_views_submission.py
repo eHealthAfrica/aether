@@ -35,7 +35,9 @@ from ...surveyors_utils import is_granted_surveyor
 
 from ..views import XML_SUBMISSION_PARAM
 
+# variables to check if the extractor module has finished
 WAIT_FOR_EXTRACTOR = 1  # in seconds
+ATTEMPTS_EXTRACTOR = 5  # how many times?
 
 
 @override_settings(MULTITENANCY=False)
@@ -169,9 +171,9 @@ class PostSubmissionTests(CustomTestCase):
             submisison_url = submission['url']
 
             # -----------------------------------------
-            # get entities (try only 3 times)
+            # get entities (give time to extractor)
             count = 0
-            while count < 3:
+            while count < ATTEMPTS_EXTRACTOR:
                 if not submission['is_extracted']:
                     count += 1
                     time.sleep(WAIT_FOR_EXTRACTOR)
