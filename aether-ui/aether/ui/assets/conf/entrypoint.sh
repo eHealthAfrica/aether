@@ -69,8 +69,9 @@ case "$1" in
     ;;
 
     build )
-        rm -r -f ./bundles/*
+        rm -rf ./bundles/*
         npm run build
+        rm -rf ./node_modules || true
     ;;
 
     start_dev )
