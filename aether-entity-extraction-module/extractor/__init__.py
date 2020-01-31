@@ -16,16 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from .manager import ExtractionManager
-
-SUBMISSION_CHANNEL = '_submissions*'
+from extractor.manager import ExtractionManager
 
 
 def main():
     extractor = ExtractionManager()
-    extractor.handle_pending_submissions(SUBMISSION_CHANNEL)
-    extractor.subscribe_to_redis_channel(
-        callback=extractor.add_to_queue,
-        channel=SUBMISSION_CHANNEL
-    )
+    extractor.start()
     return extractor

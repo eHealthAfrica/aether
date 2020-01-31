@@ -1071,34 +1071,65 @@ class ViewsTest(TestCase):
 
     def test_submission_bulk_update(self):
         url = reverse('submission-list')
-        submissions = []
-        for _ in range(5):
-            res = self.client.post(
-                url,
-                data={
-                    'payload': EXAMPLE_SOURCE_DATA,
-                    'mappingset': str(self.mappingset.pk),
-                },
-                content_type='application/json',
-            )
-            submissions.append(res.json())
 
-        url = reverse('submission-bulk-update-extracted')
-        for s in submissions:
+        new_submissions = [
+            {
+                'payload': EXAMPLE_SOURCE_DATA,
+                'mappingset': str(self.mappingset.pk),
+            }
+            for _ in range(5)
+        ]
+
+        # bulk creation
+        res = self.client.post(
+            url,
+            data=new_submissions,
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.json())
+
+        # bulk update
+        to_update_submissions = res.json()
+        for s in to_update_submissions:
+            s['is_extracted'] = False
+
+        res = self.client.put(
+            url,
+            data=to_update_submissions,
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK, res.json())
+        self.assertEqual(len(res.json()), len(to_update_submissions))
+        entities = models.Entity.objects.filter(submission=to_update_submissions[0]['id'])
+        self.assertEqual(entities.count(), 0)
+
+        # include entities
+        with_entities_submissions = res.json()
+        for s in with_entities_submissions:
             s['is_extracted'] = True
+            s['extracted_entities'] = [{
+                'schemadecorator': str(self.entity.schemadecorator.pk),
+                'payload': self.entity.payload,
+                'status': self.entity.status,
+            }]
+
+        # bulk partial update
         res = self.client.patch(
             url,
-            data=submissions,
+            data=with_entities_submissions,
             content_type='application/json',
         )
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.json()), len(submissions))
+        self.assertEqual(res.status_code, status.HTTP_200_OK, res.json())
+        self.assertEqual(len(res.json()), len(with_entities_submissions))
+        entities = models.Entity.objects.filter(submission=with_entities_submissions[0]['id'])
+        self.assertEqual(entities.count(), 1)
 
-        submissions[0]['id'] = None
-
-        res = self.client.patch(
+        # cannot update without id
+        wrong_submissions = res.json()
+        wrong_submissions[0]['id'] = None
+        res = self.client.put(
             url,
-            data=submissions,
+            data=wrong_submissions,
             content_type='application/json',
         )
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST, res.json())

@@ -99,8 +99,7 @@ def entities(client, schemadecorators):  # noqa: F811
     for sd in schemadecorators:
         name = sd['name']
         sd_id = sd.id
-        entities[name] = [i for i in client.entities.paginated(
-            'list', schemadecorator=sd_id)]
+        entities[name] = [i for i in client.entities.paginated('list', schemadecorator=sd_id)]
     return entities
 
 

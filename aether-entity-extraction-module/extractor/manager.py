@@ -16,257 +16,310 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import collections
+import signal
+import sys
 import time
-import gettext
-import concurrent.futures
-import threading
-import logging
-from . import settings
-from .utils import (
-    cache_failed_entities,
-    get_from_redis_or_kernel,
-    get_redis_keys_by_pattern,
-    get_redis_subscribed_message,
-    KERNEL_ARTEFACT_NAMES,
-    kernel_data_request,
-    MAX_WORKERS,
-    MAX_PUSH_SIZE,
-    remove_from_redis,
-    redis_subscribe,
-    redis_stop,
-    SUBMISSION_EXTRACTION_FLAG,
-    SUBMISSION_PAYLOAD_FIELD,
-)
+
+from collections import defaultdict
+from queue import Queue, Empty
+import multiprocessing as mp
+from threading import Thread
+
+from typing import Any, Dict, List
+
+from requests.exceptions import HTTPError
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 from aether.python.entity.extractor import (
-    extract_create_entities,
     ENTITY_EXTRACTION_ERRORS,
-    ENTITY_EXTRACTION_ENRICHMENT,
+    extract_create_entities,
 )
 
-PUSH_TO_KERNEL_INTERVAL = 0.05
-logger = logging.getLogger(__name__)
-logger.setLevel(settings.LOGGING_LEVEL)
-_ = gettext.gettext
+from extractor import settings, utils
+
+SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
+SUBMISSION_PAYLOAD_FIELD = 'payload'
+SUBMISSION_ENTITIES_FIELD = 'extracted_entities'
+
+
+_logger = settings.get_logger('Manager')
 
 
 class ExtractionManager():
 
-    def __init__(self, redis=None):
-        self.SUBMISSION_QUEUE = collections.deque()
-        self.PROCESSED_SUBMISSIONS = collections.deque()
-        self.realm_entities = {}
-        self.is_extracting = False
-        self.is_pushing_to_kernel = False
+    def __init__(self, redis=None, channel=settings.SUBMISSION_CHANNEL):
         self.redis = redis
-        self.push_to_kernel_thread = None
-        self.extraction_thread = None
-        self.start_time = None
-        self.end_time = None
+        self.channel = channel
 
-    def stop(self):
-        redis_stop(self.redis)
-        self.is_extracting = False
-        self.is_pushing_to_kernel = False
+        self.stopped = True
 
-    def subscribe_to_redis_channel(self, callback: callable, channel: str):
-        redis_subscribe(
-            callback=callback,
-            pattern=channel,
-            redis=self.redis
-        )
+        self.extraction_pool = mp.Pool()
+        # only one concurrent request to Kernel.
+        self.kernel_comm_pool = mp.Pool(processes=1)
 
-    def handle_pending_submissions(self, channel='*'):
-        pending_submission_keys = get_redis_keys_by_pattern(
-            channel,
-            self.redis
-        )
-        for key in pending_submission_keys:
-            self.add_to_queue(get_redis_subscribed_message(
-                key,
-                self.redis
-            ))
+        self.manager = mp.Manager()
+        self.processed_submissions = self.manager.Queue()
 
-    def add_to_queue(self, submission):
-        if submission:
-            self.SUBMISSION_QUEUE.appendleft(submission)
-            if not self.is_extracting:
-                self.is_extracting = True
-                self.extraction_thread = threading.Thread(
-                    target=self.process,
-                    name='extraction-thread'
-                )
-                self.extraction_thread.start()
+        self.worker_thread = Thread(target=self.worker, daemon=True)
 
-            if not self.is_pushing_to_kernel:
-                self.is_pushing_to_kernel = True
-                self.push_to_kernel_thread = threading.Thread(
-                    target=self.push_to_kernel,
-                    name='push-to-kernel-thread'
-                )
-                self.push_to_kernel_thread.start()
+    def start(self):
+        if not self.stopped:
+            raise RuntimeError('Manager already started!')
 
-    def entity_extraction(self, submission):
-        # get artifacts from redis
-        # if not found on redis, get from kernel and cache on redis
-        # if not found on kernel ==> flag submission as invalid and skip extraction
+        _logger.info('starting')
 
-        current_submission = submission.data
-        current_submission['tenant'] = submission.tenant
-        submission_entities = []
-        mapping_ids = current_submission[KERNEL_ARTEFACT_NAMES.mappings]
-        for mapping_id in mapping_ids:
-            schemas = {}
-            schema_decorators = {}
-            mapping = get_from_redis_or_kernel(
-                mapping_id,
-                KERNEL_ARTEFACT_NAMES.mappings,
-                submission.tenant,
-                self.redis
+        signal.signal(signal.SIGINT, self.stop)
+        signal.signal(signal.SIGTERM, self.stop)
+
+        # start jobs
+        self.stopped = False
+
+        # run the main worker loop in a new thread, no need to MP it.
+        self.worker_thread.start()
+
+        # Report on permanently failed submissions
+        # (Failed with 400 Bad Request)
+        _logger.info(f'#{utils.count_quarantined(self.redis)} submissions in quarantine')
+
+        # load failed from redis. When running will cycle back into
+        # queue on failure.
+        try:
+            self.load_failed()
+        except RedisConnectionError as err:  # pragma: no cover
+            _logger.critical(f'Cannot connect to Redis. Fatal: {err}')
+            sys.exit(1)
+
+        # subscribe to redis channel
+        self.subscribe_to_channel()
+
+        _logger.info('started')
+
+    def stop(self, *args, **kwargs):
+        if self.stopped:
+            raise RuntimeError('Manager not running!')
+
+        _logger.info('stopping')
+
+        # indicate the thread to stop
+        self.stopped = True
+
+        utils.redis_unsubscribe(self.redis)
+
+        # do not allow new entries
+        self.extraction_pool.close()
+        self.kernel_comm_pool.close()
+
+        # let the current jobs finish
+        self.extraction_pool.join()
+        self.kernel_comm_pool.join()
+        self.worker_thread.join()
+
+        _logger.info('stopped')
+
+    def is_alive(self):
+        return not self.stopped
+
+    def worker(self):
+        while not self.stopped:
+            _logger.debug('Looking for work')
+
+            read_subs = get_prepared(self.processed_submissions, self.redis)
+            for realm, objs in read_subs.items():
+                self.kernel_comm_pool.apply_async(
+                    func=push_to_kernel,
+                    args=(
+                        realm,
+                        objs,
+                        self.processed_submissions,
+                        self.redis,
+                    ))
+
+            time.sleep(settings.WAIT_INTERVAL)
+
+        _logger.info('Manager caught stop signal')
+
+    def load_failed(self) -> None:
+        utils.get_failed_objects(self.processed_submissions, self.redis)
+        fc_sub = self.processed_submissions.qsize()
+        _logger.info(f'Loaded failed: {fc_sub}')
+
+    def subscribe_to_channel(self):
+        # include current submissions from redis
+        for key in utils.get_redis_keys_by_pattern(self.channel, self.redis):
+            self.add_to_queue(utils.get_redis_subscribed_message(key=key, redis=self.redis))
+
+        # subscribe to new submissions
+        utils.redis_subscribe(callback=self.add_to_queue, pattern=self.channel, redis=self.redis)
+
+    def add_to_queue(self, task):
+        self.extraction_pool.apply_async(
+            func=entity_extraction,
+            args=(
+                task,
+                self.processed_submissions,
+                self.redis,
             )
-            if mapping and KERNEL_ARTEFACT_NAMES.schemadecorators in mapping:
-                schemadecorator_ids = mapping[KERNEL_ARTEFACT_NAMES.schemadecorators]
-                schema_decorators = mapping['definition']['entities']
-                for shemadecorator_id in schemadecorator_ids:
-                    sd = get_from_redis_or_kernel(
-                        shemadecorator_id,
-                        KERNEL_ARTEFACT_NAMES.schemadecorators,
-                        submission.tenant,
-                        self.redis
-                    )
-                    schema_definition = None
-                    if sd and KERNEL_ARTEFACT_NAMES.schema_definition in sd:
-                        schema_definition = sd[KERNEL_ARTEFACT_NAMES.schema_definition]
-                    elif sd and KERNEL_ARTEFACT_NAMES.single_schema in sd:
-                        schema = get_from_redis_or_kernel(
-                            sd[KERNEL_ARTEFACT_NAMES.single_schema],
-                            KERNEL_ARTEFACT_NAMES.schemas,
-                            settings.DEFAULT_REALM,
-                            self.redis
-                        )
-                        if schema and schema['definition']:
-                            schema_definition = schema['definition']
+        )
 
-                    if schema_definition:
-                        schemas[sd['name']] = schema_definition
+
+def entity_extraction(task, submission_queue, redis=None):
+    # receive task from redis
+    # if artifacts found on redis, get from kernel and cache on redis
+    # if artifacts not found on kernel ==> flag submission as invalid and skip extraction
+
+    try:
+        tenant = task.tenant
+        submission = task.data
+        payload = submission[SUBMISSION_PAYLOAD_FIELD]
+        submission_entities = []
+        _logger.info(f'Got extraction Task: {task.id}')
+
+        # extract entities for each linked mapping
+        for mapping_id in submission[utils.ARTEFACT_NAMES.mappings]:
+            mapping = utils.get_from_redis_or_kernel(
+                id=mapping_id,
+                model_type=utils.ARTEFACT_NAMES.mappings,
+                tenant=tenant,
+                redis=redis,
+            )
+            if not mapping:
+                raise ValueError(f'Mapping {mapping_id} not found.')
+
+            # get required artefacts
+            schemas = {}
+            schema_decorators = mapping['definition']['entities']
+            for schemadecorator_id in mapping[utils.ARTEFACT_NAMES.schemadecorators]:
+                sd = utils.get_from_redis_or_kernel(
+                    id=schemadecorator_id,
+                    model_type=utils.ARTEFACT_NAMES.schemadecorators,
+                    tenant=tenant,
+                    redis=redis,
+                )
+                if not sd:
+                    raise ValueError(f'No schemadecorator with ID {schemadecorator_id} found')
+
+                schema_definition = None
+                if sd and utils.ARTEFACT_NAMES.schema_definition in sd:
+                    schema_definition = sd[utils.ARTEFACT_NAMES.schema_definition]
+
+                elif sd and utils.ARTEFACT_NAMES.schema_id in sd:
+                    schema = utils.get_from_redis_or_kernel(
+                        id=sd[utils.ARTEFACT_NAMES.schema_id],
+                        model_type=utils.ARTEFACT_NAMES.schemas,
+                        tenant=settings.DEFAULT_REALM,
+                        redis=redis,
+                    )
+                    if schema and schema.get('definition'):
+                        schema_definition = schema['definition']
+
+                if schema_definition:
+                    schemas[sd['name']] = schema_definition
+
             # perform entity extraction
-            try:
-                submission_data, entities = extract_create_entities(
-                    submission_payload=submission.data['payload'],
-                    mapping_definition=mapping['definition'],
-                    schemas=schemas,
-                )
+            _, extracted_entities = extract_create_entities(
+                submission_payload=payload,
+                mapping_definition=mapping['definition'],
+                schemas=schemas,
+            )
+            for entity in extracted_entities:
+                submission_entities.append({
+                    'id': entity.payload['id'],
+                    'payload': entity.payload,
+                    'status': entity.status,
+                    'schemadecorator': schema_decorators[entity.schemadecorator_name],
+                    'submission': task.id,
+                    'mapping': mapping_id,
+                    'mapping_revision': mapping['revision'],
+                })
 
-                for entity in entities:
-                    schemadecorator_name = entity.schemadecorator_name
-                    schemadecorator = schema_decorators[schemadecorator_name]
-                    submission_entities.append({
-                        'payload': entity.payload,
-                        'status': entity.status,
-                        'schemadecorator': schemadecorator,
-                        'submission': submission.id,
-                        'mapping': mapping_id,
-                        'mapping_revision': mapping['revision'],
-                    })
-                if ENTITY_EXTRACTION_ENRICHMENT in submission_data:
-                    current_submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ENRICHMENT] = \
-                        submission_data[ENTITY_EXTRACTION_ENRICHMENT]
-            except Exception as e:
-                current_submission = self.flag_invalid_submission(
-                    current_submission,
-                    [],
-                    e
-                )
-
-        if ENTITY_EXTRACTION_ERRORS not in current_submission:
-            current_submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ERRORS] = []
-            current_submission[SUBMISSION_EXTRACTION_FLAG] = True
-            for entity in submission_entities:
-                try:
-                    self.realm_entities[submission.tenant].append(entity)
-                except KeyError:
-                    self.realm_entities[submission.tenant] = collections.deque([entity])
-
-        # add to processed submission queue
-        self.PROCESSED_SUBMISSIONS.appendleft(current_submission)
-
-    def flag_invalid_submission(self, submission, errors, excep):
-        submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ERRORS] \
-            += errors[ENTITY_EXTRACTION_ERRORS]
-        submission[SUBMISSION_PAYLOAD_FIELD][ENTITY_EXTRACTION_ERRORS] += [_(str(excep))]
-        return submission
-
-    def process(self):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            while self.SUBMISSION_QUEUE:
-                executor.submit(self.entity_extraction, self.SUBMISSION_QUEUE.pop())
-        if self.SUBMISSION_QUEUE:
-            self.process()
+        if not payload.get(ENTITY_EXTRACTION_ERRORS):
+            payload.pop(ENTITY_EXTRACTION_ERRORS, None)
+            is_extracted = True
         else:
-            self.is_extracting = False
+            submission_entities.clear()
+            is_extracted = False
 
-    def realm_has_entities(self):
-        for realm in self.realm_entities:
-            if self.realm_entities[realm]:
-                return True
-        return False
+        # add to processed submission queue (but only the required fields)
+        processed_submission = {
+            'id': task.id,
+            SUBMISSION_PAYLOAD_FIELD: payload,
+            SUBMISSION_EXTRACTION_FLAG: is_extracted,
+            SUBMISSION_ENTITIES_FIELD: submission_entities,
+        }
+        _logger.debug(f'finished task {task.id}')
+        return 1
 
-    def push_to_kernel(self):
-        logger.debug('Pushing to kernel')
-        while self.realm_has_entities() or self.PROCESSED_SUBMISSIONS or self.is_extracting:
-            available_length = len(self.PROCESSED_SUBMISSIONS)
-            current_submission_size = MAX_PUSH_SIZE if available_length > MAX_PUSH_SIZE else available_length
+    except Exception as err:
+        _logger.info(f'extractor error: {err}')
+        processed_submission = {
+            'id': task.id,
+            SUBMISSION_PAYLOAD_FIELD: {
+                **payload,
+                ENTITY_EXTRACTION_ERRORS: [str(err)],
+            },
+            SUBMISSION_EXTRACTION_FLAG: False,
+        }
+        return 0
 
-            for realm in self.realm_entities:
-                available_length = len(self.realm_entities[realm])
-                current_entity_size = MAX_PUSH_SIZE if available_length > MAX_PUSH_SIZE else available_length
-                if current_entity_size:
-                    entities = [self.realm_entities[realm].pop() for _ in range(current_entity_size)]
-                    # post entities to kernel per realm
-                    try:
-                        res = kernel_data_request(
-                            url='entities/',
-                            method='post',
-                            data=entities,
-                            realm=realm
-                        )
-                    except Exception as e:
-                        logger.error(str(e))
-                        # cache failed entities on redis for retries later
-                        cache_failed_entities(entities, realm)
+    finally:
+        # Let's assume it's going to fail so we don't reextract if kernel
+        # can't accept the results.
+        utils.cache_objects(
+            objects=[processed_submission],
+            realm=task.tenant,
+            queue=submission_queue,
+            redis=redis,
+        )
+        utils.remove_from_redis(
+            id=task.id,
+            model_type=utils.ARTEFACT_NAMES.submissions,
+            tenant=task.tenant,
+            redis=redis,
+        )
 
-            if current_submission_size:
-                submissions = [
-                    self.PROCESSED_SUBMISSIONS.pop()
-                    for _ in range(current_submission_size)
-                ]
-                submission_tenant = {}
 
-                # remove helper property
-                for submission in submissions:
-                    submission_tenant[submission['id']] = submission['tenant']
-                    submission.pop('tenant')
-                    submission.pop('mappings')
+def get_prepared(queue: Queue, redis=None) -> Dict[str, Dict]:
+    res = defaultdict(list)
+    for _ in range(settings.MAX_PUSH_SIZE):
+        try:
+            realm, msg = queue.get_nowait()
+            res[realm].append(msg)
+        except Empty:
+            break
 
-                # post to kernel submissions
-                try:
-                    res = kernel_data_request(
-                        url=f'submissions/bulk_update_extracted/',
-                        method='patch',
-                        data=submissions,
-                    )
-                    # remove submissions from redis
-                    for s in res:
-                        remove_from_redis(
-                            s,
-                            f'{KERNEL_ARTEFACT_NAMES.submissions}',
-                            submission_tenant[s],
-                            self.redis
-                        )
-                except Exception as e:
-                    logger.error(str(e))
+    return res
 
-            time.sleep(PUSH_TO_KERNEL_INTERVAL)
-        self.is_pushing_to_kernel = False
-        logger.debug('Pushed all entities and submissions to kernel')
+
+def push_to_kernel(realm: str, objs: List[Any], queue: Queue, redis=None):
+    if not objs:
+        return 0
+
+    try:
+        utils.kernel_data_request(url='submissions.json', method='patch', data=objs, realm=realm)
+        for obj in objs:
+            utils.remove_from_cache(obj, realm, redis)
+            utils.remove_from_quarantine(obj, realm, redis)
+        return len(objs)
+    except HTTPError as e:
+        if e.response.status_code == 400:
+            return handle_kernel_errors(objs, realm, queue, redis)
+        else:
+            _logger.warning(f'Unexpected HTTP Status from Kernel: {e.response.status_code}')
+            utils.cache_objects(objs, realm, queue, redis)
+            return 0
+
+
+def handle_kernel_errors(objs: List[Any], realm: str, queue: Queue, redis=None):
+    _size = len(objs)
+    if _size > 1:
+        # break down big failures and retry parts
+        # reducing by half each time
+        _chunks = utils.halve_iterable(objs)
+        _logger.debug(f'Trying smaller chunks than {_size}...')
+        return sum([push_to_kernel(realm, chunk, queue, redis) for chunk in _chunks])
+
+    # Move bad object from cache to quarantine
+    for obj in objs:
+        utils.remove_from_cache(obj, realm, redis)
+    utils.quarantine(objs, realm, redis)
+    return 0

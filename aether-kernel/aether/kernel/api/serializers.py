@@ -163,83 +163,6 @@ class AttachmentSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         fields = '__all__'
 
 
-class SubmissionListSerializer(serializers.ListSerializer):
-    def create(self, validated_data):
-        submissions = [models.Submission(**s) for s in validated_data]
-        for submission in submissions:
-            submission.project = submission.mappingset.project
-
-        # bulk database operation
-        results = models.Submission.objects.bulk_create(submissions)
-        # send to redis
-        submission_list = list(submissions)
-        for s in submission_list:
-            send_model_item_to_redis(s)
-        return results
-
-
-class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
-
-    url = HyperlinkedIdentityField(view_name='submission-detail')
-    project_url = HyperlinkedRelatedField(
-        view_name='project-detail',
-        source='project',
-        read_only=True,
-    )
-    mappingset_url = HyperlinkedRelatedField(
-        view_name='mappingset-detail',
-        source='mappingset',
-        read_only=True,
-    )
-    entities_url = FilteredHyperlinkedRelatedField(
-        view_name='entity-list',
-        lookup_field='submission',
-        read_only=True,
-        source='entities',
-    )
-    attachments_url = FilteredHyperlinkedRelatedField(
-        view_name='attachment-list',
-        lookup_field='submission',
-        read_only=True,
-        source='attachments',
-    )
-
-    # this will return all linked attachment files
-    attachments = AttachmentSerializer(
-        fields=('id', 'name'),
-        many=True,
-        read_only=True,
-    )
-
-    payload = serializers.JSONField()
-
-    project = MtPrimaryKeyRelatedField(
-        queryset=models.Project.objects.all(),
-        required=False,
-    )
-
-    is_extracted = serializers.BooleanField(default=False)
-
-    mappingset = MtPrimaryKeyRelatedField(
-        queryset=models.MappingSet.objects.all(),
-        mt_field='project',
-        required=False,
-    )
-
-    def create(self, validated_data):
-        if not validated_data.get('mappingset'):
-            raise serializers.ValidationError(
-                {'mappingset': [_('Mapping set must be provided on initial submission')]}
-            )
-        try:
-            return models.Submission.objects.create(**validated_data)
-        except Exception as e:                      # pragma: no cover : don't know how to trigger
-            raise serializers.ValidationError(e)    # without first triggering VE on the serializer
-
-    class Meta:
-        list_serializer_class = SubmissionListSerializer
-
-
 class SchemaSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='schema-detail')
@@ -300,16 +223,17 @@ class EntityListSerializer(serializers.ListSerializer):
     def create(self, validated_data):
         entities = []
         # remove helper field and validate entity
-        for i in validated_data:
-            i.pop('merge')
+        for entity_data in validated_data:
+            entity_data.pop('merge', None)
             try:
                 # set ignore_submission_check to True to avoid a race condition on bulk submissions
-                i['project'] = validators.validate_entity_project(i)
-                entity = models.Entity(**i)
+                entity_data['project'] = validators.validate_entity_project(entity_data)
+                entity = models.Entity(**entity_data)
                 entity.clean()
                 entities.append(entity)
             except Exception as e:
                 raise(serializers.ValidationError(str(e)))
+
         # bulk database operation
         try:
             created_entities = models.Entity.objects.bulk_create(entities)
@@ -419,6 +343,130 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
 
     class Meta:
         list_serializer_class = EntityListSerializer
+
+
+class SubmissionListSerializer(serializers.ListSerializer):
+
+    def create(self, validated_data):
+        submissions = self._get_validated_list(validated_data)
+
+        # bulk database operation
+        results = models.Submission.objects.bulk_create(submissions)
+        return self._send_to_redis(results)
+
+    def update(self, instance, validated_data):
+        # cannot use validated data, take the initial data
+        for data in self.initial_data:
+            entities_data = [
+                {**e, 'submission': data['id']}  # add submission id
+                for e in data.pop('extracted_entities', [])
+            ]
+
+            if entities_data:
+                # this is a bulk update from extractor that includes the entities
+                entities = EntitySerializer(
+                    data=entities_data,
+                    many=True,
+                    context=self.context,
+                )
+                entities.is_valid(raise_exception=True)
+                entities.save()
+
+        fields = set()
+        for data in validated_data:
+            data.pop('extracted_entities', None)
+            for k in data.keys():
+                fields.add(k)
+        fields.remove('id')
+
+        # bulk database operation
+        submissions = self._get_validated_list(validated_data)
+        models.Submission.objects.bulk_update(submissions, fields)
+        return submissions
+
+    def _get_validated_list(self, validated_data):
+        submissions = [models.Submission(**s) for s in validated_data]
+        for submission in submissions:
+            submission.project = submission.mappingset.project
+        return submissions
+
+    def _send_to_redis(self, submissions):
+        submission_list = list(submissions)
+        for s in submission_list:
+            send_model_item_to_redis(s)
+        return submissions
+
+
+class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
+
+    url = HyperlinkedIdentityField(view_name='submission-detail')
+    project_url = HyperlinkedRelatedField(
+        view_name='project-detail',
+        source='project',
+        read_only=True,
+    )
+    mappingset_url = HyperlinkedRelatedField(
+        view_name='mappingset-detail',
+        source='mappingset',
+        read_only=True,
+    )
+    entities_url = FilteredHyperlinkedRelatedField(
+        view_name='entity-list',
+        lookup_field='submission',
+        read_only=True,
+        source='entities',
+    )
+    attachments_url = FilteredHyperlinkedRelatedField(
+        view_name='attachment-list',
+        lookup_field='submission',
+        read_only=True,
+        source='attachments',
+    )
+
+    # this will return all linked attachment files
+    attachments = AttachmentSerializer(
+        fields=('id', 'name'),
+        many=True,
+        read_only=True,
+    )
+
+    payload = serializers.JSONField()
+
+    project = MtPrimaryKeyRelatedField(
+        queryset=models.Project.objects.all(),
+        required=False,
+    )
+
+    is_extracted = serializers.BooleanField(default=False)
+
+    mappingset = MtPrimaryKeyRelatedField(
+        queryset=models.MappingSet.objects.all(),
+        mt_field='project',
+        required=False,
+    )
+
+    def create(self, validated_data):
+        if not validated_data.get('mappingset'):
+            raise serializers.ValidationError(
+                {'mappingset': [_('Mapping set must be provided on initial submission')]}
+            )
+        try:
+            return models.Submission.objects.create(**validated_data)
+        except Exception as e:                    # pragma: no cover : don't know how to trigger
+            raise serializers.ValidationError(e)  # without first triggering VE on the serializer
+
+    def update(self, instance, validated_data):
+        for k, v in validated_data.items():
+            setattr(instance, k, v)
+
+        try:
+            instance.save()
+            return instance
+        except Exception as e:  # pragma: no cover
+            raise serializers.ValidationError(e)
+
+    class Meta:
+        list_serializer_class = SubmissionListSerializer
 
 
 class ProjectStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):

@@ -27,9 +27,6 @@ def get_required(name):
         raise RuntimeError(f'Missing {name} environment variable!')
 
 
-# https://docs.python.org/3.7/library/logging.html#levels
-LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
-
 # Redis server
 REDIS_HOST = get_required('REDIS_HOST')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
@@ -43,3 +40,22 @@ KERNEL_URL = get_required('AETHER_KERNEL_URL')
 # Multitenancy
 DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'eha')
 REALM_COOKIE = os.environ.get('REALM_COOKIE', 'eha-realm')
+
+# Extractor settings
+SUBMISSION_CHANNEL = os.environ.get('SUBMISSION_CHANNEL', '_submissions*')
+WAIT_INTERVAL = float(os.environ.get('WAIT_INTERVAL', 1.0))  # in seconds
+MAX_PUSH_SIZE = int(os.environ.get('MAX_PUSH_SIZE', 40))
+
+
+# https://docs.python.org/3.7/library/logging.html#levels
+LOG_LEVEL = os.environ.get('LOGGING_LEVEL', 'INFO')
+
+
+def get_logger(name):
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter(f'%(asctime)s [{name}] %(levelname)-8s %(message)s'))
+
+    logger = logging.getLogger(name)
+    logger.addHandler(handler)
+    logger.setLevel(logging.getLevelName(LOG_LEVEL))
+    return logger

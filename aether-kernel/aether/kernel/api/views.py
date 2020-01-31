@@ -377,36 +377,28 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.M
             kwargs['many'] = isinstance(kwargs.get('data'), list)
         return super(SubmissionViewSet, self).get_serializer(*args, **kwargs)
 
-    @action(detail=False, methods=['patch'])
-    def bulk_update_extracted(self, request, *args, **kwargs):
-        '''
-        Updates `is_extracted`, and `payload` for the supplied subbmissions,
+    def patch(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.bulk_update(request, *args, **kwargs)
 
-        Reachable at ``PATCH /submissions/bulk-update-extracted/``
+    def put(self, request, *args, **kwargs):
+        return self.bulk_update(request, *args, **kwargs)
 
-        expected body:
-
-        [
-            {
-                'id': 'uuid',
-                'payload': {},
-                'is_extracted': True|False
-
-            },
-            ...
-        ]
-        '''
+    def bulk_update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
         try:
-            result = utils.submissions_flag_extracted(request.data)
-            return Response(
-                result,
-                status=status.HTTP_200_OK
-            )
+            # get instances
+            instance = [
+                get_object_or_404(models.Submission.objects.all(), pk=entry['id'])
+                for entry in request.data
+            ]
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response(serializer.data)
         except Exception as e:
-            return Response(
-                str(e),
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
     def check_realm_permission(self, request, mappingset):
         return is_accessible_by_realm(request, mappingset)

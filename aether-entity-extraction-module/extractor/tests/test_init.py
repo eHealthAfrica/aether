@@ -16,16 +16,33 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import collections
 from unittest import TestCase
-from .. import main
+
+from extractor import main
 
 
 class InitTests(TestCase):
 
+    def setUp(self):
+        super(InitTests, self).setUp()
+        self.container = main()
+
     def test_manager_setup(self):
-        container = main()
-        self.assertEqual(container.SUBMISSION_QUEUE, collections.deque())
-        self.assertEqual(container.PROCESSED_SUBMISSIONS, collections.deque())
-        self.assertEqual(container.realm_entities, {})
-        container.stop()
+        self.assertFalse(self.container.stopped)
+        self.assertTrue(self.container.is_alive())
+        self.assertEqual(self.container.processed_submissions.qsize(), 0)
+
+        # try to start again
+        with self.assertRaises(RuntimeError):
+            self.container.start()
+
+    def tearDown(self):
+        self.container.stop()
+        self.assertTrue(self.container.stopped)
+        self.assertFalse(self.container.is_alive())
+
+        # try to start again
+        with self.assertRaises(RuntimeError):
+            self.container.stop()
+
+        super(InitTests, self).tearDown()

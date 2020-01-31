@@ -128,6 +128,7 @@ class ExporterMixin():
                 return value
 
         json_filter = f'{self.json_field}__'
+        data = self.request.data if isinstance(self.request.data, dict) else {}
         filters = [
             # GET method: query params
             (k, v)
@@ -136,7 +137,7 @@ class ExporterMixin():
         ] + [
             # POST method: data content
             (k, v)
-            for k, v in self.request.data.items()
+            for k, v in data.items()
             if k.startswith(json_filter)
         ]
         queryset = self.queryset

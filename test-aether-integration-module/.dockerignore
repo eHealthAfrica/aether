@@ -2,6 +2,7 @@
 Dockerfile
 db.sqlite3
 __pycache__
+.pytest_cache
 *.pyc
 *.pyo
 *.pyd

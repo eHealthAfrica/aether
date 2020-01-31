@@ -242,6 +242,22 @@ class SerializersTests(TestCase):
 
         # save the submission and check that no entities were created
         submission.save()
+        submission_obj = models.Submission.objects.get(pk=submission.data['id'])
+        self.assertEqual(submission_obj.entities.count(), 0)
+
+        # update the submission
+        submission_upd = serializers.SubmissionSerializer(
+            submission_obj,
+            data={
+                'is_extracted': True,
+                'payload': {},
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(submission_upd.is_valid(), submission_upd.errors)
+
+        # save the submission
+        submission_upd.save()
 
         # Create submission that fails validation
         submission_bad = serializers.SubmissionSerializer(
