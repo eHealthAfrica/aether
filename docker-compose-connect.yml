@@ -51,7 +51,7 @@ services:
   producer:
     extends:
       file: ./docker-compose-base.yml
-      service: aether-producer-base
+      service: producer-base
     restart: on-failure
     networks:
       - aether

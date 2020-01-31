@@ -101,6 +101,11 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: kernel-base
+    volumes:
+      # static folder
+      - ./.persistent_data/static/kernel:/var/www/static
+      # backup folder
+      - ./.persistent_data/backups/kernel:/backups
     depends_on:
       db:
         condition: service_healthy
@@ -128,6 +133,11 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: ui-assets-base
+    volumes:
+      # static folder
+      - ./.persistent_data/static/ui:/var/www/static
+      # backup folder
+      - ./.persistent_data/backups/ui:/backups
     networks:
       - internal
 
@@ -161,6 +171,11 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: odk-base
+    volumes:
+      # static folder
+      - ./.persistent_data/static/odk:/var/www/static
+      # backup folder
+      - ./.persistent_data/backups/odk:/backups
     depends_on:
       db:
         condition: service_healthy
