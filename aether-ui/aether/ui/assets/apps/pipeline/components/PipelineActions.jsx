@@ -3,7 +3,7 @@ import React from 'react'
 import PipelineOptions from './PipelineOptions'
 import ContractAddButton from './ContractAddButton'
 
-const PipelineActions = props => (
+const PipelineActions = (props) => (
   <div className='pipeline-actions'>
     <PipelineOptions
       delete={props.delete}
