@@ -18,62 +18,47 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React, { useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import Modal from './Modal'
 
-export default class ModalError extends Component {
-  constructor (props) {
-    super(props)
-
-    this.state = {
-      showError: props.error && props.error.message
-    }
+const ModalError = ({ error }) => {
+  const [showError, setShowError] = useState(true)
+  if (!showError) {
+    return ''
   }
 
-  componentDidUpdate (prevProps) {
-    if (prevProps.error !== this.props.error) {
-      this.setState({
-        showError: this.props.error && this.props.error.message
-      })
-    }
+  const close = (event) => {
+    event.stopPropagation()
+    setShowError(false)
   }
 
-  render () {
-    if (!this.state.showError) {
-      return ''
-    }
-
-    const close = (event) => {
-      event.stopPropagation()
-      this.setState({ showError: false })
-    }
-
-    return (
-      <Modal
-        onEnter={close}
-        onEscape={close}
-        header={
-          <>
-            <FormattedMessage
-              id='modal.error.header'
-              defaultMessage='Error code'
-            /> {this.props.error.status}
-          </>
-        }
-        buttons={
-          <button
-            type='button'
-            className='btn btn-w btn-primary'
-            onClick={close}
-          >
-            <FormattedMessage id='modal.error.ok' defaultMessage='OK' />
-          </button>
-        }
-      >
-        {this.props.error.message}
-      </Modal>
-    )
-  }
+  return (
+    <Modal
+      onEnter={close}
+      onEscape={close}
+      header={
+        <>
+          <FormattedMessage
+            id='modal.error.header'
+            defaultMessage='Error code'
+          /> {error.status}
+        </>
+      }
+      buttons={
+        <button
+          type='button'
+          className='btn btn-w btn-primary'
+          onClick={close}
+        >
+          <FormattedMessage id='modal.error.ok' defaultMessage='OK' />
+        </button>
+      }
+    >
+      {error.message}
+    </Modal>
+  )
 }
+
+export default ModalError
