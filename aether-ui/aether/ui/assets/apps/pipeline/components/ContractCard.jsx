@@ -18,7 +18,7 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
@@ -27,72 +27,73 @@ import ContractPublishButton from './ContractPublishButton'
 import { selectContract, selectSection } from '../redux'
 import { CONTRACT_SECTION_ENTITY_TYPES } from '../../utils/constants'
 
-class ContractCard extends Component {
-  render () {
-    const { contract } = this.props
+const ContractCard = ({
+  contract,
+  selectContract,
+  selectSection,
+  history
+}) => {
+  const handleSelectContract = (pipelineId, contractId) => {
+    selectContract(pipelineId, contractId)
+    selectSection(CONTRACT_SECTION_ENTITY_TYPES)
+    history.push(`/${pipelineId}/${contractId}/${CONTRACT_SECTION_ENTITY_TYPES}`)
+  }
 
-    const handleSelectContract = (pipelineId, contractId) => {
-      this.props.selectContract(pipelineId, contractId)
-      this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES)
-      this.props.history.push(`/${pipelineId}/${contractId}/${CONTRACT_SECTION_ENTITY_TYPES}`)
-    }
+  return (
+    <div
+      key={contract.id}
+      className={`preview-contract ${contract.is_read_only ? 'pipeline-readonly' : ''}`}
+      onClick={() => { handleSelectContract(contract.pipeline, contract.id) }}
+    >
+      {
+        contract.is_read_only &&
+          <span className='tag'>
+            <FormattedMessage
+              id='contract.card.read-only'
+              defaultMessage='read-only'
+            />
+          </span>
+      }
 
-    return (
-      <div
-        key={contract.id}
-        className={`preview-contract ${contract.is_read_only ? 'pipeline-readonly' : ''}`}
-        onClick={() => { handleSelectContract(contract.pipeline, contract.id) }}
-      >
-        {
-          contract.is_read_only &&
-            <span className='tag'>
-              <FormattedMessage
-                id='contract.card.read-only'
-                defaultMessage='read-only'
-              />
+      <div className='contract-heading'>
+        <h2 className='contract-name'>{contract.name}</h2>
+
+        <div className='contract-summaries'>
+          <div className='summary-entity-types'>
+            <span className='badge badge-c badge-big'>
+              {(contract.entity_types || []).length}
             </span>
-        }
+            <FormattedMessage
+              id='contract.card.entity.types'
+              defaultMessage='Entity-Types'
+            />
+          </div>
 
-        <div className='contract-heading'>
-          <h2 className='contract-name'>{contract.name}</h2>
-
-          <div className='contract-summaries'>
-            <div className='summary-entity-types'>
-              <span className='badge badge-c badge-big'>
-                {(contract.entity_types || []).length}
-              </span>
-              <FormattedMessage
-                id='contract.card.entity.types'
-                defaultMessage='Entity-Types'
-              />
-            </div>
-
-            <div className='summary-errors'>
-              <span
-                className={`
-                  badge badge-c badge-big
-                  ${(contract.mapping_errors || []).length ? 'error' : ''}
-                `}
-              >
-                {(contract.mapping_errors || []).length}
-              </span>
-              <FormattedMessage
-                id='contract.card.errors'
-                defaultMessage='Errors'
-              />
-            </div>
+          <div className='summary-errors'>
+            <span
+              className={`
+                badge badge-c badge-big
+                ${(contract.mapping_errors || []).length ? 'error' : ''}
+              `}
+            >
+              {(contract.mapping_errors || []).length}
+            </span>
+            <FormattedMessage
+              id='contract.card.errors'
+              defaultMessage='Errors'
+            />
           </div>
         </div>
-
-        <div className='contract-publish'>
-          <ContractPublishButton
-            contract={contract}
-            className='btn btn-d btn-publish'
-          />
-        </div>
       </div>
-    )
-  }
+
+      <div className='contract-publish'>
+        <ContractPublishButton
+          contract={contract}
+          className='btn btn-d btn-publish'
+        />
+      </div>
+    </div>
+  )
 }
 
 const mapStateToProps = () => ({})
