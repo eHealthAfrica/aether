@@ -18,171 +18,161 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React, { useEffect } from 'react'
 import { Modal } from '../../components'
 import { connect } from 'react-redux'
 import { FormattedMessage, injectIntl } from 'react-intl'
 
-class DeleteStatus extends Component {
-  constructor (props) {
-    super(props)
-    this.state = {
+const DeleteStatus = ({
+  deleteOptions,
+  deleteStatus,
+  error,
+  header,
+  showModal,
+  toggle
+}) => {
+  useEffect(() => {
+    if (error || (deleteStatus && deleteStatus.not_published)) {
+      toggle()
     }
+  })
+
+  if (!showModal) {
+    return ''
   }
 
-  componentDidUpdate () {
-    if (
-      this.props.error ||
-      (this.props.deleteStatus && this.props.deleteStatus.not_published)
-    ) {
-      this.props.toggle()
-    }
-  }
-
-  render () {
-    if (!this.props.showModal) {
-      return null
-    }
-
-    const header = this.props.header
-    const close = () => { this.props.toggle() }
-
-    const buttons = (
+  const close = () => { toggle() }
+  const buttons = deleteStatus
+    ? (
       <div className='modal-actions'>
-        {
-          this.props.deleteStatus &&
-            <button
-              className='btn btn-primary btn-w'
-              onClick={close}
-            >
-              <FormattedMessage
-                id='delete.progress.modal.ok'
-                defaultMessage='Close'
-              />
-            </button>
-        }
+        <button className='btn btn-primary btn-w' onClick={close}>
+          <FormattedMessage
+            id='delete.progress.modal.ok'
+            defaultMessage='Close'
+          />
+        </button>
       </div>
     )
+    : ''
 
-    return (
-      <Modal
-        buttons={buttons}
-        header={header}
-        onEnter={close}
-        onEscape={close}
-      >
-        {
-          !this.props.deleteStatus && (
-            <label className='title-medium mt-4'>
+  return (
+    <Modal
+      buttons={buttons}
+      header={header}
+      onEnter={close}
+      onEscape={close}
+    >
+      {
+        !deleteStatus && (
+          <label className='title-medium mt-4'>
+            <FormattedMessage
+              id='delete.modal.status.head-1'
+              defaultMessage='Deleting kernel artefacts...'
+            />
+            <i className='ml-5 fa fa-cog fa-spin' />
+          </label>
+        )
+      }
+
+      {
+        deleteOptions.entities &&
+        deleteStatus &&
+        Object.prototype.hasOwnProperty.call(deleteStatus, 'entities') &&
+          <div>
+            <label className='form-label'>
+              <span className='badge badge-b'>
+                {deleteStatus.entities.total}
+              </span>
               <FormattedMessage
-                id='delete.modal.status.head-1'
-                defaultMessage='Deleting kernel artefacts...'
+                id='delete.modal.entities.status'
+                defaultMessage='Entities deleted'
               />
-              <i className='ml-5 fa fa-cog fa-spin' />
             </label>
-          )
-        }
-
-        {
-          this.props.deleteOptions.entities &&
-          this.props.deleteStatus &&
-          Object.prototype.hasOwnProperty.call(this.props.deleteStatus, 'entities') &&
-            <div>
-              <label className='form-label'>
-                <span className='badge badge-b'>
-                  {this.props.deleteStatus.entities.total}
-                </span>
-                <FormattedMessage
-                  id='delete.modal.entities.status'
-                  defaultMessage='Entities deleted'
-                />
-              </label>
-              <div className='ml-5'>
-                {
-                  this.props.deleteStatus.entities.schemas.map(schema => (
-                    <div key={schema.name}>
-                      <i className='fa fa-check mr-2' />
-                      <label>
-                        {schema.name} : {schema.count}
-                      </label>
-                    </div>
-                  ))
-                }
-              </div>
-            </div>
-        }
-
-        {
-          this.props.deleteOptions.schemas && this.props.deleteStatus &&
-          this.props.deleteStatus.schemas && (
-            <div>
-              <label className='form-label mt-4'>
-                <span className='badge badge-b'>
-                  {Object.keys(this.props.deleteStatus.schemas).length}
-                </span>
-                <FormattedMessage
-                  id='delete.modal.entity.types.status'
-                  defaultMessage='Entity types deleted'
-                />
-              </label>
-              <div className='ml-5'>
-                {
-                  Object.keys(this.props.deleteStatus.schemas).map(schema => (
-                    <div key={schema}>
-                      <i className='fa fa-check mr-2' />
-                      <label>
-                        {schema} :
-                        {
-                          this.props.deleteStatus.schemas[schema].is_deleted
-                            ? (
-                              <FormattedMessage
-                                id='delete.modal.entity.types.status.deleted'
-                                defaultMessage='Deleted'
-                              />
-                            )
-                            : (
-                              <FormattedMessage
-                                id='delete.modal.entity.types.status.not.deleted'
-                                defaultMessage='Not deleted, used by other mappings'
-                              />
-                            )
-                        }
-                      </label>
-                    </div>
-                  ))
-                }
-              </div>
-
+            <div className='ml-5'>
               {
-                Object.keys(this.props.deleteStatus.schemas).length === 0 &&
-                  <label>
-                    <FormattedMessage
-                      id='delete.modal.entity.types.empty'
-                      defaultMessage='No entity types to delete'
-                    />
-                  </label>
+                deleteStatus.entities.schemas.map(schema => (
+                  <div key={schema.name}>
+                    <i className='fa fa-check mr-2' />
+                    <label>
+                      {schema.name} : {schema.count}
+                    </label>
+                  </div>
+                ))
               }
             </div>
-          )
-        }
+          </div>
+      }
 
-        {
-          this.props.deleteOptions.submissions &&
-          this.props.deleteStatus &&
-          Object.prototype.hasOwnProperty.call(this.props.deleteStatus, 'submissions') &&
-            <div>
-              <label className='form-label mt-4'>
-                <span className='badge badge-b'>{this.props.deleteStatus.submissions}</span>
-                <FormattedMessage
-                  id='delete.modal.sumbissions.status'
-                  defaultMessage='Submissions deleted'
-                />
-              </label>
+      {
+        deleteOptions.schemas &&
+        deleteStatus &&
+        deleteStatus.schemas &&
+          <div>
+            <label className='form-label mt-4'>
+              <span className='badge badge-b'>
+                {Object.keys(deleteStatus.schemas).length}
+              </span>
+              <FormattedMessage
+                id='delete.modal.entity.types.status'
+                defaultMessage='Entity types deleted'
+              />
+            </label>
+            <div className='ml-5'>
+              {
+                Object.keys(deleteStatus.schemas).map(schema => (
+                  <div key={schema}>
+                    <i className='fa fa-check mr-2' />
+                    <label>
+                      {schema} :
+                      {
+                        deleteStatus.schemas[schema].is_deleted
+                          ? (
+                            <FormattedMessage
+                              id='delete.modal.entity.types.status.deleted'
+                              defaultMessage='Deleted'
+                            />
+                          )
+                          : (
+                            <FormattedMessage
+                              id='delete.modal.entity.types.status.not.deleted'
+                              defaultMessage='Not deleted, used by other mappings'
+                            />
+                          )
+                      }
+                    </label>
+                  </div>
+                ))
+              }
             </div>
-        }
-      </Modal>
-    )
-  }
+
+            {
+              Object.keys(deleteStatus.schemas).length === 0 &&
+                <label>
+                  <FormattedMessage
+                    id='delete.modal.entity.types.empty'
+                    defaultMessage='No entity types to delete'
+                  />
+                </label>
+            }
+          </div>
+      }
+
+      {
+        deleteOptions.submissions &&
+        deleteStatus &&
+        Object.prototype.hasOwnProperty.call(deleteStatus, 'submissions') &&
+          <div>
+            <label className='form-label mt-4'>
+              <span className='badge badge-b'>{deleteStatus.submissions}</span>
+              <FormattedMessage
+                id='delete.modal.sumbissions.status'
+                defaultMessage='Submissions deleted'
+              />
+            </label>
+          </div>
+      }
+    </Modal>
+  )
 }
 
 const mapStateToProps = ({ pipelines }) => ({
