@@ -18,7 +18,7 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 
@@ -31,103 +31,94 @@ const MESSAGES = defineMessages({
   }
 })
 
-class PipelineNew extends Component {
-  constructor (props) {
-    super(props)
+const PipelineNew = ({
+  history,
+  pipeline,
+  addPipeline,
+  intl: { formatMessage }
+}) => {
+  const [view, setView] = useState('button')
+  const [name, setName] = useState('')
+  const [submitted, setSubmitted] = useState(false)
 
-    this.state = {
-      view: 'button',
-      pipelineName: '',
-      submitted: false
+  useEffect(() => {
+    if (submitted && pipeline) {
+      history.push(`/${pipeline.id}`)
     }
+  })
+
+  const onSubmit = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    setSubmitted(true)
+    addPipeline({ name })
   }
 
-  componentDidUpdate (prevProps) {
-    if (this.state.submitted && this.props.pipeline && prevProps.pipeline !== this.props.pipeline) {
-      this.props.history.push(`/${this.props.pipeline.id}`)
-    }
-  }
+  return (
+    <div className='pipeline-new'>
+      {
+        view === 'button'
+          ? (
+            <button
+              type='button'
+              className='btn btn-c btn-big new-input'
+              onClick={() => { setView('form') }}
+            >
+              <span className='details-title'>
+                <FormattedMessage
+                  id='pipeline.new.button.new'
+                  defaultMessage='New pipeline'
+                />
+              </span>
+            </button>
+          )
+          : (
+            <form className='pipeline-form' onSubmit={onSubmit}>
+              <div className='form-group'>
+                <input
+                  type='text'
+                  required
+                  name='name'
+                  className='text-input'
+                  placeholder={formatMessage(MESSAGES.namePlaceholder)}
+                  value={name}
+                  onChange={event => { setName(event.target.value) }}
+                />
+                <label className='form-label'>
+                  {formatMessage(MESSAGES.namePlaceholder)}
+                </label>
+              </div>
 
-  render () {
-    return (
-      <div className='pipeline-new'>
-        {this.state.view === 'button' ? this.renderButton() : this.renderForm()}
-      </div>
-    )
-  }
+              <button
+                type='button'
+                className='btn btn-c btn-big btn-transparent'
+                onClick={() => {
+                  setView('button')
+                  setName('')
+                }}
+              >
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='pipeline.new.button.cancel'
+                    defaultMessage='Cancel'
+                  />
+                </span>
+              </button>
 
-  renderButton () {
-    return (
-      <button
-        type='button'
-        className='btn btn-c btn-big new-input'
-        onClick={() => { this.setState({ view: 'form' }) }}
-      >
-        <span className='details-title'>
-          <FormattedMessage
-            id='pipeline.new.button.new'
-            defaultMessage='New pipeline'
-          />
-        </span>
-      </button>
-    )
-  }
-
-  renderForm () {
-    const { formatMessage } = this.props.intl
-
-    const onSubmit = (event) => {
-      event.preventDefault()
-      event.stopPropagation()
-
-      this.setState({
-        submitted: true
-      }, () => {
-        this.props.addPipeline({ name: this.state.pipelineName })
-      })
-    }
-
-    return (
-      <form className='pipeline-form' onSubmit={onSubmit}>
-        <div className='form-group'>
-          <input
-            type='text'
-            required
-            name='name'
-            className='text-input'
-            placeholder={formatMessage(MESSAGES.namePlaceholder)}
-            value={this.state.pipelineName}
-            onChange={event => { this.setState({ pipelineName: event.target.value }) }}
-          />
-          <label className='form-label'>
-            {formatMessage(MESSAGES.namePlaceholder)}
-          </label>
-        </div>
-
-        <button
-          type='button'
-          className='btn btn-c btn-big btn-transparent'
-          onClick={() => { this.setState({ view: 'button', pipelineName: '' }) }}
-        >
-          <span className='details-title'>
-            <FormattedMessage
-              id='pipeline.new.button.cancel'
-              defaultMessage='Cancel'
-            />
-          </span>
-        </button>
-
-        <button type='submit' className='btn btn-c btn-big'>
-          <span className='details-title'>
-            <FormattedMessage
-              id='pipeline.new.button.ok'
-              defaultMessage='Start pipeline'
-            />
-          </span>
-        </button>
-      </form>
-    )
-  }
+              <button type='submit' className='btn btn-c btn-big'>
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='pipeline.new.button.ok'
+                    defaultMessage='Start pipeline'
+                  />
+                </span>
+              </button>
+            </form>
+          )
+      }
+    </div>
+  )
 }
 
 const mapStateToProps = ({ pipelines }) => ({
