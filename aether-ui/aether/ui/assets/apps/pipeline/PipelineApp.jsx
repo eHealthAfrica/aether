@@ -18,28 +18,24 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import { hot } from 'react-hot-loader'
+import React from 'react'
 import { connect } from 'react-redux'
 import { Route, Switch } from 'react-router-dom'
-import { hot } from 'react-hot-loader'
 
 import PipelineList from './PipelineList'
 import Pipeline from './Pipeline'
 
-class PipelineApp extends Component {
-  render () {
-    return (
-      <Route render={() => (
-        <Switch>
-          <Route exact path='/' component={PipelineList} />
-          <Route path='/:pid/:cid/:view' component={Pipeline} />
-          <Route path='/:pid/:cid' component={Pipeline} />
-          <Route path='/:pid' component={Pipeline} />
-        </Switch>
-      )}
-      />
-    )
-  }
-}
+const PipelineApp = () => (
+  <Route render={() => (
+    <Switch>
+      <Route exact path='/' component={PipelineList} />
+      <Route path='/:pid/:cid/:view' component={Pipeline} />
+      <Route path='/:pid/:cid' component={Pipeline} />
+      <Route path='/:pid' component={Pipeline} />
+    </Switch>
+  )}
+  />
+)
 
 export default hot(module)(connect()(PipelineApp))
