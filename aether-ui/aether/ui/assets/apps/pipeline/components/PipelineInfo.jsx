@@ -25,25 +25,24 @@ import { FormattedMessage } from 'react-intl'
 import Modal from '../../components/Modal'
 import SubmissionCard from './SubmissionCard'
 
-const PipelineInfo = ({ showInfo, setShowInfo, pipeline: { name, mappingset, input } }) => {
-  const hide = (event) => { setShowInfo(event, false) }
+const PipelineInfo = ({ close, pipeline: { name, mappingset, input } }) => {
   const button = (
-    <button type='button' className='btn btn-w btn-primary' onClick={hide}>
+    <button type='button' className='btn btn-w btn-primary' onClick={close}>
       <FormattedMessage id='pipeline.info.modal.ok' defaultMessage='OK' />
     </button>
   )
 
-  return showInfo ? (
+  return (
     <Modal
-      onEnter={hide}
-      onEscape={hide}
+      onEnter={close}
+      onEscape={close}
       header={name}
       buttons={button}
-      handleClickOutside={hide}
+      handleClickOutside={close}
     >
       <SubmissionCard mappingset={mappingset} inputData={input} />
     </Modal>
-  ) : null
+  )
 }
 
 export default connect()(PipelineInfo)
