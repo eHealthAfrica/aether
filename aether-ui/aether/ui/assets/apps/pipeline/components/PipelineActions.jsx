@@ -6,7 +6,7 @@ import ContractAddButton from './ContractAddButton'
 const PipelineActions = (props) => (
   <div className='pipeline-actions'>
     <PipelineOptions
-      delete={props.delete}
+      remove={props.remove}
       rename={props.rename}
     />
     <ContractAddButton
