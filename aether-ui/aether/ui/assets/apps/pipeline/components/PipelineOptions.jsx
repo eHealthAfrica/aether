@@ -18,55 +18,45 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
-import onClickOutside from 'react-onclickoutside'
+import React, { useState } from 'react'
 import { FormattedMessage } from 'react-intl'
+import onClickOutside from 'react-onclickoutside'
 
-class PipelineOptions extends Component {
-  constructor (props) {
-    super(props)
+const PipelineOptions = ({ remove, rename }) => {
+  const [show, setShow] = useState(false)
 
-    this.state = {
-      show: false
-    }
-  }
+  PipelineOptions.handleClickOutside = () => { setShow(false) }
 
-  handleClickOutside () {
-    this.setState({ show: false })
-  }
-
-  render () {
-    return (
-      <div>
-        <button
-          type='button'
-          className='btn btn-c btn-square mr-2'
-          onClick={() => { this.setState({ show: !this.state.show }) }}
-        >
-          <span className='details-title'>
-            <i className='fas fa-ellipsis-h' />
-          </span>
-        </button>
-        {
-          this.state.show &&
-            <ul className='options'>
-              <li onClick={() => { this.props.delete() }}>
-                <FormattedMessage
-                  id='pipeline.option.delete'
-                  defaultMessage='Delete Pipeline'
-                />
-              </li>
-              <li onClick={() => { this.props.rename() }}>
-                <FormattedMessage
-                  id='pipeline.option.rename'
-                  defaultMessage='Rename Pipeline'
-                />
-              </li>
-            </ul>
-        }
-      </div>
-    )
-  }
+  return (
+    <div>
+      <button
+        type='button'
+        className='btn btn-c btn-square mr-2'
+        onClick={() => { setShow(!show) }}
+      >
+        <span className='details-title'>
+          <i className='fas fa-ellipsis-h' />
+        </span>
+      </button>
+      {
+        show &&
+          <ul className='options'>
+            <li onClick={() => { remove() }}>
+              <FormattedMessage
+                id='pipeline.option.delete'
+                defaultMessage='Delete Pipeline'
+              />
+            </li>
+            <li onClick={() => { rename() }}>
+              <FormattedMessage
+                id='pipeline.option.rename'
+                defaultMessage='Rename Pipeline'
+              />
+            </li>
+          </ul>
+      }
+    </div>
+  )
 }
 
 export default onClickOutside(PipelineOptions)
