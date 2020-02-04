@@ -112,7 +112,7 @@ class PipelineList extends Component {
                   key={pipeline.id}
                   pipeline={pipeline}
                   history={this.props.history}
-                  delete={() => {
+                  remove={() => {
                     this.setState({ showDeleteModal: true })
                     this.props.pipelineChanged(pipeline)
                   }}
