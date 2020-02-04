@@ -59,4 +59,8 @@ const PipelineOptions = ({ remove, rename }) => {
   )
 }
 
-export default onClickOutside(PipelineOptions)
+const clickOutsideConfig = {
+  handleClickOutside: () => PipelineOptions.handleClickOutside
+}
+
+export default onClickOutside(PipelineOptions, clickOutsideConfig)
