@@ -129,6 +129,7 @@ $output-nav-width: 10rem;
   position: absolute;
   bottom: $unit;
   right: $unit-xl;
+  padding-right: 2.5rem;
 
   &::before,
   &::after {
