@@ -18,22 +18,22 @@
  * under the License.
  */
 
-// import all components
-import AppLayout from './AppLayout'
-import AvroSchemaViewer from './AvroSchemaViewer'
-import LoadingSpinner from './LoadingSpinner'
-import Modal from './Modal'
-import ModalError from './ModalError'
-import NavBar from './NavBar'
-import ViewsBar from './ViewsBar'
+import React from 'react'
 
-// export all components
-export {
-  AppLayout,
-  AvroSchemaViewer,
-  LoadingSpinner,
-  Modal,
-  ModalError,
-  NavBar,
-  ViewsBar
-}
+const ViewsBar = ({ current, views, setView }) => (
+  <div className='tabs'>
+    {
+      views.map(({ id, label }) => (
+        <button
+          key={id}
+          className={`tab ${current === id ? 'selected' : ''}`}
+          onClick={() => { setView(id) }}
+        >
+          {label}
+        </button>
+      ))
+    }
+  </div>
+)
+
+export default ViewsBar
