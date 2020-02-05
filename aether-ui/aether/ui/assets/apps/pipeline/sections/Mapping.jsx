@@ -107,34 +107,38 @@ const Mapping = ({
   })
 
   const renderButtons = (disabled) => (
-    <>
-      <button
-        type='submit'
-        className='btn btn-d btn-primary mt-3'
-        disabled={disabled}
-      >
-        <span className='details-title'>
-          <FormattedMessage
-            id='mapping.rules.button.ok'
-            defaultMessage='Apply mapping rules to pipeline'
-          />
-        </span>
-      </button>
+    contract.is_read_only
+      ? ''
+      : (
+        <div className='action-buttons'>
+          <button
+            type='submit'
+            className='btn btn-d btn-primary mt-3'
+            disabled={disabled}
+          >
+            <span className='details-title'>
+              <FormattedMessage
+                id='mapping.rules.button.ok'
+                defaultMessage='Apply mapping rules to pipeline'
+              />
+            </span>
+          </button>
 
-      <button
-        type='button'
-        className='btn btn-d btn-default'
-        onClick={() => { updateRules(prevRules) }}
-        disabled={disabled}
-      >
-        <span className='details-title'>
-          <FormattedMessage
-            id='mapping.rules.button.reset'
-            defaultMessage='Revert unsaved changes'
-          />
-        </span>
-      </button>
-    </>
+          <button
+            type='button'
+            className='btn btn-d btn-default'
+            onClick={() => { updateRules(prevRules) }}
+            disabled={disabled}
+          >
+            <span className='details-title'>
+              <FormattedMessage
+                id='mapping.rules.button.reset'
+                defaultMessage='Revert unsaved changes'
+              />
+            </span>
+          </button>
+        </div>
+      )
   )
 
   const renderRulesList = () => {
@@ -231,18 +235,25 @@ const Mapping = ({
 
           {
             !contract.is_read_only &&
-              <div className='action-buttons'>
+              <div key='add' className='rule'>
+                <div />
+
                 <button
                   type='button'
-                  className='btn btn-d btn-primary'
+                  className='btn btn-d btn-flat btn-transparent'
                   onClick={addNewRule}
                 >
-                  <FormattedMessage id='mapping.rules.button.add' defaultMessage='Add rule' />
+                  <span className='details-title'>
+                    <FormattedMessage
+                      id='mapping.rule.button.add'
+                      defaultMessage='Add'
+                    />
+                  </span>
                 </button>
-
-                {renderButtons(deepEqual(rulesList, prevRules))}
               </div>
           }
+
+          {renderButtons(deepEqual(rulesList, prevRules))}
         </form>
       </div>
     )
@@ -287,12 +298,7 @@ const Mapping = ({
             disabled={contract.is_read_only}
           />
 
-          {
-            !contract.is_read_only &&
-              <div className='action-buttons'>
-                {renderButtons(!hasChanged)}
-              </div>
-          }
+          {renderButtons(!hasChanged)}
         </form>
       </div>
     )
