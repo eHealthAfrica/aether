@@ -18,22 +18,54 @@
  * under the License.
  */
 
-import React from 'react'
+import React, { useState } from 'react'
+import onClickOutside from 'react-onclickoutside'
 
-import PipelineOptions from './PipelineOptions'
+import PipelineRemoveButton from './PipelineRemoveButton'
+import PipelineRenameButton from './PipelineRenameButton'
 import ContractAddButton from './ContractAddButton'
 
-const PipelineActions = (props) => (
-  <div className='pipeline-actions'>
-    <PipelineOptions
-      remove={props.remove}
-      rename={props.rename}
-    />
-    <ContractAddButton
-      pipeline={props.pipeline}
-      history={props.history}
-    />
-  </div>
-)
+const PipelineOptions = ({ pipeline }) => {
+  const [showOptions, setShowOptions] = useState(false)
+
+  PipelineOptions.handleClickOutside = () => { setShowOptions(false) }
+
+  return (
+    <div>
+      <button
+        type='button'
+        className='btn btn-c btn-square mr-2'
+        onClick={() => { setShowOptions(!showOptions) }}
+      >
+        <span className='details-title'>
+          <i className='fas fa-ellipsis-h' />
+        </span>
+      </button>
+
+      {
+        showOptions &&
+          <ul className='options'>
+            <PipelineRemoveButton pipeline={pipeline} />
+            <PipelineRenameButton pipeline={pipeline} />
+          </ul>
+      }
+    </div>
+  )
+}
+
+const clickOutsideConfig = {
+  handleClickOutside: () => PipelineOptions.handleClickOutside
+}
+
+const PipelineOptionsOutside = onClickOutside(PipelineOptions, clickOutsideConfig)
+
+const PipelineActions = ({ history, pipeline }) => {
+  return (
+    <div className='pipeline-actions'>
+      <PipelineOptionsOutside pipeline={pipeline} />
+      <ContractAddButton pipeline={pipeline} history={history} />
+    </div>
+  )
+}
 
 export default PipelineActions
