@@ -18,123 +18,69 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { LoadingSpinner, ModalError, NavBar } from '../components'
+import { NavBar } from '../components'
 
 import PipelineNew from './components/PipelineNew'
 import PipelineCard from './components/PipelineCard'
-import DeleteStatus from './components/DeleteStatus'
-import DeleteModal from './components/DeleteModal'
 
-import { getPipelines, deletePipeline, pipelineChanged } from './redux'
+import { getPipelines } from './redux'
 
-class PipelineList extends Component {
-  constructor (props) {
-    super(props)
+const PipelineList = ({ getPipelines, history, loading, pipelinesList }) => {
+  const [initialized, setInitialized] = useState(false)
 
-    // fetch pipelines list
-    props.getPipelines()
-
-    this.state = {
-      showDeleteModal: false,
-      showDeleteProgress: false,
-      deleteOptions: {}
+  useEffect(() => {
+    if (!initialized) {
+      setInitialized(true)
+      getPipelines()
     }
-  }
+  })
 
-  renderDeletionModal () {
-    if (!this.state.showDeleteModal) {
-      return null
-    }
+  return (
+    <div className='pipelines-container show-index'>
+      <NavBar />
 
-    return (
-      <DeleteModal
-        onClose={() => { this.setState({ showDeleteModal: false }) }}
-        onDelete={(deleteOptions) => {
-          this.setState({
-            deleteOptions,
-            showDeleteModal: false,
-            showDeleteProgress: true
-          }, () => {
-            this.props.deletePipeline(this.props.pipeline.id, deleteOptions)
-          })
-        }}
-        objectType='pipeline'
-        obj={this.props.pipeline}
-      />
-    )
-  }
-
-  renderDeleteProgressModal () {
-    if (!this.state.showDeleteProgress) {
-      return ''
-    }
-
-    return (
-      <DeleteStatus
-        header={
+      <div className='pipelines'>
+        <h1 className='pipelines-heading'>
           <FormattedMessage
-            id='pipeline.list.delete.status.header'
-            defaultMessage='Deleting pipeline '
+            id='pipeline.list.pipelines'
+            defaultMessage='Pipelines'
           />
-        }
-        deleteOptions={this.state.deleteOptions}
-        toggle={() => { this.setState({ showDeleteProgress: false }) }}
-        showModal={this.state.showDeleteProgress}
-      />
-    )
-  }
-
-  render () {
-    return (
-      <div className='pipelines-container show-index'>
-        {this.props.loading && <LoadingSpinner />}
-        {this.props.error && <ModalError error={this.props.error} />}
-        <NavBar />
-
-        <div className='pipelines'>
-          <h1 className='pipelines-heading'>
+          <button
+            type='button'
+            className='btn btn-primary btn-w float-right'
+            onClick={() => { setInitialized(false) }}
+          >
+            <i className={`fas mr-2 ${loading ? ' fa-recycle' : 'fa-sync'}`} />
             <FormattedMessage
-              id='pipeline.list.pipelines'
-              defaultMessage='Pipelines'
+              id='pipeline.list.refresh'
+              defaultMessage='Reload'
             />
-          </h1>
+          </button>
+        </h1>
 
-          <PipelineNew history={this.props.history} />
+        <PipelineNew history={history} />
 
-          <div className='pipeline-previews'>
-            {
-              this.props.list.map(pipeline => (
-                <PipelineCard
-                  key={pipeline.id}
-                  pipeline={pipeline}
-                  history={this.props.history}
-                  remove={() => {
-                    this.setState({ showDeleteModal: true })
-                    this.props.pipelineChanged(pipeline)
-                  }}
-                />
-              ))
-            }
-          </div>
+        <div className='pipeline-previews'>
+          {
+            (pipelinesList || []).map(pipeline => (
+              <PipelineCard
+                key={pipeline.id}
+                pipeline={pipeline}
+                history={history}
+              />
+            ))
+          }
         </div>
-
-        {this.renderDeletionModal()}
-        {this.renderDeleteProgressModal()}
       </div>
-    )
-  }
+    </div>
+  )
 }
 
-const mapStateToProps = ({ pipelines }) => ({
-  loading: pipelines.loading,
-  list: pipelines.pipelineList || [],
-  error: pipelines.error,
-  pipeline: pipelines.currentPipeline
-})
-const mapDispatchToProps = { getPipelines, deletePipeline, pipelineChanged }
+const mapStateToProps = ({ pipelines: { loading, pipelinesList } }) => ({ loading, pipelinesList })
+const mapDispatchToProps = { getPipelines }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PipelineList)
