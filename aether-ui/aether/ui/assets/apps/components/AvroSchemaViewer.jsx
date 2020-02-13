@@ -19,7 +19,7 @@
  */
 
 import React from 'react'
-import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 
 import { AVRO_EXTENDED_TYPE, MASKING_ANNOTATION, MASKING_PUBLIC } from '../utils/constants'
 import { clone, isEmpty, generateGUID } from '../utils'
@@ -56,14 +56,8 @@ const getHighlightedClassName = (path, highlight, className) => {
   return ''
 }
 
-const AvroSchemaViewer = ({
-  className,
-  hideChildren,
-  highlight,
-  pathPrefix,
-  schema,
-  intl: { formatMessage }
-}) => {
+const AvroSchemaViewer = ({ className, hideChildren, highlight, pathPrefix, schema }) => {
+  const { formatMessage } = useIntl()
   if (isEmpty(schema)) {
     return (
       <div className='hint'>
@@ -176,4 +170,4 @@ const AvroSchemaViewer = ({
   }
 }
 
-export default injectIntl(AvroSchemaViewer)
+export default AvroSchemaViewer

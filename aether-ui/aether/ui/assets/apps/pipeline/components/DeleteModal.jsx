@@ -19,7 +19,7 @@
  */
 
 import React, { useState } from 'react'
-import { FormattedMessage, injectIntl, defineMessages } from 'react-intl'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { Modal } from '../../components'
 
 const MESSAGES = defineMessages({
@@ -33,13 +33,8 @@ const MESSAGES = defineMessages({
   }
 })
 
-const DeleteModal = ({
-  onClose,
-  onDelete,
-  obj,
-  objectType,
-  intl: { formatMessage }
-}) => {
+const DeleteModal = ({ onClose, onDelete, obj, objectType }) => {
+  const { formatMessage } = useIntl()
   const [schemas, setSchemas] = useState(false)
   const [entities, setEntities] = useState(false)
   const [submissions, setSubmissions] = useState(false)
@@ -157,4 +152,4 @@ const DeleteModal = ({
   )
 }
 
-export default injectIntl(DeleteModal)
+export default DeleteModal

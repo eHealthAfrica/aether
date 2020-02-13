@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { AvroSchemaViewer, ViewsBar } from '../../components'
@@ -80,12 +80,8 @@ const MESSAGES = defineMessages({
   }
 })
 
-const Input = ({
-  pipeline,
-  highlight,
-  updatePipeline,
-  intl: { formatMessage }
-}) => {
+const Input = ({ pipeline, highlight, updatePipeline }) => {
+  const { formatMessage } = useIntl()
   const [view, setView] = useState(DATA_VIEW)
   const [prevPipeline, setPrevPipeline] = useState(pipeline)
 
@@ -297,4 +293,4 @@ const mapStateToProps = ({ pipelines }) => ({
 })
 const mapDispatchToProps = { updatePipeline }
 
-export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(Input))
+export default connect(mapStateToProps, mapDispatchToProps)(Input)

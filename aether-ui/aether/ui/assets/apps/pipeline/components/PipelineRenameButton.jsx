@@ -19,7 +19,7 @@
  */
 
 import React, { useState } from 'react'
-import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { Modal } from '../../components'
 
 import { connect } from 'react-redux'
@@ -89,26 +89,23 @@ const RenameForm = ({ initialValue, placeholder, onSave, onCancel }) => {
   )
 }
 
-const PipelineRename = ({
-  name,
-  onCancel,
-  onSave,
-  intl: { formatMessage }
-}) => (
-  <Modal
-    onEscape={onCancel}
-    header={formatMessage(MESSAGES.title, { name: <b>{name}</b> })}
-  >
-    <RenameForm
-      initialValue={name}
-      placeholder={formatMessage(MESSAGES.namePlaceholder)}
-      onSave={onSave}
-      onCancel={onCancel}
-    />
-  </Modal>
-)
+const PipelineRename = ({ name, onCancel, onSave }) => {
+  const { formatMessage } = useIntl()
 
-const PipelineRenameIntl = injectIntl(PipelineRename)
+  return (
+    <Modal
+      onEscape={onCancel}
+      header={formatMessage(MESSAGES.title, { name: <b>{name}</b> })}
+    >
+      <RenameForm
+        initialValue={name}
+        placeholder={formatMessage(MESSAGES.namePlaceholder)}
+        onSave={onSave}
+        onCancel={onCancel}
+      />
+    </Modal>
+  )
+}
 
 const PipelineRenameButton = ({
   pipeline: { id, name },
@@ -132,7 +129,7 @@ const PipelineRenameButton = ({
 
       {
         isRenaming &&
-          <PipelineRenameIntl
+          <PipelineRename
             name={name}
             onCancel={() => { setIsRenaming(false) }}
             onSave={handleRenameSave}

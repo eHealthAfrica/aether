@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { AvroSchemaViewer } from '../../components'
@@ -50,11 +50,9 @@ const MESSAGES = defineMessages({
   }
 })
 
-const EntityTypes = ({
-  contract,
-  updateContract,
-  intl: { formatMessage }
-}) => {
+const EntityTypes = ({ contract, updateContract }) => {
+  const { formatMessage } = useIntl()
+
   const [prevContract, setPrevContract] = useState(contract)
   const [entityTypesSchema, setEntityTypesSchema] = useState(objectToString(contract.entity_types))
   const [error, setError] = useState(null)
@@ -192,4 +190,4 @@ const mapStateToProps = ({ pipelines }) => ({
 })
 const mapDispatchToProps = { updateContract }
 
-export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(EntityTypes))
+export default connect(mapStateToProps, mapDispatchToProps)(EntityTypes)

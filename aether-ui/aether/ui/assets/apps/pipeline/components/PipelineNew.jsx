@@ -21,7 +21,7 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
 import { connect } from 'react-redux'
-import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 
 import { addPipeline } from '../redux'
 
@@ -32,8 +32,9 @@ const MESSAGES = defineMessages({
   }
 })
 
-const PipelineNew = ({ pipeline, addPipeline, intl: { formatMessage } }) => {
+const PipelineNew = ({ pipeline, addPipeline }) => {
   const history = useHistory()
+  const { formatMessage } = useIntl()
   const [view, setView] = useState('button')
   const [name, setName] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -123,4 +124,4 @@ const mapStateToProps = ({ pipelines }) => ({
 })
 const mapDispatchToProps = { addPipeline }
 
-export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(PipelineNew))
+export default connect(mapStateToProps, mapDispatchToProps)(PipelineNew)

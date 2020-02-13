@@ -19,7 +19,7 @@
  */
 
 import React from 'react'
-import { defineMessages, injectIntl } from 'react-intl'
+import { defineMessages, useIntl } from 'react-intl'
 
 import { getLoggedInUser } from '../utils'
 
@@ -30,12 +30,8 @@ const MESSAGES = defineMessages({
   }
 })
 
-const NavBar = ({
-  children,
-  showBreadcrumb,
-  onClick,
-  intl: { formatMessage }
-}) => {
+const NavBar = ({ children, showBreadcrumb, onClick }) => {
+  const { formatMessage } = useIntl()
   const user = getLoggedInUser()
   const logoutUrl = window.location.origin + window.location.pathname + 'logout'
 
@@ -72,4 +68,4 @@ const NavBar = ({
   )
 }
 
-export default injectIntl(NavBar)
+export default NavBar

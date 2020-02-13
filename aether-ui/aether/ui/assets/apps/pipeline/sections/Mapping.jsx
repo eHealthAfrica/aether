@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { ViewsBar } from '../../components'
@@ -79,11 +79,8 @@ const errorsToString = (errors) => {
   })
 }
 
-const Mapping = ({
-  contract,
-  updateContract,
-  intl: { formatMessage }
-}) => {
+const Mapping = ({ contract, updateContract }) => {
+  const { formatMessage } = useIntl()
   const [view, setView] = useState(LIST_VIEW)
 
   const rules = contract.mapping_rules || []
@@ -355,4 +352,4 @@ const mapStateToProps = ({ pipelines }) => ({
 })
 const mapDispatchToProps = { updateContract }
 
-export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(Mapping))
+export default connect(mapStateToProps, mapDispatchToProps)(Mapping)
