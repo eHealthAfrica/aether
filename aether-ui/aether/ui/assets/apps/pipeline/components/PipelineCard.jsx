@@ -24,27 +24,14 @@ import { FormattedMessage } from 'react-intl'
 
 import PipelineInfo from './PipelineInfo'
 import ContractCard from './ContractCard'
-import PipelineRename from './PipelineRename'
 import PipelineActions from './PipelineActions'
 
-import { selectPipeline, renamePipeline } from '../redux'
+import { selectPipeline } from '../redux'
 
-const PipelineCard = ({
-  history,
-  pipeline,
-  remove,
-  renamePipeline,
-  selectPipeline
-}) => {
-  const [isRenaming, setIsRenaming] = useState(false)
+const PipelineCard = ({ history, pipeline, selectPipeline }) => {
   const [showInfo, setShowInfo] = useState(false)
 
   const { id, name, isInputReadOnly, mappingset, contracts } = pipeline
-
-  const handleRenameSave = (newName) => {
-    renamePipeline(id, newName)
-    setIsRenaming(false)
-  }
 
   const handlePipelineSelect = () => {
     selectPipeline(id)
@@ -55,24 +42,8 @@ const PipelineCard = ({
     <div className='pipeline-preview'>
       <div className='preview-heading'>
         <span className='pipeline-name'>// {name}</span>
-        {
-          isRenaming
-            ? (
-              <PipelineRename
-                name={name}
-                onCancel={() => { setIsRenaming(false) }}
-                onSave={handleRenameSave}
-              />
-            )
-            : (
-              <PipelineActions
-                remove={remove}
-                rename={() => { setIsRenaming(true) }}
-                pipeline={pipeline}
-                history={history}
-              />
-            )
-        }
+
+        <PipelineActions pipeline={pipeline} history={history} />
       </div>
 
       <div
@@ -134,6 +105,6 @@ const PipelineCard = ({
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { selectPipeline, renamePipeline }
+const mapDispatchToProps = { selectPipeline }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PipelineCard)
