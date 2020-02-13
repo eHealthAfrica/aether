@@ -51,8 +51,9 @@ const PipelineList = ({ getPipelines, history, loading, pipelinesList }) => {
           />
           <button
             type='button'
-            className='btn btn-primary btn-w float-right'
+            className='btn btn-c float-right'
             onClick={() => { setInitialized(false) }}
+            disabled={loading}
           >
             <i className={`fas mr-2 ${loading ? ' fa-recycle' : 'fa-sync'}`} />
             <FormattedMessage
