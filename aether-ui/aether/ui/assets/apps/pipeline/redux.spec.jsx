@@ -107,12 +107,12 @@ describe('Pipeline actions', () => {
       .post('/api/pipelines/')
       .reply(200, { id: 'mockid', contracts: [] })
 
-    expect(store.getState().pipelineList).toBeFalsy()
+    expect(store.getState().pipelinesList).toBeFalsy()
 
     return store.dispatch(addPipeline({ name: 'mock new name' }))
       .then(() => {
-        expect(store.getState().pipelineList.length).toEqual(1)
-        expect(store.getState().pipelineList[0].id).toEqual('mockid')
+        expect(store.getState().pipelinesList.length).toEqual(1)
+        expect(store.getState().pipelinesList[0].id).toEqual('mockid')
       })
   })
 
@@ -121,13 +121,13 @@ describe('Pipeline actions', () => {
       .post('/api/pipelines/fetch/')
       .reply(200, mockPipelines)
 
-    expect(store.getState().pipelineList).toBeFalsy()
+    expect(store.getState().pipelinesList).toBeFalsy()
 
     return store.dispatch(getPipelines())
       .then(() => {
-        expect(store.getState().pipelineList.length).toEqual(3)
+        expect(store.getState().pipelinesList.length).toEqual(3)
 
-        expect(store.getState().pipelineList).toEqual(
+        expect(store.getState().pipelinesList).toEqual(
           mockPipelines.map(pipeline => ({
             ...pipeline,
             isInputReadOnly: false, // added by "parsePipeline"
@@ -237,7 +237,7 @@ describe('Pipeline actions', () => {
             expect(store.getState().currentContract.name).toEqual('Another name')
 
             // the pipelines list was also updated
-            const newPipelineList = store.getState().pipelineList
+            const newPipelineList = store.getState().pipelinesList
             expect(newPipelineList[0].name).toEqual('Pipeline Mock 1 Updated')
             expect(newPipelineList[0].contracts[0].name).toEqual('Another name')
           })
@@ -256,7 +256,7 @@ describe('Pipeline actions', () => {
       .put('/api/pipelines/1/')
       .reply(200, pipeline)
 
-    expect(store.getState().pipelineList).toBeFalsy()
+    expect(store.getState().pipelinesList).toBeFalsy()
     expect(store.getState().currentPipeline).toBeFalsy()
     expect(store.getState().currentContract).toBeFalsy()
 
@@ -272,7 +272,7 @@ describe('Pipeline actions', () => {
         expect(store.getState().currentContract.name).toEqual('Another name')
 
         // the pipelines list was not updated (is still empty)
-        expect(store.getState().pipelineList).toEqual([])
+        expect(store.getState().pipelinesList).toEqual([])
       })
   })
 
