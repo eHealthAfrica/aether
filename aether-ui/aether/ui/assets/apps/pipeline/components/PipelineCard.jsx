@@ -95,7 +95,7 @@ const PipelineCard = ({ history, pipeline, selectPipeline }) => {
           <PipelineInfo
             pipeline={pipeline}
             close={(event) => {
-              event.stopPropagation()
+              event && event.stopPropagation()
               setShowInfo(false)
             }}
           />

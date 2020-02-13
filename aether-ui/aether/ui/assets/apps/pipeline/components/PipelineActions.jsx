@@ -19,7 +19,7 @@
  */
 
 import React, { useState } from 'react'
-import onClickOutside from 'react-onclickoutside'
+import OutsideClickHandler from 'react-outside-click-handler'
 
 import PipelineRemoveButton from './PipelineRemoveButton'
 import PipelineRenameButton from './PipelineRenameButton'
@@ -28,10 +28,8 @@ import ContractAddButton from './ContractAddButton'
 const PipelineOptions = ({ pipeline }) => {
   const [showOptions, setShowOptions] = useState(false)
 
-  PipelineOptions.handleClickOutside = () => { setShowOptions(false) }
-
   return (
-    <div>
+    <OutsideClickHandler onOutsideClick={() => { setShowOptions(false) }}>
       <button
         type='button'
         className='btn btn-c btn-square mr-2'
@@ -49,20 +47,14 @@ const PipelineOptions = ({ pipeline }) => {
             <PipelineRenameButton pipeline={pipeline} />
           </ul>
       }
-    </div>
+    </OutsideClickHandler>
   )
 }
-
-const clickOutsideConfig = {
-  handleClickOutside: () => PipelineOptions.handleClickOutside
-}
-
-const PipelineOptionsOutside = onClickOutside(PipelineOptions, clickOutsideConfig)
 
 const PipelineActions = ({ history, pipeline }) => {
   return (
     <div className='pipeline-actions'>
-      <PipelineOptionsOutside pipeline={pipeline} />
+      <PipelineOptions pipeline={pipeline} />
       <ContractAddButton pipeline={pipeline} history={history} />
     </div>
   )
