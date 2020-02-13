@@ -22,6 +22,9 @@ import React, { useState } from 'react'
 import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 import { Modal } from '../../components'
 
+import { connect } from 'react-redux'
+import { renamePipeline } from '../redux'
+
 const MESSAGES = defineMessages({
   title: {
     defaultMessage: 'Rename pipeline {name}',
@@ -105,4 +108,41 @@ const PipelineRename = ({
   </Modal>
 )
 
-export default injectIntl(PipelineRename)
+const PipelineRenameIntl = injectIntl(PipelineRename)
+
+const PipelineRenameButton = ({
+  pipeline: { id, name },
+  renamePipeline
+}) => {
+  const [isRenaming, setIsRenaming] = useState(false)
+
+  const handleRenameSave = (newName) => {
+    renamePipeline(id, newName)
+    setIsRenaming(false)
+  }
+
+  return (
+    <>
+      <li onClick={() => { setIsRenaming(true) }}>
+        <FormattedMessage
+          id='pipeline.option.rename'
+          defaultMessage='Rename Pipeline'
+        />
+      </li>
+
+      {
+        isRenaming &&
+          <PipelineRenameIntl
+            name={name}
+            onCancel={() => { setIsRenaming(false) }}
+            onSave={handleRenameSave}
+          />
+      }
+    </>
+  )
+}
+
+const mapStateToProps = () => ({})
+const mapDispatchToProps = { renamePipeline }
+
+export default connect(mapStateToProps, mapDispatchToProps)(PipelineRenameButton)
