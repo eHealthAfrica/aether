@@ -23,19 +23,30 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { Route, Switch } from 'react-router-dom'
 
+import { LoadingSpinner, ModalError } from '../components'
+
 import PipelineList from './PipelineList'
 import Pipeline from './Pipeline'
 
-const PipelineApp = () => (
-  <Route render={() => (
-    <Switch>
-      <Route exact path='/' component={PipelineList} />
-      <Route path='/:pid/:cid/:view' component={Pipeline} />
-      <Route path='/:pid/:cid' component={Pipeline} />
-      <Route path='/:pid' component={Pipeline} />
-    </Switch>
-  )}
-  />
+const PipelineApp = ({ loading, error }) => (
+  <>
+    <Route render={() => (
+      <Switch>
+        <Route exact path='/' component={PipelineList} />
+        <Route path='/:pid/:cid/:view' component={Pipeline} />
+        <Route path='/:pid/:cid' component={Pipeline} />
+        <Route path='/:pid' component={Pipeline} />
+      </Switch>
+    )}
+    />
+
+    {loading && <LoadingSpinner />}
+    {error && <ModalError error={error} />}
+  </>
 )
 
-export default hot(module)(connect()(PipelineApp))
+const mapStateToProps = ({ pipelines: { loading, error } }) => ({ loading, error })
+
+export default hot(module)(
+  connect(mapStateToProps)(PipelineApp)
+)
