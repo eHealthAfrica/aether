@@ -19,6 +19,7 @@
  */
 
 import React from 'react'
+import { useHistory } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
@@ -27,12 +28,8 @@ import ContractPublishButton from './ContractPublishButton'
 import { selectContract, selectSection } from '../redux'
 import { CONTRACT_SECTION_ENTITY_TYPES } from '../../utils/constants'
 
-const ContractCard = ({
-  contract,
-  selectContract,
-  selectSection,
-  history
-}) => {
+const ContractCard = ({ contract, selectContract, selectSection }) => {
+  const history = useHistory()
   const handleSelectContract = (pipelineId, contractId) => {
     selectContract(pipelineId, contractId)
     selectSection(CONTRACT_SECTION_ENTITY_TYPES)

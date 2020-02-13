@@ -29,7 +29,7 @@ import PipelineCard from './components/PipelineCard'
 
 import { getPipelines } from './redux'
 
-const PipelineList = ({ getPipelines, history, loading, pipelinesList }) => {
+const PipelineList = ({ getPipelines, loading, pipelinesList }) => {
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
@@ -63,16 +63,12 @@ const PipelineList = ({ getPipelines, history, loading, pipelinesList }) => {
           </button>
         </h1>
 
-        <PipelineNew history={history} />
+        <PipelineNew />
 
         <div className='pipeline-previews'>
           {
             (pipelinesList || []).map(pipeline => (
-              <PipelineCard
-                key={pipeline.id}
-                pipeline={pipeline}
-                history={history}
-              />
+              <PipelineCard key={pipeline.id} pipeline={pipeline} />
             ))
           }
         </div>

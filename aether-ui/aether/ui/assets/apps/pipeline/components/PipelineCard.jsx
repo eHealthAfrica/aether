@@ -19,6 +19,7 @@
  */
 
 import React, { useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
@@ -28,7 +29,8 @@ import PipelineActions from './PipelineActions'
 
 import { selectPipeline } from '../redux'
 
-const PipelineCard = ({ history, pipeline, selectPipeline }) => {
+const PipelineCard = ({ pipeline, selectPipeline }) => {
+  const history = useHistory()
   const [showInfo, setShowInfo] = useState(false)
 
   const { id, name, isInputReadOnly, mappingset, contracts } = pipeline
@@ -43,7 +45,7 @@ const PipelineCard = ({ history, pipeline, selectPipeline }) => {
       <div className='preview-heading'>
         <span className='pipeline-name'>// {name}</span>
 
-        <PipelineActions pipeline={pipeline} history={history} />
+        <PipelineActions pipeline={pipeline} />
       </div>
 
       <div
@@ -84,7 +86,6 @@ const PipelineCard = ({ history, pipeline, selectPipeline }) => {
             <ContractCard
               key={contract.id}
               contract={contract}
-              history={history}
             />
           ))
         }

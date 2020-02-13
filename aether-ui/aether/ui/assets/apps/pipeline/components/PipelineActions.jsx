@@ -51,11 +51,11 @@ const PipelineOptions = ({ pipeline }) => {
   )
 }
 
-const PipelineActions = ({ history, pipeline }) => {
+const PipelineActions = ({ pipeline }) => {
   return (
     <div className='pipeline-actions'>
       <PipelineOptions pipeline={pipeline} />
-      <ContractAddButton pipeline={pipeline} history={history} />
+      <ContractAddButton pipeline={pipeline} />
     </div>
   )
 }
