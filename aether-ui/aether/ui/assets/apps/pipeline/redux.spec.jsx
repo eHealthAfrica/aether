@@ -272,7 +272,7 @@ describe('Pipeline actions', () => {
         expect(store.getState().currentContract.name).toEqual('Another name')
 
         // the pipelines list was not updated (is still empty)
-        expect(store.getState().pipelinesList).toEqual([])
+        expect(store.getState().pipelinesList).toBeFalsy()
       })
   })
 
