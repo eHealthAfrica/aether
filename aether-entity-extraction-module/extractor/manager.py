@@ -313,6 +313,8 @@ def push_to_kernel(realm: str, objs: List[Any], queue: Queue, redis=None):
         return len(objs)
     except HTTPError as e:
         if e.response.status_code == 400:
+            if hasattr(e.response, 'text'):
+                _logger.warning(f'Bad request: {e.response.text}')
             return handle_kernel_errors(objs, realm, queue, redis)
         else:
             _logger.warning(f'Unexpected HTTP Status from Kernel: {e.response.status_code}')
