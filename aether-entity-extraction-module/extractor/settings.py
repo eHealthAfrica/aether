@@ -14,9 +14,10 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
-# under the License.
+# under the License.d ~
 
 import os
+import json
 import logging
 
 
@@ -51,10 +52,28 @@ MAX_PUSH_SIZE = int(os.environ.get('MAX_PUSH_SIZE', 40))
 LOG_LEVEL = os.environ.get('LOGGING_LEVEL', 'INFO')
 
 
+class StackdriverFormatter(logging.Formatter):
+    # https://blog.frank-mich.com/python-logging-to-stackdriver/
+
+    def __init__(self, *args, **kwargs):
+        super(StackdriverFormatter, self).__init__(*args, **kwargs)
+
+    def format(self, record):
+        return json.dumps({
+            'severity': record.levelname,
+            'message': record.getMessage(),
+            'name': record.name
+        })
+
+
 def get_logger(name):
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter(f'%(asctime)s [{name}] %(levelname)-8s %(message)s'))
-
+    if str(os.environ.get('stackdriver_logging', True)) in ('yes', 'true', 't', '1', True):
+        handler.setFormatter(StackdriverFormatter())
+    else:
+        handler.setFormatter(logging.Formatter(
+            f'%(asctime)s [{name}] %(levelname)-8s %(message)s'))
     logger = logging.getLogger(name)
     logger.addHandler(handler)
     logger.setLevel(logging.getLevelName(LOG_LEVEL))

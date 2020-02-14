@@ -30,6 +30,8 @@ from typing import Any, Dict, List
 from requests.exceptions import HTTPError
 from redis.exceptions import ConnectionError as RedisConnectionError
 
+
+from aether.python.redis.task import Task, TaskEvent
 from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ERRORS,
     extract_create_entities,
@@ -145,13 +147,22 @@ class ExtractionManager():
 
     def subscribe_to_channel(self):
         # include current submissions from redis
+        _logger.info(f'Subscribing to {self.channel}')
         for key in utils.get_redis_keys_by_pattern(self.channel, self.redis):
+            _logger.debug(f'Picking up missed message from {self.channel} with key: {key}')
             self.add_to_queue(utils.get_redis_subscribed_message(key=key, redis=self.redis))
 
         # subscribe to new submissions
         utils.redis_subscribe(callback=self.add_to_queue, pattern=self.channel, redis=self.redis)
 
-    def add_to_queue(self, task):
+    def add_to_queue(self, task: Task):
+        if isinstance(task, Task):
+            _logger.debug(f'Adding Task with ID {task.id} to extraction pool')
+        else:
+            _logger.warning(f'Caught malformed Task of type {type(task)}')
+            if isinstance(task, TaskEvent):
+                _logger.warning(f'Bad message is TaskEvent with TaskID {task.task_id}')
+            return
         self.extraction_pool.apply_async(
             func=entity_extraction,
             args=(
@@ -305,6 +316,8 @@ def push_to_kernel(realm: str, objs: List[Any], queue: Queue, redis=None):
             return handle_kernel_errors(objs, realm, queue, redis)
         else:
             _logger.warning(f'Unexpected HTTP Status from Kernel: {e.response.status_code}')
+            if hasattr(e.response, 'text'):
+                _logger.info(f'Unexpected Response from Kernel: {e.response.text}')
             utils.cache_objects(objs, realm, queue, redis)
             return 0
 
