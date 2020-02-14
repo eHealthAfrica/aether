@@ -19,17 +19,14 @@
  */
 
 import React from 'react'
+import { useHistory } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
 import { selectPipeline } from '../redux'
 
-const ContractAddButton = ({
-  className,
-  history,
-  pipeline: { id },
-  selectPipeline
-}) => {
+const ContractAddButton = ({ className, pipeline: { id }, selectPipeline }) => {
+  const history = useHistory()
   const handleCreateNewContract = () => {
     selectPipeline(id)
     history.push({

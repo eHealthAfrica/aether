@@ -67,7 +67,7 @@ const ACTIONS_INITIAL_STATE = {
 export const INITIAL_STATE = {
   ...ACTIONS_INITIAL_STATE,
 
-  pipelineList: null,
+  pipelinesList: null,
 
   currentSection: null,
   currentPipeline: null,
@@ -258,7 +258,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     case types.REQUEST_ALL: {
       return {
         ...nextState,
-        pipelineList: action.payload.map(parsePipeline)
+        pipelinesList: action.payload.map(parsePipeline)
       }
     }
 
@@ -268,7 +268,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...nextState,
-        pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
+        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline,
         currentContract
       }
@@ -286,7 +286,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     }
 
     case types.PIPELINE_SELECT: {
-      const currentPipeline = (state.pipelineList || []).find(p => p.id === action.payload)
+      const currentPipeline = (state.pipelinesList || []).find(p => p.id === action.payload)
       const currentContract = findContract(currentPipeline, state.currentContract && state.currentContract.id)
 
       return {
@@ -298,7 +298,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     }
 
     case types.CONTRACT_SELECT: {
-      const currentPipeline = (state.pipelineList || [])
+      const currentPipeline = (state.pipelinesList || [])
         .find(p => p.id === action.payload.pipeline) || state.currentPipeline
       const currentContract = findContract(currentPipeline, action.payload.contract)
       const currentSection = !state.currentSection || state.currentSection === PIPELINE_SECTION_INPUT
@@ -326,6 +326,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentPipeline = parsePipeline(action.payload)
       return {
         ...nextState,
+        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline
       }
     }
@@ -335,7 +336,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...nextState,
-        pipelineList: [newPipeline, ...(state.pipelineList || [])],
+        pipelinesList: [newPipeline, ...(state.pipelinesList || [])],
 
         currentSection: PIPELINE_SECTION_INPUT,
         currentPipeline: newPipeline
@@ -348,7 +349,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...nextState,
-        pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
+        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline,
         currentContract
       }
@@ -357,7 +358,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     case types.PIPELINE_DELETE: {
       return {
         ...nextState,
-        pipelineList: removeItemFromList(state.pipelineList, state.currentPipeline),
+        pipelinesList: removeItemFromList(state.pipelinesList, state.currentPipeline),
         currentPipeline: null,
         currentContract: null,
         deleteStatus: action.payload
@@ -366,13 +367,13 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.CONTRACT_ADD: {
       const currentContract = parseContract(action.payload)
-      const currentPipeline = (state.pipelineList || [])
+      const currentPipeline = (state.pipelinesList || [])
         .find(p => p.id === currentContract.pipeline) || state.currentPipeline
       currentPipeline.contracts = [currentContract, ...currentPipeline.contracts]
 
       return {
         ...nextState,
-        pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
+        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline,
         currentContract
       }
@@ -385,7 +386,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...state,
-        pipelineList: replaceItemInList(state.pipelineList, uPipeline),
+        pipelinesList: replaceItemInList(state.pipelinesList, uPipeline),
         currentPipeline: uPipeline,
         currentContract: currentContract
       }
@@ -398,7 +399,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...state,
-        pipelineList: replaceItemInList(state.pipelineList, uPipeline),
+        pipelinesList: replaceItemInList(state.pipelinesList, uPipeline),
         currentPipeline: uPipeline,
         currentContract: currentContract,
         deleteStatus: action.payload,
@@ -410,7 +411,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentContract = parseContract(action.payload)
       let currentPipeline = state.currentPipeline
       if (currentPipeline.id !== currentContract.pipeline) {
-        currentPipeline = (state.pipelineList || []).find(p => p.id === currentContract.pipeline)
+        currentPipeline = (state.pipelinesList || []).find(p => p.id === currentContract.pipeline)
         if (!currentPipeline) {
           currentPipeline = state.currentPipeline
           currentContract.pipeline = currentPipeline.id
@@ -419,26 +420,27 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...state,
+        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentContract,
         currentPipeline
       }
     }
+
     case types.CONTRACT_PUBLISH_SUCCESS: {
-      const statePipeline = (state.pipelineList || [])
+      const statePipeline = (state.pipelinesList || [])
         .find(p => p.id === action.payload.pipeline) || state.currentPipeline
       const currentContract = parseContract(action.payload)
       const currentPipeline = {
         ...statePipeline,
         contracts: replaceItemInList(statePipeline.contracts, currentContract)
       }
-      const pipelineList = replaceItemInList(state.pipelineList, currentPipeline)
 
       return {
         ...nextState,
         publishSuccess: (action.type === types.CONTRACT_PUBLISH_SUCCESS),
+        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline,
-        currentContract,
-        pipelineList
+        currentContract
       }
     }
 

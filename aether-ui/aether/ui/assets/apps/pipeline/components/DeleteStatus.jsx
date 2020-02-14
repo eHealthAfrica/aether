@@ -21,7 +21,7 @@
 import React, { useEffect } from 'react'
 import { Modal } from '../../components'
 import { connect } from 'react-redux'
-import { FormattedMessage, injectIntl } from 'react-intl'
+import { FormattedMessage } from 'react-intl'
 
 const DeleteStatus = ({
   deleteOptions,
@@ -180,4 +180,4 @@ const mapStateToProps = ({ pipelines }) => ({
   deleteStatus: pipelines.deleteStatus
 })
 
-export default connect(mapStateToProps, {})(injectIntl(DeleteStatus))
+export default connect(mapStateToProps, {})(DeleteStatus)

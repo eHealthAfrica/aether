@@ -46,17 +46,6 @@
     flex-direction: column;
   }
 
-  .rules-buttons {
-    margin: 1rem 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-
-    .btn {
-      margin-top: 1rem;
-    }
-  }
-
   .rule {
     display: flex;
     flex-wrap: wrap;
@@ -79,6 +68,7 @@
 
     .btn {
       margin: .2rem 0;
+      min-width: 120px;
     }
   }
 

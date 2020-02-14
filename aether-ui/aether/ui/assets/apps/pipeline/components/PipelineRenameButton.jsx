@@ -19,8 +19,11 @@
  */
 
 import React, { useState } from 'react'
-import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { Modal } from '../../components'
+
+import { connect } from 'react-redux'
+import { renamePipeline } from '../redux'
 
 const MESSAGES = defineMessages({
   title: {
@@ -86,23 +89,57 @@ const RenameForm = ({ initialValue, placeholder, onSave, onCancel }) => {
   )
 }
 
-const PipelineRename = ({
-  name,
-  onCancel,
-  onSave,
-  intl: { formatMessage }
-}) => (
-  <Modal
-    onEscape={onCancel}
-    header={formatMessage(MESSAGES.title, { name: <b>{name}</b> })}
-  >
-    <RenameForm
-      initialValue={name}
-      placeholder={formatMessage(MESSAGES.namePlaceholder)}
-      onSave={onSave}
-      onCancel={onCancel}
-    />
-  </Modal>
-)
+const PipelineRename = ({ name, onCancel, onSave }) => {
+  const { formatMessage } = useIntl()
 
-export default injectIntl(PipelineRename)
+  return (
+    <Modal
+      onEscape={onCancel}
+      header={formatMessage(MESSAGES.title, { name: <b>{name}</b> })}
+    >
+      <RenameForm
+        initialValue={name}
+        placeholder={formatMessage(MESSAGES.namePlaceholder)}
+        onSave={onSave}
+        onCancel={onCancel}
+      />
+    </Modal>
+  )
+}
+
+const PipelineRenameButton = ({
+  pipeline: { id, name },
+  renamePipeline
+}) => {
+  const [isRenaming, setIsRenaming] = useState(false)
+
+  const handleRenameSave = (newName) => {
+    renamePipeline(id, newName)
+    setIsRenaming(false)
+  }
+
+  return (
+    <>
+      <li onClick={() => { setIsRenaming(true) }}>
+        <FormattedMessage
+          id='pipeline.option.rename'
+          defaultMessage='Rename Pipeline'
+        />
+      </li>
+
+      {
+        isRenaming &&
+          <PipelineRename
+            name={name}
+            onCancel={() => { setIsRenaming(false) }}
+            onSave={handleRenameSave}
+          />
+      }
+    </>
+  )
+}
+
+const mapStateToProps = () => ({})
+const mapDispatchToProps = { renamePipeline }
+
+export default connect(mapStateToProps, mapDispatchToProps)(PipelineRenameButton)

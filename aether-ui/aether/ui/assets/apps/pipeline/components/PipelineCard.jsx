@@ -19,32 +19,21 @@
  */
 
 import React, { useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
 import PipelineInfo from './PipelineInfo'
 import ContractCard from './ContractCard'
-import PipelineRename from './PipelineRename'
 import PipelineActions from './PipelineActions'
 
-import { selectPipeline, renamePipeline } from '../redux'
+import { selectPipeline } from '../redux'
 
-const PipelineCard = ({
-  history,
-  pipeline,
-  remove,
-  renamePipeline,
-  selectPipeline
-}) => {
-  const [isRenaming, setIsRenaming] = useState(false)
+const PipelineCard = ({ pipeline, selectPipeline }) => {
+  const history = useHistory()
   const [showInfo, setShowInfo] = useState(false)
 
   const { id, name, isInputReadOnly, mappingset, contracts } = pipeline
-
-  const handleRenameSave = (newName) => {
-    renamePipeline(id, newName)
-    setIsRenaming(false)
-  }
 
   const handlePipelineSelect = () => {
     selectPipeline(id)
@@ -55,24 +44,8 @@ const PipelineCard = ({
     <div className='pipeline-preview'>
       <div className='preview-heading'>
         <span className='pipeline-name'>// {name}</span>
-        {
-          isRenaming
-            ? (
-              <PipelineRename
-                name={name}
-                onCancel={() => { setIsRenaming(false) }}
-                onSave={handleRenameSave}
-              />
-            )
-            : (
-              <PipelineActions
-                remove={remove}
-                rename={() => { setIsRenaming(true) }}
-                pipeline={pipeline}
-                history={history}
-              />
-            )
-        }
+
+        <PipelineActions pipeline={pipeline} />
       </div>
 
       <div
@@ -113,7 +86,6 @@ const PipelineCard = ({
             <ContractCard
               key={contract.id}
               contract={contract}
-              history={history}
             />
           ))
         }
@@ -124,7 +96,7 @@ const PipelineCard = ({
           <PipelineInfo
             pipeline={pipeline}
             close={(event) => {
-              event.stopPropagation()
+              event && event.stopPropagation()
               setShowInfo(false)
             }}
           />
@@ -134,6 +106,6 @@ const PipelineCard = ({
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { selectPipeline, renamePipeline }
+const mapDispatchToProps = { selectPipeline }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PipelineCard)

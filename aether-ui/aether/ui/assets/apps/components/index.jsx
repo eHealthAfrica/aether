@@ -21,17 +21,21 @@
 // import all components
 import AppLayout from './AppLayout'
 import AvroSchemaViewer from './AvroSchemaViewer'
+import Clipboard from './Clipboard'
 import LoadingSpinner from './LoadingSpinner'
 import Modal from './Modal'
 import ModalError from './ModalError'
 import NavBar from './NavBar'
+import ViewsBar from './ViewsBar'
 
 // export all components
 export {
   AppLayout,
   AvroSchemaViewer,
+  Clipboard,
   LoadingSpinner,
   Modal,
   ModalError,
-  NavBar
+  NavBar,
+  ViewsBar
 }

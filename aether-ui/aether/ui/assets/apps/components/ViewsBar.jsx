@@ -20,18 +20,20 @@
 
 import React from 'react'
 
-const ModalDialog = ({ header, children, buttons }) => (
-  <div className='modal-dialog'>
-    <div className='modal-header'>
-      <span className='modal-title'>{header}</span>
-    </div>
-
-    <div className='modal-content'>
-      {children}
-
-      <div className='modal-actions'>{buttons}</div>
-    </div>
+const ViewsBar = ({ current, views, setView }) => (
+  <div className='tabs'>
+    {
+      views.map(({ id, label }) => (
+        <button
+          key={id}
+          className={`tab ${current === id ? 'selected' : ''}`}
+          onClick={() => { setView(id) }}
+        >
+          {label}
+        </button>
+      ))
+    }
   </div>
 )
 
-export default ModalDialog
+export default ViewsBar
