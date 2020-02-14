@@ -19,28 +19,19 @@
  */
 
 import React from 'react'
-import OutsideClickHandler from 'react-outside-click-handler'
 
-const ModalDialog = ({ header, children, buttons, handleClickOutside: handler }) => {
-  const handleClickOutside = (args) => {
-    if (handler) handler(args)
-  }
+const ModalDialog = ({ header, children, buttons }) => (
+  <div className='modal-dialog'>
+    <div className='modal-header'>
+      <span className='modal-title'>{header}</span>
+    </div>
 
-  return (
-    <OutsideClickHandler onOutsideClick={handleClickOutside}>
-      <div className='modal-dialog'>
-        <div className='modal-header'>
-          <span className='modal-title'>{header}</span>
-        </div>
+    <div className='modal-content'>
+      {children}
 
-        <div className='modal-content'>
-          {children}
-
-          <div className='modal-actions'>{buttons}</div>
-        </div>
-      </div>
-    </OutsideClickHandler>
-  )
-}
+      <div className='modal-actions'>{buttons}</div>
+    </div>
+  </div>
+)
 
 export default ModalDialog

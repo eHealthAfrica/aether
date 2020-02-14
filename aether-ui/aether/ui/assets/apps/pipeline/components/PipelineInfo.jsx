@@ -22,6 +22,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
+import OutsideClickHandler from 'react-outside-click-handler'
 import Modal from '../../components/Modal'
 import SubmissionCard from './SubmissionCard'
 
@@ -33,15 +34,16 @@ const PipelineInfo = ({ close, pipeline: { name, mappingset, input } }) => {
   )
 
   return (
-    <Modal
-      onEnter={close}
-      onEscape={close}
-      header={name}
-      buttons={button}
-      handleClickOutside={close}
-    >
-      <SubmissionCard mappingset={mappingset} inputData={input} />
-    </Modal>
+    <OutsideClickHandler onOutsideClick={close}>
+      <Modal
+        onEnter={close}
+        onEscape={close}
+        header={name}
+        buttons={button}
+      >
+        <SubmissionCard mappingset={mappingset} inputData={input} />
+      </Modal>
+    </OutsideClickHandler>
   )
 }
 
