@@ -340,7 +340,7 @@ def push_to_kernel(_type: Artifact, realm: str, objs: List[Any], queue: Queue, r
     if not objs:
         return 0
     if _type is Artifact.SUBMISSION:
-        url = 'submissions/bulk_update_extracted.json'
+        url = 'submissions.json'
         method = 'patch'
     elif _type is Artifact.ENTITY:
         url = 'entities.json'
@@ -386,5 +386,6 @@ def handle_kernel_errors(
         return 0
     else:
         _logger.warning(f'Unexpected HTTP Status from Kernel: {_code}')
+        _logger.info(f'Unexpected Response from Kernel: {e.response.text}')
         utils.cache_objects(objs, realm, _type, queue, redis)
         return 0

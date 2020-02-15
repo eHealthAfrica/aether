@@ -242,7 +242,7 @@ class ExtractionManagerTests(TestCase):
             # emulate worker
             for realm, objs in prepared.items():
                 push_to_kernel(Artifact.SUBMISSION, realm, objs, sub_queue, self.redis)
-            _url = 'submissions/bulk_update_extracted.json'
+            _url = 'submissions.json'
             _mock_fn.assert_has_calls([
                 mock.call(
                     url=_url,
@@ -305,7 +305,7 @@ class ExtractionManagerTests(TestCase):
                 if _type is Artifact.SUBMISSION:
                     _mock_fn.assert_has_calls([
                         mock.call(
-                            url='submissions/bulk_update_extracted.json',
+                            url='submissions.json',
                             method='patch',
                             data=prepared[TENANT],
                             realm=TENANT,
@@ -389,7 +389,7 @@ class ExtractionManagerTests(TestCase):
                 if _type is Artifact.SUBMISSION:
                     _mock_fn.assert_has_calls([
                         mock.call(
-                            url='submissions/bulk_update_extracted.json',
+                            url='submissions.json',
                             method='patch',
                             data=prepared[TENANT],
                             realm=TENANT,
@@ -445,7 +445,7 @@ class ExtractionManagerTests(TestCase):
                 if _type is Artifact.SUBMISSION:
                     _mock_fn.assert_has_calls([
                         mock.call(
-                            url='submissions/bulk_update_extracted.json',
+                            url='submissions.json',
                             method='patch',
                             data=prepared[TENANT],
                             realm=TENANT,
