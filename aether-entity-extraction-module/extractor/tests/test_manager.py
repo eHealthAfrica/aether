@@ -34,13 +34,13 @@ from aether.python.entity.extractor import (
 from extractor.manager import (
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
-    SUBMISSION_ENTITIES_FIELD,
     entity_extraction,
     get_prepared,
     push_to_kernel,
 )
 
 from extractor.utils import (
+    Artifact,
     ARTEFACT_NAMES,
     CacheType,
     Task,
@@ -154,8 +154,10 @@ class ExtractionManagerTests(TestCase):
                 json.dumps(sd)
             )
 
+        ent_queue = Queue()
         sub_queue = Queue()
-        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
+        self.assertEqual(
+            entity_extraction(self.submission_task, ent_queue, sub_queue, self.redis), 1)
         self.assertEqual(sub_queue.qsize(), 1)
 
         tenant, submission = sub_queue.get_nowait()
@@ -163,13 +165,14 @@ class ExtractionManagerTests(TestCase):
         self.assertTrue(submission[SUBMISSION_EXTRACTION_FLAG])
         self.assertIn(ENTITY_EXTRACTION_ENRICHMENT, submission[SUBMISSION_PAYLOAD_FIELD])
         self.assertNotIn(ENTITY_EXTRACTION_ERRORS, submission[SUBMISSION_PAYLOAD_FIELD])
-        self.assertIn(SUBMISSION_ENTITIES_FIELD, submission)
-        self.assertEqual(len(submission[SUBMISSION_ENTITIES_FIELD]), 3)
+        self.assertEqual(ent_queue.qsize(), 3)
 
         # included in cache
-        self.assertEqual(cache_has_object(submission['id'], tenant, self.redis), CacheType.NORMAL)
+        self.assertEqual(cache_has_object(
+            submission['id'], tenant, Artifact.SUBMISSION, self.redis), CacheType.NORMAL)
 
     def test_entity_extraction__conform_no_mapping(self):
+        ent_queue = Queue()
         sub_queue = Queue()
         task = Task(
             id=str(uuid.uuid4()),
@@ -178,7 +181,7 @@ class ExtractionManagerTests(TestCase):
             tenant=TENANT,
         )
 
-        self.assertEqual(entity_extraction(task, sub_queue, self.redis), 1)
+        self.assertEqual(entity_extraction(task, ent_queue, sub_queue, self.redis), 1)
         self.assertEqual(sub_queue.qsize(), 1)
 
         tenant, submission = sub_queue.get_nowait()
@@ -186,13 +189,14 @@ class ExtractionManagerTests(TestCase):
         self.assertTrue(submission[SUBMISSION_EXTRACTION_FLAG], submission)
         self.assertNotIn(ENTITY_EXTRACTION_ENRICHMENT, submission[SUBMISSION_PAYLOAD_FIELD])
         self.assertNotIn(ENTITY_EXTRACTION_ERRORS, submission[SUBMISSION_PAYLOAD_FIELD])
-        self.assertIn(SUBMISSION_ENTITIES_FIELD, submission)
-        self.assertEqual(len(submission[SUBMISSION_ENTITIES_FIELD]), 0)
+        self.assertEqual(ent_queue.qsize(), 0)
 
         # included in cache
-        self.assertEqual(cache_has_object(submission['id'], tenant, self.redis), CacheType.NORMAL)
+        self.assertEqual(cache_has_object(
+            submission['id'], tenant, Artifact.SUBMISSION, self.redis), CacheType.NORMAL)
 
     def test_entity_extraction__unknown_mapping(self):
+        ent_queue = Queue()
         sub_queue = Queue()
         task = Task(
             id=str(uuid.uuid4()),
@@ -201,7 +205,7 @@ class ExtractionManagerTests(TestCase):
             tenant=TENANT,
         )
 
-        self.assertEqual(entity_extraction(task, sub_queue, self.redis), 0)
+        self.assertEqual(entity_extraction(task, ent_queue, sub_queue, self.redis), 0)
         self.assertEqual(sub_queue.qsize(), 1)
 
         tenant, submission = sub_queue.get_nowait()
@@ -209,10 +213,11 @@ class ExtractionManagerTests(TestCase):
         self.assertFalse(submission[SUBMISSION_EXTRACTION_FLAG])
         self.assertNotIn(ENTITY_EXTRACTION_ENRICHMENT, submission[SUBMISSION_PAYLOAD_FIELD])
         self.assertIn(ENTITY_EXTRACTION_ERRORS, submission[SUBMISSION_PAYLOAD_FIELD])
-        self.assertNotIn(SUBMISSION_ENTITIES_FIELD, submission)
+        self.assertEqual(ent_queue.qsize(), 0)
 
         # included in cache
-        self.assertEqual(cache_has_object(submission['id'], tenant, self.redis), CacheType.NORMAL)
+        self.assertEqual(cache_has_object(
+            submission['id'], tenant, Artifact.SUBMISSION, self.redis), CacheType.NORMAL)
 
     def test_push_submissions_to_kernel(self):
         def _mock_fn_side_effect(url='', method='get', data=None, headers=None, realm=None):
@@ -236,39 +241,39 @@ class ExtractionManagerTests(TestCase):
             _mock_fn.side_effect = _mock_fn_side_effect
             # emulate worker
             for realm, objs in prepared.items():
-                push_to_kernel(realm, objs, sub_queue, self.redis)
-
+                push_to_kernel(Artifact.SUBMISSION, realm, objs, sub_queue, self.redis)
+            _url = 'submissions/bulk_update_extracted.json'
             _mock_fn.assert_has_calls([
                 mock.call(
-                    url='submissions.json',
+                    url=_url,
                     method='patch',
                     data=[_obj_t1],
                     realm=TENANT,
                 ),
                 mock.call(
-                    url='submissions.json',
+                    url=_url,
                     method='patch',
                     data=[_obj_t1, _obj_t2],
                     realm=TENANT_2,
                 ),
                 # halve_iteration chunks
                 mock.call(
-                    url='submissions.json',
+                    url=_url,
                     method='patch',
                     data=[_obj_t1],
                     realm=TENANT_2,
                 ),
                 mock.call(
-                    url='submissions.json',
+                    url=_url,
                     method='patch',
                     data=[_obj_t2],
                     realm=TENANT_2,
                 ),
             ])
 
-        self.assertEqual(count_quarantined(self.redis), 1)
+        self.assertEqual(count_quarantined(Artifact.SUBMISSION, self.redis), 1)
         q = Queue()
-        get_failed_objects(q, self.redis)
+        get_failed_objects(q, Artifact.SUBMISSION, self.redis)
         self.assertEqual(q.qsize(), 0)
 
     def test_workflow(self):
@@ -282,34 +287,47 @@ class ExtractionManagerTests(TestCase):
                 json.dumps(sd)
             )
 
-        sub_queue = Queue()
-        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
-        self.assertEqual(sub_queue.qsize(), 1)
+        qs = {i: Queue() for i in Artifact}
+        self.assertEqual(entity_extraction(
+            self.submission_task, qs[Artifact.ENTITY], qs[Artifact.SUBMISSION], self.redis), 1)
+        self.assertEqual(qs[Artifact.ENTITY].qsize(), 3)
+        self.assertEqual(qs[Artifact.SUBMISSION].qsize(), 1)
+        # submissions must be sent first for entities to be processed
+        for _type in [Artifact.SUBMISSION, Artifact.ENTITY]:
+            prepared = get_prepared(qs[_type], _type, self.redis)
+            self.assertEqual(qs[_type].qsize(), 0)
+            self.assertIn(TENANT, dict(prepared))
 
-        prepared = get_prepared(sub_queue, self.redis)
-        self.assertEqual(sub_queue.qsize(), 0)
-        self.assertIn(TENANT, dict(prepared))
-
-        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
-            # emulate worker
-            for realm, objs in prepared.items():
-                push_to_kernel(realm, objs, sub_queue, self.redis)
-
-            _mock_fn.assert_has_calls([
-                mock.call(
-                    url='submissions.json',
-                    method='patch',
-                    data=prepared[TENANT],
-                    realm=TENANT,
-                ),
-            ])
+            with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+                # emulate worker
+                for realm, objs in prepared.items():
+                    push_to_kernel(_type, realm, objs, qs[_type], self.redis)
+                if _type is Artifact.SUBMISSION:
+                    _mock_fn.assert_has_calls([
+                        mock.call(
+                            url='submissions/bulk_update_extracted.json',
+                            method='patch',
+                            data=prepared[TENANT],
+                            realm=TENANT,
+                        ),
+                    ])
+                elif _type is Artifact.ENTITY:
+                    _mock_fn.assert_has_calls([
+                        mock.call(
+                            url='entities.json',
+                            method='post',
+                            data=prepared[TENANT],
+                            realm=TENANT,
+                        ),
+                    ])
 
         # no errors/quarantine
-        self.assertEqual(count_quarantined(self.redis), 0)
-        q = Queue()
-        get_failed_objects(q, self.redis)
-        self.assertEqual(q.qsize(), 0)
-        self.assertEqual(sub_queue.qsize(), 0)
+        for _type in Artifact:
+            self.assertEqual(count_quarantined(_type, self.redis), 0)
+            q = Queue()
+            get_failed_objects(q, _type, self.redis)
+            self.assertEqual(q.qsize(), 0)
+        self.assertEqual(qs[Artifact.SUBMISSION].qsize(), 0)
 
     def test_workflow__error(self):
         # test extraction with missing schema definition in schema decorator
@@ -322,34 +340,51 @@ class ExtractionManagerTests(TestCase):
                 json.dumps(sd)
             )
 
-        sub_queue = Queue()
-        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
-        self.assertEqual(sub_queue.qsize(), 1)
+        qs = {i: Queue() for i in Artifact}
+        self.assertEqual(entity_extraction(
+            self.submission_task, qs[Artifact.ENTITY], qs[Artifact.SUBMISSION], self.redis), 1)
+        self.assertEqual(qs[Artifact.ENTITY].qsize(), 3)
+        self.assertEqual(qs[Artifact.SUBMISSION].qsize(), 1)
 
-        prepared = get_prepared(sub_queue, self.redis)
-        self.assertEqual(sub_queue.qsize(), 0)
-        self.assertIn(TENANT, dict(prepared))
+        for _type in Artifact:
+            queue = qs[_type]
+            prepared = get_prepared(queue, self.redis)
+            self.assertEqual(queue.qsize(), 0)
+            self.assertIn(TENANT, dict(prepared))
 
-        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
-            _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=500))
-            # emulate worker
-            for realm, objs in prepared.items():
-                push_to_kernel(realm, objs, sub_queue, self.redis)
+            with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+                _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=500))
+                # emulate worker
+                for realm, objs in prepared.items():
+                    push_to_kernel(_type, realm, objs, queue, self.redis)
 
-            _mock_fn.assert_has_calls([
-                mock.call(
-                    url='submissions.json',
-                    method='patch',
-                    data=prepared[TENANT],
-                    realm=TENANT,
-                ),
-            ])
+                if _type is Artifact.SUBMISSION:
+                    _mock_fn.assert_has_calls([
+                        mock.call(
+                            url='submissions/bulk_update_extracted.json',
+                            method='patch',
+                            data=prepared[TENANT],
+                            realm=TENANT,
+                        ),
+                    ])
+                elif _type is Artifact.ENTITY:
+                    _mock_fn.assert_has_calls([
+                        mock.call(
+                            url='entities.json',
+                            method='post',
+                            data=prepared[TENANT],
+                            realm=TENANT,
+                        ),
+                    ])
 
-        self.assertEqual(count_quarantined(self.redis), 0)
-        q = Queue()
-        get_failed_objects(q, self.redis)
-        self.assertEqual(q.qsize(), 1)
-        self.assertEqual(sub_queue.qsize(), 1)
+            self.assertEqual(count_quarantined(_type, self.redis), 0)
+            q = Queue()
+            get_failed_objects(q, _type, self.redis)
+            if _type is Artifact.SUBMISSION:
+                self.assertEqual(q.qsize(), 1)
+                self.assertEqual(queue.qsize(), 1)
+            else:
+                self.assertEqual(q.qsize(), 3)
 
     def test_workflow__quarantine(self):
         # test extraction with missing schema definition in schema decorator
@@ -362,32 +397,45 @@ class ExtractionManagerTests(TestCase):
                 json.dumps(sd)
             )
 
-        sub_queue = Queue()
-        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
-        self.assertEqual(sub_queue.qsize(), 1)
+        qs = {i: Queue() for i in Artifact}
+        self.assertEqual(entity_extraction(
+            self.submission_task, qs[Artifact.ENTITY], qs[Artifact.SUBMISSION], self.redis), 1)
+        self.assertEqual(qs[Artifact.ENTITY].qsize(), 3)
+        self.assertEqual(qs[Artifact.SUBMISSION].qsize(), 1)
+        for _type in Artifact:
+            queue = qs[_type]
+            prepared = get_prepared(queue, self.redis)
+            self.assertEqual(queue.qsize(), 0)
+            self.assertIn(TENANT, dict(prepared))
 
-        prepared = get_prepared(sub_queue, self.redis)
-        self.assertEqual(sub_queue.qsize(), 0)
-        self.assertIn(TENANT, dict(prepared))
+            with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+                _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=400))
+                # emulate worker
+                for realm, objs in prepared.items():
+                    push_to_kernel(_type, realm, objs, queue, self.redis)
 
-        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
-            _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=400))
-            # emulate worker
-            for realm, objs in prepared.items():
-                push_to_kernel(realm, objs, sub_queue, self.redis)
-
-            _mock_fn.assert_has_calls([
-                mock.call(
-                    url='submissions.json',
-                    method='patch',
-                    data=prepared[TENANT],
-                    realm=TENANT,
-                ),
-            ])
+                if _type is Artifact.SUBMISSION:
+                    _mock_fn.assert_has_calls([
+                        mock.call(
+                            url='submissions/bulk_update_extracted.json',
+                            method='patch',
+                            data=prepared[TENANT],
+                            realm=TENANT,
+                        ),
+                    ])
+                elif _type is Artifact.ENTITY:
+                    _mock_fn.assert_has_calls([
+                        mock.call(
+                            url='entities.json',
+                            method='post',
+                            data=prepared[TENANT],
+                            realm=TENANT,
+                        ),
+                    ])
 
         # no errors but quarantine
-        self.assertEqual(count_quarantined(self.redis), 1)
+        self.assertEqual(count_quarantined(Artifact.SUBMISSION, self.redis), 1)
         q = Queue()
-        get_failed_objects(q, self.redis)
+        get_failed_objects(q, Artifact.SUBMISSION, self.redis)
         self.assertEqual(q.qsize(), 0)
-        self.assertEqual(sub_queue.qsize(), 0)
+        self.assertEqual(qs[Artifact.SUBMISSION].qsize(), 0)
