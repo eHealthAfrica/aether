@@ -33,7 +33,7 @@ services:
       retries: 30
 
   redis-base:
-    image: alpine:redis
+    image: redis:alpine
     command: >
       redis-server
       --requirepass ${REDIS_PASSWORD}
