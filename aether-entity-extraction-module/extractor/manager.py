@@ -31,7 +31,7 @@ from requests.exceptions import HTTPError
 from redis.exceptions import ConnectionError as RedisConnectionError
 
 
-from aether.python.redis.task import Task, TaskEvent
+from aether.python.redis.task import Task
 from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ERRORS,
     extract_create_entities,
@@ -175,11 +175,9 @@ class ExtractionManager():
 
     def add_to_queue(self, task: Task):
         if isinstance(task, Task):
+            # We don't want to catch metadata, only Tasks
             _logger.debug(f'Adding Task with ID {task.id} to extraction pool')
         else:
-            _logger.warning(f'Caught malformed Task of type {type(task)}')
-            if isinstance(task, TaskEvent):
-                _logger.warning(f'Bad message is TaskEvent with TaskID {task.task_id}')
             return
         self.extraction_pool.apply_async(
             func=entity_extraction,
@@ -261,7 +259,7 @@ def entity_extraction(task, entity_queue, submission_queue, redis=None):
                     'mapping': mapping_id,
                     'mapping_revision': mapping['revision'],
                 })
-
+        is_extracted = False
         if not payload.get(ENTITY_EXTRACTION_ERRORS):
             payload.pop(ENTITY_EXTRACTION_ERRORS, None)
             is_extracted = True
@@ -272,9 +270,6 @@ def entity_extraction(task, entity_queue, submission_queue, redis=None):
                 queue=entity_queue,
                 redis=redis
             )
-        else:
-            submission_entities.clear()
-            is_extracted = False
         # add to processed submission queue (but only the required fields)
         processed_submission = {
             'id': task.id,

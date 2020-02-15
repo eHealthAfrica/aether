@@ -329,6 +329,34 @@ class ExtractionManagerTests(TestCase):
             self.assertEqual(q.qsize(), 0)
         self.assertEqual(qs[Artifact.SUBMISSION].qsize(), 0)
 
+    def test_workflow__entity_first(self):
+        # test extraction with missing schema definition in schema decorator
+        self.assertEqual(len(SCHEMA_DECORATORS), 3)
+        remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
+        for sd in remove_definitions:
+            sd.pop(ARTEFACT_NAMES.schema_definition)
+            self.redis.set(
+                build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
+                json.dumps(sd)
+            )
+
+        qs = {i: Queue() for i in Artifact}
+        self.assertEqual(entity_extraction(
+            self.submission_task, qs[Artifact.ENTITY], qs[Artifact.SUBMISSION], self.redis), 1)
+        self.assertEqual(qs[Artifact.ENTITY].qsize(), 3)
+        self.assertEqual(qs[Artifact.SUBMISSION].qsize(), 1)
+        # submissions must be sent first for entities to be processed
+        for _type in [Artifact.ENTITY]:
+            prepared = get_prepared(qs[_type], _type, self.redis)
+            self.assertEqual(qs[_type].qsize(), 3)
+            self.assertEqual(prepared, {})
+
+        # no errors/quarantine
+        self.assertEqual(count_quarantined(Artifact.ENTITY, self.redis), 0)
+        q = Queue()
+        get_failed_objects(q, Artifact.ENTITY, self.redis)
+        self.assertEqual(q.qsize(), 3)
+
     def test_workflow__error(self):
         # test extraction with missing schema definition in schema decorator
         self.assertEqual(len(SCHEMA_DECORATORS), 3)
