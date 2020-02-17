@@ -32,7 +32,7 @@ from typing import Any, Dict, List
 from requests.exceptions import HTTPError
 from redis.exceptions import LockError, ConnectionError as RedisConnectionError
 
-from aether.python.redis.task import Task, TaskEvent
+from aether.python.redis.task import Task
 from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ERRORS,
     extract_create_entities,
@@ -190,9 +190,6 @@ class ExtractionManager():
 
     def add_to_queue(self, task: Task) -> bool:
         if not isinstance(task, Task):
-            _logger.warning(f'Caught malformed Task of type {type(task)}')
-            if isinstance(task, TaskEvent):
-                _logger.warning(f'Bad message is TaskEvent with TaskID {task.task_id}')
             return False
         _logger.debug(f'Adding Task with ID {task.id} to extraction pool')
         self.extraction_pool.apply_async(
@@ -343,6 +340,7 @@ def push_to_kernel(realm: str, objs: List[Any], queue: Queue, redis=None):
         for obj in objs:
             utils.remove_from_cache(obj, realm, redis)
             utils.remove_from_quarantine(obj, realm, redis)
+        _logger.debug(f'submitted: {len(objs)} for {realm}')
         return len(objs)
     except HTTPError as e:
         if e.response.status_code == 400:

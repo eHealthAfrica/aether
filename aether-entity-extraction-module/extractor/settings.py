@@ -49,7 +49,7 @@ MAX_PUSH_SIZE = int(os.environ.get('MAX_PUSH_SIZE', 40))
 LOCK_TIMEOUT = int(os.environ.get('LOCK_TIMEOUT', 60))
 
 # https://docs.python.org/3.7/library/logging.html#levels
-LOG_LEVEL = os.environ.get('LOGGING_LEVEL', 'INFO')
+LOG_LEVEL = os.environ.get('LOGGING_LEVEL', 'DEBUG')
 
 
 class StackdriverFormatter(logging.Formatter):
