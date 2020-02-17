@@ -16,9 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime
 import signal
 import sys
 import time
+from uuid import uuid4
 
 from collections import defaultdict
 from queue import Queue, Empty
@@ -28,8 +30,7 @@ from threading import Thread
 from typing import Any, Dict, List
 
 from requests.exceptions import HTTPError
-from redis.exceptions import ConnectionError as RedisConnectionError
-
+from redis.exceptions import LockError, ConnectionError as RedisConnectionError
 
 from aether.python.redis.task import Task, TaskEvent
 from aether.python.entity.extractor import (
@@ -48,8 +49,11 @@ _logger = settings.get_logger('Manager')
 
 
 class ExtractionManager():
+    LOCK_TYPE = '_aether-extraction-manager_lock'
+    LOCK_TIMEOUT = 600
 
     def __init__(self, redis=None, channel=settings.SUBMISSION_CHANNEL):
+        self._id = f'{str(uuid4())}-{str(datetime.now().isoformat())}'
         self.redis = redis
         self.channel = channel
 
@@ -68,7 +72,7 @@ class ExtractionManager():
         if not self.stopped:
             raise RuntimeError('Manager already started!')
 
-        _logger.info('starting')
+        _logger.info(f'starting with ID: {self._id}')
 
         signal.signal(signal.SIGINT, self.stop)
         signal.signal(signal.SIGTERM, self.stop)
@@ -96,6 +100,23 @@ class ExtractionManager():
 
         _logger.info('started')
 
+    def _get_lock(self, timeout=settings.LOCK_TIMEOUT, token=None):
+        try:
+            _lock = self.redis.lock(
+                self.LOCK_TYPE,                         # same ID across all
+                timeout=60,                             # TTL in redis
+                blocking_timeout=timeout)               # attempt for this long
+            if not _lock.acquire(token=token or self.LOCK_TYPE):
+                raise LockError('Could not get lock')
+            # update lock_info
+            _meta = utils.get_redis(self.redis).add(
+                {'id': 'lockmeta', 'owner': self._id}, self.LOCK_TYPE, '_all')
+            return _lock
+        except LockError as ler:
+            _meta = utils.get_redis(self.redis).get('lockmeta', self.LOCK_TYPE, '_all')
+            _logger.error(f'Could not acquire lock, owned by {_meta}')
+            raise ler
+
     def stop(self, *args, **kwargs):
         if self.stopped:
             raise RuntimeError('Manager not running!')
@@ -122,23 +143,35 @@ class ExtractionManager():
         return not self.stopped
 
     def worker(self):
-        while not self.stopped:
-            _logger.debug('Looking for work')
+        try:
+            _lock = self._get_lock()
+            while not self.stopped:
+                _logger.debug('Looking for work')
+                _lock.reacquire()
+                read_subs = get_prepared(self.processed_submissions, self.redis)
+                for realm, objs in read_subs.items():
+                    self.kernel_comm_pool.apply_async(
+                        func=push_to_kernel,
+                        args=(
+                            realm,
+                            objs,
+                            self.processed_submissions,
+                            self.redis,
+                        ))
 
-            read_subs = get_prepared(self.processed_submissions, self.redis)
-            for realm, objs in read_subs.items():
-                self.kernel_comm_pool.apply_async(
-                    func=push_to_kernel,
-                    args=(
-                        realm,
-                        objs,
-                        self.processed_submissions,
-                        self.redis,
-                    ))
-
-            time.sleep(settings.WAIT_INTERVAL)
-
-        _logger.info('Manager caught stop signal')
+                time.sleep(settings.WAIT_INTERVAL)
+            _logger.info('Manager caught stop signal')
+        except LockError as ler:
+            _logger.error(f'Could not acquire lock in {self.LOCK_TIMEOUT}; {ler}')
+        except Exception as err:
+            _logger.error(f'Worker died with err: {err}')
+        finally:
+            try:
+                _lock.release()
+            except Exception:
+                # never set should be (UnboundLocalError, LockError), but FakeRedis can't release
+                # so we catch all
+                pass
 
     def load_failed(self) -> None:
         utils.get_failed_objects(self.processed_submissions, self.redis)
@@ -155,14 +188,13 @@ class ExtractionManager():
         # subscribe to new submissions
         utils.redis_subscribe(callback=self.add_to_queue, pattern=self.channel, redis=self.redis)
 
-    def add_to_queue(self, task: Task):
-        if isinstance(task, Task):
-            _logger.debug(f'Adding Task with ID {task.id} to extraction pool')
-        else:
+    def add_to_queue(self, task: Task) -> bool:
+        if not isinstance(task, Task):
             _logger.warning(f'Caught malformed Task of type {type(task)}')
             if isinstance(task, TaskEvent):
                 _logger.warning(f'Bad message is TaskEvent with TaskID {task.task_id}')
-            return
+            return False
+        _logger.debug(f'Adding Task with ID {task.id} to extraction pool')
         self.extraction_pool.apply_async(
             func=entity_extraction,
             args=(
@@ -171,6 +203,7 @@ class ExtractionManager():
                 self.redis,
             )
         )
+        return True
 
 
 def entity_extraction(task, submission_queue, redis=None):

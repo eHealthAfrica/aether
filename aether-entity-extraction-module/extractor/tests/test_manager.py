@@ -21,11 +21,13 @@ import fakeredis
 import json
 import uuid
 
+from redis.exceptions import LockError
 from requests.exceptions import HTTPError
 from queue import Queue
 
 from unittest import TestCase, mock
 
+from aether.python.redis.task import Task, TaskEvent
 from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ERRORS,
     ENTITY_EXTRACTION_ENRICHMENT,
@@ -35,6 +37,7 @@ from extractor.manager import (
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
     SUBMISSION_ENTITIES_FIELD,
+    ExtractionManager,
     entity_extraction,
     get_prepared,
     push_to_kernel,
@@ -42,12 +45,13 @@ from extractor.manager import (
 
 from extractor.utils import (
     ARTEFACT_NAMES,
+    # _REDIS_TASK,
     CacheType,
-    Task,
     cache_has_object,
     count_quarantined,
     get_failed_objects,
     get_from_redis_or_kernel,
+    get_redis,
 )
 
 from . import (
@@ -142,6 +146,20 @@ class ExtractionManagerTests(TestCase):
             type=f'_{SUBMISSION_CHANNEL}',
             tenant=TENANT,
         )
+
+    def test_lock(self):
+        man = ExtractionManager(self.redis)
+        man._get_lock()
+        with self.assertRaises(LockError):
+            man._get_lock(0.1)
+        _meta = get_redis(self.redis).get('lockmeta', man.LOCK_TYPE, '_all')
+        self.assertEqual(_meta['owner'], man._id)
+
+    def test_bad_event(self):
+        man = ExtractionManager(self.redis)
+        self.assertTrue(man.add_to_queue(self.submission_task))
+        bad = TaskEvent('a', 'b', 'c', 'd')
+        self.assertFalse(man.add_to_queue(bad))
 
     def test_entity_extraction(self):
         # test extraction with missing schema definition in schema decorator

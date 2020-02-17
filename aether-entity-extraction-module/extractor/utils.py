@@ -21,16 +21,13 @@ from enum import Enum
 from multiprocessing import Queue
 from typing import (
     Any,
-    Dict,
     List,
     Mapping,
-    NamedTuple,
-    Union
 )
 
 from requests.exceptions import HTTPError
 
-from aether.python.redis.task import TaskHelper
+from aether.python.redis.task import TaskHelper, Task
 from aether.python.utils import request
 
 from extractor import settings
@@ -53,13 +50,6 @@ class CacheType(Enum):
     NORMAL = 1
     QUARANTINE = 2
     NONE = 3
-
-
-class Task(NamedTuple):
-    id: str
-    tenant: str
-    type: str
-    data: Union[Dict, None] = None
 
 
 ARTEFACT_NAMES = Constants(
