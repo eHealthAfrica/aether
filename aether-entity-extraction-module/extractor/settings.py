@@ -69,7 +69,7 @@ class StackdriverFormatter(logging.Formatter):
 def get_logger(name):
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter(f'%(asctime)s [{name}] %(levelname)-8s %(message)s'))
-    if str(os.environ.get('stackdriver_logging', True)) in ('yes', 'true', 't', '1', True):
+    if str(os.environ.get('STACKDRIVER_LOGGING', True)) in ('yes', 'true', 't', '1', True):
         handler.setFormatter(StackdriverFormatter())
     else:
         handler.setFormatter(logging.Formatter(

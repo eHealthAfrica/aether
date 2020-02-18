@@ -19,7 +19,7 @@
 from extractor.manager import ExtractionManager
 
 
-def main():
-    extractor = ExtractionManager()
+def main(redis=None):
+    extractor = ExtractionManager(redis=redis)
     extractor.start()
     return extractor

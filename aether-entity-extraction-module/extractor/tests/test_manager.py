@@ -45,7 +45,6 @@ from extractor.manager import (
 
 from extractor.utils import (
     ARTEFACT_NAMES,
-    # _REDIS_TASK,
     CacheType,
     cache_has_object,
     count_quarantined,
@@ -53,6 +52,8 @@ from extractor.utils import (
     get_from_redis_or_kernel,
     get_redis,
 )
+
+from extractor.settings import get_logger
 
 from . import (
     MAPPINGS,
@@ -67,6 +68,9 @@ from . import (
 SUBMISSION_CHANNEL = 'test_submissions'
 TENANT = 'test'
 TENANT_2 = 'test-2'
+
+
+_logger = get_logger('UNIT')
 
 
 def build_redis_key(_type, tenant, id):
@@ -148,6 +152,7 @@ class ExtractionManagerTests(TestCase):
         )
 
     def test_lock(self):
+        _logger.debug('Test Lock')
         man = ExtractionManager(self.redis)
         man._get_lock()
         with self.assertRaises(LockError):
@@ -156,6 +161,7 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(_meta['owner'], man._id)
 
     def test_bad_event(self):
+        _logger.debug('Test Bad Event')
         man = ExtractionManager(self.redis)
         self.assertTrue(man.add_to_queue(self.submission_task))
         bad = TaskEvent('a', 'b', 'c', 'd')

@@ -17,6 +17,7 @@
 # under the License.
 
 from unittest import TestCase
+import fakeredis
 
 from extractor import main
 
@@ -25,7 +26,8 @@ class InitTests(TestCase):
 
     def setUp(self):
         super(InitTests, self).setUp()
-        self.container = main()
+        self.redis = fakeredis.FakeStrictRedis()
+        self.container = main(self.redis)
 
     def test_manager_setup(self):
         self.assertFalse(self.container.stopped)
@@ -44,5 +46,5 @@ class InitTests(TestCase):
         # try to start again
         with self.assertRaises(RuntimeError):
             self.container.stop()
-
+        self.container = None
         super(InitTests, self).tearDown()

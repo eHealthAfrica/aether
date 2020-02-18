@@ -25,12 +25,15 @@ from typing import (
     Mapping,
 )
 
+from redis import Redis  # noqa
 from requests.exceptions import HTTPError
 
 from aether.python.redis.task import TaskHelper, Task
 from aether.python.utils import request
 
 from extractor import settings
+
+_logger = settings.get_logger('Utils')
 
 Constants = namedtuple(
     'Constants',
@@ -62,7 +65,6 @@ ARTEFACT_NAMES = Constants(
     schema_definition='schema_definition',
 )
 
-_REDIS_TASK = TaskHelper(settings, None)
 
 _NORMAL_CACHE = 'exm_failed_submissions'
 _QUARANTINE_CACHE = 'exm_quarantine_submissions'
@@ -71,11 +73,36 @@ _FAILED_CACHES = [
     (CacheType.QUARANTINE, _QUARANTINE_CACHE),
 ]
 
-_logger = settings.get_logger('Utils')
+
+_DEFAULT_REDIS = None
+_REDIS_TASK = None
+
+
+def get_default_base_redis(redis=None):
+    global _DEFAULT_REDIS
+    if (not redis) and (not _DEFAULT_REDIS):
+        _DEFAULT_REDIS = Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            password=settings.REDIS_PASSWORD,
+            db=settings.REDIS_DB,
+            encoding='utf-8',
+            decode_responses=True
+        )
+    else:
+        _logger.debug('Not Creating Redis instance')
+    return redis if redis else _DEFAULT_REDIS
 
 
 def get_redis(redis=None):
-    return TaskHelper(settings, redis) if redis else _REDIS_TASK
+    global _REDIS_TASK
+    if (not redis) and (not _REDIS_TASK):  # only want one of these
+        _REDIS_TASK = TaskHelper(settings, get_default_base_redis())
+    elif isinstance(redis, TaskHelper):
+        _REDIS_TASK = redis
+    else:
+        _REDIS_TASK = TaskHelper(settings, redis)
+    return _REDIS_TASK
 
 
 def kernel_data_request(url='', method='get', data=None, headers=None, realm=None):
@@ -164,8 +191,8 @@ def redis_subscribe(callback, pattern, redis=None):
 def redis_unsubscribe(redis=None):
     try:
         get_redis(redis).stop()
-    except Exception:  # pragma: no cover
-        pass
+    except Exception as aer:  # pragma: no cover
+        _logger.critical(f'could not unsubscribe! {aer}')
 
 
 def cache_objects(objects: List[Any], realm, queue: Queue, redis=None):

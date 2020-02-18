@@ -54,7 +54,9 @@ class ExtractionManager():
 
     def __init__(self, redis=None, channel=settings.SUBMISSION_CHANNEL):
         self._id = f'{str(uuid4())}-{str(datetime.now().isoformat())}'
-        self.redis = redis
+        self.redis = utils.get_default_base_redis(redis)
+        self.task_helper = utils.get_redis(self.redis)
+        _logger.debug(f'{self._id}- {self.redis}')
         self.channel = channel
 
         self.stopped = True
@@ -66,7 +68,7 @@ class ExtractionManager():
         self.manager = mp.Manager()
         self.processed_submissions = self.manager.Queue()
 
-        self.worker_thread = Thread(target=self.worker, daemon=True)
+        self.worker_thread = Thread(target=self.worker, daemon=False)
 
     def start(self):
         if not self.stopped:
@@ -85,7 +87,7 @@ class ExtractionManager():
 
         # Report on permanently failed submissions
         # (Failed with 400 Bad Request)
-        _logger.info(f'#{utils.count_quarantined(self.redis)} submissions in quarantine')
+        _logger.info(f'#{utils.count_quarantined(self.task_helper)} submissions in quarantine')
 
         # load failed from redis. When running will cycle back into
         # queue on failure.
@@ -109,11 +111,11 @@ class ExtractionManager():
             if not _lock.acquire(token=token or self.LOCK_TYPE):
                 raise LockError('Could not get lock')
             # update lock_info
-            _meta = utils.get_redis(self.redis).add(
+            _meta = self.task_helper.add(
                 {'id': 'lockmeta', 'owner': self._id}, self.LOCK_TYPE, '_all')
             return _lock
         except LockError as ler:
-            _meta = utils.get_redis(self.redis).get('lockmeta', self.LOCK_TYPE, '_all')
+            _meta = self.task_helper.get('lockmeta', self.LOCK_TYPE, '_all')
             _logger.error(f'Could not acquire lock, owned by {_meta}')
             raise ler
 
@@ -126,7 +128,7 @@ class ExtractionManager():
         # indicate the thread to stop
         self.stopped = True
 
-        utils.redis_unsubscribe(self.redis)
+        utils.redis_unsubscribe(self.task_helper)
 
         # do not allow new entries
         self.extraction_pool.close()
@@ -146,9 +148,9 @@ class ExtractionManager():
         try:
             _lock = self._get_lock()
             while not self.stopped:
-                _logger.debug('Looking for work')
+                _logger.debug(f'Looking for work: {self._id}')
                 _lock.reacquire()
-                read_subs = get_prepared(self.processed_submissions, self.redis)
+                read_subs = get_prepared(self.processed_submissions, self.task_helper)
                 for realm, objs in read_subs.items():
                     self.kernel_comm_pool.apply_async(
                         func=push_to_kernel,
@@ -156,7 +158,7 @@ class ExtractionManager():
                             realm,
                             objs,
                             self.processed_submissions,
-                            self.redis,
+                            self.task_helper,
                         ))
 
                 time.sleep(settings.WAIT_INTERVAL)
@@ -168,25 +170,27 @@ class ExtractionManager():
         finally:
             try:
                 _lock.release()
-            except Exception:
+            except Exception as aer:
+                _logger.warning(f'error releasing lock: {aer}')
                 # never set should be (UnboundLocalError, LockError), but FakeRedis can't release
                 # so we catch all
                 pass
+            _logger.critical(f'Worker stopped {self._id}')
 
     def load_failed(self) -> None:
-        utils.get_failed_objects(self.processed_submissions, self.redis)
+        utils.get_failed_objects(self.processed_submissions, self.task_helper)
         fc_sub = self.processed_submissions.qsize()
         _logger.info(f'Loaded failed: {fc_sub}')
 
     def subscribe_to_channel(self):
         # include current submissions from redis
         _logger.info(f'Subscribing to {self.channel}')
-        for key in utils.get_redis_keys_by_pattern(self.channel, self.redis):
+        for key in utils.get_redis_keys_by_pattern(self.channel, self.task_helper):
             _logger.debug(f'Picking up missed message from {self.channel} with key: {key}')
-            self.add_to_queue(utils.get_redis_subscribed_message(key=key, redis=self.redis))
+            self.add_to_queue(utils.get_redis_subscribed_message(key=key, redis=self.task_helper))
 
         # subscribe to new submissions
-        utils.redis_subscribe(callback=self.add_to_queue, pattern=self.channel, redis=self.redis)
+        utils.redis_subscribe(callback=self.add_to_queue, pattern=self.channel, redis=self.task_helper)
 
     def add_to_queue(self, task: Task) -> bool:
         if not isinstance(task, Task):
@@ -197,7 +201,7 @@ class ExtractionManager():
             args=(
                 task,
                 self.processed_submissions,
-                self.redis,
+                self.task_helper,
             )
         )
         return True
