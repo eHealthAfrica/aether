@@ -52,10 +52,10 @@ class ExtractionManager():
     LOCK_TYPE = '_aether-extraction-manager_lock'
     LOCK_TIMEOUT = 600
 
-    def __init__(self, redis=None, channel=settings.SUBMISSION_CHANNEL):
+    def __init__(self, channel=settings.SUBMISSION_CHANNEL):
         self._id = f'{str(uuid4())}-{str(datetime.now().isoformat())}'
-        self.redis = utils.get_default_base_redis(redis)
-        self.task_helper = utils.get_redis(self.redis)
+        self.redis = utils.REDIS_HANDLER.get_redis()
+        self.task_helper = utils.REDIS_HANDLER.get_helper()
         _logger.debug(f'{self._id}- {self.redis}')
         self.channel = channel
 
@@ -158,7 +158,6 @@ class ExtractionManager():
                             realm,
                             objs,
                             self.processed_submissions,
-                            self.task_helper,
                         ))
 
                 time.sleep(settings.WAIT_INTERVAL)
@@ -201,7 +200,6 @@ class ExtractionManager():
             args=(
                 task,
                 self.processed_submissions,
-                self.task_helper,
             )
         )
         return True

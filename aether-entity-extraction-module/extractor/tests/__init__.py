@@ -16,6 +16,143 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import copy
+import fakeredis
+import json
+import pytest
+import uuid
+
+from aether.python.redis.task import Task  # , TaskEvent
+
+from extractor.manager import (
+    # SUBMISSION_EXTRACTION_FLAG,
+    # SUBMISSION_PAYLOAD_FIELD,
+    # SUBMISSION_ENTITIES_FIELD,
+    ExtractionManager,
+    # entity_extraction,
+    # get_prepared,
+    # push_to_kernel,
+)
+
+from extractor.utils import (
+    ARTEFACT_NAMES,
+    REDIS_HANDLER,
+    # CacheType,
+    # cache_has_object,
+    # count_quarantined,
+    # get_failed_objects,
+    get_from_redis_or_kernel,
+)
+
+
+SUBMISSION_CHANNEL = 'test_submissions'
+TENANT = 'test'
+TENANT_2 = 'test-2'
+
+
+def build_redis_key(_type, tenant, id):
+    return f'_{_type}:{tenant}:{id}'
+
+
+def load_redis(redis):
+    # load mappingset
+    redis.set(
+        build_redis_key(ARTEFACT_NAMES.mappingsets, TENANT, MAPPINGSET['id']),
+        json.dumps(MAPPINGSET)
+    )
+    assert(
+        get_from_redis_or_kernel(
+            id=MAPPINGSET['id'],
+            model_type=ARTEFACT_NAMES.mappingsets,
+            tenant=TENANT,
+            redis=redis
+        ) is not None)
+
+    # load mappings
+    for m in MAPPINGS:
+        redis.set(
+            build_redis_key(ARTEFACT_NAMES.mappings, TENANT, m['id']),
+            json.dumps(m)
+        )
+        assert(
+            get_from_redis_or_kernel(
+                id=m['id'],
+                model_type=ARTEFACT_NAMES.mappings,
+                tenant=TENANT,
+                redis=redis
+            ) is not None)
+
+    # load schemas
+    for s in SCHEMAS:
+        redis.set(
+            build_redis_key(ARTEFACT_NAMES.schemas, TENANT, s['id']),
+            json.dumps(s)
+        )
+        assert(
+            get_from_redis_or_kernel(
+                id=s['id'],
+                model_type=ARTEFACT_NAMES.schemas,
+                tenant=TENANT,
+                redis=redis
+            ) is not None)
+
+    # load schema decorators
+    for sd in SCHEMA_DECORATORS:
+        redis.set(
+            build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
+            json.dumps(sd)
+        )
+        assert(
+            get_from_redis_or_kernel(
+                id=sd['id'],
+                model_type=ARTEFACT_NAMES.schemadecorators,
+                tenant=TENANT,
+                redis=redis
+            ) is not None)
+
+
+@pytest.fixture(scope='function')
+def redis_fn_scope():
+    _redis = fakeredis.FakeStrictRedis()
+    REDIS_HANDLER.set_redis(_redis)
+    load_redis(_redis)
+    yield _redis
+    REDIS_HANDLER.clear()
+
+
+@pytest.fixture(scope='session')
+def redis_session_scope():
+    _redis = fakeredis.FakeStrictRedis()
+    REDIS_HANDLER.set_redis(_redis)
+    load_redis(_redis)
+    yield _redis
+    REDIS_HANDLER.clear()
+
+
+@pytest.fixture(scope='function')
+def manager_fn_scope(redis_fn_scope):
+    man = ExtractionManager(redis_fn_scope)
+    yield man
+    try:
+        man.stop()
+    except Exception:
+        pass
+    REDIS_HANDLER.clear()
+
+
+@pytest.fixture(scope='session')
+def submission_task():
+    submission = copy.deepcopy(SUBMISSION)
+    submission['id'] = str(uuid.uuid4())
+    _submission_task = Task(
+        id=submission['id'],
+        data=submission,
+        type=f'_{SUBMISSION_CHANNEL}',
+        tenant=TENANT,
+    )
+    yield _submission_task
+
+
 MAPPINGSET_ID = '41282431-50bb-4309-92bf-ef9359494dc6'
 
 PAYLOAD = {
