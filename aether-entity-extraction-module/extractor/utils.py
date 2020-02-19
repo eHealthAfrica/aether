@@ -118,8 +118,8 @@ ARTEFACT_NAMES = Constants(
 )
 
 
-_NORMAL_CACHE = 'exm_failed_submissions'
-_QUARANTINE_CACHE = 'exm_quarantine_submissions'
+_NORMAL_CACHE = 'exm_failed'
+_QUARANTINE_CACHE = 'exm_quarantine'
 _FAILED_CACHES = [
     (CacheType.NORMAL, _NORMAL_CACHE),
     (CacheType.QUARANTINE, _QUARANTINE_CACHE),
