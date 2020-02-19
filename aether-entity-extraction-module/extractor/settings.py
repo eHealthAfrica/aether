@@ -74,7 +74,7 @@ def get_logger(name):
     else:
         handler.setFormatter(logging.Formatter(
             f'%(asctime)s [{name}] %(levelname)-8s %(message)s'))
-    logger = logging.getLogger()
+    logger = logging.getLogger(name)
     logger.addHandler(handler)
     logger.setLevel(logging.getLevelName(LOG_LEVEL))
     return logger
