@@ -22,5 +22,6 @@ aether.sdk[cache,server,storage,test]
 # xForm and data manipulation
 lxml
 python-dateutil
-pyxform
+# BREAKING CHANGES
+pyxform<1
 spavro
