@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# from unittest import TestCase
-# import fakeredis
 import pytest
 from . import *  # noqa
 
@@ -40,30 +38,3 @@ def test__init_main(redis_fn_scope):
         assert container.is_alive() is False
         with pytest.raises(RuntimeError):
             container.stop()
-
-# class InitTests(TestCase):
-
-#     def setUp(self):
-#         super(InitTests, self).setUp()
-#         self.redis = fakeredis.FakeStrictRedis()
-#         self.container = main(self.redis)
-
-#     def test_manager_setup(self):
-#         self.assertFalse(self.container.stopped)
-#         self.assertTrue(self.container.is_alive())
-#         self.assertEqual(self.container.processed_submissions.qsize(), 0)
-
-#         # try to start again
-#         with self.assertRaises(RuntimeError):
-#             self.container.start()
-
-#     def tearDown(self):
-#         self.container.stop()
-#         self.assertTrue(self.container.stopped)
-#         self.assertFalse(self.container.is_alive())
-
-#         # try to start again
-#         with self.assertRaises(RuntimeError):
-#             self.container.stop()
-#         self.container = None
-#         super(InitTests, self).tearDown()

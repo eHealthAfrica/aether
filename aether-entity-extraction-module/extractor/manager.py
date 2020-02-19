@@ -20,6 +20,7 @@ from datetime import datetime
 import signal
 import sys
 import time
+import traceback
 from uuid import uuid4
 
 from collections import defaultdict
@@ -50,30 +51,25 @@ _logger = settings.get_logger('Manager')
 
 class ExtractionManager():
     LOCK_TYPE = '_aether-extraction-manager_lock'
-    LOCK_TIMEOUT = 600
+    kernel_comm_pool: mp.Pool = None
+    extraction_pool: mp.Pool = None
+    processed_submissions: Queue = None
+    manager: mp.Manager = None
 
     def __init__(self, channel=settings.SUBMISSION_CHANNEL):
         self._id = f'{str(uuid4())}-{str(datetime.now().isoformat())}'
         self.redis = utils.REDIS_HANDLER.get_redis()
         self.task_helper = utils.REDIS_HANDLER.get_helper()
-        _logger.debug(f'{self._id}- {self.redis}')
         self.channel = channel
-
         self.stopped = True
-
-        self.extraction_pool = mp.Pool()
-        # only one concurrent request to Kernel.
-        self.kernel_comm_pool = mp.Pool(processes=1)
-
         self.manager = mp.Manager()
-        self.processed_submissions = self.manager.Queue()
-
-        self.worker_thread = Thread(target=self.worker, daemon=False)
+        self._start_pools()
 
     def start(self):
         if not self.stopped:
             raise RuntimeError('Manager already started!')
-
+        self.worker_thread = Thread(target=self.worker, daemon=False)
+        self._start_pools()
         _logger.info(f'starting with ID: {self._id}')
 
         signal.signal(signal.SIGINT, self.stop)
@@ -87,7 +83,7 @@ class ExtractionManager():
 
         # Report on permanently failed submissions
         # (Failed with 400 Bad Request)
-        _logger.info(f'#{utils.count_quarantined(self.task_helper)} submissions in quarantine')
+        _logger.info(f'#{utils.count_quarantined()} submissions in quarantine')
 
         # load failed from redis. When running will cycle back into
         # queue on failure.
@@ -99,8 +95,25 @@ class ExtractionManager():
 
         # subscribe to redis channel
         self.subscribe_to_channel()
-
         _logger.info('started')
+        Thread(target=self.__stop_on_exit, daemon=False).start()
+
+    def __stop_on_exit(self):
+        self.worker_thread.join()
+        _logger.info('Worker complete, stopping other processes')
+        try:
+            self.stop()
+        except RuntimeError:
+            _logger.debug('Already stopped')
+
+    def _start_pools(self):
+        if not self.processed_submissions:
+            self.processed_submissions = self.manager.Queue()
+        if not self.extraction_pool:
+            self.extraction_pool = mp.Pool()
+        # only one concurrent request to Kernel.
+        if not self.kernel_comm_pool:
+            self.kernel_comm_pool = mp.Pool(processes=1)
 
     def _get_lock(self, timeout=settings.LOCK_TIMEOUT, token=None):
         try:
@@ -128,7 +141,7 @@ class ExtractionManager():
         # indicate the thread to stop
         self.stopped = True
 
-        utils.redis_unsubscribe(self.task_helper)
+        utils.redis_unsubscribe()
 
         # do not allow new entries
         self.extraction_pool.close()
@@ -138,7 +151,9 @@ class ExtractionManager():
         self.extraction_pool.join()
         self.kernel_comm_pool.join()
         self.worker_thread.join()
-
+        self.processed_submissions = None
+        self.kernel_comm_pool = None
+        self.worker_thread = None
         _logger.info('stopped')
 
     def is_alive(self):
@@ -150,7 +165,7 @@ class ExtractionManager():
             while not self.stopped:
                 _logger.debug(f'Looking for work: {self._id}')
                 _lock.reacquire()
-                read_subs = get_prepared(self.processed_submissions, self.task_helper)
+                read_subs = get_prepared(self.processed_submissions)
                 for realm, objs in read_subs.items():
                     self.kernel_comm_pool.apply_async(
                         func=push_to_kernel,
@@ -163,33 +178,33 @@ class ExtractionManager():
                 time.sleep(settings.WAIT_INTERVAL)
             _logger.info('Manager caught stop signal')
         except LockError as ler:
-            _logger.error(f'Could not acquire lock in {self.LOCK_TIMEOUT}; {ler}')
+            _logger.error(f'Could not acquire lock in {settings.LOCK_TIMEOUT}; {ler}')
         except Exception as err:
             _logger.error(f'Worker died with err: {err}')
+            _logger.info(traceback.format_exc())
         finally:
             try:
                 _lock.release()
-            except Exception as aer:
+            except (UnboundLocalError, LockError) as aer:
                 _logger.warning(f'error releasing lock: {aer}')
-                # never set should be (UnboundLocalError, LockError), but FakeRedis can't release
-                # so we catch all
-                pass
-            _logger.critical(f'Worker stopped {self._id}')
+            _logger.info(f'Worker stopped {self._id}')
 
     def load_failed(self) -> None:
-        utils.get_failed_objects(self.processed_submissions, self.task_helper)
+        utils.get_failed_objects(self.processed_submissions)
         fc_sub = self.processed_submissions.qsize()
         _logger.info(f'Loaded failed: {fc_sub}')
+        if fc_sub:
+            _logger.info(utils.list_failed_objects())
 
     def subscribe_to_channel(self):
         # include current submissions from redis
         _logger.info(f'Subscribing to {self.channel}')
-        for key in utils.get_redis_keys_by_pattern(self.channel, self.task_helper):
+        for key in utils.get_redis_keys_by_pattern(self.channel):
             _logger.debug(f'Picking up missed message from {self.channel} with key: {key}')
-            self.add_to_queue(utils.get_redis_subscribed_message(key=key, redis=self.task_helper))
+            self.add_to_queue(utils.get_redis_subscribed_message(key=key))
 
         # subscribe to new submissions
-        utils.redis_subscribe(callback=self.add_to_queue, pattern=self.channel, redis=self.task_helper)
+        utils.redis_subscribe(callback=self.add_to_queue, pattern=self.channel)
 
     def add_to_queue(self, task: Task) -> bool:
         if not isinstance(task, Task):
@@ -205,7 +220,7 @@ class ExtractionManager():
         return True
 
 
-def entity_extraction(task, submission_queue, redis=None):
+def entity_extraction(task, submission_queue):
     # receive task from redis
     # if artifacts found on redis, get from kernel and cache on redis
     # if artifacts not found on kernel ==> flag submission as invalid and skip extraction
@@ -222,8 +237,7 @@ def entity_extraction(task, submission_queue, redis=None):
             mapping = utils.get_from_redis_or_kernel(
                 id=mapping_id,
                 model_type=utils.ARTEFACT_NAMES.mappings,
-                tenant=tenant,
-                redis=redis,
+                tenant=tenant
             )
             if not mapping:
                 raise ValueError(f'Mapping {mapping_id} not found.')
@@ -235,8 +249,7 @@ def entity_extraction(task, submission_queue, redis=None):
                 sd = utils.get_from_redis_or_kernel(
                     id=schemadecorator_id,
                     model_type=utils.ARTEFACT_NAMES.schemadecorators,
-                    tenant=tenant,
-                    redis=redis,
+                    tenant=tenant
                 )
                 if not sd:
                     raise ValueError(f'No schemadecorator with ID {schemadecorator_id} found')
@@ -249,8 +262,7 @@ def entity_extraction(task, submission_queue, redis=None):
                     schema = utils.get_from_redis_or_kernel(
                         id=sd[utils.ARTEFACT_NAMES.schema_id],
                         model_type=utils.ARTEFACT_NAMES.schemas,
-                        tenant=settings.DEFAULT_REALM,
-                        redis=redis,
+                        tenant=settings.DEFAULT_REALM
                     )
                     if schema and schema.get('definition'):
                         schema_definition = schema['definition']
@@ -311,17 +323,15 @@ def entity_extraction(task, submission_queue, redis=None):
             objects=[processed_submission],
             realm=task.tenant,
             queue=submission_queue,
-            redis=redis,
         )
         utils.remove_from_redis(
             id=task.id,
             model_type=utils.ARTEFACT_NAMES.submissions,
             tenant=task.tenant,
-            redis=redis,
         )
 
 
-def get_prepared(queue: Queue, redis=None) -> Dict[str, Dict]:
+def get_prepared(queue: Queue) -> Dict[str, Dict]:
     res = defaultdict(list)
     for _ in range(settings.MAX_PUSH_SIZE):
         try:
@@ -333,41 +343,44 @@ def get_prepared(queue: Queue, redis=None) -> Dict[str, Dict]:
     return res
 
 
-def push_to_kernel(realm: str, objs: List[Any], queue: Queue, redis=None):
+def push_to_kernel(realm: str, objs: List[Any], queue: Queue):
     if not objs:
+        _logger.debug('Nothing to send to kernel')
         return 0
-
     try:
         utils.kernel_data_request(url='submissions.json', method='patch', data=objs, realm=realm)
         for obj in objs:
-            utils.remove_from_cache(obj, realm, redis)
-            utils.remove_from_quarantine(obj, realm, redis)
+            utils.remove_from_cache(obj, realm)
+            utils.remove_from_quarantine(obj, realm)
         _logger.debug(f'submitted: {len(objs)} for {realm}')
         return len(objs)
     except HTTPError as e:
+        _logger.debug(f'Kernel submission failed: {e.response.status_code}')
         if e.response.status_code == 400:
             if hasattr(e.response, 'text'):
                 _logger.warning(f'Bad request: {e.response.text}')
-            return handle_kernel_errors(objs, realm, queue, redis)
+            return handle_kernel_errors(objs, realm, queue)
         else:
             _logger.warning(f'Unexpected HTTP Status from Kernel: {e.response.status_code}')
             if hasattr(e.response, 'text'):
                 _logger.info(f'Unexpected Response from Kernel: {e.response.text}')
-            utils.cache_objects(objs, realm, queue, redis)
+            utils.cache_objects(objs, realm, queue)
             return 0
+    except Exception as err:
+        _logger.critical(f'Unexpected error submitting to kernel {err}')
 
 
-def handle_kernel_errors(objs: List[Any], realm: str, queue: Queue, redis=None):
+def handle_kernel_errors(objs: List[Any], realm: str, queue: Queue):
     _size = len(objs)
     if _size > 1:
         # break down big failures and retry parts
         # reducing by half each time
         _chunks = utils.halve_iterable(objs)
         _logger.debug(f'Trying smaller chunks than {_size}...')
-        return sum([push_to_kernel(realm, chunk, queue, redis) for chunk in _chunks])
+        return sum([push_to_kernel(realm, chunk, queue) for chunk in _chunks])
 
     # Move bad object from cache to quarantine
     for obj in objs:
-        utils.remove_from_cache(obj, realm, redis)
-    utils.quarantine(objs, realm, redis)
+        utils.remove_from_cache(obj, realm)
+    utils.quarantine(objs, realm)
     return 0

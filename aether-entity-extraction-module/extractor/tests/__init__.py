@@ -22,25 +22,13 @@ import json
 import pytest
 import uuid
 
-from aether.python.redis.task import Task  # , TaskEvent
+from aether.python.redis.task import Task
 
-from extractor.manager import (
-    # SUBMISSION_EXTRACTION_FLAG,
-    # SUBMISSION_PAYLOAD_FIELD,
-    # SUBMISSION_ENTITIES_FIELD,
-    ExtractionManager,
-    # entity_extraction,
-    # get_prepared,
-    # push_to_kernel,
-)
+from extractor.manager import ExtractionManager
 
 from extractor.utils import (
     ARTEFACT_NAMES,
     REDIS_HANDLER,
-    # CacheType,
-    # cache_has_object,
-    # count_quarantined,
-    # get_failed_objects,
     get_from_redis_or_kernel,
 )
 
@@ -64,8 +52,7 @@ def load_redis(redis):
         get_from_redis_or_kernel(
             id=MAPPINGSET['id'],
             model_type=ARTEFACT_NAMES.mappingsets,
-            tenant=TENANT,
-            redis=redis
+            tenant=TENANT
         ) is not None)
 
     # load mappings
@@ -78,8 +65,7 @@ def load_redis(redis):
             get_from_redis_or_kernel(
                 id=m['id'],
                 model_type=ARTEFACT_NAMES.mappings,
-                tenant=TENANT,
-                redis=redis
+                tenant=TENANT
             ) is not None)
 
     # load schemas
@@ -92,8 +78,7 @@ def load_redis(redis):
             get_from_redis_or_kernel(
                 id=s['id'],
                 model_type=ARTEFACT_NAMES.schemas,
-                tenant=TENANT,
-                redis=redis
+                tenant=TENANT
             ) is not None)
 
     # load schema decorators
@@ -106,8 +91,7 @@ def load_redis(redis):
             get_from_redis_or_kernel(
                 id=sd['id'],
                 model_type=ARTEFACT_NAMES.schemadecorators,
-                tenant=TENANT,
-                redis=redis
+                tenant=TENANT
             ) is not None)
 
 
@@ -120,18 +104,9 @@ def redis_fn_scope():
     REDIS_HANDLER.clear()
 
 
-@pytest.fixture(scope='session')
-def redis_session_scope():
-    _redis = fakeredis.FakeStrictRedis()
-    REDIS_HANDLER.set_redis(_redis)
-    load_redis(_redis)
-    yield _redis
-    REDIS_HANDLER.clear()
-
-
 @pytest.fixture(scope='function')
 def manager_fn_scope(redis_fn_scope):
-    man = ExtractionManager(redis_fn_scope)
+    man = ExtractionManager()
     yield man
     try:
         man.stop()

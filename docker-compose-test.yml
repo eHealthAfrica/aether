@@ -69,7 +69,8 @@ services:
       DEFAULT_REALM: test
       LOGGING_LEVEL: CRITICAL
       REDIS_HOST: redis-test
-      WAIT_INTERVAL: 0.01
+      WAIT_INTERVAL: 0.5
+      LOCK_TIMEOUT: 3
     command: start
 
 

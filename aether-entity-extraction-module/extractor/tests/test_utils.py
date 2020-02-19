@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import fakeredis
+import pytest
 import requests
 
 from unittest import TestCase, mock
@@ -36,6 +38,27 @@ from extractor.utils import (
 )
 
 from . import *  # noqa
+
+
+def test__helper_manager(redis_fn_scope):
+    _initial_redis = REDIS_HANDLER.get_redis()
+    _initial_helper = REDIS_HANDLER.get_helper()
+    new_redis = fakeredis.FakeStrictRedis()
+    REDIS_HANDLER.set_redis()
+    assert _initial_redis is not REDIS_HANDLER.get_redis()
+    assert _initial_helper is not REDIS_HANDLER.get_helper()
+    _initial_redis = REDIS_HANDLER.get_redis()
+    REDIS_HANDLER.set_redis(new_redis)
+    assert _initial_redis is not REDIS_HANDLER.get_redis()
+    assert new_redis is REDIS_HANDLER.get_redis()
+    REDIS_HANDLER.clear()
+    assert REDIS_HANDLER._redis is None
+    assert REDIS_HANDLER._helper is None
+    assert REDIS_HANDLER.get_helper() is not None
+    REDIS_HANDLER.clear()
+    assert REDIS_HANDLER._redis is None
+    assert REDIS_HANDLER._helper is None
+    assert REDIS_HANDLER.get_redis() is not None
 
 
 class UtilsTests(TestCase):
@@ -87,7 +110,6 @@ class UtilsTests(TestCase):
 
     @pytest.mark.usefixtures('redis_fn_scope')
     def test_get_from_redis_or_kernel(self):
-        # redis = fakeredis.FakeStrictRedis()
         redis = REDIS_HANDLER.get_redis()
         _key = '_model:tenant:id'
         self.assertIsNone(redis.get(_key))
@@ -97,7 +119,7 @@ class UtilsTests(TestCase):
             'extractor.utils.kernel_data_request',
             return_value=None
         ) as mocked_1:
-            result = get_from_redis_or_kernel('id', 'model', 'tenant', redis)
+            result = get_from_redis_or_kernel('id', 'model', 'tenant')
             self.assertIsNone(result)
             self.assertIsNone(redis.get(_key))
             mocked_1.assert_called()
@@ -106,7 +128,7 @@ class UtilsTests(TestCase):
             'extractor.utils.kernel_data_request',
             return_value={'id': 'id'}
         ) as mocked_2:
-            result = get_from_redis_or_kernel('id', 'model', 'tenant', redis)
+            result = get_from_redis_or_kernel('id', 'model', 'tenant')
             self.assertEqual(result['id'], 'id')
             self.assertIn('modified', result, 'caching in redis adds modified')
             self.assertIsNotNone(redis.get(_key), 'cached in redis')
@@ -116,51 +138,42 @@ class UtilsTests(TestCase):
             'extractor.utils.kernel_data_request',
             return_value={'id': 'jd'}
         ) as mocked_3:
-            result = get_from_redis_or_kernel('id', 'model', 'tenant', redis)
+            result = get_from_redis_or_kernel('id', 'model', 'tenant')
             self.assertEqual(result['id'], 'id')
             mocked_3.assert_not_called()
 
     @pytest.mark.usefixtures('redis_fn_scope')
     def test_remove_from_redis(self):
-        # redis = fakeredis.FakeStrictRedis()
         redis = REDIS_HANDLER.get_redis()
         _key = '_model:tenant:id'
 
         redis.set(_key, 'testing')
         self.assertEqual(redis.get(_key), b'testing')
 
-        remove_from_redis('id', 'model', 'tenant', redis)
+        remove_from_redis('id', 'model', 'tenant')
         self.assertIsNone(redis.get(_key))
 
     @pytest.mark.usefixtures('redis_fn_scope')
     def test_get_redis_subscribed_message(self):
-        # server = fakeredis.FakeServer()
-        # server.connected = True
-        # redis = fakeredis.FakeStrictRedis(server=server)
         redis = REDIS_HANDLER.get_redis()
 
         # wrong key format
-        message = get_redis_subscribed_message('_s_b_c', redis)
+        message = get_redis_subscribed_message('_s_b_c')
         self.assertIsNone(message)
 
         _key = '_model:tenant:id'
 
         # not in redis yet
-        message = get_redis_subscribed_message(_key, redis)
+        message = get_redis_subscribed_message(_key)
         self.assertIsNone(message)
 
         # in redis
         redis.set(_key, b'{"id": "id"}')
-        task = get_redis_subscribed_message(_key, redis)
+        task = get_redis_subscribed_message(_key)
         self.assertEqual(task.id, 'id')
         self.assertEqual(task.tenant, 'tenant')
         self.assertEqual(task.type, '_model')
         self.assertEqual(task.data, {'id': 'id'})
-
-        # server disconnected (exception)
-        # server.connected = False
-        # message = get_redis_subscribed_message(_key, redis)
-        # self.assertIsNone(message)
 
     def test_halve_iterable(self):
         _set_even = halve_iterable([1, 2, 3, 4])

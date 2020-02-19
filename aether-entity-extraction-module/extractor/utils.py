@@ -24,6 +24,7 @@ from typing import (
     List,
     Mapping,
 )
+import traceback
 
 from redis import Redis
 from requests.exceptions import HTTPError
@@ -59,10 +60,6 @@ class HelperManager(object):
     _redis: Redis = None
     _helper: TaskHelper = None
 
-    def __init__(self, redis=None):
-        if redis:
-            self.set_redis(redis)
-
     def clear(self):
         _logger.info('clearing handled redis and task helpers')
         self._stop_helper()
@@ -86,7 +83,7 @@ class HelperManager(object):
 
     def get_helper(self) -> TaskHelper:
         if not self._helper:
-            self.set_redis()
+            self.set_redis(self._redis)
         return self._helper
 
     def set_redis(self, redis=None):
@@ -129,37 +126,6 @@ _FAILED_CACHES = [
 ]
 
 
-# _DEFAULT_REDIS = None
-# _REDIS_TASK = None
-
-
-# def get_default_base_redis(redis=None):
-#     global _DEFAULT_REDIS
-#     if (not redis) and (not _DEFAULT_REDIS):
-#         _DEFAULT_REDIS = Redis(
-#             host=settings.REDIS_HOST,
-#             port=settings.REDIS_PORT,
-#             password=settings.REDIS_PASSWORD,
-#             db=settings.REDIS_DB,
-#             encoding='utf-8',
-#             decode_responses=True
-#         )
-#     else:
-#         _logger.debug('Not Creating Redis instance')
-#     return redis if redis else _DEFAULT_REDIS
-
-
-# def get_redis(redis=None):
-#     global _REDIS_TASK
-#     if (not redis) and (not _REDIS_TASK):  # only want one of these
-#         _REDIS_TASK = TaskHelper(settings, get_default_base_redis())
-#     elif isinstance(redis, TaskHelper):
-#         _REDIS_TASK = redis
-#     else:
-#         _REDIS_TASK = TaskHelper(settings, redis)
-#     return _REDIS_TASK
-
-
 def kernel_data_request(url='', method='get', data=None, headers=None, realm=None):
     '''
     Handle request calls to the kernel server
@@ -185,7 +151,7 @@ def kernel_data_request(url='', method='get', data=None, headers=None, realm=Non
     return res.json()
 
 
-def get_from_redis_or_kernel(id, model_type, tenant=None, redis=None):
+def get_from_redis_or_kernel(id, model_type, tenant=None):
     '''
     Get resource from redis by key or fetch from kernel and cache in redis.
 
@@ -220,15 +186,15 @@ def get_from_redis_or_kernel(id, model_type, tenant=None, redis=None):
     return value
 
 
-def remove_from_redis(id, model_type, tenant, redis=None):
+def remove_from_redis(id, model_type, tenant):
     return REDIS_HANDLER.get_helper().remove(id, model_type, tenant)
 
 
-def get_redis_keys_by_pattern(pattern, redis=None):
+def get_redis_keys_by_pattern(pattern):
     return REDIS_HANDLER.get_helper().get_keys(pattern)
 
 
-def get_redis_subscribed_message(key, redis=None):
+def get_redis_subscribed_message(key):
     try:
         doc = REDIS_HANDLER.get_helper().get_by_key(key)
         key = key if isinstance(key, str) else key.decode()
@@ -239,7 +205,7 @@ def get_redis_subscribed_message(key, redis=None):
         return None
 
 
-def redis_subscribe(callback, pattern, redis=None):
+def redis_subscribe(callback, pattern):
     return REDIS_HANDLER.get_helper().subscribe(callback=callback, pattern=pattern, keep_alive=True)
 
 
@@ -250,7 +216,7 @@ def redis_unsubscribe(redis=None):
         _logger.critical(f'could not unsubscribe! {aer}')
 
 
-def cache_objects(objects: List[Any], realm, queue: Queue, redis=None):
+def cache_objects(objects: List[Any], realm, queue: Queue):
     _logger.debug(f'Caching {len(objects)} objects for realm {realm}')
 
     redis_instance = REDIS_HANDLER.get_helper()
@@ -259,11 +225,13 @@ def cache_objects(objects: List[Any], realm, queue: Queue, redis=None):
             assert ('id' in obj), obj.keys()
             redis_instance.add(obj, _NORMAL_CACHE, realm)
             queue.put(tuple([realm, obj]))
+            _logger.warning(f'cached {obj["id"]} for realm {realm}')
     except Exception as err:  # pragma: no cover
         _logger.critical(f'Could not save failed objects to REDIS {str(err)}')
+        _logger.info(traceback.format_exc())
 
 
-def cache_has_object(_id: str, realm: str, redis=None) -> CacheType:
+def cache_has_object(_id: str, realm: str) -> CacheType:
     redis_instance = REDIS_HANDLER.get_helper()
     for _cache_type, _key in _FAILED_CACHES:
         if redis_instance.exists(_id, _key, realm):
@@ -271,21 +239,25 @@ def cache_has_object(_id: str, realm: str, redis=None) -> CacheType:
     return CacheType.NONE
 
 
-def get_failed_objects(queue: Queue, redis=None) -> dict:
+def count_failed_objects():
+    return len(list_failed_objects())
+
+
+def list_failed_objects():
     redis_instance = REDIS_HANDLER.get_helper()
-
     failed = redis_instance.list(_NORMAL_CACHE)
-    failed = [i.split(':') for i in failed]  # split "{tenant}:{_id}"
-    for tenant, _id in failed:
+    return [tuple(i.split(':')) for i in failed]  # split "{tenant}:{_id}"
+
+
+def get_failed_objects(queue: Queue) -> dict:
+    redis_instance = REDIS_HANDLER.get_helper()
+    for tenant, _id in list_failed_objects():
         res = redis_instance.get(_id, _NORMAL_CACHE, tenant)
-        if res:
-            del res['modified']
-            queue.put(tuple([tenant, res]))
-        else:
-            _logger.warning(f'Could not fetch object {tenant}:{_id}')
+        del res['modified']
+        queue.put(tuple([tenant, res]))
 
 
-def remove_from_cache(obj: Mapping[Any, Any], realm: str, redis=None):
+def remove_from_cache(obj: Mapping[Any, Any], realm: str):
     redis_instance = REDIS_HANDLER.get_helper()
     _id = obj['id']
     if redis_instance.exists(_id, _NORMAL_CACHE, realm):
@@ -295,31 +267,38 @@ def remove_from_cache(obj: Mapping[Any, Any], realm: str, redis=None):
         return False
 
 
-def quarantine(objects: List[Any], realm, redis=None):
-    _logger.warning(f'Quarantine {len(objects)} objects for realm {realm}')
-
+def quarantine(objects: List[Any], realm):
     redis_instance = REDIS_HANDLER.get_helper()
     try:
         for obj in objects:
             assert ('id' in obj), obj.keys()
             redis_instance.add(obj, _QUARANTINE_CACHE, realm)
+            _logger.warning(f'Quarantined {obj["id"]} for realm {realm}')
+            _logger.debug(f'now Quarantined: {list_quarantined()}')
     except Exception as err:  # pragma: no cover
         _logger.critical(f'Could not save quarantine objects to REDIS {str(err)}')
 
 
-def remove_from_quarantine(obj: Mapping[Any, Any], realm: str, redis=None):
+def remove_from_quarantine(obj: Mapping[Any, Any], realm: str):
     redis_instance = REDIS_HANDLER.get_helper()
     _id = obj['id']
     if redis_instance.exists(_id, _QUARANTINE_CACHE, realm):
         redis_instance.remove(_id, _QUARANTINE_CACHE, realm)
+        _logger.debug(f'removed {_id} for QUARANTINE')
         return True
     else:
         return False
 
 
-def count_quarantined(redis=None) -> dict:
+def list_quarantined():
     redis_instance = REDIS_HANDLER.get_helper()
-    return sum(1 for _ in redis_instance.list(_QUARANTINE_CACHE))
+    failed = redis_instance.list(_QUARANTINE_CACHE)
+    return [tuple(i.split(':')) for i in failed]  # split "{tenant}:{_id}"
+
+
+def count_quarantined() -> int:
+    _logger.debug('Asking for quarantine count')
+    return len(list_quarantined())
 
 
 def halve_iterable(obj):

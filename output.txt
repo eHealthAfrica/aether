@@ -1,0 +1,871 @@
+========================================================================================================================================================== Starting databases 
+=================================================================================================================================================== Building kernel container 
+Step 1/12 : FROM python:3.7-slim-buster
+ ---> 5b03cb8574a0
+Step 2/12 : COPY ./conf/docker/* /tmp/
+ ---> Using cache
+ ---> 9f8f991684a9
+Step 3/12 : RUN /tmp/setup.sh
+ ---> Using cache
+ ---> 9a6bd140b50d
+Step 4/12 : WORKDIR /code
+ ---> Using cache
+ ---> 992828bf26d2
+Step 5/12 : COPY ./conf/pip /code/conf/pip
+ ---> Using cache
+ ---> 6b460e5846fe
+Step 6/12 : RUN pip install -q --upgrade pip &&     pip install -q -r /code/conf/pip/requirements.txt
+ ---> Using cache
+ ---> a1cef0559487
+Step 7/12 : COPY ./ /code
+ ---> 1299018a7600
+Step 8/12 : ARG VERSION=0.0.0
+ ---> Running in 0dcc344a5252
+Removing intermediate container 0dcc344a5252
+ ---> ab6de827386a
+Step 9/12 : ARG GIT_REVISION
+ ---> Running in d5fc911b7924
+Removing intermediate container d5fc911b7924
+ ---> c22e70acf8d5
+Step 10/12 : RUN mkdir -p /var/tmp &&     echo $VERSION > /var/tmp/VERSION &&     echo $GIT_REVISION > /var/tmp/REVISION
+ ---> Running in e3dd8585f6a9
+Removing intermediate container e3dd8585f6a9
+ ---> 2876adaa88e7
+Step 11/12 : RUN chown -R aether: /code
+ ---> Running in b2a73010057c
+Removing intermediate container b2a73010057c
+ ---> 49f1e201fedc
+Step 12/12 : ENTRYPOINT ["/code/entrypoint.sh"]
+ ---> Running in fbb7ba39f9a2
+Removing intermediate container fbb7ba39f9a2
+ ---> 59567c7a743a
+Successfully built 59567c7a743a
+Successfully tagged aether-kernel:latest
+============================================================================================================================================================== Starting db... 
+================================================================================================================================================================ db is ready! 
+========================================================================================================================================================== Starting kernel... 
+============================================================================================================================================================ kernel is ready! 
+===================================================================================================================================================== Preparing exm container 
+====================================================================================================================================================== Building exm container 
+Step 1/12 : FROM python:3.7-slim-buster
+ ---> 5b03cb8574a0
+Step 2/12 : RUN apt-get update -qq &&     apt-get -qq         --yes         --allow-downgrades         --allow-remove-essential         --allow-change-held-packages         install gcc redis-server curl
+ ---> Using cache
+ ---> 3a2a1fffe57f
+Step 3/12 : WORKDIR /code
+ ---> Using cache
+ ---> 47c9a8fbcd8f
+Step 4/12 : COPY ./conf/pip /code/conf/pip
+ ---> Using cache
+ ---> ca731f1cfba7
+Step 5/12 : RUN pip install -q --upgrade pip &&     pip install -q -r /code/conf/pip/requirements.txt
+ ---> Using cache
+ ---> f9d80ba4f60e
+Step 6/12 : COPY ./ /code
+ ---> 965f736d13df
+Step 7/12 : ARG VERSION=0.0.0
+ ---> Running in f88c12399a64
+Removing intermediate container f88c12399a64
+ ---> 09625e7135b8
+Step 8/12 : ARG GIT_REVISION
+ ---> Running in d9598187636f
+Removing intermediate container d9598187636f
+ ---> c49c1bfcd97c
+Step 9/12 : RUN mkdir -p /var/tmp &&     echo $VERSION > /var/tmp/VERSION &&     echo $GIT_REVISION > /var/tmp/REVISION
+ ---> Running in cd33690b3c06
+Removing intermediate container cd33690b3c06
+ ---> 9ad5591634ef
+Step 10/12 : RUN useradd -ms /bin/false aether
+ ---> Running in ae3658e35f24
+Removing intermediate container ae3658e35f24
+ ---> afbbb50807cb
+Step 11/12 : RUN chown -R aether: /code
+ ---> Running in b2674d31a202
+Removing intermediate container b2674d31a202
+ ---> c1a26d66baf0
+Step 12/12 : ENTRYPOINT ["/code/entrypoint.sh"]
+ ---> Running in bc001fe32e5e
+Removing intermediate container bc001fe32e5e
+ ---> 484c3f1843d2
+Successfully built 484c3f1843d2
+Successfully tagged aether-exm:latest
+================================================================================================================================================================== exm ready! 
+============================================================================================================================================================== Starting db... 
+================================================================================================================================================================ db is ready! 
+[1m============================= test session starts ==============================[0m
+platform linux -- Python 3.7.6, pytest-5.3.4, py-1.8.1, pluggy-0.13.1
+rootdir: /code, inifile: setup.cfg
+[1mcollecting ... [0m[1mcollected 17 items                                                             [0m
+
+extractor/tests/test_init.py::InitTests::test_manager_setup [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_bad_event [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_bad_event [31mERROR[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_entity_extraction [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_entity_extraction [31mERROR[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_entity_extraction__conform_no_mapping [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_entity_extraction__conform_no_mapping [31mERROR[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_entity_extraction__unknown_mapping [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_entity_extraction__unknown_mapping [31mERROR[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_lock [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_lock [31mERROR[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_pickup_old_events [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_pickup_old_events [31mERROR[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_push_submissions_to_kernel [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_push_submissions_to_kernel [31mERROR[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_workflow [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_workflow [31mERROR[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_workflow__error [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_workflow__error [31mERROR[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_workflow__quarantine [31mFAILED[0m
+extractor/tests/test_manager.py::ExtractionManagerTests::test_workflow__quarantine [31mERROR[0m
+extractor/tests/test_utils.py::UtilsTests::test_get_from_redis_or_kernel [31mFAILED[0m
+extractor/tests/test_utils.py::UtilsTests::test_get_redis_subscribed_message [31mFAILED[0m
+extractor/tests/test_utils.py::UtilsTests::test_halve_iterable [32mPASSED[0m
+extractor/tests/test_utils.py::UtilsTests::test_kernel_request [32mPASSED[0m
+extractor/tests/test_utils.py::UtilsTests::test_kernel_request__raise_for_status 2020-02-18 17:31:44,670 [Utils] DEBUG    400
+2020-02-18 17:31:44,670 [Manager] DEBUG    400
+2020-02-18 17:31:44,670 [UNIT] DEBUG    400
+
+[1m-------------------------------- live log call ---------------------------------[0m
+17:31:44 [[35m   DEBUG[0m] 400 (utils.py:130)
+[32mPASSED[0m
+extractor/tests/test_utils.py::UtilsTests::test_remove_from_redis [31mFAILED[0m
+
+==================================== ERRORS ====================================
+[31m[1m__________ ERROR at teardown of ExtractionManagerTests.test_bad_event __________[0m
+
+self = <unittest.case._Outcome object at 0x7fce742a7dd0>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_bad_event>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_bad_event>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+[31m[1m______ ERROR at teardown of ExtractionManagerTests.test_entity_extraction ______[0m
+
+self = <unittest.case._Outcome object at 0x7fce73fa4890>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_entity_extraction>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_entity_extraction>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+[31m[1m_ ERROR at teardown of ExtractionManagerTests.test_entity_extraction__conform_no_mapping _[0m
+
+self = <unittest.case._Outcome object at 0x7fce73fa7f90>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_entity_extraction__conform_no_mapping>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_entity_extraction__conform_no_mapping>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+[31m[1m_ ERROR at teardown of ExtractionManagerTests.test_entity_extraction__unknown_mapping _[0m
+
+self = <unittest.case._Outcome object at 0x7fce73f9a7d0>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_entity_extraction__unknown_mapping>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_entity_extraction__unknown_mapping>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+[31m[1m____________ ERROR at teardown of ExtractionManagerTests.test_lock _____________[0m
+
+self = <unittest.case._Outcome object at 0x7fce7431b610>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_lock>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_lock>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+[31m[1m______ ERROR at teardown of ExtractionManagerTests.test_pickup_old_events ______[0m
+
+self = <unittest.case._Outcome object at 0x7fce7426a550>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_pickup_old_events>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_pickup_old_events>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+[31m[1m_ ERROR at teardown of ExtractionManagerTests.test_push_submissions_to_kernel __[0m
+
+self = <unittest.case._Outcome object at 0x7fce7425a810>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_push_submissions_to_kernel>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_push_submissions_to_kernel>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+[31m[1m__________ ERROR at teardown of ExtractionManagerTests.test_workflow ___________[0m
+
+self = <unittest.case._Outcome object at 0x7fce74256910>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_workflow>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_workflow>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+[31m[1m_______ ERROR at teardown of ExtractionManagerTests.test_workflow__error _______[0m
+
+self = <unittest.case._Outcome object at 0x7fce7425fad0>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_workflow__error>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_workflow__error>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+[31m[1m____ ERROR at teardown of ExtractionManagerTests.test_workflow__quarantine _____[0m
+
+self = <unittest.case._Outcome object at 0x7fce74244650>
+test_case = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_workflow__quarantine>
+isTest = False
+
+[1m    @contextlib.contextmanager[0m
+[1m    def testPartExecutor(self, test_case, isTest=False):[0m
+[1m        old_success = self.success[0m
+[1m        self.success = True[0m
+[1m        try:[0m
+[1m>           yield[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_workflow__quarantine>
+
+[1m    def doCleanups(self):[0m
+[1m        """Execute all cleanup functions. Normally called for you after[0m
+[1m        tearDown."""[0m
+[1m        outcome = self._outcome or _Outcome()[0m
+[1m        while self._cleanups:[0m
+[1m            function, args, kwargs = self._cleanups.pop()[0m
+[1m            with outcome.testPartExecutor(self):[0m
+[1m>               function(*args, **kwargs)[0m
+[1m[31mE               TypeError: 'NoneType' object is not callable[0m
+
+[1m[31m/usr/local/lib/python3.7/unittest/case.py[0m:669: TypeError
+=================================== FAILURES ===================================
+[31m[1m_________________________ InitTests.test_manager_setup _________________________[0m
+
+self = <extractor.tests.test_init.InitTests testMethod=test_manager_setup>
+
+[1m    def setUp(self):[0m
+[1m        super(InitTests, self).setUp()[0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m>       self.container = main(self.redis)[0m
+
+[1m[31mextractor/tests/test_init.py[0m:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/__init__.py[0m:23: in main
+[1m    extractor = ExtractionManager(redis=redis)[0m
+[1m[31mextractor/manager.py[0m:57: in __init__
+[1m    self.redis = utils.get_default_base_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_default_base_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:82: ValueError
+[31m[1m____________________ ExtractionManagerTests.test_bad_event _____________________[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_bad_event>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m________________ ExtractionManagerTests.test_entity_extraction _________________[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_entity_extraction>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m______ ExtractionManagerTests.test_entity_extraction__conform_no_mapping _______[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_entity_extraction__conform_no_mapping>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m________ ExtractionManagerTests.test_entity_extraction__unknown_mapping ________[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_entity_extraction__unknown_mapping>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m_______________________ ExtractionManagerTests.test_lock _______________________[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_lock>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m________________ ExtractionManagerTests.test_pickup_old_events _________________[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_pickup_old_events>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m____________ ExtractionManagerTests.test_push_submissions_to_kernel ____________[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_push_submissions_to_kernel>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m_____________________ ExtractionManagerTests.test_workflow _____________________[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_workflow>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m_________________ ExtractionManagerTests.test_workflow__error __________________[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_workflow__error>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m_______________ ExtractionManagerTests.test_workflow__quarantine _______________[0m
+
+self = <extractor.tests.test_manager.ExtractionManagerTests testMethod=test_workflow__quarantine>
+
+[1m    def setUp(self):[0m
+[1m        super(ExtractionManagerTests, self).setUp()[0m
+[1m    [0m
+[1m        self.redis = fakeredis.FakeStrictRedis()[0m
+[1m        _helper = TaskHelper(settings, self.redis)[0m
+[1m        self._p1 = mock.patch([0m
+[1m            'extractor.utils.get_default_base_redis', mock.MagicMock(return_value=self.redis))[0m
+[1m        self._p2 = mock.patch([0m
+[1m            'extractor.utils.get_redis', mock.MagicMock(return_value=_helper))[0m
+[1m        self._p1.start()[0m
+[1m        self._p2.start()[0m
+[1m        self.addCleanup(self._p1.stop())[0m
+[1m        self.addCleanup(self._p2.stop())[0m
+[1m>       load_redis(self.redis)[0m
+
+[1m[31mextractor/tests/test_manager.py[0m:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/tests/test_manager.py[0m:77: in load_redis
+[1m    assert([0m
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m___________________ UtilsTests.test_get_from_redis_or_kernel ___________________[0m
+
+self = <extractor.tests.test_utils.UtilsTests testMethod=test_get_from_redis_or_kernel>
+
+[1m    def test_get_from_redis_or_kernel(self):[0m
+[1m        redis = fakeredis.FakeStrictRedis()[0m
+[1m        _key = '_model:tenant:id'[0m
+[1m        self.assertIsNone(redis.get(_key))[0m
+[1m    [0m
+[1m        # not in redis or kernel[0m
+[1m        with mock.patch([0m
+[1m            'extractor.utils.kernel_data_request',[0m
+[1m            return_value=None[0m
+[1m        ) as mocked_1:[0m
+[1m>           result = get_from_redis_or_kernel('id', 'model', 'tenant', redis)[0m
+
+[1m[31mextractor/tests/test_utils.py[0m:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/utils.py[0m:153: in get_from_redis_or_kernel
+[1m    redis_instance = get_redis(redis)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m[1m_________________ UtilsTests.test_get_redis_subscribed_message _________________[0m
+
+self = <extractor.tests.test_utils.UtilsTests testMethod=test_get_redis_subscribed_message>
+
+[1m    def test_get_redis_subscribed_message(self):[0m
+[1m        server = fakeredis.FakeServer()[0m
+[1m        server.connected = True[0m
+[1m        redis = fakeredis.FakeStrictRedis(server=server)[0m
+[1m    [0m
+[1m        # wrong key format[0m
+[1m        message = get_redis_subscribed_message('_s_b_c', redis)[0m
+[1m        self.assertIsNone(message)[0m
+[1m    [0m
+[1m        _key = '_model:tenant:id'[0m
+[1m    [0m
+[1m        # not in redis yet[0m
+[1m        message = get_redis_subscribed_message(_key, redis)[0m
+[1m        self.assertIsNone(message)[0m
+[1m    [0m
+[1m        # in redis[0m
+[1m        redis.set(_key, b'{"id": "id"}')[0m
+[1m        task = get_redis_subscribed_message(_key, redis)[0m
+[1m>       self.assertEqual(task.id, 'id')[0m
+[1m[31mE       AttributeError: 'NoneType' object has no attribute 'id'[0m
+
+[1m[31mextractor/tests/test_utils.py[0m:147: AttributeError
+[31m[1m______________________ UtilsTests.test_remove_from_redis _______________________[0m
+
+self = <extractor.tests.test_utils.UtilsTests testMethod=test_remove_from_redis>
+
+[1m    def test_remove_from_redis(self):[0m
+[1m        redis = fakeredis.FakeStrictRedis()[0m
+[1m        _key = '_model:tenant:id'[0m
+[1m    [0m
+[1m        redis.set(_key, 'testing')[0m
+[1m        self.assertEqual(redis.get(_key), b'testing')[0m
+[1m    [0m
+[1m>       remove_from_redis('id', 'model', 'tenant', redis)[0m
+
+[1m[31mextractor/tests/test_utils.py[0m:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31mextractor/utils.py[0m:171: in remove_from_redis
+[1m    return get_redis(redis).remove(id, model_type, tenant)[0m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+redis = FakeStrictRedis<ConnectionPool<FakeConnection<db=0>>>
+
+[1m    def get_redis(redis=None):[0m
+[1m>       raise ValueError()[0m
+[1m[31mE       ValueError[0m
+
+[1m[31mextractor/utils.py[0m:99: ValueError
+[31m=================== [31m[1m14 failed[0m, [32m3 passed[0m, [31m[1m10 errors[0m[31m in 1.98s[0m[31m ====================[0m

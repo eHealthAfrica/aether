@@ -17,10 +17,10 @@
 # under the License.
 
 import copy
-# import fakeredis
 import json
 import uuid
 import pytest
+from time import sleep
 
 from redis.exceptions import LockError
 from requests.exceptions import HTTPError
@@ -28,7 +28,7 @@ from queue import Queue
 
 from unittest import mock
 
-from aether.python.redis.task import Task, TaskEvent  # noqa
+from aether.python.redis.task import Task, TaskEvent
 from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ERRORS,
     ENTITY_EXTRACTION_ENRICHMENT,
@@ -48,11 +48,21 @@ from extractor.utils import (  # noqa
     CacheType,
     cache_has_object,
     count_quarantined,
+    list_quarantined,
+    count_failed_objects,
+    list_failed_objects,
     get_failed_objects,
     get_from_redis_or_kernel,
 )
 
-from extractor.settings import get_logger
+from extractor import settings
+
+from . import (
+    SCHEMA_DECORATORS,
+    WRONG_SUBMISSION_MAPPING,
+    WRONG_SUBMISSION_PAYLOAD,
+    build_redis_key
+)
 
 from . import *  # noqa  # have to import all for fixtures to work
 
@@ -61,7 +71,7 @@ TENANT = 'test'
 TENANT_2 = 'test-2'
 
 
-_logger = get_logger('UNIT')
+_logger = settings.get_logger('UNIT')
 
 
 def test__manager_lock(manager_fn_scope):  # noqa  # pytest fixtures
@@ -80,8 +90,24 @@ def test__manager_bad_event(manager_fn_scope, submission_task):
     assert man.add_to_queue(bad) is False
 
 
+def test__manager_fail_on_locked(manager_fn_scope, submission_task):
+    man = manager_fn_scope
+    _lock = man._get_lock()
+    # test old man dying
+    man.start()
+    sleep(6)
+    assert man.is_alive() is not True
+    _lock.release()
+
+
 def test__manager_process_old(manager_fn_scope, submission_task):
-    pass
+    assert entity_extraction(submission_task, Queue()) == 1
+    assert count_failed_objects() == 1, list_failed_objects()
+    man = manager_fn_scope
+    man.start()
+    sleep(2)  # give it a second to work
+    assert count_failed_objects() == 1, list_failed_objects()
+    man.stop()
 
 
 def test__manager_entity_extraction(redis_fn_scope, submission_task):
@@ -97,7 +123,7 @@ def test__manager_entity_extraction(redis_fn_scope, submission_task):
         )
 
     sub_queue = Queue()
-    assert entity_extraction(submission_task, sub_queue, redis) == 1
+    assert entity_extraction(submission_task, sub_queue) == 1
     assert sub_queue.qsize() == 1
 
     tenant, submission = sub_queue.get_nowait()
@@ -109,11 +135,11 @@ def test__manager_entity_extraction(redis_fn_scope, submission_task):
     assert len(submission[SUBMISSION_ENTITIES_FIELD]) == 3
 
     # included in cache
-    assert cache_has_object(submission['id'], tenant, redis) == CacheType.NORMAL
+    assert cache_has_object(submission['id'], tenant) == CacheType.NORMAL
+    assert cache_has_object('missing_id', tenant) == CacheType.NONE
 
 
 def test__manager_entity_extraction__conform_no_mapping(redis_fn_scope):
-    redis = redis_fn_scope
     sub_queue = Queue()
     task = Task(
         id=str(uuid.uuid4()),
@@ -122,7 +148,7 @@ def test__manager_entity_extraction__conform_no_mapping(redis_fn_scope):
         tenant=TENANT,
     )
 
-    assert entity_extraction(task, sub_queue, redis) == 1
+    assert entity_extraction(task, sub_queue) == 1
     assert sub_queue.qsize() == 1
 
     tenant, submission = sub_queue.get_nowait()
@@ -134,11 +160,10 @@ def test__manager_entity_extraction__conform_no_mapping(redis_fn_scope):
     assert len(submission[SUBMISSION_ENTITIES_FIELD]) == 0
 
     # included in cache
-    assert cache_has_object(submission['id'], tenant, redis) == CacheType.NORMAL
+    assert cache_has_object(submission['id'], tenant) == CacheType.NORMAL
 
 
 def test__manager_entity_extraction__unknown_mapping(redis_fn_scope):
-    redis = redis_fn_scope
     sub_queue = Queue()
     task = Task(
         id=str(uuid.uuid4()),
@@ -147,7 +172,7 @@ def test__manager_entity_extraction__unknown_mapping(redis_fn_scope):
         tenant=TENANT,
     )
 
-    assert entity_extraction(task, sub_queue, redis) == 0
+    assert entity_extraction(task, sub_queue) == 0
     assert sub_queue.qsize() == 1
 
     tenant, submission = sub_queue.get_nowait()
@@ -158,10 +183,11 @@ def test__manager_entity_extraction__unknown_mapping(redis_fn_scope):
     assert SUBMISSION_ENTITIES_FIELD not in submission
 
     # included in cache
-    assert cache_has_object(submission['id'], tenant, redis) is CacheType.NORMAL
+    assert cache_has_object(submission['id'], tenant) is CacheType.NORMAL
 
 
 def test__manager_push_submissions_to_kernel(redis_fn_scope):
+
     def _mock_fn_side_effect(url='', method='get', data=None, headers=None, realm=None):
         # different responses depending on data
         if any([x for x in data if x['id'] == '2']):
@@ -274,10 +300,10 @@ def test__manager_workflow__error(redis_fn_scope, submission_task):
         )
 
     sub_queue = Queue()
-    assert entity_extraction(submission_task, sub_queue, redis) == 1
+    assert entity_extraction(submission_task, sub_queue) == 1
     assert sub_queue.qsize() == 1
 
-    prepared = get_prepared(sub_queue, redis)
+    prepared = get_prepared(sub_queue)
     assert sub_queue.qsize() == 0
     assert TENANT in dict(prepared)
 
@@ -285,7 +311,7 @@ def test__manager_workflow__error(redis_fn_scope, submission_task):
         _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=500))
         # emulate worker
         for realm, objs in prepared.items():
-            push_to_kernel(realm, objs, sub_queue, redis)
+            push_to_kernel(realm, objs, sub_queue)
 
         _mock_fn.assert_has_calls([
             mock.call(
@@ -296,9 +322,9 @@ def test__manager_workflow__error(redis_fn_scope, submission_task):
             ),
         ])
 
-    assert count_quarantined(redis) == 0
+    assert count_quarantined() == 0
     q = Queue()
-    get_failed_objects(q, redis)
+    get_failed_objects(q)
     assert q.qsize() == 1
     assert sub_queue.qsize() == 1
 
@@ -316,10 +342,10 @@ def test__manager_workflow__quarantine(redis_fn_scope, submission_task):
         )
 
     sub_queue = Queue()
-    assert entity_extraction(submission_task, sub_queue, redis) == 1
+    assert entity_extraction(submission_task, sub_queue) == 1
     assert sub_queue.qsize() == 1
 
-    prepared = get_prepared(sub_queue, redis)
+    prepared = get_prepared(sub_queue)
     assert sub_queue.qsize() == 0
     assert TENANT in dict(prepared)
 
@@ -327,7 +353,7 @@ def test__manager_workflow__quarantine(redis_fn_scope, submission_task):
         _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=400))
         # emulate worker
         for realm, objs in prepared.items():
-            push_to_kernel(realm, objs, sub_queue, redis)
+            push_to_kernel(realm, objs, sub_queue)
 
         _mock_fn.assert_has_calls([
             mock.call(
@@ -339,8 +365,8 @@ def test__manager_workflow__quarantine(redis_fn_scope, submission_task):
         ])
 
     # no errors but quarantine
-    assert count_quarantined(redis) == 1
+    assert count_quarantined() == 1
     q = Queue()
-    get_failed_objects(q, redis)
+    get_failed_objects(q)
     assert q.qsize() == 0
     assert sub_queue.qsize() == 0
