@@ -22,7 +22,7 @@ cryptography==2.8
 decorator==4.4.1
 eha-jsonpath==0.5.1
 entrypoints==0.3
-fakeredis==1.1.0
+fakeredis[lua]==1.1.0
 flake8==3.7.9
 flake8-quotes==2.1.1
 gevent==1.4.0
@@ -34,7 +34,6 @@ jsonschema==3.2.0
 mccabe==0.6.1
 more-itertools==8.1.0
 packaging==20.0
-lupa
 pluggy==0.13.1
 ply==3.11
 py==1.8.1
