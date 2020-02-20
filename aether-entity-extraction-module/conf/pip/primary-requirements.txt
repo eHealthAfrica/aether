@@ -16,7 +16,7 @@ aether.python
 
 # Test libraries
 coverage
-fakeredis
+fakeredis[lua]
 flake8-quotes
 gevent
 pytest
