@@ -41,6 +41,7 @@ from aether.python.entity.extractor import (
 
 from extractor import settings, utils
 
+MAPPINSET_FIELD = 'mappingset'
 SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
 SUBMISSION_PAYLOAD_FIELD = 'payload'
 SUBMISSION_ENTITIES_FIELD = 'extracted_entities'
@@ -233,6 +234,7 @@ def entity_extraction(task, submission_queue):
         _logger.info(f'Got extraction Task: {task.id}')
 
         # extract entities for each linked mapping
+        mappingset_id = None  # same for each mapping on a single submission
         for mapping_id in submission[utils.ARTEFACT_NAMES.mappings]:
             mapping = utils.get_from_redis_or_kernel(
                 id=mapping_id,
@@ -240,7 +242,10 @@ def entity_extraction(task, submission_queue):
                 tenant=tenant
             )
             if not mapping:
+                mappingset_id = None
                 raise ValueError(f'Mapping {mapping_id} not found.')
+            else:
+                mappingset_id = mapping['mappingset']
 
             # get required artefacts
             schemas = {}
@@ -297,6 +302,7 @@ def entity_extraction(task, submission_queue):
         # add to processed submission queue (but only the required fields)
         processed_submission = {
             'id': task.id,
+            MAPPINSET_FIELD: mappingset_id,
             SUBMISSION_PAYLOAD_FIELD: payload,
             SUBMISSION_EXTRACTION_FLAG: is_extracted,
             SUBMISSION_ENTITIES_FIELD: submission_entities,
@@ -308,6 +314,7 @@ def entity_extraction(task, submission_queue):
         _logger.info(f'extractor error: {err}')
         processed_submission = {
             'id': task.id,
+            MAPPINSET_FIELD: mapping['mappingset'],
             SUBMISSION_PAYLOAD_FIELD: {
                 **payload,
                 ENTITY_EXTRACTION_ERRORS: [str(err)],
@@ -356,6 +363,7 @@ def push_to_kernel(realm: str, objs: List[Any], queue: Queue):
         return len(objs)
     except HTTPError as e:
         _logger.debug(f'Kernel submission failed: {e.response.status_code}')
+        _logger.debug(f'bad data: {objs}')
         if e.response.status_code == 400:
             if hasattr(e.response, 'text'):
                 _logger.warning(f'Bad request: {e.response.text}')
