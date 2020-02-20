@@ -210,6 +210,7 @@ to a CDN.
 ##### Minio (`DJANGO_STORAGE_BACKEND=minio`)
 
 - `BUCKET_NAME`: Name of the bucket that will act as MEDIA folder (**mandatory**).
+- `STATIC_BUCKET_NAME`: Name of the bucket to collect static files (**mandatory** if `COLLECT_STATIC_FILES_ON_STORAGE` is set to `true`)
 - `MINIO_STORAGE_ACCESS_KEY`: Minio Access Key.
 - `MINIO_STORAGE_SECRET_KEY`: Minio Secret Access Key.
 - `MINIO_STORAGE_ENDPOINT`: Minio server url endpoint (without scheme).
@@ -222,6 +223,7 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 ##### S3 (`DJANGO_STORAGE_BACKEND=s3`)
 
 - `BUCKET_NAME`: Name of the bucket to use on s3 (**mandatory**). Must be unique on s3.
+- `STATIC_BUCKET_NAME`: Name of the bucket to collect static files (**mandatory** if `COLLECT_STATIC_FILES_ON_STORAGE` is set to `true`)
 - `AWS_ACCESS_KEY_ID`: AWS Access Key to your s3 account.
 - `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your s3 account.
 - `AWS_S3_REGION_NAME`: AWS region.
@@ -231,6 +233,7 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 - `BUCKET_NAME`: Name of the bucket to use on gcs (**mandatory**).
   Create bucket using [Google Cloud Console](https://console.cloud.google.com/)
   and set appropriate permissions.
+- `STATIC_BUCKET_NAME`: Name of the bucket to collect static files (**mandatory** if `COLLECT_STATIC_FILES_ON_STORAGE` is set to `true`)
 - `GS_ACCESS_KEY_ID`: Google Cloud Access Key.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 - `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key.

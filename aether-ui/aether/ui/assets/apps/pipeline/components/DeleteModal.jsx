@@ -18,8 +18,8 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
-import { FormattedMessage, injectIntl, defineMessages } from 'react-intl'
+import React, { useState } from 'react'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { Modal } from '../../components'
 
 const MESSAGES = defineMessages({
@@ -33,141 +33,123 @@ const MESSAGES = defineMessages({
   }
 })
 
-class DeleteModal extends Component {
-  constructor (props) {
-    super(props)
-    this.state = {
-      schemas: false,
-      entities: false,
-      submissions: false
-    }
-  }
+const DeleteModal = ({ onClose, onDelete, obj, objectType }) => {
+  const { formatMessage } = useIntl()
+  const [schemas, setSchemas] = useState(false)
+  const [entities, setEntities] = useState(false)
+  const [submissions, setSubmissions] = useState(false)
 
-  render () {
-    const { formatMessage } = this.props.intl
-    const objType = formatMessage(MESSAGES[this.props.objectType || 'pipeline'])
-    const header = (
-      <span>
-        <FormattedMessage
-          id='modal.delete.text'
-          defaultMessage='Delete {objType} {objName}'
-          values={{ objType, objName: <b>{this.props.obj.name}</b> }}
-        />
-      </span>
-    )
-    const remove = () => { this.props.onDelete(this.state) }
+  const objType = formatMessage(MESSAGES[objectType || 'pipeline'])
+  const header = (
+    <span>
+      <FormattedMessage
+        id='modal.delete.text'
+        defaultMessage='Delete {objType} {objName}'
+        values={{ objType, objName: <b>{obj.name}</b> }}
+      />
+    </span>
+  )
+  const remove = () => { onDelete({ schemas, submissions, entities }) }
 
-    const buttons = (
-      <div>
-        <button
-          data-qa='delete.modal.button.cancel'
-          className='btn btn-w'
-          onClick={this.props.onClose}
-        >
-          <FormattedMessage
-            id='delete.modal.button.cancel'
-            defaultMessage='Cancel'
-          />
-        </button>
-
-        <button
-          className='btn btn-w btn-primary'
-          onClick={remove}
-        >
-          <FormattedMessage
-            id='delete.modal.button.delete'
-            defaultMessage='Delete'
-          />
-        </button>
-      </div>
-    )
-
-    return (
-      <Modal
-        header={header}
-        buttons={buttons}
-        onEnter={remove}
-        onEscape={this.props.onClose}
+  const buttons = (
+    <div>
+      <button
+        data-qa='delete.modal.button.cancel'
+        className='btn btn-w'
+        onClick={onClose}
       >
-        <label className='title-medium mt-4'>
+        <FormattedMessage
+          id='delete.modal.button.cancel'
+          defaultMessage='Cancel'
+        />
+      </button>
+
+      <button
+        className='btn btn-w btn-primary'
+        onClick={remove}
+      >
+        <FormattedMessage
+          id='delete.modal.button.delete'
+          defaultMessage='Delete'
+        />
+      </button>
+    </div>
+  )
+
+  return (
+    <Modal
+      header={header}
+      buttons={buttons}
+      onEnter={remove}
+      onEscape={onClose}
+    >
+      <label className='title-medium mt-4'>
+        <FormattedMessage
+          id='delete.modal.message-2'
+          defaultMessage='Would you also like to delete any of the following?'
+        />
+      </label>
+      {
+        objectType === 'pipeline' &&
+          <div className='check-default ml-4'>
+            <input
+              type='checkbox'
+              id='check1'
+              checked={submissions}
+              onChange={(e) => {
+                setSubmissions(e.target.checked)
+              }}
+            />
+            <label htmlFor='check1'>
+              <FormattedMessage
+                id='modal.delete.submissions.text'
+                defaultMessage='Data <b>submitted to</b> this pipeline (Submissions)'
+                values={{ b: text => <b>{text}</b> }}
+              />
+            </label>
+          </div>
+      }
+      <div className='check-default ml-4'>
+        <input
+          type='checkbox'
+          id='check2'
+          checked={schemas}
+          onChange={(e) => {
+            setEntities(e.target.checked)
+            setSchemas(e.target.checked)
+          }}
+        />
+        <label htmlFor='check2'>
           <FormattedMessage
-            id='delete.modal.message-2'
-            defaultMessage='Would you also like to delete any of the following?'
+            id='delete.modal.all.entity-types-0'
+            defaultMessage='Entity Types (Schemas)'
           />
         </label>
-        {
-          this.props.objectType === 'pipeline' &&
-            <div className='check-default ml-4'>
-              <input
-                type='checkbox'
-                id='check1'
-                checked={this.state.submissions}
-                onChange={(e) => {
-                  this.setState({
-                    ...this.state, submissions: e.target.checked
-                  })
-                }}
-              />
-              <label htmlFor='check1'>
-                <FormattedMessage
-                  id='modal.delete.submissions.text'
-                  defaultMessage='Data <b>submitted to</b> this pipeline (Submissions)'
-                  values={{ b: text => <b>{text}</b> }}
-                />
-              </label>
-            </div>
-        }
-        <div className='check-default ml-4'>
-          <input
-            type='checkbox'
-            id='check2'
-            checked={this.state.schemas}
-            onChange={(e) => {
-              this.setState({
-                ...this.state,
-                schemas: e.target.checked,
-                entities: e.target.checked
-              })
-            }}
+      </div>
+      <div className='check-default ml-4 check-indent'>
+        <input
+          type='checkbox'
+          id='check3'
+          checked={entities}
+          onChange={(e) => {
+            if (!e.target.checked) {
+              setEntities(e.target.checked)
+              setSchemas(e.target.checked)
+            } else {
+              setEntities(e.target.checked)
+            }
+          }}
+        />
+        <label htmlFor='check3'>
+          <FormattedMessage
+            id='modal.delete.entities.text'
+            defaultMessage='Data <b>created by</b> this {objType} (Entities)'
+            values={{ b: text => <b>{text}</b>, objType }}
           />
-          <label htmlFor='check2'>
-            <FormattedMessage
-              id='delete.modal.all.entity-types-0'
-              defaultMessage='Entity Types (Schemas)'
-            />
-          </label>
-        </div>
-        <div className='check-default ml-4 check-indent'>
-          <input
-            type='checkbox'
-            id='check3'
-            checked={this.state.entities}
-            onChange={(e) => {
-              if (!e.target.checked) {
-                this.setState({
-                  ...this.state,
-                  entities: e.target.checked,
-                  schemas: e.target.checked
-                })
-              } else {
-                this.setState({
-                  ...this.state,
-                  entities: e.target.checked
-                })
-              }
-            }}
-          />
-          <label htmlFor='check3'>
-            <FormattedMessage
-              id='modal.delete.entities.text'
-              defaultMessage='Data <b>created by</b> this {objType} (Entities)'
-              values={{ b: text => <b>{text}</b>, objType }}
-            />
-          </label>
-        </div>
-      </Modal>
-    )
-  }
+        </label>
+      </div>
+    </Modal>
+  )
 }
 
-export default injectIntl(DeleteModal)
+export default DeleteModal

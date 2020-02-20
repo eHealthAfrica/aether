@@ -22,28 +22,29 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
+import OutsideClickHandler from 'react-outside-click-handler'
 import Modal from '../../components/Modal'
 import SubmissionCard from './SubmissionCard'
 
-const PipelineInfo = ({ showInfo, setShowInfo, pipeline: { name, mappingset, input } }) => {
-  const hide = (event) => { setShowInfo(event, false) }
+const PipelineInfo = ({ close, pipeline: { name, mappingset, input } }) => {
   const button = (
-    <button type='button' className='btn btn-w btn-primary' onClick={hide}>
+    <button type='button' className='btn btn-w btn-primary' onClick={close}>
       <FormattedMessage id='pipeline.info.modal.ok' defaultMessage='OK' />
     </button>
   )
 
-  return showInfo ? (
-    <Modal
-      onEnter={hide}
-      onEscape={hide}
-      header={name}
-      buttons={button}
-      handleClickOutside={hide}
-    >
-      <SubmissionCard mappingset={mappingset} inputData={input} />
-    </Modal>
-  ) : null
+  return (
+    <OutsideClickHandler onOutsideClick={close}>
+      <Modal
+        onEnter={close}
+        onEscape={close}
+        header={name}
+        buttons={button}
+      >
+        <SubmissionCard mappingset={mappingset} inputData={input} />
+      </Modal>
+    </OutsideClickHandler>
+  )
 }
 
 export default connect()(PipelineInfo)

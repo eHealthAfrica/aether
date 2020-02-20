@@ -18,363 +18,273 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
-import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
+import React, { useState, useEffect } from 'react'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
-import { AvroSchemaViewer } from '../../components'
+import { AvroSchemaViewer, ViewsBar } from '../../components'
 import { deepEqual, objectToString } from '../../utils'
 import { generateSchema, randomInput } from '../../utils/avro-utils'
 
 import { updatePipeline } from '../redux'
 
-// The input section has two subviews `SCHEMA_VIEW` and `DATA_VIEW`.
-// In the schema view, the user enters an avro schema representing their input.
-// Sample data is derived from that schema and displayed in the `DataInput` component.
-// In the data view, the user enters sample data representing a submission.
-// An avro schema is derived from this sample and displayed in the `SchemaInput`.
-
 const SCHEMA_VIEW = 'SCHEMA_VIEW'
 const DATA_VIEW = 'DATA_VIEW'
 
 const MESSAGES = defineMessages({
-  recursiveError: {
-    defaultMessage: 'Input data could not be generated from the schema provided. Recursive schemas are not supported.',
-    id: 'input.schema.invalid.message.head.recursive'
+  avroSchemaView: {
+    defaultMessage: 'Avro Schema',
+    id: 'input.schema.view'
   },
-  regularError: {
+  avroSchemaPlacehoder: {
+    defaultMessage: 'Paste an AVRO Schema and Sample Data will be generated for your convenience to use in the pipeline.',
+    id: 'input.schema.placeholder'
+  },
+  avroSchemaSubmitButton: {
+    defaultMessage: 'Add to pipeline',
+    id: 'input.schema.submit'
+  },
+  avroSchemaInvalidError: {
     defaultMessage: 'You have provided an invalid AVRO schema.',
-    id: 'input.schema.invalid.message.head'
+    id: 'input.schema.error.invalid'
+  },
+  avroSchemaGenericError: {
+    defaultMessage: 'Input data could not be generated from the schema provided.',
+    id: 'input.schema.error.invalid.generic'
+  },
+  avroSchemaNonObjectError: {
+    defaultMessage: 'The AVRO schema can only be of type "record".',
+    id: 'input.schema.error.non-object'
   },
 
+  inputDataView: {
+    defaultMessage: 'JSON Data',
+    id: 'input.data.view'
+  },
   inputDataPlaceholder: {
     defaultMessage: 'Once you have added a schema, we will generate some sample data for you. Alternatively, you can enter some JSON data and Aether will derive an AVRO schema for you.',
     id: 'input.data.placeholder'
   },
-  inputDataNonObjectError: {
-    defaultMessage: 'The JSON data can only be a valid dictionary.',
-    id: 'input.data.error.non-object'
+  inputDataSubmitButton: {
+    defaultMessage: 'Derive schema from data',
+    id: 'input.data.submit'
   },
 
-  inputSchemaPlacehoder: {
-    defaultMessage: 'Paste an AVRO Schema and Sample Data will be generated for your convenience to use in the pipeline.',
-    id: 'input.schema.placeholder'
+  jsonInvalidError: {
+    defaultMessage: 'Not a valid JSON document.',
+    id: 'input.json.error.invalid'
   },
-  inputSchemaNonObjectError: {
-    defaultMessage: 'The AVRO schema can only be of type "record".',
-    id: 'input.schema.error.non-object'
+  jsonNonObjectError: {
+    defaultMessage: 'The JSON document can only be a valid dictionary.',
+    id: 'input.json.error.non-object'
   }
 })
 
-class SchemaInput extends Component {
-  constructor (props) {
-    super(props)
+const Input = ({ pipeline, highlight, updatePipeline }) => {
+  const { formatMessage } = useIntl()
+  const [view, setView] = useState(DATA_VIEW)
+  const [prevPipeline, setPrevPipeline] = useState(pipeline)
 
-    this.state = {
-      inputSchema: objectToString(props.pipeline.schema),
-      view: SCHEMA_VIEW,
-      error: null,
-      errorHead: null
+  const [schemaStr, setSchemaStr] = useState(objectToString(pipeline.schema))
+  const [schemaErr, setSchemaErr] = useState(null)
+
+  const [inputStr, setInputStr] = useState(objectToString(pipeline.input))
+  const [inputErr, setInputErr] = useState(null)
+
+  useEffect(() => {
+    if (!deepEqual(prevPipeline, pipeline)) {
+      setPrevPipeline(pipeline)
+      setSchemaStr(objectToString(pipeline.schema))
+      setSchemaErr(null)
+      setInputStr(objectToString(pipeline.input))
+      setInputErr(null)
     }
-  }
+  })
 
-  componentDidUpdate (prevProps) {
-    if (!deepEqual(prevProps.pipeline, this.props.pipeline)) {
-      this.setState({
-        inputSchema: objectToString(this.props.pipeline.schema),
-        error: null,
-        errorHead: null
+  const parseJson = () => {
+    try {
+      const obj = JSON.parse(currentValue)
+
+      // the JSON cannot be an array or a primitive, only an object
+      if (Object.prototype.toString.call(obj) !== '[object Object]') {
+        setError({
+          message: formatMessage(MESSAGES.jsonNonObjectError),
+          title: formatMessage(MESSAGES.jsonInvalidError)
+        })
+        return null
+      }
+
+      return obj
+    } catch (err) {
+      setError({
+        message: err.message,
+        title: formatMessage(MESSAGES.jsonInvalidError)
       })
     }
+
+    return null
   }
 
-  onSchemaTextChanged (event) {
-    this.setState({ inputSchema: event.target.value })
-  }
-
-  notifyChange (event) {
+  const handleSubmit = (event) => {
     event.preventDefault()
     event.stopPropagation()
 
-    if (this.props.pipeline.isInputReadOnly) {
+    if (pipeline.isInputReadOnly) {
       return
     }
 
-    this.setState({
-      error: null,
-      errorHead: null
-    })
+    setError(null)
+    const obj = parseJson(currentValue, setError)
+    if (obj === null) return
 
-    const { formatMessage } = this.props.intl
-    try {
-      // validate schema
-      const schema = JSON.parse(this.state.inputSchema)
-      if (!schema.fields) {
-        this.setState({
-          error: formatMessage(MESSAGES.inputSchemaNonObjectError),
-          errorHead: formatMessage(MESSAGES.regularError)
-        })
-        return
-      }
-
-      // generate a new input sample
+    if (view === DATA_VIEW) {
+      // Generate avro schema from input
       try {
-        const input = randomInput(schema)
-        this.props.updatePipeline({ ...this.props.pipeline, schema, input })
-      } catch (error) {
-        this.setState({
-          error: error.message,
-          errorHead: formatMessage(MESSAGES.recursiveError)
+        // TODO: do not generate a new schema if the current one conforms the input
+        const schema = generateSchema(obj)
+        // Take pipeline name and remove forbidden characters
+        const name = pipeline.name.replace(/[^a-zA-Z0-9]/g, '')
+        schema.name = name.substring(0, 25)
+
+        updatePipeline({ ...pipeline, schema, input: obj })
+      } catch (err) {
+        setError({
+          message: err.message,
+          title: formatMessage(MESSAGES.inputDataInvalidError)
         })
       }
-    } catch (error) {
-      this.setState({
-        error: error.message,
-        errorHead: formatMessage(MESSAGES.regularError)
-      })
-    }
-  }
-
-  hasChanged () {
-    try {
-      const schema = JSON.parse(this.state.inputSchema)
-      return !deepEqual(schema, this.props.pipeline.schema)
-    } catch (e) {
-      return true
-    }
-  }
-
-  render () {
-    const { formatMessage } = this.props.intl
-
-    return (
-      <form onSubmit={this.notifyChange.bind(this)}>
-        <div className='textarea-header'>
-          {
-            this.state.error &&
-              <div className='hint error-message'>
-                <h4 className='hint-title'>
-                  {this.state.errorHead}
-                </h4>
-                {this.state.error}
-              </div>
-          }
-        </div>
-
-        <textarea
-          className={`monospace ${this.state.error ? 'error' : ''}`}
-          required
-          value={this.state.inputSchema}
-          onChange={this.onSchemaTextChanged.bind(this)}
-          placeholder={formatMessage(MESSAGES.inputSchemaPlacehoder)}
-          rows='10'
-          disabled={this.props.pipeline.isInputReadOnly}
-        />
-
-        {
-          !this.props.pipeline.isInputReadOnly &&
-            <button
-              type='submit'
-              className='btn btn-w btn-primary mt-3'
-              disabled={!this.hasChanged()}
-            >
-              <span className='details-title'>
-                <FormattedMessage
-                  id='input.schema.button.add'
-                  defaultMessage='Add to pipeline'
-                />
-              </span>
-            </button>
-        }
-      </form>
-    )
-  }
-}
-
-class DataInput extends Component {
-  constructor (props) {
-    super(props)
-    this.state = {
-      inputData: objectToString(props.pipeline.input),
-      error: null
-    }
-  }
-
-  componentDidUpdate (prevProps) {
-    if (!deepEqual(prevProps.pipeline, this.props.pipeline)) {
-      this.setState({
-        inputData: objectToString(this.props.pipeline.input),
-        error: null
-      })
-    }
-  }
-
-  onDataChanged (event) {
-    this.setState({ inputData: event.target.value })
-  }
-
-  notifyChange (event) {
-    event.preventDefault()
-    event.stopPropagation()
-
-    if (this.props.pipeline.isInputReadOnly) {
-      return
-    }
-
-    try {
-      // Validate data and generate avro schema from input
-      const input = JSON.parse(this.state.inputData)
-      // the input cannot be an array or a primitive, only an object
-      if (Object.prototype.toString.call(input) !== '[object Object]') {
-        const { formatMessage } = this.props.intl
-        this.setState({ error: formatMessage(MESSAGES.inputDataNonObjectError) })
+    } else {
+      // validate schema and generate a new input sample
+      if (!obj.fields) {
+        setError({
+          message: formatMessage(MESSAGES.avroSchemaNonObjectError),
+          title: formatMessage(MESSAGES.avroSchemaInvalidError)
+        })
         return
       }
-      const schema = generateSchema(input)
 
-      // Take pipeline name and remove forbidden characters
-      const name = this.props.pipeline.name.replace(/[^a-zA-Z0-9]/g, '')
-      schema.name = name.substring(0, 25)
+      try {
+        // TODO: do not generate a new sample if the current one conforms the schema
+        const input = randomInput(obj)
 
-      this.props.updatePipeline({
-        ...this.props.pipeline,
-        schema,
-        input
-      })
-    } catch (error) {
-      this.setState({ error: error.message })
+        updatePipeline({ ...pipeline, schema: obj, input })
+      } catch (err) {
+        setError({
+          message: err.message,
+          title: formatMessage(MESSAGES.avroSchemaGenericError)
+        })
+      }
     }
   }
 
-  hasChanged () {
-    try {
-      const data = JSON.parse(this.state.inputData)
-      return !deepEqual(data, this.props.pipeline.input)
-    } catch (e) {
-      return true
-    }
+  const placeholder = view === DATA_VIEW ? MESSAGES.inputDataPlaceholder : MESSAGES.avroSchemaPlacehoder
+  const submitLabel = view === DATA_VIEW ? MESSAGES.inputDataSubmitButton : MESSAGES.avroSchemaSubmitButton
+
+  const setValue = view === DATA_VIEW ? setInputStr : setSchemaStr
+  const setError = view === DATA_VIEW ? setInputErr : setSchemaErr
+
+  const currentObj = view === DATA_VIEW ? pipeline.input : pipeline.schema
+  const currentValue = view === DATA_VIEW ? inputStr : schemaStr
+  const currentError = view === DATA_VIEW ? inputErr : schemaErr
+
+  let disableButtons = true
+  try {
+    disableButtons = deepEqual(JSON.parse(currentValue), currentObj)
+  } catch (e) {
+    disableButtons = false
   }
 
-  render () {
-    const { formatMessage } = this.props.intl
-
-    return (
-      <form onSubmit={this.notifyChange.bind(this)}>
-        <div className='textarea-header'>
-          {
-            this.state.error &&
-              <div className='hint error-message'>
-                <h4 className='hint-title'>
-                  <FormattedMessage
-                    id='input.data.invalid'
-                    defaultMessage='Not a valid JSON document.'
-                  />
-                </h4>
-                {this.state.error}
-              </div>
-          }
-        </div>
-
-        <textarea
-          className={`monospace ${this.state.error ? 'error' : ''}`}
-          required
-          value={this.state.inputData}
-          onChange={this.onDataChanged.bind(this)}
-          placeholder={formatMessage(MESSAGES.inputDataPlaceholder)}
-          rows='10'
-          disabled={this.props.pipeline.isInputReadOnly}
+  return (
+    <div className='section-body'>
+      <div className='section-left'>
+        <AvroSchemaViewer
+          schema={pipeline.schema}
+          highlight={highlight}
+          pathPrefix='$'
+          className='input-schema'
         />
+      </div>
 
-        {
-          !this.props.pipeline.isInputReadOnly &&
-            <button
-              type='submit'
-              className='btn btn-w btn-primary mt-3'
-              disabled={this.props.pipeline.isInputReadOnly || !this.hasChanged()}
-            >
-              <span className='details-title'>
-                <FormattedMessage
-                  id='input.data.button.add'
-                  defaultMessage='Derive schema from data'
-                />
-              </span>
-            </button>
-        }
-      </form>
-    )
-  }
-}
-
-class Input extends Component {
-  constructor (props) {
-    super(props)
-
-    this.state = {
-      showModal: false,
-      view: DATA_VIEW
-    }
-
-    this.handleToggleInputView = this.handleToggleInputView.bind(this)
-  }
-
-  handleToggleInputView () {
-    if (this.state.view === DATA_VIEW) {
-      this.setState({ view: SCHEMA_VIEW })
-    } else {
-      this.setState({ view: DATA_VIEW })
-    }
-  }
-
-  render () {
-    return (
-      <div className='section-body'>
-        <div className='section-left'>
-          <AvroSchemaViewer
-            schema={this.props.pipeline.schema}
-            highlight={this.props.highlight}
-            pathPrefix='$'
-            className='input-schema'
+      <div className='section-right'>
+        <h3 className='title-large'>
+          <FormattedMessage
+            id='input.title'
+            defaultMessage='Define the source for your pipeline'
           />
-        </div>
+        </h3>
 
-        <div className='section-right'>
-          <h3 className='title-large'>
-            <FormattedMessage
-              id='input.title'
-              defaultMessage='Define the source for your pipeline'
+        <div className='toggleable-content mt-3'>
+          <ViewsBar
+            current={view}
+            setView={setView}
+            views={[
+              { id: SCHEMA_VIEW, label: formatMessage(MESSAGES.avroSchemaView) },
+              { id: DATA_VIEW, label: formatMessage(MESSAGES.inputDataView) }
+            ]}
+          />
+
+          <form onSubmit={handleSubmit}>
+            {
+              currentError &&
+                <div className='textarea-header'>
+                  <div className='hint error-message'>
+                    <h4 className='hint-title'>
+                      {currentError.title}
+                    </h4>
+                    {currentError.message}
+                  </div>
+                </div>
+            }
+
+            <textarea
+              className={`monospace ${currentError ? 'error' : ''}`}
+              required
+              value={currentValue}
+              onChange={(event) => {
+                setValue(event.target.value)
+                setError(null)
+              }}
+              placeholder={formatMessage(placeholder)}
+              rows='10'
+              disabled={pipeline.isInputReadOnly}
             />
-          </h3>
 
-          <div className='toggleable-content mt-3'>
-            <div className='tabs'>
-              <button
-                className={`tab ${this.state.view === SCHEMA_VIEW ? 'selected' : ''}`}
-                onClick={this.handleToggleInputView}
-              >
-                <FormattedMessage
-                  id='input.toggle.schema'
-                  defaultMessage='Avro schema'
-                />
-              </button>
+            {
+              !pipeline.isInputReadOnly &&
+                <div className='action-buttons'>
+                  <button
+                    type='submit'
+                    className='btn btn-w btn-primary mt-3'
+                    disabled={disableButtons}
+                  >
+                    <span className='details-title'>
+                      {formatMessage(submitLabel)}
+                    </span>
+                  </button>
 
-              <button
-                className={`tab ${this.state.view === DATA_VIEW ? 'selected' : ''}`}
-                onClick={this.handleToggleInputView}
-              >
-                <FormattedMessage
-                  id='input.toggle.data'
-                  defaultMessage='JSON Data'
-                />
-              </button>
-            </div>
-
-            {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
-            {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
-          </div>
+                  <button
+                    type='button'
+                    className='btn btn-w btn-primary mt-3'
+                    disabled={disableButtons}
+                    onClick={() => {
+                      setValue(objectToString(currentObj))
+                      setError(null)
+                    }}
+                  >
+                    <span className='details-title'>
+                      <FormattedMessage
+                        id='input.button.reset'
+                        defaultMessage='Revert unsaved changes'
+                      />
+                    </span>
+                  </button>
+                </div>
+            }
+          </form>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
 }
 
 const mapStateToProps = ({ pipelines }) => ({
@@ -383,4 +293,4 @@ const mapStateToProps = ({ pipelines }) => ({
 })
 const mapDispatchToProps = { updatePipeline }
 
-export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(Input))
+export default connect(mapStateToProps, mapDispatchToProps)(Input)

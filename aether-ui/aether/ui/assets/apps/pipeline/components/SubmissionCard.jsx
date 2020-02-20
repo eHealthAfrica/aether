@@ -18,54 +18,52 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
-import Clipboard from './Clipboard'
+import { Clipboard } from '../../components'
 
 import { getKernelURL } from '../../redux/settings'
 import { objectToString } from '../../utils'
 
-class SubmissionCard extends Component {
-  constructor (props) {
-    super(props)
+const SubmissionCard = ({
+  getKernelURL,
+  inputData,
+  kernelUrl,
+  mappingset
+}) => {
+  useEffect(() => { getKernelURL() })
 
-    props.getKernelURL()
-  }
+  const submissionUrl = `${kernelUrl}/submissions/`
+  const sampleData = objectToString({ mappingset, payload: inputData || {} })
 
-  render () {
-    const { kernelUrl, mappingset, inputData } = this.props
-    const submissionUrl = `${kernelUrl}/submissions/`
-    const sampleData = objectToString({ mappingset, payload: inputData || {} })
+  return (
+    <div className='mt-4'>
+      <label className='form-label'>
+        <FormattedMessage
+          id='submission.card.url'
+          defaultMessage='Submission URL'
+        />
+        <Clipboard content={submissionUrl} />
+      </label>
+      <a className='submission-url' href={submissionUrl}>
+        {submissionUrl}
+      </a>
 
-    return (
-      <div className='mt-4'>
+      <div className='mt-5'>
         <label className='form-label'>
           <FormattedMessage
-            id='submission.card.url'
-            defaultMessage='Submission URL'
+            id='submission.card.sample'
+            defaultMessage='Submission sample data'
           />
-          <Clipboard content={submissionUrl} />
+          <Clipboard content={sampleData} />
         </label>
-        <a className='submission-url' href={submissionUrl}>
-          {submissionUrl}
-        </a>
-
-        <div className='mt-5'>
-          <label className='form-label'>
-            <FormattedMessage
-              id='submission.card.sample'
-              defaultMessage='Submission sample data'
-            />
-            <Clipboard content={sampleData} />
-          </label>
-          <div className='code'>
-            <code>{sampleData}</code>
-          </div>
+        <div className='code'>
+          <code>{sampleData}</code>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
 }
 
 const mapStateToProps = ({ settings }) => ({

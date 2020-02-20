@@ -26,11 +26,11 @@ export default ({ content }) => {
 
   const onCopy = () => {
     setIcon('-check')
-    setTimeout(() => setIcon(null), 2000)
+    setTimeout(() => { setIcon(null) }, 2000)
   }
 
   return (
-    <span className='clipboard'>
+    <span className='ml-2 clipboard'>
       <Clipboard
         component='i'
         onClick={onCopy}

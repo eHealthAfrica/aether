@@ -18,8 +18,8 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
-import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
+import React, { useState, useEffect } from 'react'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { AvroSchemaViewer } from '../../components'
@@ -50,44 +50,32 @@ const MESSAGES = defineMessages({
   }
 })
 
-class EntityTypes extends Component {
-  constructor (props) {
-    super(props)
+const EntityTypes = ({ contract, updateContract }) => {
+  const { formatMessage } = useIntl()
 
-    this.state = {
-      entityTypesSchema: objectToString(props.contract.entity_types),
-      error: null
+  const [prevContract, setPrevContract] = useState(contract)
+  const [entityTypesSchema, setEntityTypesSchema] = useState(objectToString(contract.entity_types))
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (!deepEqual(prevContract.entity_types, contract.entity_types)) {
+      setPrevContract(contract)
+      setError(null)
+      setEntityTypesSchema(objectToString(contract.entity_types))
     }
-  }
+  })
 
-  componentDidUpdate (prevProps) {
-    if (!deepEqual(prevProps.contract.entity_types, this.props.contract.entity_types)) {
-      this.setState({
-        entityTypesSchema: objectToString(this.props.contract.entity_types),
-        error: null
-      })
-    }
-  }
-
-  onSchemaTextChanged (event) {
-    this.setState({
-      entityTypesSchema: event.target.value
-    })
-  }
-
-  notifyChange (event) {
+  const notifyChange = (event) => {
     event.preventDefault()
     event.stopPropagation()
 
-    if (this.props.contract.is_read_only) {
+    if (contract.is_read_only) {
       return
     }
 
-    const { formatMessage } = this.props.intl
-
     try {
       // validate schemas
-      const schemas = JSON.parse(this.state.entityTypesSchema)
+      const schemas = JSON.parse(entityTypesSchema)
       schemas.forEach((schema, index) => {
         const current = `${formatMessage(MESSAGES.schema)} ${index + 1}`
         try {
@@ -111,98 +99,90 @@ class EntityTypes extends Component {
         throw new Error(formatMessage(MESSAGES.uniqueNamesError))
       }
 
-      this.props.updateContract({
-        ...this.props.contract,
-        entity_types: schemas,
-        is_identity: false
-      })
+      updateContract({ ...contract, entity_types: schemas, is_identity: false })
     } catch (error) {
-      this.setState({ error: error.message })
+      setError(error.message)
     }
   }
 
-  hasChanged () {
+  const hasChanged = () => {
     try {
-      const schemas = JSON.parse(this.state.entityTypesSchema)
-      return !deepEqual(schemas, this.props.contract.entity_types)
+      const schemas = JSON.parse(entityTypesSchema)
+      return !deepEqual(schemas, contract.entity_types)
     } catch (e) {
       return true
     }
   }
 
-  render () {
-    const { formatMessage } = this.props.intl
-
-    return (
-      <div className='section-body'>
-        <div className='section-left'>
-          {
-            (this.props.contract.entity_types || []).map((entityType, index) => (
-              <AvroSchemaViewer
-                key={index}
-                schema={entityType}
-                highlight={this.props.contract.highlightDestination}
-                pathPrefix={entityType.name}
-                className='entity-type'
-                hideChildren
-              />
-            ))
-          }
-        </div>
-
-        <div className='section-right'>
-          <form onSubmit={this.notifyChange.bind(this)}>
-            <label className='form-label'>
-              <FormattedMessage
-                id='entity.types.empty'
-                defaultMessage='Paste Entity Type definitions'
-              />
-            </label>
-
-            <div className='textarea-header'>
-              {
-                this.state.error &&
-                  <div className='hint error-message'>
-                    <h4 className='hint-title'>
-                      <FormattedMessage
-                        id='entity.types.invalid'
-                        defaultMessage='You have provided invalid AVRO schemas.'
-                      />
-                    </h4>
-                    {this.state.error}
-                  </div>
-              }
-            </div>
-
-            <textarea
-              className={`input-d monospace ${this.state.error ? 'error' : ''}`}
-              value={this.state.entityTypesSchema}
-              onChange={this.onSchemaTextChanged.bind(this)}
-              placeholder={formatMessage(MESSAGES.entityTypeSchemaPlaceHolder)}
-              rows='10'
-              disabled={this.props.contract.is_read_only}
+  return (
+    <div className='section-body'>
+      <div className='section-left'>
+        {
+          (contract.entity_types || []).map((entityType, index) => (
+            <AvroSchemaViewer
+              key={index}
+              schema={entityType}
+              highlight={contract.highlightDestination}
+              pathPrefix={entityType.name}
+              className='entity-type'
+              hideChildren
             />
-
-            {
-              !this.props.contract.is_read_only &&
-                <button
-                  type='submit'
-                  className='btn btn-d btn-primary mt-3'
-                  disabled={!this.hasChanged()}
-                >
-                  <span className='details-title'>
-                    <FormattedMessage
-                      id='entity.types.button.ok'
-                      defaultMessage='Add to pipeline'
-                    />
-                  </span>
-                </button>
-            }
-          </form>
-        </div>
+          ))
+        }
       </div>
-    )
-  }
+
+      <div className='section-right'>
+        <form onSubmit={notifyChange}>
+          <label className='form-label'>
+            <FormattedMessage
+              id='entity.types.empty'
+              defaultMessage='Paste Entity Type definitions'
+            />
+          </label>
+
+          <div className='textarea-header'>
+            {
+              error &&
+                <div className='hint error-message'>
+                  <h4 className='hint-title'>
+                    <FormattedMessage
+                      id='entity.types.invalid'
+                      defaultMessage='You have provided invalid AVRO schemas.'
+                    />
+                  </h4>
+                  {error}
+                </div>
+            }
+          </div>
+
+          <textarea
+            className={`input-d monospace ${error ? 'error' : ''}`}
+            value={entityTypesSchema}
+            onChange={(event) => { setEntityTypesSchema(event.target.value) }}
+            placeholder={formatMessage(MESSAGES.entityTypeSchemaPlaceHolder)}
+            rows='10'
+            disabled={contract.is_read_only}
+          />
+
+          {
+            !contract.is_read_only &&
+              <button
+                type='submit'
+                className='btn btn-d btn-primary mt-3'
+                disabled={!hasChanged()}
+              >
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='entity.types.button.ok'
+                    defaultMessage='Add to pipeline'
+                  />
+                </span>
+              </button>
+          }
+        </form>
+      </div>
+    </div>
+  )
 }
 
 const mapStateToProps = ({ pipelines }) => ({
@@ -210,4 +190,4 @@ const mapStateToProps = ({ pipelines }) => ({
 })
 const mapDispatchToProps = { updateContract }
 
-export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(EntityTypes))
+export default connect(mapStateToProps, mapDispatchToProps)(EntityTypes)

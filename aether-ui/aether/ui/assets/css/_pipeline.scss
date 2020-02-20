@@ -129,6 +129,7 @@ $output-nav-width: 10rem;
   position: absolute;
   bottom: $unit;
   right: $unit-xl;
+  padding-right: 2.5rem;
 
   &::before,
   &::after {
@@ -285,6 +286,18 @@ div[class^='pipeline-section__'],
   padding-top: $pipeline-nav-height;
   transition: width $transition-speed, height .4s .5s;
   position: relative;
+}
+
+.action-buttons {
+  width: 100%;
+  margin: 1rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+
+  .btn {
+    margin-top: 1rem;
+  }
 }
 
 // STATES
