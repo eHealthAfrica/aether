@@ -27,11 +27,7 @@ import { mount } from 'enzyme'
 
 import AppLayout from './AppLayout'
 
-class Foo extends React.Component {
-  render () {
-    return 'foo'
-  }
-}
+const Foo = () => 'foo'
 
 describe('AppLayout', () => {
   it('should render the component wrapped by Redux Provider and IntlProvider', () => {

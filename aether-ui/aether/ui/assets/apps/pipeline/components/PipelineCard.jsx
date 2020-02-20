@@ -18,122 +18,94 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React, { useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
 import PipelineInfo from './PipelineInfo'
 import ContractCard from './ContractCard'
-import PipelineRename from './PipelineRename'
 import PipelineActions from './PipelineActions'
 
-import { selectPipeline, renamePipeline } from '../redux'
+import { selectPipeline } from '../redux'
 
-class PipelineCard extends Component {
-  constructor (props) {
-    super(props)
+const PipelineCard = ({ pipeline, selectPipeline }) => {
+  const history = useHistory()
+  const [showInfo, setShowInfo] = useState(false)
 
-    this.state = { isRenaming: false, showInfo: false }
+  const { id, name, isInputReadOnly, mappingset, contracts } = pipeline
+
+  const handlePipelineSelect = () => {
+    selectPipeline(id)
+    history.push(`/${id}/`)
   }
 
-  render () {
-    const { pipeline, history } = this.props
-    const { isRenaming, showInfo } = this.state
-    const { id, name, isInputReadOnly, mappingset, contracts } = pipeline
+  return (
+    <div className='pipeline-preview'>
+      <div className='preview-heading'>
+        <span className='pipeline-name'>// {name}</span>
 
-    const handleRenameSave = (newName) => {
-      this.props.renamePipeline(id, newName)
-      this.setState({ isRenaming: false })
-    }
+        <PipelineActions pipeline={pipeline} />
+      </div>
 
-    const handlePipelineSelect = () => {
-      this.props.selectPipeline(id)
-      history.push(`/${id}/`)
-    }
-
-    const setShowInfo = (event, showInfo) => {
-      event.stopPropagation()
-      this.setState({ showInfo })
-    }
-
-    return (
-      <div className='pipeline-preview'>
-        <div className='preview-heading'>
-          <span className='pipeline-name'>// {name}</span>
-          {
-            isRenaming
-              ? (
-                <PipelineRename
-                  name={name}
-                  onCancel={() => { this.setState({ isRenaming: false }) }}
-                  onSave={handleRenameSave}
-                />
-              )
-              : (
-                <PipelineActions
-                  delete={this.props.delete}
-                  rename={() => { this.setState({ isRenaming: true }) }}
-                  pipeline={pipeline}
-                  history={history}
-                />
-              )
-          }
-        </div>
-
-        <div
-          className={`preview-input ${isInputReadOnly ? 'pipeline-readonly' : ''}`}
-          onClick={handlePipelineSelect}
-        >
-          {
-            isInputReadOnly &&
-              <span className='tag'>
-                <FormattedMessage
-                  id='pipeline.card.read-only'
-                  defaultMessage='read-only'
-                />
-              </span>
-          }
-
-          <div className='input-heading'>
-            <span className='badge badge-circle badge-c'>
-              <i className='fas fa-file' />
-            </span>
-            <span className='input-name'>
-              {name} {mappingset && (
-                <i
-                  className='ml-1 fas fa-info-circle published-info-icon'
-                  onClick={(event) => { setShowInfo(event, true) }}
-                />
-              )}
-            </span>
-          </div>
-        </div>
-
-        <div className='preview-contracts'>
-          {
-            contracts.map(contract => (
-              <ContractCard
-                key={contract.id}
-                contract={contract}
-                history={history}
+      <div
+        className={`preview-input ${isInputReadOnly ? 'pipeline-readonly' : ''}`}
+        onClick={handlePipelineSelect}
+      >
+        {
+          isInputReadOnly &&
+            <span className='tag'>
+              <FormattedMessage
+                id='pipeline.card.read-only'
+                defaultMessage='read-only'
               />
-            ))
-          }
-        </div>
+            </span>
+        }
 
-        {mappingset && (
+        <div className='input-heading'>
+          <span className='badge badge-circle badge-c'>
+            <i className='fas fa-file' />
+          </span>
+          <span className='input-name'>
+            {name} {mappingset && (
+              <i
+                className='ml-1 fas fa-info-circle published-info-icon'
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setShowInfo(true)
+                }}
+              />
+            )}
+          </span>
+        </div>
+      </div>
+
+      <div className='preview-contracts'>
+        {
+          contracts.map(contract => (
+            <ContractCard
+              key={contract.id}
+              contract={contract}
+            />
+          ))
+        }
+      </div>
+
+      {
+        mappingset && showInfo &&
           <PipelineInfo
             pipeline={pipeline}
-            showInfo={showInfo}
-            setShowInfo={setShowInfo}
+            close={(event) => {
+              event && event.stopPropagation()
+              setShowInfo(false)
+            }}
           />
-        )}
-      </div>
-    )
-  }
+      }
+    </div>
+  )
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { selectPipeline, renamePipeline }
+const mapDispatchToProps = { selectPipeline }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PipelineCard)

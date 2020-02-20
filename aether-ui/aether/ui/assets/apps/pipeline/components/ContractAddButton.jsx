@@ -18,39 +18,37 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React from 'react'
+import { useHistory } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
 import { selectPipeline } from '../redux'
 
-class ContractAddButton extends Component {
-  render () {
-    const handleCreateNewContract = () => {
-      const { id } = this.props.pipeline
-
-      this.props.selectPipeline(id)
-      this.props.history.push({
-        pathname: `/${id}`,
-        state: { isNewContract: true }
-      })
-    }
-
-    return (
-      <button
-        type='button'
-        className={this.props.className || 'btn btn-c'}
-        onClick={handleCreateNewContract}
-      >
-        <span className='details-title'>
-          <FormattedMessage
-            id='contract.add.button'
-            defaultMessage='Add contract'
-          />
-        </span>
-      </button>
-    )
+const ContractAddButton = ({ className, pipeline: { id }, selectPipeline }) => {
+  const history = useHistory()
+  const handleCreateNewContract = () => {
+    selectPipeline(id)
+    history.push({
+      pathname: `/${id}`,
+      state: { isNewContract: true }
+    })
   }
+
+  return (
+    <button
+      type='button'
+      className={className || 'btn btn-c'}
+      onClick={handleCreateNewContract}
+    >
+      <span className='details-title'>
+        <FormattedMessage
+          id='contract.add.button'
+          defaultMessage='Add contract'
+        />
+      </span>
+    </button>
+  )
 }
 
 const mapStateToProps = () => ({})

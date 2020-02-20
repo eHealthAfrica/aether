@@ -18,8 +18,8 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
-import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
+import React from 'react'
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 
 import { AVRO_EXTENDED_TYPE, MASKING_ANNOTATION, MASKING_PUBLIC } from '../utils/constants'
 import { clone, isEmpty, generateGUID } from '../utils'
@@ -42,65 +42,39 @@ const isMasked = (field) => (
   )
 )
 
-class AvroSchemaViewer extends Component {
-  render () {
-    const { schema } = this.props
-    if (isEmpty(schema)) {
-      return (
-        <div className='hint'>
-          <FormattedMessage
-            id='avro.schema.empty'
-            defaultMessage='Your AVRO schema will be displayed here once you have added a valid source.'
-          />
-        </div>
-      )
-    }
-
-    try {
-      parseSchema(schema)
-
-      if (schema.type !== 'record') {
-        return (
-          <div className='hint error-message'>
-            <FormattedMessage
-              id='avro.schema.type.not.record'
-              defaultMessage='Initial AVRO schema type can only be of type "record".'
-            />
-          </div>
-        )
-      }
-
-      return (
-        <div className={this.props.className}>
-          <div className='group'>
-            <div data-qa={`group-title-${schema.name}`} className='title group-title'>
-              {schema.name}
-            </div>
-            <div className='properties group-list'>
-              {schema.fields.map(f => this.renderField(clone(f), this.props.pathPrefix))}
-            </div>
-          </div>
-        </div>
-      )
-    } catch (error) {
-      return (
-        <div className='hint'>
-          <FormattedMessage
-            id='avro.schema.invalid'
-            defaultMessage='You have provided an invalid AVRO schema.'
-          />
-        </div>
-      )
+const getHighlightedClassName = (path, highlight, className) => {
+  // the simplest way (equality)
+  // TODO: check that the jsonPath is included in any of the keys,
+  // because they can also be "formulas"
+  const keys = Object.keys(highlight || {})
+  for (let i = 0; i < keys.length; i++) {
+    if (keys[i] === path) {
+      return `${className}-mapped-${highlight[keys[i]]}`
     }
   }
 
-  renderField (field, parentJsonPath = null) {
-    const { formatMessage } = this.props.intl
+  return ''
+}
+
+const AvroSchemaViewer = ({ className, hideChildren, highlight, pathPrefix, schema }) => {
+  const { formatMessage } = useIntl()
+  if (isEmpty(schema)) {
+    return (
+      <div className='hint'>
+        <FormattedMessage
+          id='avro.schema.empty'
+          defaultMessage='Your AVRO schema will be displayed here once you have added a valid source.'
+        />
+      </div>
+    )
+  }
+
+  const renderField = (field, parentJsonPath = null) => {
     const nullableStr = formatMessage(MESSAGES.nullable)
 
     const jsonPath = getPath(parentJsonPath, field)
-    const highlightedClassName = this.getHighlightedClassName(jsonPath)
-    const type = typeToString(field.type, nullableStr, !this.props.hideChildren, field[AVRO_EXTENDED_TYPE])
+    const highlightedClassName = getHighlightedClassName(jsonPath, highlight, className)
+    const type = typeToString(field.type, nullableStr, !hideChildren, field[AVRO_EXTENDED_TYPE])
 
     let currentType = (field.type.type || field.type) && field.type
     if (isOptionalType(currentType)) {
@@ -116,18 +90,18 @@ class AvroSchemaViewer extends Component {
     const isUnion = Array.isArray(currentType) && !isPrimitive(currentType)
 
     let children = null
-    if (!this.props.hideChildren) {
+    if (!hideChildren) {
       if (currentType.type === 'record') {
-        children = currentType.fields.map(f => this.renderField(f, jsonPath))
+        children = currentType.fields.map(f => renderField(f, jsonPath))
       }
       if (currentType.type === 'array' && !isPrimitive(currentType.items)) {
-        children = this.renderField({ type: currentType.items }, jsonPath)
+        children = renderField({ type: currentType.items }, jsonPath)
       }
       if (currentType.type === 'map' && !isPrimitive(currentType.values)) {
-        children = this.renderField({ type: currentType.values }, jsonPath)
+        children = renderField({ type: currentType.values }, jsonPath)
       }
       if (isUnion) { // union type
-        children = currentType.map((t, i) => this.renderField({ name: `${i + 1}`, type: t }, jsonPath))
+        children = currentType.map((t, i) => renderField({ name: `${i + 1}`, type: t }, jsonPath))
       }
 
       if (children) {
@@ -158,20 +132,42 @@ class AvroSchemaViewer extends Component {
     )
   }
 
-  getHighlightedClassName (jsonPath) {
-    const { highlight } = this.props
-    // the simplest way (equality)
-    // TODO: check that the jsonPath is included in any of the keys,
-    // because they can also be "formulas"
-    const keys = Object.keys(highlight || {})
-    for (let i = 0; i < keys.length; i++) {
-      if (keys[i] === jsonPath) {
-        return `${this.props.className}-mapped-${highlight[keys[i]]}`
-      }
+  try {
+    parseSchema(schema)
+
+    if (schema.type !== 'record') {
+      return (
+        <div className='hint error-message'>
+          <FormattedMessage
+            id='avro.schema.type.not.record'
+            defaultMessage='Initial AVRO schema type can only be of type "record".'
+          />
+        </div>
+      )
     }
 
-    return ''
+    return (
+      <div className={className}>
+        <div className='group'>
+          <div data-qa={`group-title-${schema.name}`} className='title group-title'>
+            {schema.name}
+          </div>
+          <div className='properties group-list'>
+            {schema.fields.map(f => renderField(clone(f), pathPrefix))}
+          </div>
+        </div>
+      </div>
+    )
+  } catch (error) {
+    return (
+      <div className='hint'>
+        <FormattedMessage
+          id='avro.schema.invalid'
+          defaultMessage='You have provided an invalid AVRO schema.'
+        />
+      </div>
+    )
   }
 }
 
-export default injectIntl(AvroSchemaViewer)
+export default AvroSchemaViewer

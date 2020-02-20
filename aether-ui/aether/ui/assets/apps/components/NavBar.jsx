@@ -18,8 +18,8 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
-import { defineMessages, injectIntl } from 'react-intl'
+import React from 'react'
+import { defineMessages, useIntl } from 'react-intl'
 
 import { getLoggedInUser } from '../utils'
 
@@ -30,44 +30,42 @@ const MESSAGES = defineMessages({
   }
 })
 
-class NavBar extends Component {
-  render () {
-    const { formatMessage } = this.props.intl
-    const user = getLoggedInUser()
-    const logoutUrl = window.location.origin + window.location.pathname + 'logout'
+const NavBar = ({ children, showBreadcrumb, onClick }) => {
+  const { formatMessage } = useIntl()
+  const user = getLoggedInUser()
+  const logoutUrl = window.location.origin + window.location.pathname + 'logout'
 
-    return (
-      <div data-qa='navbar' className='navbar top-nav'>
-        <a className='top-nav-logo' title='aether' onClick={this.props.onClick}>
-          <div className='logo-container'>
-            <div className='flipper'>
-              <div className='front' />
-              <div className='back' />
-            </div>
+  return (
+    <div data-qa='navbar' className='navbar top-nav'>
+      <a className='top-nav-logo' title='aether' onClick={onClick}>
+        <div className='logo-container'>
+          <div className='flipper'>
+            <div className='front' />
+            <div className='back' />
           </div>
-          <span data-app-name='app-name'><b>ae</b>ther</span>
-        </a>
-
-        {
-          this.props.showBreadcrumb &&
-            <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
-              {this.props.children}
-            </div>
-        }
-
-        <div data-qa='navbar-user' className='top-nav-user'>
-          <span className='user-name'>
-            {user.name}
-          </span>
-          <span className='logout'>
-            <a href={logoutUrl}>
-              <i className='fas fa-sign-out-alt' title={formatMessage(MESSAGES.logout)} />
-            </a>
-          </span>
         </div>
+        <span data-app-name='app-name'><b>ae</b>ther</span>
+      </a>
+
+      {
+        showBreadcrumb &&
+          <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
+            {children}
+          </div>
+      }
+
+      <div data-qa='navbar-user' className='top-nav-user'>
+        <span className='user-name'>
+          {user.name}
+        </span>
+        <span className='logout'>
+          <a href={logoutUrl}>
+            <i className='fas fa-sign-out-alt' title={formatMessage(MESSAGES.logout)} />
+          </a>
+        </span>
       </div>
-    )
-  }
+    </div>
+  )
 }
 
-export default injectIntl(NavBar)
+export default NavBar

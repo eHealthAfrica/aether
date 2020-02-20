@@ -18,7 +18,7 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React from 'react'
 import { Provider } from 'react-redux'
 import { IntlProvider } from 'react-intl'
 import { HashRouter, Switch, Route } from 'react-router-dom'
@@ -28,20 +28,16 @@ import createStore from '../redux/store'
 
 const store = createStore()
 
-class AppLayout extends Component {
-  render () {
-    return (
-      <Provider store={store}>
-        <IntlProvider defaultLocale={DEFAULT_LOCALE} locale={navigator.locale || DEFAULT_LOCALE}>
-          <HashRouter>
-            <Switch>
-              <Route path='/' component={this.props.app} />
-            </Switch>
-          </HashRouter>
-        </IntlProvider>
-      </Provider>
-    )
-  }
-}
+const AppLayout = ({ app }) => (
+  <Provider store={store}>
+    <IntlProvider defaultLocale={DEFAULT_LOCALE} locale={navigator.locale || DEFAULT_LOCALE}>
+      <HashRouter>
+        <Switch>
+          <Route path='/' component={app} />
+        </Switch>
+      </HashRouter>
+    </IntlProvider>
+  </Provider>
+)
 
 export default AppLayout

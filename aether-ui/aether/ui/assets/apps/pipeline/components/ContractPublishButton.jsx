@@ -18,7 +18,7 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React, { useState } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
@@ -30,70 +30,21 @@ import { publishPreflightContract, publishContract } from '../redux'
 import { objectToString } from '../../utils'
 import { DATE_FORMAT } from '../../utils/constants'
 
-class ContractPublishButton extends Component {
-  constructor (props) {
-    super(props)
+const ContractPublishButton = ({
+  className,
+  contract,
+  publishContract,
+  publishError,
+  publishPreflightContract,
+  publishState,
+  publishSuccess
+}) => {
+  const [showModal, setShowModal] = useState(false)
 
-    this.state = {
-      showModal: false
-    }
-  }
-
-  render () {
-    const { contract } = this.props
-
-    return (
-      <>
-        {this.renderModal()}
-
-        <div>
-          {
-            contract.published_on &&
-              <>
-                <FormattedMessage
-                  id='contract.publish-status.published'
-                  defaultMessage='Published on'
-                /> {moment(contract.published_on).format(DATE_FORMAT)}
-              </>
-          }
-
-          {
-            contract.created && !contract.published_on &&
-              <FormattedMessage
-                id='contract.publish-status.not-published'
-                defaultMessage='Not published yet'
-              />
-          }
-        </div>
-
-        {
-          contract.created && !contract.is_read_only &&
-            <button
-              type='button'
-              className={this.props.className}
-              onClick={(event) => {
-                event.stopPropagation()
-                this.props.publishPreflightContract(contract.id)
-                this.setState({ showModal: true })
-              }}
-            >
-              <FormattedMessage
-                id='contract.publish.button'
-                defaultMessage='Publish'
-              />
-            </button>
-        }
-      </>
-    )
-  }
-
-  renderModal () {
-    const { showModal } = this.state
+  const renderModal = () => {
     if (!showModal) {
       return ''
     }
-
-    const { contract, publishState, publishSuccess, publishError } = this.props
 
     let errors = []
     let warnings = []
@@ -140,11 +91,11 @@ class ContractPublishButton extends Component {
 
     const close = (event) => {
       event.stopPropagation()
-      this.setState({ showModal: false })
+      setShowModal(false)
     }
     const publish = (event) => {
       event.stopPropagation()
-      this.props.publishContract(contract.id)
+      publishContract(contract.id)
     }
     const closeOrPublish = (publishState && errors.length === 0) ? publish : close
 
@@ -228,6 +179,50 @@ class ContractPublishButton extends Component {
       </Modal>
     )
   }
+
+  return (
+    <>
+      {renderModal()}
+
+      <div>
+        {
+          contract.published_on &&
+            <>
+              <FormattedMessage
+                id='contract.publish-status.published'
+                defaultMessage='Published on'
+              /> {moment(contract.published_on).format(DATE_FORMAT)}
+            </>
+        }
+
+        {
+          contract.created && !contract.published_on &&
+            <FormattedMessage
+              id='contract.publish-status.not-published'
+              defaultMessage='Not published yet'
+            />
+        }
+      </div>
+
+      {
+        contract.created && !contract.is_read_only &&
+          <button
+            type='button'
+            className={className}
+            onClick={(event) => {
+              event.stopPropagation()
+              publishPreflightContract(contract.id)
+              setShowModal(true)
+            }}
+          >
+            <FormattedMessage
+              id='contract.publish.button'
+              defaultMessage='Publish'
+            />
+          </button>
+      }
+    </>
+  )
 }
 
 const mapStateToProps = ({ pipelines }) => ({

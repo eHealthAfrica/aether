@@ -18,34 +18,22 @@
  * under the License.
  */
 
-import { useState, useEffect } from 'react'
-import ReactDOM from 'react-dom'
+import React from 'react'
 
-// https://reactjs.org/docs/portals.html
-
-const Portal = ({ children, onEscape, onEnter }) => {
-  const [element] = useState(document.createElement('div'))
-
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onEscape && onEscape(event)
-      }
-      if (event.key === 'Enter') {
-        onEnter && onEnter(event)
-      }
+const ViewsBar = ({ current, views, setView }) => (
+  <div className='tabs'>
+    {
+      views.map(({ id, label }) => (
+        <button
+          key={id}
+          className={`tab ${current === id ? 'selected' : ''}`}
+          onClick={() => { setView(id) }}
+        >
+          {label}
+        </button>
+      ))
     }
+  </div>
+)
 
-    document.body.appendChild(element)
-    document.addEventListener('keydown', onKeyDown)
-
-    return () => {
-      document.body.removeChild(element)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  })
-
-  return ReactDOM.createPortal(children, element)
-}
-
-export default Portal
+export default ViewsBar
