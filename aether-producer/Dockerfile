@@ -1,5 +1,9 @@
 FROM python:3.7-slim-buster
 
+LABEL description="Aether Kafka Producer" \
+      name="aether-producer" \
+      author="eHealth Africa"
+
 ################################################################################
 ## setup container
 ################################################################################

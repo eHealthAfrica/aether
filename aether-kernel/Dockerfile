@@ -1,5 +1,9 @@
 FROM python:3.7-slim-buster
 
+LABEL description="Aether Kernel" \
+      name="aether-kernel" \
+      author="eHealth Africa"
+
 ################################################################################
 ## setup container
 ################################################################################

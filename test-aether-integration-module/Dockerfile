@@ -1,5 +1,9 @@
 FROM python:3.7-slim-buster
 
+LABEL description="Aether Integration Tests" \
+      name="aether-integration-test" \
+      author="eHealth Africa"
+
 ################################################################################
 ## setup container
 ################################################################################

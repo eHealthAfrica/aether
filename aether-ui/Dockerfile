@@ -1,5 +1,9 @@
 FROM python:3.7-slim-buster
 
+LABEL description="Aether Kernel UI" \
+      name="aether-ui" \
+      author="eHealth Africa"
+
 ################################################################################
 ## setup container
 ################################################################################

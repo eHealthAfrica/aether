@@ -1,5 +1,9 @@
 FROM python:3.7-slim-buster
 
+LABEL description="Aether ODK Module" \
+      name="aether-odk" \
+      author="eHealth Africa"
+
 ################################################################################
 ## setup container
 ################################################################################
