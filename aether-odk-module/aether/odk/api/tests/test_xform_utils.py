@@ -1159,14 +1159,48 @@ class XFormUtilsAvroTests(CustomTestCase):
                             }
                         ],
                         'label': 'Humidity:'
+                    },
+                    'another-tag': {
+                        '@ref': '/nm/a/b/humidity',
+                        'item': [
+                            {
+                                'label': 'Another Dry or low',
+                                'value': 'another-low'
+                            },
+                            {
+                                'label': 'Another Normal or medium',
+                                'value': 'another-med'
+                            },
+                            {
+                                'label': 'Another Wet or High',
+                                'value': 'another-high'
+                            }
+                        ],
+                        'label': 'Humidity:'
+                    },
+                    'wrong-tag': {
+                        '@ref': '/nm/a/b/humidity-wrong',
+                        'item': [
+                            {
+                                'label': 'Wrong Dry or low',
+                                'value': 'wrong-low'
+                            },
+                            {
+                                'label': 'Wrong Normal or medium',
+                                'value': 'wrong-med'
+                            },
+                            {
+                                'label': 'Wrong Wet or High',
+                                'value': 'wrong-high'
+                            }
+                        ],
+                        'label': 'Humidity:'
                     }
                 }
             }
         }
         found_nodes = list(find_value(xform_dict, '@ref', '/nm/a/b/humidity',  True))
-        self.assertEqual(len(found_nodes), 1)
-        self.assertIn('@ref', found_nodes[0])
-        self.assertEqual('humidity', found_nodes[0]['@ref'])
+        self.assertEqual(len(found_nodes), 2)
 
     def test__get_choices(self):
         expected = [
@@ -1183,16 +1217,64 @@ class XFormUtilsAvroTests(CustomTestCase):
                 'value': 'high'
             }
         ]
+        expected_wrong = [
+            {
+                'label': 'Wrong Dry or low',
+                'value': 'wrong-low'
+            },
+            {
+                'label': 'Wrong Normal or medium',
+                'value': 'wrong-med'
+            },
+            {
+                'label': 'Wrong Wet or High',
+                'value': 'wrong-high'
+            }
+        ]
+        expected_default = [
+            {
+                'label': 'Another Dry or low',
+                'value': 'another-low'
+            },
+            {
+                'label': 'Another Normal or medium',
+                'value': 'another-med'
+            },
+            {
+                'label': 'Another Wet or High',
+                'value': 'another-high'
+            }
+        ]
+
         xform_dict = {
             'h:html': {
                 'h:body': {
-                    'any-tag': {
+                    'another-tag': {
                         '@ref': 'humidity',
+                        'item': expected_default,
+                        'label': 'Humidity:'
+                    },
+                    'any-tag': {
+                        '@ref': '/a/b/c/humidity',
                         'item': expected,
+                        'label': 'Humidity:'
+                    },
+                    'wrong-tag': {
+                        '@ref': '/nm/a/b/humidity-wrong',
+                        'item': expected_wrong,
                         'label': 'Humidity:'
                     }
                 }
             }
         }
-        choices = get_choices(xform_dict, '/None/a/b/c/humidity')
+        choices = get_choices(xform_dict, '/a/b/c/humidity')
         self.assertEqual(choices, expected)
+
+        choices = get_choices(xform_dict, '/nm/a/b/humidity-wrong')
+        self.assertEqual(choices, expected_wrong)
+
+        choices = get_choices(xform_dict, '/a/b/c/does-not-exist')
+        self.assertIsNone(choices)
+
+        choices = get_choices(xform_dict, '/unknown/humidity')
+        self.assertEqual(choices, expected_default)

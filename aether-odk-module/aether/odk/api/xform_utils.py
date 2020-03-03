@@ -706,7 +706,11 @@ def __get_xform_instance_skeleton(xml_definition):
 
 def __get_xform_choices(xform_dict, xpath, texts={}):
     found_nodes = list(__find_by_key_value(xform_dict, '@ref', xpath, True))
-    select_node = found_nodes[0] if found_nodes else {}
+    if len(found_nodes) > 1:
+        exact_node = [d for d in found_nodes if d['@ref'] == xpath]
+        select_node = exact_node[0] if exact_node else found_nodes[0]
+    else:
+        select_node = found_nodes[0] if found_nodes else {}
     select_options = __wrap_as_list(select_node.get('item', []))
 
     # limitation: skips selects linked to a datasource with 'itemset'
