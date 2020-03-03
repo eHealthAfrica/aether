@@ -705,7 +705,8 @@ def __get_xform_instance_skeleton(xml_definition):
 
 
 def __get_xform_choices(xform_dict, xpath, texts={}):
-    select_node = list(__find_by_key_value(xform_dict, '@ref', xpath))[0]
+    found_nodes = list(__find_by_key_value(xform_dict, '@ref', xpath, True))
+    select_node = found_nodes[0] if found_nodes else {}
     select_options = __wrap_as_list(select_node.get('item', []))
 
     # limitation: skips selects linked to a datasource with 'itemset'
@@ -943,13 +944,17 @@ def __find_in_dict(dictionary, key):
             yield result
 
 
-def __find_by_key_value(dictionary, key, value):
+def __find_by_key_value(dictionary, key, value, hasOptions=False):
+    last_node = value.split('/')[-1] if hasOptions else None
+
     for k, v in dictionary.items():
         if k == key and v == value:
             yield dictionary
+        elif hasOptions and k == key and v == last_node:
+            yield dictionary
 
         # continue searching in the value keys
-        for result in __iterate_dict(v, __find_by_key_value, key, value):
+        for result in __iterate_dict(v, __find_by_key_value, key, value, hasOptions):
             yield result
 
 
