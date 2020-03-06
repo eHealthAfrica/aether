@@ -20,32 +20,19 @@ LABEL description="Aether Kernel" \
       name="aether-kernel" \
       author="eHealth Africa"
 
-################################################################################
-## setup container
-################################################################################
-
+## set up container
 WORKDIR /code
+ENTRYPOINT ["/code/entrypoint.sh"]
+
 COPY ./aether-kernel/conf/docker/* /tmp/
 RUN /tmp/setup.sh
 
-################################################################################
-## install app
-################################################################################
+## copy source code
+COPY --chown=aether:aether ./aether-kernel/ /code
 
-COPY ./aether-kernel/ /code
+## install dependencies
 RUN pip install -q --upgrade pip && \
     pip install -q -r /code/conf/pip/requirements.txt
 
-################################################################################
-## copy application version and git revision
-################################################################################
-
-COPY --from=app_resource /tmp/resources/. /var/tmp/
-
-################################################################################
-## last setup steps
-################################################################################
-
-RUN chown -R aether: /code
-
-ENTRYPOINT ["/code/entrypoint.sh"]
+## copy application version and revision
+COPY --from=app_resource --chown=aether:aether /tmp/resources/. /var/tmp/

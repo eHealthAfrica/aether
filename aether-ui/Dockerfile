@@ -5,27 +5,27 @@ LABEL description="Aether Kernel UI" \
       author="eHealth Africa"
 
 ################################################################################
-## setup container
+## set up container
 ################################################################################
 
 COPY ./conf/docker/* /tmp/
 RUN /tmp/setup.sh
 
+WORKDIR /code
+ENTRYPOINT ["/code/entrypoint.sh"]
+
 ################################################################################
-## install app
+## install dependencies
 ## copy files one by one and split commands to use docker cache
 ################################################################################
 
-WORKDIR /code
-
-COPY ./conf/pip /code/conf/pip
+COPY --chown=aether:aether ./conf/pip /code/conf/pip
 RUN pip install -q --upgrade pip && \
     pip install -q -r /code/conf/pip/requirements.txt
-
-COPY ./ /code
+COPY --chown=aether:aether ./ /code
 
 ################################################################################
-## copy application version and create git revision
+## create application version and revision files
 ################################################################################
 
 ARG VERSION=0.0.0
@@ -34,11 +34,3 @@ ARG GIT_REVISION
 RUN mkdir -p /var/tmp && \
     echo $VERSION > /var/tmp/VERSION && \
     echo $GIT_REVISION > /var/tmp/REVISION
-
-################################################################################
-## last setup steps
-################################################################################
-
-RUN chown -R aether: /code
-
-ENTRYPOINT ["/code/entrypoint.sh"]

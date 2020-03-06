@@ -16,26 +16,14 @@ RUN /tmp/setup_revision.sh
 
 FROM node:lts-slim AS app_node
 
-################################################################################
-## setup container
-################################################################################
-
-WORKDIR /code/
-
-COPY ./aether-ui/aether/ui/assets/ /code/
-RUN npm install -q -g npm && npm install -q
-
-################################################################################
+## set up container
+WORKDIR /assets/
 ## copy application version and git revision
-################################################################################
-
 COPY --from=app_resource /tmp/resources/. /var/tmp/
-
-################################################################################
+## copy source code
+COPY ./aether-ui/aether/ui/assets/ /assets/
 ## build react app
-################################################################################
-
-RUN npm run build
+RUN npm install -q && npm run build
 
 
 ################################################################################
@@ -48,38 +36,23 @@ LABEL description="Aether Kernel UI" \
       name="aether-ui" \
       author="eHealth Africa"
 
-################################################################################
-## setup container
-################################################################################
-
+## set up container
 WORKDIR /code
+ENTRYPOINT ["/code/entrypoint.sh"]
 
 COPY ./aether-ui/conf/docker/* /tmp/
 RUN /tmp/setup.sh
 
-################################################################################
-## install app
-################################################################################
+## copy source code
+COPY --chown=aether:aether ./aether-ui/ /code
 
-COPY ./aether-ui/ /code
+## install dependencies
 RUN pip install -q --upgrade pip && \
     pip install -q -r /code/conf/pip/requirements.txt
 
-################################################################################
 ## copy react app
-################################################################################
-COPY --from=app_node /code/bundles/. /code/aether/ui/assets/bundles
+RUN rm -Rf /code/aether/ui/assets/
+COPY --from=app_node --chown=aether:aether /assets/bundles/. /code/aether/ui/assets/bundles
 
-################################################################################
-## copy application version and git revision
-################################################################################
-
-COPY --from=app_resource /tmp/resources/. /var/tmp/
-
-################################################################################
-## last setup steps
-################################################################################
-
-RUN chown -R aether: /code
-
-ENTRYPOINT ["/code/entrypoint.sh"]
+## copy application version and revision
+COPY --from=app_resource --chown=aether:aether /tmp/resources/. /var/tmp/

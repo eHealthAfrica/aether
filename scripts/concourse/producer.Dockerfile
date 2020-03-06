@@ -20,39 +20,25 @@ LABEL description="Aether Kafka Producer" \
       name="aether-producer" \
       author="eHealth Africa"
 
-################################################################################
-## setup container
-################################################################################
-
+## set up container
 WORKDIR /code
+ENTRYPOINT ["/code/entrypoint.sh"]
+
 RUN apt-get update -qq && \
     apt-get -qq \
         --yes \
         --allow-downgrades \
         --allow-remove-essential \
         --allow-change-held-packages \
-        install gcc
+        install gcc && \
+    useradd -ms /bin/false aether
 
-################################################################################
-## install app
-################################################################################
+## copy source code
+COPY --chown=aether:aether ./aether-producer/ /code
 
-COPY ./aether-producer/ /code
+## install dependencies
 RUN pip install -q --upgrade pip && \
     pip install -q -r /code/conf/pip/requirements.txt
 
-################################################################################
-## copy application version and git revision
-################################################################################
-
-COPY --from=app_resource /tmp/resources/. /var/tmp/
-
-################################################################################
-## last setup steps
-################################################################################
-
-# create user to run container (avoid root user)
-RUN useradd -ms /bin/false aether
-RUN chown -R aether: /code
-
-ENTRYPOINT ["/code/entrypoint.sh"]
+## copy application version and revision
+COPY --from=app_resource --chown=aether:aether /tmp/resources/. /var/tmp/
