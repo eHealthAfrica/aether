@@ -1,0 +1,58 @@
+################################################################################
+## using alpine image to build version and revision files
+################################################################################
+
+FROM alpine AS app_resource
+
+WORKDIR /tmp
+COPY ./.git /tmp/.git
+COPY ./scripts/concourse/setup_revision.sh /tmp/setup_revision.sh
+RUN /tmp/setup_revision.sh
+
+
+################################################################################
+## using python image to build app
+################################################################################
+
+FROM python:3.7-slim-buster
+
+LABEL description="Aether Kafka Producer" \
+      name="aether-producer" \
+      author="eHealth Africa"
+
+################################################################################
+## setup container
+################################################################################
+
+WORKDIR /code
+RUN apt-get update -qq && \
+    apt-get -qq \
+        --yes \
+        --allow-downgrades \
+        --allow-remove-essential \
+        --allow-change-held-packages \
+        install gcc
+
+################################################################################
+## install app
+################################################################################
+
+COPY ./aether-producer/ /code
+RUN pip install -q --upgrade pip && \
+    pip install -q -r /code/conf/pip/requirements.txt
+
+################################################################################
+## copy application version and git revision
+################################################################################
+
+COPY --from=app_resource /tmp/resources/. /var/tmp/
+
+################################################################################
+## last setup steps
+################################################################################
+
+# create user to run container (avoid root user)
+RUN useradd -ms /bin/false aether
+RUN chown -R aether: /code
+
+ENTRYPOINT ["/code/entrypoint.sh"]
