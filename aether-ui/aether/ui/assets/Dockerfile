@@ -16,6 +16,4 @@ ENV PATH /code/node_modules/.bin:$PATH
 WORKDIR /code/assets
 COPY ./ /code/assets
 
-RUN apt-get autoremove && apt-get clean
-
 ENTRYPOINT ["/code/assets/conf/entrypoint.sh"]
