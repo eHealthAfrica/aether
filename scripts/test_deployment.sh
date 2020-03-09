@@ -21,12 +21,11 @@
 
 set -Eeuo pipefail
 
-DEPLOY_APPS=( kernel producer odk ui )
+DEPLOY_APPS=( exm kernel producer odk ui )
 IMAGE_PREFIX="test-deployment-aether"
 
 for APP in "${DEPLOY_APPS[@]}"; do
     docker build \
-        --force-rm \
         --tag ${IMAGE_PREFIX}-${APP} \
         --file ./scripts/deployment/${APP}.Dockerfile \
         .
