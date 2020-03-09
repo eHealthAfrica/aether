@@ -35,7 +35,11 @@ jobs:
       stage: test
       env: 'TEST_MODE=integration'
 
-    - name: "Publish containers in Docker Hub"
+    - name: "Test deployment process"
+      stage: test
+      script: ./scripts/test_deployment.sh
+
+    - name: "Publish images in Docker Hub"
       stage: deploy
       script: ./scripts/release.sh
       if: |
