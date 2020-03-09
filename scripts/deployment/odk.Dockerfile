@@ -6,7 +6,7 @@ FROM alpine AS app_resource
 
 WORKDIR /tmp
 COPY ./.git /tmp/.git
-COPY ./scripts/concourse/setup_revision.sh /tmp/setup_revision.sh
+COPY ./scripts/deployment/setup_revision.sh /tmp/setup_revision.sh
 RUN /tmp/setup_revision.sh
 
 
@@ -16,25 +16,19 @@ RUN /tmp/setup_revision.sh
 
 FROM python:3.7-slim-buster
 
-LABEL description="Aether Kafka Producer" \
-      name="aether-producer" \
+LABEL description="Aether ODK Module" \
+      name="aether-odk" \
       author="eHealth Africa"
 
 ## set up container
 WORKDIR /code
 ENTRYPOINT ["/code/entrypoint.sh"]
 
-RUN apt-get update -qq && \
-    apt-get -qq \
-        --yes \
-        --allow-downgrades \
-        --allow-remove-essential \
-        --allow-change-held-packages \
-        install gcc && \
-    useradd -ms /bin/false aether
+COPY ./aether-odk-module/conf/docker/* /tmp/
+RUN /tmp/setup.sh
 
 ## copy source code
-COPY --chown=aether:aether ./aether-producer/ /code
+COPY --chown=aether:aether ./aether-odk-module/ /code
 
 ## install dependencies
 RUN pip install -q --upgrade pip && \

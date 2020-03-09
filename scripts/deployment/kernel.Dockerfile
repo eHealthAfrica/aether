@@ -6,7 +6,7 @@ FROM alpine AS app_resource
 
 WORKDIR /tmp
 COPY ./.git /tmp/.git
-COPY ./scripts/concourse/setup_revision.sh /tmp/setup_revision.sh
+COPY ./scripts/deployment/setup_revision.sh /tmp/setup_revision.sh
 RUN /tmp/setup_revision.sh
 
 
@@ -16,19 +16,19 @@ RUN /tmp/setup_revision.sh
 
 FROM python:3.7-slim-buster
 
-LABEL description="Aether ODK Module" \
-      name="aether-odk" \
+LABEL description="Aether Kernel" \
+      name="aether-kernel" \
       author="eHealth Africa"
 
 ## set up container
 WORKDIR /code
 ENTRYPOINT ["/code/entrypoint.sh"]
 
-COPY ./aether-odk-module/conf/docker/* /tmp/
+COPY ./aether-kernel/conf/docker/* /tmp/
 RUN /tmp/setup.sh
 
 ## copy source code
-COPY --chown=aether:aether ./aether-odk-module/ /code
+COPY --chown=aether:aether ./aether-kernel/ /code
 
 ## install dependencies
 RUN pip install -q --upgrade pip && \
