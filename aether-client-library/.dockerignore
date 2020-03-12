@@ -11,6 +11,6 @@ Dockerfile
 **/.coverage.*
 **/.cache
 **/coverage.xml
-**/*,cover
+**/*.cover
 
 **/*.log
