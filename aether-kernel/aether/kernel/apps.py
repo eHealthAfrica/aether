@@ -17,8 +17,19 @@
 # under the License.
 
 from django.apps import AppConfig
+from django.db.models.signals import pre_migrate, post_migrate
+
+from aether.kernel.models import pre_migrate_signal, post_migrate_signal
 
 
 class Config(AppConfig):
     name = 'aether.kernel'
     verbose_name = 'Aether Kernel'
+
+    def ready(self):
+        super(Config, self).ready()
+
+        # https://docs.djangoproject.com/en/2.2/ref/signals/#management-signals
+        # enables the migration signals that will recreate the views
+        pre_migrate.connect(pre_migrate_signal, sender=self)
+        post_migrate.connect(post_migrate_signal, sender=self)
