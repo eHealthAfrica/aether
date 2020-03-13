@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
 #
-# Licensed under the Apache License, Version 2.0 (the 'License');
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
@@ -18,4 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Unit Tests were outdated, returning in true MT version
+from producer.settings import SETTINGS
+from producer.db import PriorityDatabasePool
+
+
+# KernelDB
+pg_requires = ['user', 'dbname', 'port', 'host', 'password']
+pg_creds = {key: SETTINGS.get('postgres_%s' % key) for key in pg_requires}
+kernel_db_pool_size = SETTINGS.get('kernel_db_pool_size', 6)
+KERNEL_DB = PriorityDatabasePool(pg_creds, 'KernelDB', kernel_db_pool_size)  # imported from here

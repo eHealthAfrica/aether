@@ -18,17 +18,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
-import pytest
-
-from .timeout import timeout as Timeout  # noqa
-from producer import *  # noqa
-Offset = db.Offset
-
-log = logging.getLogger()
-
-USER = os.environ['PRODUCER_ADMIN_USER']
-PW = os.environ['PRODUCER_ADMIN_PW']
+from producer import ProducerManager
+from producer.settings import SETTINGS, get_logger
 
 
 class MockAdminInterface(object):
@@ -38,40 +29,12 @@ class MockAdminInterface(object):
 
 class MockProducerManager(ProducerManager):
 
-    def __init__(self, settings):
-        self.admin_name = USER
-        self.admin_password = PW
-        self.settings = settings
+    def __init__(self):
+        self.admin_name = SETTINGS.get('PRODUCER_ADMIN_USER')
+        self.admin_password = SETTINGS.get('PRODUCER_ADMIN_PW')
         self.killed = False
         self.kernel = None
         self.kafka = False
         self.kafka_admin_client = MockAdminInterface()
-        self.logger = log
+        self.logger = get_logger('tests')
         self.topic_managers = {}
-
-
-class ObjectWithKernel(object):
-
-    def __init__(self, initial_kernel_value=None):
-        self.kernel = initial_kernel_value
-        self.logger = log
-
-
-@pytest.mark.integration
-@pytest.fixture(scope='session')
-def ProducerManagerSettings():
-    return Settings('/code/tests/conf/producer.json')
-
-
-@pytest.mark.integration
-@pytest.fixture(scope='session')
-def OffsetDB(ProducerManagerSettings):
-    man = MockProducerManager(ProducerManagerSettings)
-    man.init_db()
-    return Offset
-
-
-@pytest.mark.integration
-@pytest.fixture(scope='function')
-def OffsetQueue():
-    return db.OFFSET_DB
