@@ -266,7 +266,7 @@ def init():
             sessionmaker(bind=engine)
             logger.info('Database initialized.')
         except SQLAlchemyError as err:
-            logger.error('Database could not be initialized. | %s' % err)
+            logger.error(f'Database could not be initialized. | {err}')
             raise err
 
     def _create_db():
@@ -291,7 +291,7 @@ def init():
         Offset.create_pool()
         return
     except SQLAlchemyError as sqe:
-        logger.error('Start session failed (1st attempt): %s' % sqe)
+        logger.error(f'Start session failed (1st attempt): {sqe}')
         pass
 
     # it was not possible to start session because the database does not exit
@@ -301,5 +301,5 @@ def init():
         _start_session(engine)
         Offset.create_pool()
     except SQLAlchemyError as sqe:
-        logger.error('Start session failed (2nd attempt): %s' % sqe)
+        logger.error(f'Start session failed (2nd attempt): {sqe}')
         sys.exit(1)

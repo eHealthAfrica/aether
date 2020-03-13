@@ -28,27 +28,10 @@ import gevent
 from gevent.pool import Pool
 from gevent.pywsgi import WSGIServer
 
-from gevent import monkey, sleep
-# need to patch sockets to make requests async
-monkey.patch_all()  # noqa
-import psycogreen.gevent
-psycogreen.gevent.patch_psycopg()  # noqa
-
-import psycopg2
-from psycopg2 import sql
-from psycopg2.extras import DictCursor
-
 from producer.db import init as init_offset_db
-from producer.kernel import KERNEL_DB as POSTGRES
-
-from producer.settings import (
-    KAFKA_SETTINGS,
-    SETTINGS,
-    LOG_LEVEL,
-    KafkaStatus,
-    get_logger,
-)
-from producer.topic import TopicStatus, TopicManager
+from producer.kernel import KernelDB
+from producer.settings import KAFKA_SETTINGS, SETTINGS, LOG_LEVEL, get_logger
+from producer.topic import KafkaStatus, TopicStatus, TopicManager
 
 
 class ProducerManager(object):
@@ -57,8 +40,6 @@ class ProducerManager(object):
     # Keeps track of schemas
     # Spawns a TopicManager for each schema type in Kernel
     # TopicManager registers own eventloop greenlet (update_kafka) with ProducerManager
-
-    SCHEMAS_STR = 'SELECT * FROM kernel_schema_vw'
 
     def __init__(self):
         # Start Signal Handlers
@@ -74,8 +55,9 @@ class ProducerManager(object):
         self.serve()
         self.add_endpoints()
 
-        # Initialize Offsetdb
+        # Initialize Offsetdb and KernelDB
         self.init_db()
+        self.kernel_db = KernelDB()
 
         # Clear objects and start
         self.kernel = None
@@ -87,7 +69,7 @@ class ProducerManager(object):
     def keep_alive_loop(self):
         # Keeps the server up in case all other threads join at the same time.
         while not self.killed:
-            sleep(1)
+            gevent.sleep(1)
 
     def run(self):
         self.threads = []
@@ -99,7 +81,7 @@ class ProducerManager(object):
 
     def kill(self, *args, **kwargs):
         # Stops HTTP service and flips stop switch, which is read by greenlets
-        self.app.logger.warn('Shutting down gracefully')
+        self.logger.warn('Shutting down gracefully')
         self.http.stop()
         self.http.close()
         self.worker_pool.kill()
@@ -109,7 +91,7 @@ class ProducerManager(object):
         # keeps shutdown time low by yielding during sleep and checking if killed.
         for x in range(dur):
             if not self.killed:
-                sleep(1)
+                gevent.sleep(1)
 
     # Connectivity
 
@@ -121,8 +103,8 @@ class ProducerManager(object):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((kafka_ip, kafka_port))
         except (InterruptedError, ConnectionRefusedError, socket.gaierror) as rce:
-            self.logger.debug('Could not connect to Kafka on url: %s:%s' % (kafka_ip, kafka_port))
-            self.logger.debug('Connection problem: %s' % rce)
+            self.logger.debug(f'Could not connect to Kafka on url: {kafka_ip}:{kafka_port}')
+            self.logger.debug(f'Connection problem: {rce}')
             return False
         return True
 
@@ -135,6 +117,7 @@ class ProducerManager(object):
                     res['brokers'].append('{}  (controller)'.format(b))
                 else:
                     res['brokers'].append('{}'.format(b))
+
             for t in iter(md.topics.values()):
                 t_str = []
                 if t.error is not None:
@@ -157,7 +140,7 @@ class ProducerManager(object):
         except Exception as err:
             return {'error': f'{err}'}
 
-    # Connect to sqlite
+    # Connect to offset
     def init_db(self):
         init_offset_db()
         self.logger.info('OffsetDB initialized')
@@ -171,55 +154,32 @@ class ProducerManager(object):
         while not self.killed:
             schemas = []
             try:
-                schemas = self.get_schemas()
+                schemas = self.kernel_db.get_schemas()
                 self.kernel = datetime.now().isoformat()
             except Exception as err:
                 self.kernel = None
                 self.logger.error(f'no database connection: {err}')
-                sleep(1)
+                gevent.sleep(1)
                 continue
+
             for schema in schemas:
                 _name = schema['schema_name']
                 realm = schema['realm']
                 schema_name = f'{realm}.{_name}'
                 if schema_name not in self.topic_managers.keys():
-                    self.logger.info('Topic connected: %s' % schema_name)
+                    self.logger.info(f'Topic connected: {schema_name}')
                     self.topic_managers[schema_name] = TopicManager(self, schema, realm)
                 else:
                     topic_manager = self.topic_managers[schema_name]
                     if topic_manager.schema_changed(schema):
                         topic_manager.update_schema(schema)
-                        self.logger.debug('Schema %s updated' % schema_name)
+                        self.logger.debug(f'Schema {schema_name} updated')
                     else:
-                        self.logger.debug('Schema %s unchanged' % schema_name)
+                        self.logger.debug(f'Schema {schema_name} unchanged')
+
             # Time between checks for schema change
             self.safe_sleep(SETTINGS['sleep_time'])
         self.logger.debug('No longer checking schemas')
-
-    def get_schemas(self):
-        name = 'schemas_query'
-        query = sql.SQL(ProducerManager.SCHEMAS_STR)
-        try:
-            # needs to be quick(ish)
-            promise = POSTGRES.request_connection(1, name)
-            conn = promise.get()
-            cursor = conn.cursor(cursor_factory=DictCursor)
-            cursor.execute(query)
-            for row in cursor:
-                yield {key: row[key] for key in row.keys()}
-
-        except psycopg2.OperationalError as pgerr:
-            self.logger.critical(
-                'Could not access db to get topic size: %s' % pgerr)
-            return -1
-        finally:
-            try:
-                POSTGRES.release(name, conn)
-            except UnboundLocalError:
-                self.logger.error(
-                    f'{name} could not release a'
-                    ' connection it never received.'
-                )
 
     # Flask Functions
 
@@ -233,7 +193,7 @@ class ProducerManager(object):
         self.register('rebuild', self.request_rebuild)
 
     def register(self, route_name, fn):
-        self.app.add_url_rule('/%s' % route_name, route_name, view_func=fn)
+        self.app.add_url_rule(f'/{route_name}', route_name, view_func=fn)
 
     def serve(self):
         self.app = Flask('AetherProducer')  # pylint: disable=invalid-name
@@ -284,7 +244,7 @@ class ProducerManager(object):
             'kafka_broker_information': self.broker_info(),
             # This is just a status flag
             'kafka_submission_status': str(self.kafka),
-            'topics': {k: v.get_status() for k, v in self.topic_managers.items()}
+            'topics': {k: v.get_status() for k, v in self.topic_managers.items()},
         }
         with self.app.app_context():
             return jsonify(**status)
@@ -293,6 +253,7 @@ class ProducerManager(object):
     def request_topics(self):
         if not self.topic_managers:
             return Response({})
+
         status = {k: v.get_topic_size() for k, v in self.topic_managers.items()}
         with self.app.app_context():
             return jsonify(**status)
@@ -331,6 +292,7 @@ class ProducerManager(object):
             res = fn()
             if not res:
                 return Response(f'Operation failed on {topic}', 500)
+
             return Response(f'Success for status {status} on {topic}', 200)
         except Exception as err:
             return Response(f'Operation failed on {topic} with: {err}', 500)

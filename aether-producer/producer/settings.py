@@ -16,16 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import enum
 import json
 import logging
 import os
-
-
-class KafkaStatus(enum.Enum):
-    SUBMISSION_PENDING = 1
-    SUBMISSION_FAILURE = 2
-    SUBMISSION_SUCCESS = 3
 
 
 class Settings(dict):
