@@ -173,6 +173,8 @@ services:
     image: aether-integration-test
     build: ./test-aether-integration-module
     environment:
+      KAFKA_URL: kafka-test:29092
+
       KERNEL_URL: http://kernel-test:9100
       KERNEL_USERNAME: ${CLIENT_USERNAME}
       KERNEL_PASSWORD: ${CLIENT_PASSWORD}
