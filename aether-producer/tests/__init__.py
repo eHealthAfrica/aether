@@ -27,13 +27,20 @@ class MockAdminInterface(object):
         return {}
 
 
+class MockKernelClient(object):
+
+    def __init__(self):
+        self.last_check = None
+        self.last_check_error = None
+
+
 class MockProducerManager(ProducerManager):
 
     def __init__(self):
         self.admin_name = SETTINGS.get('PRODUCER_ADMIN_USER')
         self.admin_password = SETTINGS.get('PRODUCER_ADMIN_PW')
         self.killed = False
-        self.kernel = None
+        self.kernel_client = MockKernelClient()
         self.kafka = False
         self.kafka_admin_client = MockAdminInterface()
         self.logger = get_logger('tests')

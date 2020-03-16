@@ -57,6 +57,7 @@ def test_6_check_stream_entities(read_people, entities):
     for _id in kernel_messages:
         if _id not in kafka_messages:
             failed.append(_id)
+
     assert(len(failed) == 0)
     assert(len(kernel_messages) == len(kafka_messages))
     assert(producer_topic_count(KAFKA_SEED_TYPE) == len(kafka_messages))
@@ -65,17 +66,21 @@ def test_6_check_stream_entities(read_people, entities):
 def test_7_control_topic():
     producer_control_topic(KAFKA_SEED_TYPE, 'pause')
     sleep(.5)
+
     op = topic_status(KAFKA_SEED_TYPE)['operating_status']
     assert(op == 'TopicStatus.PAUSED')
     producer_control_topic(KAFKA_SEED_TYPE, 'resume')
     sleep(.5)
+
     op = topic_status(KAFKA_SEED_TYPE)['operating_status']
     assert(op == 'TopicStatus.NORMAL')
     producer_control_topic(KAFKA_SEED_TYPE, 'rebuild')
     sleep(.5)
+
     for x in range(120):
         op = topic_status(KAFKA_SEED_TYPE)['operating_status']
         if op != 'TopicStatus.REBUILDING':
             return
         sleep(1)
+
     assert(False), 'Topic Deletion Timed out.'

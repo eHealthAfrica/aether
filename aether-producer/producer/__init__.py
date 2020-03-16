@@ -18,7 +18,6 @@
 
 import signal
 import socket
-from datetime import datetime
 from functools import wraps
 
 from confluent_kafka.admin import AdminClient
@@ -29,7 +28,7 @@ from gevent.pool import Pool
 from gevent.pywsgi import WSGIServer
 
 from producer.db import init as init_offset_db
-from producer.kernel import KernelDB
+from producer.kernel import KernelClient
 from producer.settings import KAFKA_SETTINGS, SETTINGS, LOG_LEVEL, get_logger
 from producer.topic import KafkaStatus, TopicStatus, TopicManager
 
@@ -55,14 +54,13 @@ class ProducerManager(object):
         self.serve()
         self.add_endpoints()
 
-        # Initialize Offsetdb and KernelDB
+        # Initialize Offset db, Kernel and Kafka clients
         self.init_db()
-        self.kernel_db = KernelDB()
+        self.kernel_client = KernelClient()
+        self.kafka_admin_client = AdminClient(KAFKA_SETTINGS)
 
         # Clear objects and start
-        self.kernel = None
         self.kafka = KafkaStatus.SUBMISSION_PENDING
-        self.kafka_admin_client = AdminClient(KAFKA_SETTINGS)
         self.topic_managers = {}
         self.run()
 
@@ -154,18 +152,16 @@ class ProducerManager(object):
         while not self.killed:
             schemas = []
             try:
-                schemas = self.kernel_db.get_schemas()
-                self.kernel = datetime.now().isoformat()
+                schemas = self.kernel_client.get_schemas()
             except Exception as err:
-                self.kernel = None
-                self.logger.error(f'no database connection: {err}')
+                self.logger.error(f'No Kernel connection: {err}')
                 gevent.sleep(1)
                 continue
 
             for schema in schemas:
-                _name = schema['schema_name']
+                name = schema['schema_name']
                 realm = schema['realm']
-                schema_name = f'{realm}.{_name}'
+                schema_name = f'{realm}.{name}'
                 if schema_name not in self.topic_managers.keys():
                     self.logger.info(f'Topic connected: {schema_name}')
                     self.topic_managers[schema_name] = TopicManager(self, schema, realm)
@@ -239,11 +235,11 @@ class ProducerManager(object):
     @requires_auth
     def request_status(self):
         status = {
-            'kernel_connected': self.kernel is not None,  # This is a real object
+            'kernel_last_check': self.kernel_client.last_check,
+            'kernel_last_check_error': self.kernel_client.last_check_error,
             'kafka_container_accessible': self.kafka_available(),
             'kafka_broker_information': self.broker_info(),
-            # This is just a status flag
-            'kafka_submission_status': str(self.kafka),
+            'kafka_submission_status': str(self.kafka),  # This is just a status flag
             'topics': {k: v.get_status() for k, v in self.topic_managers.items()},
         }
         with self.app.app_context():

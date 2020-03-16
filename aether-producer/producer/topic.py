@@ -203,13 +203,13 @@ class TopicManager(object):
         return False
 
     def updates_available(self):
-        return self.context.kernel_db.check_updates(self.offset, self.name, self.realm)
+        return self.context.kernel_client.check_updates(self.offset, self.name, self.realm)
 
     def get_db_updates(self):
-        return self.context.kernel_db.get_updates(self.offset, self.name, self.realm)
+        return self.context.kernel_client.get_updates(self.offset, self.name, self.realm)
 
     def get_topic_size(self):
-        return self.context.kernel_db.count_updates(self.name, self.realm)
+        return self.context.kernel_client.count_updates(self.name, self.realm)
 
     def update_schema(self, schema_obj):
         self.schema_obj = self.parse_schema(schema_obj)

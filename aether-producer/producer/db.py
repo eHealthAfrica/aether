@@ -112,8 +112,8 @@ class PriorityDatabasePool(object):
                 logger.debug(f'{self.name} pulled 1 for {name}: still {len(self.connection_pool)}')
                 sleep(0)  # allow other coroutines to work
                 while not self._test_connection(conn):
-                    logger.error(f'Pooled connection is dead, getting new resource')
-                    logger.error(f'Replacing dead pool member.')
+                    logger.error('Pooled connection is dead, getting new resource.'
+                                 ' Replacing dead pool member.')
                     conn = self._make_connection()
                     sleep(0)
                 logger.debug(f'Got job from {name} @priority {priority_level}')
@@ -150,6 +150,7 @@ class PriorityDatabasePool(object):
                 logger.debug(f'{self.name} shutdown connection #{c}')
             except Exception as err:
                 logger.error(f'{self.name} FAILED to shutdown connection #{c} | err: {err}')
+                logger.exception(err)
             finally:
                 c += 1
 
@@ -226,6 +227,7 @@ class Offset(Base):
             conn.commit()
             return offset_value
         except Exception as err:
+            logger.exception(err)
             raise err
         finally:
             try:
@@ -245,6 +247,7 @@ class Offset(Base):
             res = [i for i in cursor]
             return res[0][0] if res else None
         except Exception as err:
+            logger.exception(err)
             raise err
         finally:
             try:
@@ -266,6 +269,7 @@ def init():
             sessionmaker(bind=engine)
             logger.info('Database initialized.')
         except SQLAlchemyError as err:
+            logger.exception(err)
             logger.error(f'Database could not be initialized. | {err}')
             raise err
 
@@ -291,6 +295,7 @@ def init():
         Offset.create_pool()
         return
     except SQLAlchemyError as sqe:
+        logger.exception(sqe)
         logger.error(f'Start session failed (1st attempt): {sqe}')
         pass
 
@@ -301,5 +306,6 @@ def init():
         _start_session(engine)
         Offset.create_pool()
     except SQLAlchemyError as sqe:
+        logger.exception(sqe)
         logger.error(f'Start session failed (2nd attempt): {sqe}')
         sys.exit(1)

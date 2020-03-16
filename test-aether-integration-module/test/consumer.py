@@ -18,7 +18,7 @@
 
 import json
 import sys
-from time import sleep as Sleep
+from time import sleep
 
 from aet.consumer import KafkaConsumer
 from kafka.consumer.fetcher import NoOffsetForPartitionError
@@ -33,7 +33,7 @@ def get_consumer(topic=None, strategy='latest'):
         aether_emit_flag_required=False,
         group_id='demo-reader',
         bootstrap_servers=['kafka-test:29092'],
-        auto_offset_reset=strategy
+        auto_offset_reset=strategy,
     )
     if topic:
         consumer.subscribe(topic)
@@ -51,9 +51,9 @@ def connect_kafka():
             print('Connected to Kafka...')
             return [topic for topic in topics]
         except Exception as ke:
-            print('Could not connect to Kafka: %s' % (ke))
-            Sleep(CONN_RETRY_WAIT_TIME)
-    print('Failed to connect to Kafka after %s retries' % CONN_RETRY)
+            print(f'Could not connect to Kafka: {ke}')
+            sleep(CONN_RETRY_WAIT_TIME)
+    print(f'Failed to connect to Kafka after {CONN_RETRY} retries')
     sys.exit(1)  # Kill consumer with error
 
 
@@ -72,7 +72,7 @@ def read_poll_result(new_records, verbose=False):
 def read(consumer, start='LATEST', verbose=False, timeout_ms=5000, max_records=200):
     messages = []
     if start not in ['FIRST', 'LATEST']:
-        raise ValueError('%s it not a valid argument for "start="' % start)
+        raise ValueError(f'{start} it not a valid argument for "start="')
     if start == 'FIRST':
         consumer.seek_to_beginning()
     blank = 0
@@ -88,9 +88,9 @@ def read(consumer, start='LATEST', verbose=False, timeout_ms=5000, max_records=2
             blank += 1
             if blank > 3:
                 break
-            Sleep(1)
+            sleep(1)
 
         new_messages = read_poll_result(poll_result, verbose)
         messages.extend(new_messages)
-    print('Read %s messages' % (len(messages)))
+    print(f'Read {len(messages)} messages')
     return messages

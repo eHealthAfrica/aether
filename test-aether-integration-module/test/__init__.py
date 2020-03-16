@@ -48,8 +48,9 @@ KAFKA_SEED_TYPE = f'{REALM}.{SEED_TYPE}'
 
 PRODUCER_CREDS = [
     os.environ['PRODUCER_ADMIN_USER'],
-    os.environ['PRODUCER_ADMIN_PW']
+    os.environ['PRODUCER_ADMIN_PW'],
 ]
+PRODUCER_URL = os.environ['PRODUCER_URL']
 
 
 @pytest.fixture(scope='function')
@@ -99,8 +100,7 @@ def entities(client, schemadecorators):  # noqa: F811
     for sd in schemadecorators:
         name = sd['name']
         sd_id = sd.id
-        entities[name] = [i for i in client.entities.paginated(
-            'list', schemadecorator=sd_id)]
+        entities[name] = [i for i in client.entities.paginated('list', schemadecorator=sd_id)]
     return entities
 
 
@@ -110,10 +110,7 @@ def generate_entities(client, mappingset):  # noqa: F811
     entities = []
     for i in range(FORMS_TO_SUBMIT):
         Submission = client.get_model('Submission')
-        submission = Submission(
-            payload=next(payloads),
-            mappingset=mappingset.id
-        )
+        submission = Submission(payload=next(payloads), mappingset=mappingset.id)
         instance = client.submissions.create(data=submission)
         for entity in client.entities.paginated('list', submission=instance.id):
             entities.append(entity)
@@ -133,11 +130,8 @@ def read_people():
 
 def producer_request(endpoint, expect_json=True):
     auth = requests.auth.HTTPBasicAuth(*PRODUCER_CREDS)
-    url = '{base}/{endpoint}'.format(
-        base=os.environ['PRODUCER_URL'],
-        endpoint=endpoint)
     try:
-        res = requests.get(url, auth=auth)
+        res = requests.get(f'{PRODUCER_URL}/{endpoint}', auth=auth)
         if expect_json:
             return res.json()
         else:

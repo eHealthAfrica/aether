@@ -34,7 +34,7 @@ from producer.settings import SETTINGS, get_logger
 logger = get_logger('producer-kernel')
 
 
-class KernelDB(object):
+class KernelClient(object):
 
     _SCHEMAS_SQL = 'SELECT * FROM kernel_schema_vw'
 
@@ -69,9 +69,13 @@ class KernelDB(object):
         pg_creds = {key: SETTINGS.get(f'postgres_{key}') for key in pg_requires}
         kernel_db_pool_size = SETTINGS.get('kernel_db_pool_size', 6)
 
-        self.pool = PriorityDatabasePool(pg_creds, 'KernelDB', kernel_db_pool_size)
+        self.pool = PriorityDatabasePool(pg_creds, 'KernelClient', kernel_db_pool_size)
         self.window_size_sec = SETTINGS.get('window_size_sec', 3)
         self.limit = SETTINGS.get('postgres_pull_limit', 100)
+
+        # last time kernel was checked for new updates
+        self.last_check = None
+        self.last_check_error = None
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
@@ -102,10 +106,13 @@ class KernelDB(object):
             conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
+
             return cursor
 
         except psycopg2.OperationalError as pgerr:
+            self.last_check_error = pgerr
             logger.critical(f'Error while accessing database: {pgerr}')
+            logger.exception(pgerr)
             return None
 
         finally:
@@ -115,18 +122,21 @@ class KernelDB(object):
                 logger.error(f'{name} could not release a connection it never received.')
 
     def get_schemas(self):
+        self.last_check = datetime.now().isoformat()
         name = 'schemas_query'
-        query = sql.SQL(KernelDB._SCHEMAS_SQL)
+        query = sql.SQL(KernelClient._SCHEMAS_SQL)
         cursor = self._exec_sql(name, 1, query)
         if cursor:
+            self.last_check_error = None
             for row in cursor:
                 yield {key: row[key] for key in row.keys()}
         else:
+            self.last_check_error = 'Could not access db to get topics'
             logger.critical('Could not access db to get topics')
             return []
 
     def check_updates(self, modified, schema_name, realm):
-        query = sql.SQL(KernelDB._CHECK_UPDATES_SQL).format(
+        query = sql.SQL(KernelClient._CHECK_UPDATES_SQL).format(
             modified=sql.Literal(modified),
             schema_name=sql.Literal(schema_name),
             realm=sql.Literal(realm),
@@ -139,7 +149,7 @@ class KernelDB(object):
             return False
 
     def count_updates(self, schema_name, realm):
-        query = sql.SQL(KernelDB._COUNT_UPDATES_SQL).format(
+        query = sql.SQL(KernelClient._COUNT_UPDATES_SQL).format(
             schema_name=sql.Literal(schema_name),
             realm=sql.Literal(realm),
         )
@@ -153,7 +163,7 @@ class KernelDB(object):
             return -1
 
     def get_updates(self, modified, schema_name, realm):
-        query = sql.SQL(KernelDB._GET_UPDATES_SQL).format(
+        query = sql.SQL(KernelClient._GET_UPDATES_SQL).format(
             modified=sql.Literal(modified),
             schema_name=sql.Literal(schema_name),
             realm=sql.Literal(realm),
