@@ -44,7 +44,9 @@ SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
 SEED_TYPE = 'CurrentStock'
 # realm is only required if Kernel is MultiTenant
 REALM = os.environ.get('KERNEL_REALM', '-')
+
 KAFKA_SEED_TYPE = f'{REALM}.{SEED_TYPE}'
+KAFKA_URL = os.environ['KAFKA_URL']
 
 PRODUCER_CREDS = [
     os.environ['PRODUCER_ADMIN_USER'],
@@ -119,7 +121,7 @@ def generate_entities(client, mappingset):  # noqa: F811
 
 @pytest.fixture(scope='function')
 def read_people():
-    consumer = get_consumer(KAFKA_SEED_TYPE)
+    consumer = get_consumer(KAFKA_URL, KAFKA_SEED_TYPE)
     messages = read(consumer, start='FIRST', verbose=False, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
