@@ -37,11 +37,11 @@ class MockKernelClient(object):
 class MockProducerManager(ProducerManager):
 
     def __init__(self):
-        self.admin_name = SETTINGS.get('PRODUCER_ADMIN_USER')
-        self.admin_password = SETTINGS.get('PRODUCER_ADMIN_PW')
+        self.admin_name = SETTINGS.get_required('producer_admin_user')
+        self.admin_password = SETTINGS.get_required('producer_admin_pw')
         self.killed = False
         self.kernel_client = MockKernelClient()
-        self.kafka = False
+        self.kafka_status = False
         self.kafka_admin_client = MockAdminInterface()
         self.logger = get_logger('tests')
         self.topic_managers = {}

@@ -72,10 +72,10 @@ class TopicManager(object):
         self.change_set = {}
         self.successful_changes = []
         self.failed_changes = {}
-        self.wait_time = SETTINGS.get('sleep_time', 2)
-        self.window_size_sec = SETTINGS.get('window_size_sec', 3)
+        self.wait_time = int(SETTINGS.get('sleep_time', 2))
+        self.window_size_sec = int(SETTINGS.get('window_size_sec', 3))
 
-        self.kafka_failure_wait_time = SETTINGS.get('kafka_failure_wait_time', 10)
+        self.kafka_failure_wait_time = float(SETTINGS.get('kafka_failure_wait_time', 10))
 
         try:
             topic_base = SETTINGS.get('topic_settings', {}).get('name_modifier', '%s') % self.name
@@ -173,7 +173,7 @@ class TopicManager(object):
         self.operating_status = TopicStatus.REBUILDING
         tag = f'REBUILDING {self.name}:'
         logger.info(f'{tag} waiting {self.wait_time *1.5}(sec) for inflight ops to resolve')
-        self.context.safe_sleep(int(self.wait_time * 1.5))
+        self.context.safe_sleep(self.wait_time * 1.5)
         logger.info(f'{tag} Deleting Topic')
         self.producer = None
 
@@ -388,7 +388,7 @@ class TopicManager(object):
             self.handle_kafka_errors(change_set_size, all_failed=False)
         self.clear_changeset()
         # Once we're satisfied, we set the new offset past the processed messages
-        self.context.kafka = KafkaStatus.SUBMISSION_SUCCESS
+        self.context.kafka_status = KafkaStatus.SUBMISSION_SUCCESS
         self.set_offset(end_offset)
         # Sleep so that elements passed in the current window become eligible
         self.context.safe_sleep(self.window_size_sec)
@@ -422,7 +422,7 @@ class TopicManager(object):
 
         self.status['last_errors_set'] = last_error_set
         if all_failed:
-            self.context.kafka = KafkaStatus.SUBMISSION_FAILURE
+            self.context.kafka_status = KafkaStatus.SUBMISSION_FAILURE
         return
 
     def clear_changeset(self):

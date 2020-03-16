@@ -98,7 +98,7 @@ class PriorityDatabasePool(object):
 
     def _kill(self, *args, **kwargs):
         logger.info(f'PriorityDatabasePool: {self.name} is shutting down.')
-        logger.info(f'PriorityDatabasePool: {self.name}' +
+        logger.info(f'PriorityDatabasePool: {self.name}'
                     f' resolving remaning {len(self.job_queue)} jobs.')
         self.running = False
 
@@ -150,7 +150,6 @@ class PriorityDatabasePool(object):
                 logger.debug(f'{self.name} shutdown connection #{c}')
             except Exception as err:
                 logger.error(f'{self.name} FAILED to shutdown connection #{c} | err: {err}')
-                logger.exception(err)
             finally:
                 c += 1
 
@@ -200,8 +199,8 @@ class Offset(Base):
                 'host': 'offset_db_host',
                 'password': 'offset_db_password'
             }
-            offset_creds = {k: SETTINGS.get(v) for k, v in offset_settings.items()}
-            offset_db_pool_size = SETTINGS.get('offset_db_pool_size', 6)
+            offset_creds = {k: SETTINGS.get_required(v) for k, v in offset_settings.items()}
+            offset_db_pool_size = int(SETTINGS.get('offset_db_pool_size', 6))
             Offset.__pool__ = PriorityDatabasePool(offset_creds, 'OffsetDB', offset_db_pool_size)
         return Offset.__pool__
 
@@ -226,9 +225,11 @@ class Offset(Base):
             cursor.execute(query)
             conn.commit()
             return offset_value
+
         except Exception as err:
-            logger.exception(err)
+            logger.error(err)
             raise err
+
         finally:
             try:
                 Offset.__pool__.release(call, conn)
@@ -246,9 +247,11 @@ class Offset(Base):
             cursor.execute(query)
             res = [i for i in cursor]
             return res[0][0] if res else None
+
         except Exception as err:
-            logger.exception(err)
+            logger.error(err)
             raise err
+
         finally:
             try:
                 Offset.__pool__.release(call, conn)
@@ -269,8 +272,7 @@ def init():
             sessionmaker(bind=engine)
             logger.info('Database initialized.')
         except SQLAlchemyError as err:
-            logger.exception(err)
-            logger.error(f'Database could not be initialized. | {err}')
+            logger.error(f'Database could not be initialized | {err}')
             raise err
 
     def _create_db():
@@ -278,16 +280,16 @@ def init():
         temp_engine = create_engine(_db_url('postgres'))
         conn = temp_engine.connect()
         conn.execute('commit')
-        conn.execute(f'create database {offset_db_name}')
+        conn.execute(f'CREATE DATABASE {offset_db_name};')
         conn.close()
         logger.info(f'Database "{offset_db_name}" created.')
 
     # Offset
-    offset_db_host = SETTINGS['offset_db_host']
-    offset_db_user = SETTINGS['offset_db_user']
-    offset_db_port = SETTINGS['offset_db_port']
-    offset_db_password = SETTINGS['offset_db_password']
-    offset_db_name = SETTINGS['offset_db_name']
+    offset_db_host = SETTINGS.get_required('offset_db_host')
+    offset_db_user = SETTINGS.get_required('offset_db_user')
+    offset_db_port = SETTINGS.get_required('offset_db_port')
+    offset_db_password = SETTINGS.get_required('offset_db_password')
+    offset_db_name = SETTINGS.get_required('offset_db_name')
 
     engine = create_engine(_db_url(offset_db_name), poolclass=NullPool)
     try:
@@ -295,7 +297,6 @@ def init():
         Offset.create_pool()
         return
     except SQLAlchemyError as sqe:
-        logger.exception(sqe)
         logger.error(f'Start session failed (1st attempt): {sqe}')
         pass
 
@@ -306,6 +307,6 @@ def init():
         _start_session(engine)
         Offset.create_pool()
     except SQLAlchemyError as sqe:
-        logger.exception(sqe)
         logger.error(f'Start session failed (2nd attempt): {sqe}')
+        logger.exception(sqe)
         sys.exit(1)

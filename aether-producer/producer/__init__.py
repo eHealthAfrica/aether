@@ -49,8 +49,8 @@ class ProducerManager(object):
 
         # Turn on Flask Endpoints
         # Get Auth details from env
-        self.admin_name = SETTINGS.get('PRODUCER_ADMIN_USER')
-        self.admin_password = SETTINGS.get('PRODUCER_ADMIN_PW')
+        self.admin_name = SETTINGS.get_required('producer_admin_user')
+        self.admin_password = SETTINGS.get_required('producer_admin_pw')
         self.serve()
         self.add_endpoints()
 
@@ -60,7 +60,7 @@ class ProducerManager(object):
         self.kafka_admin_client = AdminClient(KAFKA_SETTINGS)
 
         # Clear objects and start
-        self.kafka = KafkaStatus.SUBMISSION_PENDING
+        self.kafka_status = KafkaStatus.SUBMISSION_PENDING
         self.topic_managers = {}
         self.run()
 
@@ -87,7 +87,7 @@ class ProducerManager(object):
 
     def safe_sleep(self, dur):
         # keeps shutdown time low by yielding during sleep and checking if killed.
-        for x in range(dur):
+        for x in range(int(dur)):
             if not self.killed:
                 gevent.sleep(1)
 
@@ -95,7 +95,7 @@ class ProducerManager(object):
 
     # see if kafka's port is available
     def kafka_available(self):
-        kafka_ip, kafka_port = SETTINGS['kafka_url'].split(':')
+        kafka_ip, kafka_port = SETTINGS.get_required('kafka_url').split(':')
         kafka_port = int(kafka_port)
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -174,7 +174,7 @@ class ProducerManager(object):
                         self.logger.debug(f'Schema {schema_name} unchanged')
 
             # Time between checks for schema change
-            self.safe_sleep(SETTINGS['sleep_time'])
+            self.safe_sleep(SETTINGS.get('sleep_time', 1))
         self.logger.debug('No longer checking schemas')
 
     # Flask Functions
@@ -202,7 +202,7 @@ class ProducerManager(object):
             .get('pretty_json_status', False)
 
         server_ip = SETTINGS.get('server_ip', '')
-        server_port = int(SETTINGS.get('server_port', 9005))
+        server_port = int(SETTINGS.get('server_port', 5005))
         pool_size = SETTINGS.get('flask_settings', {}).get('max_connections', 3)
         self.worker_pool = Pool(pool_size)
         self.http = WSGIServer((server_ip, server_port), self.app.wsgi_app, spawn=self.worker_pool)
@@ -239,7 +239,7 @@ class ProducerManager(object):
             'kernel_last_check_error': self.kernel_client.last_check_error,
             'kafka_container_accessible': self.kafka_available(),
             'kafka_broker_information': self.broker_info(),
-            'kafka_submission_status': str(self.kafka),  # This is just a status flag
+            'kafka_submission_status': str(self.kafka_status),  # This is just a status flag
             'topics': {k: v.get_status() for k, v in self.topic_managers.items()},
         }
         with self.app.app_context():

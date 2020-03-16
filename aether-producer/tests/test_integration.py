@@ -37,7 +37,7 @@ def test_manager_http_endpoint_service():
         man.add_endpoints()
         sleep(1)
 
-        url = 'http://localhost:%s' % SETTINGS.get('server_port')
+        url = 'http://localhost:%s' % SETTINGS.get('server_port', 9005)
         r = requests.head(f'{url}/healthcheck')
         assert(r.status_code == 200)
 
