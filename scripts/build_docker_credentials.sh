@@ -141,6 +141,7 @@ UI_DB_PASSWORD=$(gen_random_string)
 # ==================================================================
 PRODUCER_ADMIN_USER=admin
 PRODUCER_ADMIN_PW=$(gen_random_string)
+PRODUCER_DB_PASSWORD=$(gen_random_string)
 # ------------------------------------------------------------------
 
 

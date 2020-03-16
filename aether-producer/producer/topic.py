@@ -72,7 +72,7 @@ class TopicManager(object):
         self.change_set = {}
         self.successful_changes = []
         self.failed_changes = {}
-        self.wait_time = int(SETTINGS.get('sleep_time', 2))
+        self.sleep_time = int(SETTINGS.get('sleep_time', 2))
         self.window_size_sec = int(SETTINGS.get('window_size_sec', 3))
 
         self.kafka_failure_wait_time = float(SETTINGS.get('kafka_failure_wait_time', 10))
@@ -172,8 +172,8 @@ class TopicManager(object):
         # greened background task to handle rebuilding of topic
         self.operating_status = TopicStatus.REBUILDING
         tag = f'REBUILDING {self.name}:'
-        logger.info(f'{tag} waiting {self.wait_time *1.5}(sec) for inflight ops to resolve')
-        self.context.safe_sleep(self.wait_time * 1.5)
+        logger.info(f'{tag} waiting {self.sleep_time *1.5}(sec) for inflight ops to resolve')
+        self.context.safe_sleep(self.sleep_time * 1.5)
         logger.info(f'{tag} Deleting Topic')
         self.producer = None
 
@@ -262,26 +262,26 @@ class TopicManager(object):
             if self.context.killed:
                 return
             logger.debug(f'Waiting for topic {self.name} to initialize...')
-            self.context.safe_sleep(self.wait_time)
+            self.context.safe_sleep(self.sleep_time)
             pass
 
         while not self.context.killed:
             if self.operating_status is not TopicStatus.NORMAL:
                 logger.debug(
                     f'Topic {self.name} not updating, status: {self.operating_status}'
-                    + f', waiting {self.wait_time}(sec)')
-                self.context.safe_sleep(self.wait_time)
+                    f', waiting {self.sleep_time}(sec)')
+                self.context.safe_sleep(self.sleep_time)
                 continue
 
             if not self.context.kafka_available():
                 logger.debug('Kafka Container not accessible, waiting.')
-                self.context.safe_sleep(self.wait_time)
+                self.context.safe_sleep(self.sleep_time)
                 continue
 
             self.offset = self.get_offset() or ''
             if not self.updates_available():
                 logger.debug('No updates')
-                self.context.safe_sleep(self.wait_time)
+                self.context.safe_sleep(self.sleep_time)
                 continue
 
             try:
@@ -289,13 +289,13 @@ class TopicManager(object):
                 self.change_set = {}
                 new_rows = self.get_db_updates()
                 if not new_rows:
-                    self.context.safe_sleep(self.wait_time)
+                    self.context.safe_sleep(self.sleep_time)
                     continue
 
                 end_offset = new_rows[-1].get('modified')
             except Exception as pge:
                 logger.error(f'Could not get new records from kernel: {pge}')
-                self.context.safe_sleep(self.wait_time)
+                self.context.safe_sleep(self.sleep_time)
                 continue
 
             try:
@@ -333,7 +333,7 @@ class TopicManager(object):
             except Exception as ke:
                 logger.error(f'error in Kafka save: {ke}')
                 logger.error(traceback.format_exc())
-                self.context.safe_sleep(self.wait_time)
+                self.context.safe_sleep(self.sleep_time)
 
     def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=10, failure_wait_time=10):
         # Waits for confirmation of message receipt from Kafka before moving to next changeset

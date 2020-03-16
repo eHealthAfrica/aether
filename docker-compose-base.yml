@@ -318,7 +318,7 @@ services:
       OFFSET_DB_HOST: db
       OFFSET_DB_USER: postgres
       OFFSET_DB_PORT: 5432
-      OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
+      OFFSET_DB_PASSWORD: ${PRODUCER_DB_PASSWORD}
       OFFSET_DB_NAME: producer_offset_db
 
       SERVER_PORT: 5005
