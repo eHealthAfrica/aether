@@ -310,7 +310,8 @@ services:
 
       POSTGRES_HOST: db
       POSTGRES_DBNAME: aether
-      POSTGRES_USER: kernel
+      POSTGRES_USER: postgres
+      POSTGRES_PORT: 5432
       POSTGRES_PASSWORD: ${KERNEL_DB_PASSWORD}
 
       OFFSET_DB_HOST: db

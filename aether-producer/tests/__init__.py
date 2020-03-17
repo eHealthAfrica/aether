@@ -23,6 +23,7 @@ from producer.settings import SETTINGS, get_logger
 
 
 class MockAdminInterface(object):
+
     def list_topics(self, *args, **kwargs):
         return {}
 
@@ -32,6 +33,21 @@ class MockKernelClient(object):
     def __init__(self):
         self.last_check = None
         self.last_check_error = None
+
+    def mode(self):
+        return 'dummy'
+
+    def get_schemas(self):
+        return []
+
+    def check_updates(self, modified, schema_name, realm):
+        return False
+
+    def count_updates(self, schema_name, realm):
+        return 0
+
+    def get_updates(self, modified, schema_name, realm):
+        return []
 
 
 class MockProducerManager(ProducerManager):

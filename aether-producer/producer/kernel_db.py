@@ -32,7 +32,6 @@ from producer.db import PriorityDatabasePool
 from producer.settings import SETTINGS
 from producer.kernel import KernelClient, logger
 
-POSTGRES_PULL_LIMIT = int(SETTINGS.get('postgres_pull_limit', 100))
 
 _SCHEMAS_SQL = 'SELECT * FROM kernel_schema_vw'
 
@@ -73,6 +72,9 @@ class KernelDBClient(KernelClient):
         kernel_db_pool_size = int(SETTINGS.get('kernel_db_pool_size', 6))
         self.pool = PriorityDatabasePool(pg_creds, 'KernelDBClient', kernel_db_pool_size)
 
+    def mode(self):
+        return 'db'
+
     def get_schemas(self):
         self.last_check = datetime.now().isoformat()
         name = 'schemas_query'
@@ -83,8 +85,8 @@ class KernelDBClient(KernelClient):
             for row in cursor:
                 yield {key: row[key] for key in row.keys()}
         else:
-            self.last_check_error = 'Could not access db to get topics'
-            logger.critical('Could not access db to get topics')
+            self.last_check_error = 'Could not access kernel database to get topics'
+            logger.critical('Could not access kernel database to get topics')
             return []
 
     def check_updates(self, modified, schema_name, realm):
@@ -97,7 +99,7 @@ class KernelDBClient(KernelClient):
         if cursor:
             return sum([1 for i in cursor]) > 0
         else:
-            logger.critical('Could not access database to look for updates')
+            logger.critical('Could not access kernel database to look for updates')
             return False
 
     def count_updates(self, schema_name, realm):
@@ -111,7 +113,7 @@ class KernelDBClient(KernelClient):
             logger.debug(f'Reporting requested size for {schema_name} of {_count}')
             return {'count': _count}
         else:
-            logger.critical('Could not access database to look for updates')
+            logger.critical('Could not access kernel database to look for updates')
             return -1
 
     def get_updates(self, modified, schema_name, realm):
@@ -119,7 +121,7 @@ class KernelDBClient(KernelClient):
             modified=sql.Literal(modified),
             schema_name=sql.Literal(schema_name),
             realm=sql.Literal(realm),
-            limit=sql.Literal(POSTGRES_PULL_LIMIT),
+            limit=sql.Literal(self.limit),
         )
 
         query_time = datetime.now()
@@ -132,7 +134,7 @@ class KernelDBClient(KernelClient):
                 if window_filter(row)
             ]
         else:
-            logger.critical('Could not access database to look for updates')
+            logger.critical('Could not access kernel database to look for updates')
             return []
 
     def _exec_sql(self, name, priority, query):

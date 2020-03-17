@@ -25,28 +25,27 @@ from producer.settings import SETTINGS
 from producer.kernel import KernelClient, logger
 
 
-REQUEST_ERROR_RETRIES = int(SETTINGS.get('request_error_retries', 3))
-REQUEST_FETCH_SIZE = int(SETTINGS.get('fetch_size', 100))
+_REQUEST_ERROR_RETRIES = int(SETTINGS.get('request_error_retries', 3))
 
 # Aether kernel
-KERNEL_TOKEN = SETTINGS.get_required('aether_kernel_token')
-KERNEL_URL = SETTINGS.get_required('aether_kernel_url')
+_KERNEL_TOKEN = SETTINGS.get_required('aether_kernel_token')
+_KERNEL_URL = SETTINGS.get_required('aether_kernel_url')
 
 # Multitenancy
-DEFAULT_REALM = SETTINGS.get('default_realm', 'eha')
-REALM_COOKIE = SETTINGS.get('realm_cookie', 'eha-realm')
-REALMS_PATH = SETTINGS.get('aether_kernel_realms_path', '/admin/~realms')
+_DEFAULT_REALM = SETTINGS.get('default_realm', 'eha')
+_REALM_COOKIE = SETTINGS.get('realm_cookie', 'eha-realm')
+_REALMS_PATH = SETTINGS.get('aether_kernel_realms_path', '/admin/~realms')
 
 # Aether Kernel REST API urls
-_REALMS_URL = f'{KERNEL_URL}{REALMS_PATH}'
+_REALMS_URL = f'{_KERNEL_URL}{_REALMS_PATH}'
 _SCHEMAS_URL = (
-    f'{KERNEL_URL}/'
+    f'{_KERNEL_URL}/'
     'schemadecorators.json?'
     '&page_size={page_size}'
     '&fields=id,schema_name,schema_definition'
 )
 _ENTITIES_URL = (
-    f'{KERNEL_URL}/'
+    f'{_KERNEL_URL}/'
     'entities.json?'
     '&page_size={page_size}'
     '&fields=id,modified,payload'
@@ -58,6 +57,9 @@ _ENTITIES_URL = (
 
 class KernelAPIClient(KernelClient):
 
+    def mode(self):
+        return 'api'
+
     def get_schemas(self):
         self.last_check = datetime.now().isoformat()
 
@@ -66,7 +68,7 @@ class KernelAPIClient(KernelClient):
             realms = self._fetch(url=_REALMS_URL)['realms']
             for realm in realms:
                 # get list of schema decorators
-                _next_url = _SCHEMAS_URL.format(page_size=REQUEST_FETCH_SIZE)
+                _next_url = _SCHEMAS_URL.format(page_size=self.limit)
                 while _next_url:
                     response = self._fetch(url=_next_url, realm=realm)
                     _next_url = response['next']
@@ -75,7 +77,7 @@ class KernelAPIClient(KernelClient):
                         yield {'realm': realm, **entry}
 
         except Exception:
-            self.last_check_error = 'Could not access kernel to get topics'
+            self.last_check_error = 'Could not access kernel API to get topics'
             logger.critical(self.last_check_error)
             return []
 
@@ -89,7 +91,7 @@ class KernelAPIClient(KernelClient):
             response = self._fetch(url=url, realm=realm)
             return response['count'] > 1
         except Exception:
-            logger.critical('Could not access kernel to look for updates')
+            logger.critical('Could not access kernel API to look for updates')
             return False
 
     def count_updates(self, schema_name, realm):
@@ -103,12 +105,12 @@ class KernelAPIClient(KernelClient):
             logger.debug(f'Reporting requested size for {schema_name} of {_count}')
             return {'count': _count}
         except Exception:
-            logger.critical('Could not access kernel to look for updates')
+            logger.critical('Could not access kernel API to look for updates')
             return -1
 
     def get_updates(self, modified, schema_name, realm):
         url = _ENTITIES_URL.format(
-            page_size=REQUEST_FETCH_SIZE,
+            page_size=self.limit,
             schema=schema_name,
             modified=modified,
         )
@@ -125,7 +127,7 @@ class KernelAPIClient(KernelClient):
             ]
 
         except Exception:
-            logger.critical('Could not access kernel to look for updates')
+            logger.critical('Could not access kernel API to look for updates')
             return []
 
     def _fetch(self, url, realm=None):
@@ -139,8 +141,8 @@ class KernelAPIClient(KernelClient):
         '''
 
         headers = {
-            'Authorization': f'Token {KERNEL_TOKEN}',
-            REALM_COOKIE: realm if realm else DEFAULT_REALM
+            'Authorization': f'Token {_KERNEL_TOKEN}',
+            _REALM_COOKIE: realm if realm else _DEFAULT_REALM
         }
 
         count = 0
@@ -150,7 +152,7 @@ class KernelAPIClient(KernelClient):
                 response = requests.get(url, headers=headers)
                 return response.json()
             except Exception as e:
-                if count >= REQUEST_ERROR_RETRIES:
+                if count >= _REQUEST_ERROR_RETRIES:
                     logger.error(f'Error while fetching data from {url}')
                     logger.error(e)
                     raise e

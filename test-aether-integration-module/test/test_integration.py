@@ -43,11 +43,12 @@ def test_3_check_updated_count(entities):
 
 def test_4_check_producer_status(wait_for_producer_status):
     assert(wait_for_producer_status is not None)
+    assert(wait_for_producer_status['kernel_mode'] == PRODUCER_MODE)
 
 
 def test_5_check_producer_topics(producer_topics):
     assert(KAFKA_SEED_TYPE in producer_topics.keys())
-    assert(int(producer_topics[KAFKA_SEED_TYPE]['count']) is SEED_ENTITIES)
+    assert(int(producer_topics[KAFKA_SEED_TYPE]['count']) == SEED_ENTITIES)
 
 
 def test_6_check_stream_entities(read_people, entities):

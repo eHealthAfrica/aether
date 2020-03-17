@@ -12,6 +12,7 @@
       "retention.ms": -1
     }
   },
+  "kernel_access_type": "api",
   "log_level": "ERROR",
   "offset_db_pool_size": 6,
   "server_ip": "",

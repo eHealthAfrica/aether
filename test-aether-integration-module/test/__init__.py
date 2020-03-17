@@ -53,6 +53,7 @@ PRODUCER_CREDS = [
     os.environ['PRODUCER_ADMIN_PW'],
 ]
 PRODUCER_URL = os.environ['PRODUCER_URL']
+PRODUCER_MODE = os.environ['PRODUCER_MODE']
 
 
 @pytest.fixture(scope='function')
@@ -79,14 +80,16 @@ def wait_for_producer_status():
             status = producer_request('status')
             if not status:
                 raise ValueError('No status response from producer')
+
             kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
+
             person = status.get('topics', {}).get(KAFKA_SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
                 sleep(5)
-                return ok_count
+                return status
             else:
                 raise ValueError('Last changeset status has no successes. Not producing')
         except Exception as err:

@@ -23,7 +23,8 @@ from producer.settings import SETTINGS, get_logger
 
 logger = get_logger('producer-kernel')
 
-WINDOW_SIZE_SEC = int(SETTINGS.get('window_size_sec', 3))
+_WINDOW_SIZE_SEC = int(SETTINGS.get('window_size_sec', 3))
+_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 
 class KernelClient(object):
@@ -32,6 +33,7 @@ class KernelClient(object):
         # last time kernel was checked for new updates
         self.last_check = None
         self.last_check_error = None
+        self.limit = int(SETTINGS.get('fetch_size', 100))
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
@@ -39,12 +41,11 @@ class KernelClient(object):
         # Sometimes rows belonging to that set would show up a couple mS after
         # the window had closed and be dropped. Our solution was to truncate sets
         # based on the insert time and now() to provide a buffer.
-        TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
         def fn(row):
-            commited = datetime.strptime(row.get('modified')[:26], TIME_FORMAT)
+            commited = datetime.strptime(row.get('modified')[:26], _TIME_FORMAT)
             lag_time = (query_time - commited).total_seconds()
-            if lag_time > WINDOW_SIZE_SEC:
+            if lag_time > _WINDOW_SIZE_SEC:
                 return True
 
             elif lag_time < -30.0:
@@ -56,6 +57,9 @@ class KernelClient(object):
             return False
 
         return fn
+
+    def mode(self):
+        raise NotImplementedError
 
     def get_schemas(self):
         raise NotImplementedError

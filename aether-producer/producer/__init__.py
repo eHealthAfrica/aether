@@ -240,6 +240,7 @@ class ProducerManager(object):
     @requires_auth
     def request_status(self):
         status = {
+            'kernel_mode': self.kernel_client.mode(),
             'kernel_last_check': self.kernel_client.last_check,
             'kernel_last_check_error': self.kernel_client.last_check_error,
             'kafka_container_accessible': self.kafka_available(),
