@@ -28,9 +28,14 @@ from gevent.pool import Pool
 from gevent.pywsgi import WSGIServer
 
 from producer.db import init as init_offset_db
-from producer.kernel import KernelClient
 from producer.settings import KAFKA_SETTINGS, SETTINGS, LOG_LEVEL, get_logger
 from producer.topic import KafkaStatus, TopicStatus, TopicManager
+
+# How to access Kernel: API (default) | DB
+if SETTINGS.get('kernel_access_type', 'api').lower() != 'db':
+    from producer.kernel_api import KernelAPIClient as KernelClient
+else:
+    from producer.kernel_db import KernelDBClient as KernelClient
 
 
 class ProducerManager(object):

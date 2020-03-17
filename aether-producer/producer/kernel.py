@@ -18,61 +18,17 @@
 
 from datetime import datetime
 
-from gevent import monkey
-# need to patch sockets to make requests async
-monkey.patch_all()  # noqa
-import psycogreen.gevent
-psycogreen.gevent.patch_psycopg()  # noqa
-
-import psycopg2
-from psycopg2 import sql
-from psycopg2.extras import DictCursor
-
-from producer.db import PriorityDatabasePool
 from producer.settings import SETTINGS, get_logger
 
+
 logger = get_logger('producer-kernel')
+
+WINDOW_SIZE_SEC = int(SETTINGS.get('window_size_sec', 3))
 
 
 class KernelClient(object):
 
-    _SCHEMAS_SQL = 'SELECT * FROM kernel_schema_vw'
-
-    _CHECK_UPDATES_SQL = '''
-        SELECT id
-        FROM kernel_entity_vw
-        WHERE modified    > {modified}
-          AND schema_name = {schema_name}
-          AND realm       = {realm}
-        LIMIT 1;
-    '''
-
-    _COUNT_UPDATES_SQL = '''
-        SELECT COUNT(id)
-        FROM kernel_entity_vw
-        WHERE schema_name = {schema_name}
-          AND realm       = {realm};
-    '''
-
-    _GET_UPDATES_SQL = '''
-        SELECT *
-        FROM kernel_entity_vw
-        WHERE modified    > {modified}
-          AND schema_name = {schema_name}
-          AND realm       = {realm}
-        ORDER BY modified ASC
-        LIMIT {limit};
-    '''
-
     def __init__(self):
-        pg_requires = ['user', 'dbname', 'port', 'host', 'password']
-        pg_creds = {key: SETTINGS.get(f'postgres_{key}') for key in pg_requires}
-        kernel_db_pool_size = SETTINGS.get('kernel_db_pool_size', 6)
-
-        self.pool = PriorityDatabasePool(pg_creds, 'KernelClient', kernel_db_pool_size)
-        self.window_size_sec = SETTINGS.get('window_size_sec', 3)
-        self.limit = SETTINGS.get('postgres_pull_limit', 100)
-
         # last time kernel was checked for new updates
         self.last_check = None
         self.last_check_error = None
@@ -88,7 +44,7 @@ class KernelClient(object):
         def fn(row):
             commited = datetime.strptime(row.get('modified')[:26], TIME_FORMAT)
             lag_time = (query_time - commited).total_seconds()
-            if lag_time > self.window_size_sec:
+            if lag_time > WINDOW_SIZE_SEC:
                 return True
 
             elif lag_time < -30.0:
@@ -98,87 +54,17 @@ class KernelClient(object):
             _id = row.get('id')
             logger.debug(f'WINDOW EXCLUDE: ID: {_id}, LAG: {lag_time}')
             return False
+
         return fn
 
-    def _exec_sql(self, name, priority, query):
-        try:
-            promise = self.pool.request_connection(priority, name)
-            conn = promise.get()
-            cursor = conn.cursor(cursor_factory=DictCursor)
-            cursor.execute(query)
-
-            return cursor
-
-        except psycopg2.OperationalError as pgerr:
-            self.last_check_error = pgerr
-            logger.critical(f'Error while accessing database: {pgerr}')
-            logger.exception(pgerr)
-            return None
-
-        finally:
-            try:
-                self.pool.release(name, conn)
-            except UnboundLocalError:
-                logger.error(f'{name} could not release a connection it never received.')
-
     def get_schemas(self):
-        self.last_check = datetime.now().isoformat()
-        name = 'schemas_query'
-        query = sql.SQL(KernelClient._SCHEMAS_SQL)
-        cursor = self._exec_sql(name, 1, query)
-        if cursor:
-            self.last_check_error = None
-            for row in cursor:
-                yield {key: row[key] for key in row.keys()}
-        else:
-            self.last_check_error = 'Could not access db to get topics'
-            logger.critical('Could not access db to get topics')
-            return []
+        raise NotImplementedError
 
     def check_updates(self, modified, schema_name, realm):
-        query = sql.SQL(KernelClient._CHECK_UPDATES_SQL).format(
-            modified=sql.Literal(modified),
-            schema_name=sql.Literal(schema_name),
-            realm=sql.Literal(realm),
-        )
-        cursor = self._exec_sql(schema_name, 1, query)
-        if cursor:
-            return sum([1 for i in cursor]) > 0
-        else:
-            logger.critical('Could not access database to look for updates')
-            return False
+        raise NotImplementedError
 
     def count_updates(self, schema_name, realm):
-        query = sql.SQL(KernelClient._COUNT_UPDATES_SQL).format(
-            schema_name=sql.Literal(schema_name),
-            realm=sql.Literal(realm),
-        )
-        cursor = self._exec_sql(schema_name, 0, query)
-        if cursor:
-            size = [{key: row[key] for key in row.keys()} for row in cursor][0]
-            logger.debug(f'Reporting requested size for {schema_name} of {size["count"]}')
-            return size
-        else:
-            logger.critical('Could not access database to look for updates')
-            return -1
+        raise NotImplementedError
 
     def get_updates(self, modified, schema_name, realm):
-        query = sql.SQL(KernelClient._GET_UPDATES_SQL).format(
-            modified=sql.Literal(modified),
-            schema_name=sql.Literal(schema_name),
-            realm=sql.Literal(realm),
-            limit=sql.Literal(self.limit),
-        )
-
-        query_time = datetime.now()
-        cursor = self._exec_sql(schema_name, 2, query)
-        if cursor:
-            window_filter = self.get_time_window_filter(query_time)
-            return [
-                {key: row[key] for key in row.keys()}
-                for row in cursor
-                if window_filter(row)
-            ]
-        else:
-            logger.critical('Could not access database to look for updates')
-            return []
+        raise NotImplementedError

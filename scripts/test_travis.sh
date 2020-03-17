@@ -45,6 +45,13 @@ case "$1" in
         ./scripts/test_container.sh producer
 
         build_client
+
+        # check producer access to kernel via REST API
+        export KERNEL_ACCESS_TYPE=api
+        ./scripts/test_container.sh integration
+
+        # check producer access to kernel via database
+        export KERNEL_ACCESS_TYPE=db
         ./scripts/test_container.sh integration
     ;;
 
