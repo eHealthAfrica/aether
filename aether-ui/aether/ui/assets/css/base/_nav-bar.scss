@@ -29,11 +29,6 @@
   top: 72px;
 }
 
-@keyframes fade-in {
-  0%   { opacity: 0; }
-  100% { opacity: 1; }
-}
-
 .top-nav-breadcrumb {
   animation: fade-in .6s;
   letter-spacing: .06em;
@@ -103,7 +98,6 @@
   }
 
   .top-nav:hover {
-
     .breadcrumb-links a,
     .top-nav-logo,
     .status-publish {
@@ -134,7 +128,6 @@
 }
 
 .pipeline--input {
-
   .breadcrumb-links a {
     opacity: 1;
     max-width: 100px;

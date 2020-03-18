@@ -18,19 +18,11 @@
  * under the License.
  */
 
-@keyframes slide-up {
-  0%   { top: 100vh; }
-  100% { top: $navbar-height-xs; }
-}
-
-$transition-speed: .6s;
-
-$pipeline-nav-height: 4rem;
-
-$input-nav-width: 6rem;
-$entityTypes-nav-width: 11rem;
-$mapping-nav-width: 9rem;
-$output-nav-width: 10rem;
+ $pipeline-nav-height:   4rem;
+ $input-nav-width:       6rem;
+ $entityTypes-nav-width: 11rem;
+ $mapping-nav-width:     9rem;
+ $output-nav-width:      10rem;
 
 .pipeline {
   background: $white;
@@ -76,7 +68,6 @@ $output-nav-width: 10rem;
   }
 
   .settings-button {
-
     padding: 0;
     margin-left: 2rem;
     display: none;
@@ -235,7 +226,6 @@ div[class^='pipeline-nav-item__'] {
   }
 
   &:hover {
-
     .badge {
       @include bg-gradient;
       opacity: 1;
@@ -300,23 +290,9 @@ div[class^='pipeline-section__'],
   }
 }
 
-// STATES
-
-@mixin selected {
-  .badge {
-    @include bg-gradient;
-    opacity: 1;
-
-    .fa-caret-right {
-      transform: rotate(90deg);
-    }
-  }
-}
-
 // INPUT
 
 .pipeline--input {
-
   .pipeline-tabs {
     left: 100vw;
   }
@@ -349,7 +325,6 @@ div[class^='pipeline-section__'],
 // ENTITY TYPES
 
 .pipeline--entityTypes {
-
   div.pipeline-nav-item__input {
     width: $column-width;
   }
@@ -374,7 +349,6 @@ div[class^='pipeline-section__'],
 }
 
 .pipeline--entityTypes .fullscreen {
-
   div.pipeline-nav-item__input,
   div.pipeline-nav-item__mapping {
     width: 0;
@@ -396,7 +370,6 @@ div[class^='pipeline-section__'],
 // MAPPING
 
 .pipeline--mapping {
-
   div.pipeline-nav-item__input {
     width: $column-width;
   }
@@ -429,7 +402,6 @@ div[class^='pipeline-section__'],
 }
 
 .pipeline--mapping .fullscreen {
-
   div.pipeline-nav-item__input,
   div.pipeline-nav-item__entityTypes {
     width: 0;
@@ -449,11 +421,9 @@ div[class^='pipeline-section__'],
   }
 }
 
-
 // OUTPUT
 
 .show-output {
-
   .pipeline-nav-items {
     width: calc(100vw - #{$output-width});
   }

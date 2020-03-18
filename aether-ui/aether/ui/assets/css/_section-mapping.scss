@@ -29,7 +29,6 @@
   }
 
   .tabs {
-
     .tab.selected {
       box-shadow: 1px 1px 1px rgba($black, .2) inset;
       background-color: darken($dark-blue, 3);
@@ -168,20 +167,6 @@
 
   .form-label {
     color: $light-grey;
-  }
-}
-
-@keyframes show {
-  0% {
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
   }
 }
 

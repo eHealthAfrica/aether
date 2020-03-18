@@ -18,36 +18,46 @@
  * under the License.
  */
 
-// ************************************
-// third-party styles
-// ************************************
+ @keyframes fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
 
-@import '~bootstrap/scss/bootstrap';
+@keyframes show {
+  0%   { opacity: 0; }
+  50%  { opacity: 0; }
+  100% { opacity: 1; }
+}
 
+@keyframes show-form {
+  0% {
+    max-height: 0;
+    padding: 0;
+    opacity: 0;
+  }
 
-// ************************************
-// custom styles
-// ************************************
+  100% {
+    max-height: 200px;
+    padding: 2rem 0 3rem;
+    opacity: 1;
+  }
+}
 
-@import 'base/fonts';
-@import 'base/settings';
-@import 'base/color-codes';
-@import 'base/mixins';
-@import 'base/keyframes';
-@import 'base/global';
-@import 'base/buttons';
-@import 'base/nav-bar';
-@import 'base/loading-spinner';
-@import 'base/modal';
-@import 'base/messages';
+@keyframes slide-up {
+  0%   { top: 100vh; }
+  100% { top: $navbar-height-xs; }
+}
 
-@import 'pipelines';
-@import 'pipeline';
-@import 'pipeline-settings';
+@-webkit-keyframes autofill-transparent {
+  to {
+    color: $white;
+    background: transparent;
+  }
+}
 
-@import 'section-input';
-@import 'section-entity-types';
-@import 'section-mapping';
-@import 'section-output';
-
-@import 'base/styleguide';
+@-webkit-keyframes autofill-dark {
+  to {
+    color: $white;
+    background: rgba($text-color, .1);
+  }
+}
