@@ -124,8 +124,10 @@ function _wait_for {
         >&2 echo "Waiting for $container... $retries"
 
         ((retries++))
-        if [[ $retries -gt 30 ]]; then
+        if [[ $retries -gt 10 ]]; then
             echo_message "It was not possible to start $container"
+            docker-compose logs $container
+            echo_message ""
             exit 1
         fi
 
