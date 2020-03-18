@@ -381,27 +381,27 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.CONTRACT_UPDATE: {
       const currentContract = parseContract(action.payload)
-      const uPipeline = { ...state.currentPipeline }
-      uPipeline.contracts = replaceItemInList(state.currentPipeline.contracts, currentContract)
+      const currentPipeline = { ...state.currentPipeline }
+      currentPipeline.contracts = replaceItemInList(state.currentPipeline.contracts, currentContract)
 
       return {
         ...state,
-        pipelinesList: replaceItemInList(state.pipelinesList, uPipeline),
-        currentPipeline: uPipeline,
-        currentContract: currentContract
+        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
+        currentPipeline,
+        currentContract
       }
     }
 
     case types.CONTRACT_DELETE: {
-      const uPipeline = { ...state.currentPipeline }
-      uPipeline.contracts = removeItemFromList(state.currentPipeline.contracts, state.currentContract)
-      const currentContract = uPipeline.contracts[0]
+      const currentPipeline = { ...state.currentPipeline }
+      currentPipeline.contracts = removeItemFromList(state.currentPipeline.contracts, state.currentContract)
+      const currentContract = currentPipeline.contracts.length ? currentPipeline.contracts[0] : null
 
       return {
         ...state,
-        pipelinesList: replaceItemInList(state.pipelinesList, uPipeline),
-        currentPipeline: uPipeline,
-        currentContract: currentContract,
+        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
+        currentPipeline,
+        currentContract,
         deleteStatus: action.payload,
         currentSection: currentContract ? CONTRACT_SECTION_ENTITY_TYPES : PIPELINE_SECTION_INPUT
       }
