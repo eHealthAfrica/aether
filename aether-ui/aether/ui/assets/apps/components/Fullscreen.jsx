@@ -18,26 +18,17 @@
  * under the License.
  */
 
-// import all components
-import AppLayout from './AppLayout'
-import AvroSchemaViewer from './AvroSchemaViewer'
-import Clipboard from './Clipboard'
-import Fullscreen from './Fullscreen'
-import LoadingSpinner from './LoadingSpinner'
-import Modal from './Modal'
-import ModalError from './ModalError'
-import NavBar from './NavBar'
-import ViewsBar from './ViewsBar'
+import React from 'react'
+import { FormattedMessage } from 'react-intl'
 
-// export all components
-export {
-  AppLayout,
-  AvroSchemaViewer,
-  Clipboard,
-  Fullscreen,
-  LoadingSpinner,
-  Modal,
-  ModalError,
-  NavBar,
-  ViewsBar
-}
+const Fullscreen = ({ value, toggle }) => (
+  <div className='btn-icon fullscreen-toggle' onClick={() => { toggle() }}>
+    {
+      value
+        ? <FormattedMessage id='fullscreen.off' defaultMessage='fullscreen off' />
+        : <FormattedMessage id='fullscreen.on' defaultMessage='fullscreen on' />
+    }
+  </div>
+)
+
+export default Fullscreen
