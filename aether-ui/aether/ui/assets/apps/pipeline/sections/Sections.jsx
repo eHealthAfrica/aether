@@ -1,0 +1,154 @@
+/*
+ * Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import React from 'react'
+import { connect } from 'react-redux'
+import { FormattedMessage } from 'react-intl'
+
+import { Fullscreen } from '../../components'
+
+import Input from './Input'
+import EntityTypes from './EntityTypes'
+import Mapping from './Mapping'
+import Output from './Output'
+
+import {
+  PIPELINE_SECTION_INPUT,
+  CONTRACT_SECTION_ENTITY_TYPES,
+  CONTRACT_SECTION_MAPPING
+} from '../../utils/constants'
+
+import { selectSection } from '../redux'
+
+const Sections = ({
+  addNewContract,
+  checkUnsavedContract,
+  pipeline,
+  contract,
+  selectSection,
+  fullscreen,
+  toggleFullscreen,
+  toggleOutput
+}) => {
+  const showInput = () => {
+    checkUnsavedContract(() => { selectSection(PIPELINE_SECTION_INPUT) })
+  }
+  const showContracts = () => {
+    if (!pipeline.contracts.length) {
+      addNewContract()
+    } else {
+      selectSection(CONTRACT_SECTION_ENTITY_TYPES)
+    }
+  }
+
+  return (
+    <>
+      <div className='pipeline-nav'>
+        <div className='pipeline-nav-items'>
+          <div className='pipeline-nav-item__input' onClick={showInput}>
+            <div className='badge'>
+              <i className='fas fa-file' />
+            </div>
+            <FormattedMessage
+              id='pipeline.navbar.input'
+              defaultMessage='Input'
+            />
+          </div>
+
+          <div className='pipeline-nav-item__contracts' onClick={showContracts}>
+            <div className='badge'>
+              <i className='fas fa-caret-right' />
+            </div>
+            <FormattedMessage
+              id='pipeline.navbar.contracts'
+              defaultMessage='Contracts'
+            />
+          </div>
+
+          <div
+            className='pipeline-nav-item__entityTypes'
+            onClick={() => { selectSection(CONTRACT_SECTION_ENTITY_TYPES) }}
+          >
+            <div className='badge'>
+              <i className='fas fa-caret-right' />
+            </div>
+            <FormattedMessage
+              id='pipeline.navbar.entity.types'
+              defaultMessage='Entity Types'
+            />
+          </div>
+
+          <div
+            className='pipeline-nav-item__mapping'
+            onClick={() => { selectSection(CONTRACT_SECTION_MAPPING) }}
+          >
+            <div className='badge'>
+              <i className='fas fa-caret-right' />
+            </div>
+            <FormattedMessage
+              id='pipeline.navbar.mapping'
+              defaultMessage='Mapping'
+            />
+          </div>
+        </div>
+
+        <div className='pipeline-nav-item__output' onClick={() => { toggleOutput() }}>
+          <div className='badge'>
+            <i className='fas fa-caret-right' />
+          </div>
+          <FormattedMessage
+            id='pipeline.navbar.output'
+            defaultMessage='Output'
+          />
+          {
+            ((contract && contract.mapping_errors) || []).length > 0 &&
+              <span className={`status ${(contract.mapping_errors || []).length ? 'red' : 'green'}`} />
+          }
+        </div>
+      </div>
+
+      <div className='pipeline-sections'>
+        <div className='pipeline-section__input'><Input /></div>
+        {
+          contract &&
+            <>
+              <div className='pipeline-section__entityTypes'>
+                <EntityTypes />
+                <Fullscreen value={fullscreen} toggle={toggleFullscreen} />
+              </div>
+              <div className='pipeline-section__mapping'>
+                <Mapping />
+                <Fullscreen value={fullscreen} toggle={toggleFullscreen} />
+              </div>
+            </>
+        }
+      </div>
+      {contract && <div className='pipeline-output'><Output /></div>}
+    </>
+  )
+}
+
+const mapStateToProps = ({ pipelines }) => ({
+  pipeline: pipelines.currentPipeline,
+  contract: pipelines.currentContract
+})
+const mapDispatchToProps = { selectSection }
+
+export default connect(mapStateToProps, mapDispatchToProps)(Sections)

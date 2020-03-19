@@ -102,8 +102,9 @@ export const selectSection = (section) => ({
   payload: section
 })
 
-export const startNewContract = () => ({
-  type: types.CONTRACT_NEW
+export const startNewContract = (pid = null) => ({
+  type: types.CONTRACT_NEW,
+  payload: pid
 })
 
 export const getPipelineById = (pid) => {
@@ -381,10 +382,14 @@ const reducer = (state = INITIAL_STATE, action) => {
     }
 
     case types.CONTRACT_NEW: {
-      const newContract = createNewContractSkeleton(state.currentPipeline)
+      const currentPipeline = action.payload
+        ? (state.pipelinesList || []).find(p => p.id === action.payload) || state.currentPipeline
+        : state.currentPipeline
+      const newContract = createNewContractSkeleton(currentPipeline)
 
       return {
         ...nextState,
+        currentPipeline,
         newContract,
         currentSection: CONTRACT_SECTION_ENTITY_TYPES
       }

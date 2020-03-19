@@ -23,12 +23,16 @@ import { connect } from 'react-redux'
 
 import { FormattedMessage } from 'react-intl'
 
+import ContractAddButton from './ContractAddButton'
+
+import { startNewContract } from '../redux'
+
 const ContractTabs = ({
   activate,
   addingNew,
-  addNew,
   current,
   list,
+  pipeline,
   showSettings,
   toggleSettings
 }) => {
@@ -72,18 +76,10 @@ const ContractTabs = ({
 
       {
         !addingNew &&
-          <button
-            type='button'
+          <ContractAddButton
             className='btn btn-c btn-sm new-contract'
-            onClick={addNew}
-          >
-            <span className='details-title'>
-              <FormattedMessage
-                id='contract.add.button'
-                defaultMessage='Add contract'
-              />
-            </span>
-          </button>
+            pipeline={pipeline}
+          />
       }
     </div>
   )
@@ -92,7 +88,10 @@ const ContractTabs = ({
 const mapStateToProps = ({ pipelines }) => ({
   addingNew: !!pipelines.newContract,
   current: pipelines.currentContract,
-  list: pipelines.currentPipeline.contracts
+  list: pipelines.currentPipeline.contracts,
+  pipeline: pipelines.currentPipeline
 })
 
-export default connect(mapStateToProps)(ContractTabs)
+const mapDispatchToProps = { startNewContract }
+
+export default connect(mapStateToProps, mapDispatchToProps)(ContractTabs)
