@@ -287,8 +287,7 @@ const reducer = (state = INITIAL_STATE, action) => {
         ...nextState,
         pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline,
-        currentContract,
-        newContract: null
+        currentContract
       }
     }
 

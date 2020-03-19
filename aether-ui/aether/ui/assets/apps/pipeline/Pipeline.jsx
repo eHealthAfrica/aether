@@ -26,16 +26,9 @@ import { LoadingSpinner, Modal, NavBar } from '../components'
 
 import Sections from './sections/Sections'
 import Settings from './sections/Settings'
-
 import ContractTabs from './components/ContractTabs'
 
-import {
-  clearSelection,
-  getPipelineById,
-  selectContract,
-  selectSection
-} from './redux'
-
+import { clearSelection, getPipelineById, selectContract } from './redux'
 import { PIPELINE_SECTION_INPUT } from '../utils/constants'
 
 class Pipeline extends Component {
@@ -53,9 +46,7 @@ class Pipeline extends Component {
 
   componentDidMount () {
     // load current pipeline using location address (router props)
-    if (!this.props.newContract) {
-      this.props.getPipelineById(this.props.match.params.pid)
-    }
+    this.props.getPipelineById(this.props.match.params.pid)
   }
 
   componentDidUpdate (prevProps) {
@@ -148,9 +139,7 @@ class Pipeline extends Component {
         `}
         >
           <ContractTabs
-            activate={(cId) => {
-              checkUnsavedContract(() => { this.props.selectContract(pipeline.id, cId) })
-            }}
+            checkUnsavedContract={checkUnsavedContract.bind(this)}
             showSettings={this.state.showSettings}
             toggleSettings={() => { this.setState({ showSettings: !this.state.showSettings }) }}
           />
@@ -261,8 +250,7 @@ const mapStateToProps = ({ pipelines }) => ({
 const mapDispatchToProps = {
   clearSelection,
   getPipelineById,
-  selectContract,
-  selectSection
+  selectContract
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Pipeline)
