@@ -22,186 +22,32 @@ import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { addContract, updateContract } from '../redux'
-import { isEmpty } from '../../utils'
-import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
+import { addContract, deleteContract, updateContract } from '../redux'
 
-import { Modal } from '../../components'
 import ContractPublishButton from '../components/ContractPublishButton'
+import DeleteModal from '../components/DeleteModal'
+import DeleteStatus from '../components/DeleteStatus'
+import IdentityContract from '../components/IdentityContract'
 import SubmissionCard from '../components/SubmissionCard'
-
-const IdentityContract = ({
-  contract,
-  inputSchema,
-  showWarning,
-  onGenerate,
-  onCancel
-}) => {
-  if (contract.is_read_only || isEmpty(inputSchema)) {
-    return ''
-  }
-
-  const [isIdentity, setIsIdentity] = useState(contract.is_identity)
-  const [entityTypeName, setEntityTypeName] = useState(inputSchema.name)
-
-  const handleGenerate = () => {
-    const mappingRules = deriveMappingRules(inputSchema, entityTypeName)
-    const entityTypes = deriveEntityTypes(inputSchema, entityTypeName)
-
-    const updatedContract = {
-      ...contract,
-      mapping_rules: mappingRules,
-      entity_types: entityTypes,
-      is_identity: true
-    }
-
-    onGenerate(updatedContract)
-  }
-
-  return (
-    <>
-      {
-        !contract.is_identity &&
-          <div className='identity-contract'>
-            <div className='toggle-default'>
-              <input
-                type='checkbox'
-                id='toggle'
-                checked={isIdentity}
-                onChange={(event) => { setIsIdentity(event.target.checked) }}
-              />
-              <label
-                htmlFor='toggle'
-                className='title-medium'
-              >
-                <FormattedMessage
-                  id='settings.identity.unchecked.help-1'
-                  defaultMessage='Create an identity contract'
-                />
-              </label>
-            </div>
-            <p>
-              <FormattedMessage
-                id='settings.identity.unchecked.help-2'
-                defaultMessage='An identity contract will produce entities
-                  that are identical with the input. If you choose this setting,
-                  Aether will generate an Entity Type and Mapping for you.'
-              />
-            </p>
-            <p>
-              <FormattedMessage
-                id='settings.identity.unchecked.help-3'
-                defaultMessage="This can be useful in situations where you
-                  want to make use of Aether's functionality without transforming
-                  the data. Alternatively, you can use the generate Entity Type
-                  and Mapping as a starting point for a more complex contract."
-              />
-            </p>
-            {
-              isIdentity &&
-                <div className='form-group'>
-                  <label className='form-label'>
-                    <FormattedMessage
-                      id='settings.contract.identity.name'
-                      defaultMessage='Entity Type name'
-                    />
-                  </label>
-                  <input
-                    type='text'
-                    required
-                    name='name'
-                    className='input-d input-large'
-                    value={entityTypeName || ''}
-                    onChange={(e) => { setEntityTypeName(e.target.value) }}
-                  />
-                </div>
-            }
-          </div>
-      }
-
-      {
-        contract.is_identity &&
-          <div className='identity-contract'>
-            <h5>
-              <FormattedMessage
-                id='settings.identity.checked.help-1'
-                defaultMessage='This is an identity contract'
-              />
-            </h5>
-            <p>
-              <FormattedMessage
-                id='settings.identity.checked.help-2'
-                defaultMessage='All Entity Types and Mappings were automatically generated from the input data'
-              />
-            </p>
-          </div>
-      }
-
-      {
-        showWarning &&
-          <Modal
-            onEscape={onCancel}
-            onEnter={handleGenerate}
-            header={
-              <FormattedMessage
-                id='settings.identity.header'
-                defaultMessage='Create identity contract'
-              />
-            }
-            buttons={
-              <div>
-                <button
-                  id='settings.identity.modal.cancel'
-                  className='btn btn-w'
-                  onClick={onCancel}
-                >
-                  <FormattedMessage
-                    id='settings.identity.button.cancel'
-                    defaultMessage='Cancel'
-                  />
-                </button>
-                <button
-                  data-qa='contract.identity.button.confirm'
-                  className='btn btn-w btn-primary'
-                  id='settings.identity.modal.yes'
-                  onClick={handleGenerate}
-                >
-                  <FormattedMessage
-                    id='settings.identity.button.confirm'
-                    defaultMessage='Yes'
-                  />
-                </button>
-              </div>
-            }
-          >
-            <FormattedMessage
-              id='settings.identity.content.question'
-              defaultMessage='Are you sure that you want to create an identity contract?'
-            />
-            <FormattedMessage
-              id='settings.identity.content.warning'
-              defaultMessage='This action will overwrite any entity types and mappings that you have created in this contract.'
-            />
-          </Modal>
-      }
-    </>
-  )
-}
 
 const Settings = ({
   addContract,
   contract,
+  deleteContract,
   inputData,
   inputSchema,
   mappingset,
   onClose,
-  onDelete,
   onSave,
   updateContract
 }) => {
   const [prevContract, setPrevContract] = useState(contract)
   const [contractName, setContractName] = useState(contract.name)
   const [showIdentityWarning, setShowIdentityWarning] = useState(false)
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showDeleteProgress, setShowDeleteProgress] = useState(false)
+  const [deleteOptions, setDeleteOptions] = useState()
 
   useEffect(() => {
     if (prevContract !== contract) {
@@ -227,6 +73,13 @@ const Settings = ({
       updateContract({ ...contract, name: contractName })
       onClose()
     }
+  }
+
+  const handleDelete = (options) => {
+    deleteContract(contract.id, deleteOptions)
+    setDeleteOptions(options)
+    setShowDeleteModal(false)
+    setShowDeleteProgress(true)
   }
 
   return (
@@ -308,17 +161,44 @@ const Settings = ({
           }
           {
             !contract.is_read_only && contract.created &&
-              <button
-                className='btn btn-d btn-red btn-big'
-                onClick={() => { onDelete() }}
-              >
-                <span className='details-title'>
-                  <FormattedMessage
-                    id='settings.contract.delete'
-                    defaultMessage='Delete Contract'
-                  />
-                </span>
-              </button>
+              <>
+                <button
+                  className='btn btn-d btn-red btn-big'
+                  onClick={() => { setShowDeleteModal(true) }}
+                >
+                  <span className='details-title'>
+                    <FormattedMessage
+                      id='settings.contract.delete'
+                      defaultMessage='Delete Contract'
+                    />
+                  </span>
+                </button>
+
+                {
+                  showDeleteModal &&
+                    <DeleteModal
+                      onClose={() => { setShowDeleteModal(false) }}
+                      onDelete={(options) => { handleDelete(options) }}
+                      objectType='contract'
+                      obj={contract}
+                    />
+                }
+
+                {
+                  showDeleteProgress &&
+                    <DeleteStatus
+                      header={
+                        <FormattedMessage
+                          id='contract.delete.status.header'
+                          defaultMessage='Deleting contract '
+                        />
+                      }
+                      deleteOptions={deleteOptions}
+                      toggle={() => { setShowDeleteProgress(false) }}
+                      showModal={showDeleteProgress}
+                    />
+                }
+              </>
           }
         </div>
       </div>
@@ -334,6 +214,6 @@ const mapStateToProps = ({ pipelines }) => ({
   contract: pipelines.newContract || pipelines.currentContract,
   pipeline: pipelines.currentPipeline
 })
-const mapDispatchToProps = { addContract, updateContract }
+const mapDispatchToProps = { addContract, deleteContract, updateContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Settings)

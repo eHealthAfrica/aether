@@ -45,13 +45,11 @@ export const types = {
   PIPELINE_ADD: 'pipeline.add',
   PIPELINE_UPDATE: 'pipeline.update',
   PIPELINE_DELETE: 'pipeline.delete',
-  PIPELINE_CHANGED: 'pipeline.changed',
 
   CONTRACT_NEW: 'contract.new',
   CONTRACT_ADD: 'contract.add',
   CONTRACT_UPDATE: 'contract.update',
   CONTRACT_DELETE: 'contract.delete',
-  CONTRACT_CHANGED: 'contract.changed',
 
   CONTRACT_PUBLISH_PREFLIGHT: 'contract.publish.preflight',
   CONTRACT_PUBLISH_SUCCESS: 'contract.publish.success',
@@ -106,16 +104,6 @@ export const selectSection = (section) => ({
 
 export const startNewContract = () => ({
   type: types.CONTRACT_NEW
-})
-
-export const contractChanged = (contract) => ({
-  type: types.CONTRACT_CHANGED,
-  payload: contract
-})
-
-export const pipelineChanged = (pipeline) => ({
-  type: types.PIPELINE_CHANGED,
-  payload: pipeline
 })
 
 export const getPipelineById = (pid) => {
@@ -356,15 +344,6 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     // CHANGES
 
-    case types.PIPELINE_CHANGED: {
-      const currentPipeline = parsePipeline(action.payload)
-      return {
-        ...nextState,
-        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
-        currentPipeline
-      }
-    }
-
     case types.PIPELINE_ADD: {
       const newPipeline = parsePipeline(action.payload)
 
@@ -435,8 +414,7 @@ const reducer = (state = INITIAL_STATE, action) => {
         ...state,
         pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline,
-        currentContract,
-        newContract: null
+        currentContract
       }
     }
 
@@ -450,29 +428,8 @@ const reducer = (state = INITIAL_STATE, action) => {
         pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline,
         currentContract,
-        newContract: null,
         deleteStatus: action.payload,
         currentSection: currentContract ? CONTRACT_SECTION_ENTITY_TYPES : PIPELINE_SECTION_INPUT
-      }
-    }
-
-    case types.CONTRACT_CHANGED: {
-      const currentContract = parseContract(action.payload)
-      let currentPipeline = state.currentPipeline
-      if (currentPipeline.id !== currentContract.pipeline) {
-        currentPipeline = (state.pipelinesList || []).find(p => p.id === currentContract.pipeline)
-        if (!currentPipeline) {
-          currentPipeline = state.currentPipeline
-          currentContract.pipeline = currentPipeline.id
-        }
-      }
-
-      return {
-        ...state,
-        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
-        currentPipeline,
-        currentContract,
-        newContract: null
       }
     }
 

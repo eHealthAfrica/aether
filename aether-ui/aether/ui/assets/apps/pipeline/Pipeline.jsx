@@ -22,19 +22,16 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { LoadingSpinner, Modal, ModalError, NavBar } from '../components'
+import { LoadingSpinner, Modal, NavBar } from '../components'
 
 import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
 import Settings from './sections/Settings'
-import DeleteModal from './components/DeleteModal'
-import DeleteStatus from './components/DeleteStatus'
 
 import {
   clearSelection,
-  deleteContract,
   getPipelineById,
   selectContract,
   selectSection,
@@ -55,12 +52,9 @@ class Pipeline extends Component {
     const view = props.section || props.match.params.section || PIPELINE_SECTION_INPUT
 
     this.state = {
-      deleteOptions: {},
       fullscreen: false,
       isNew: props.location.state && props.location.state.isNewContract,
       showCancelModal: false,
-      showDeleteModal: false,
-      showDeleteProgress: false,
       showSettings: (view === CONTRACT_SECTION_SETTINGS) && !!(this.props.newContract || this.props.contract),
       showOutput: false,
       onContractSavedCallback: null,
@@ -68,10 +62,7 @@ class Pipeline extends Component {
     }
 
     this.handleAddNewContract = this.handleAddNewContract.bind(this)
-    this.deleteContract = this.deleteContract.bind(this)
-    this.hideModalProgress = this.hideModalProgress.bind(this)
     this.handleBackToPipelines = this.handleBackToPipelines.bind(this)
-    this.handleCancelContract = this.handleCancelContract.bind(this)
     this.handleContracts = this.handleContracts.bind(this)
     this.onContractTabSelected = this.onContractTabSelected.bind(this)
     this.handleInput = this.handleInput.bind(this)
@@ -170,8 +161,6 @@ class Pipeline extends Component {
 
     return (
       <div className={`pipelines-container show-pipeline pipeline--${this.state.view}`}>
-        {this.props.loading && <LoadingSpinner />}
-        {this.props.error && <ModalError error={this.props.error} />}
         <NavBar showBreadcrumb onClick={this.handleBackToPipelines}>
           <div className='breadcrumb-links'>
             <a onClick={this.handleBackToPipelines}>
@@ -230,16 +219,11 @@ class Pipeline extends Component {
               <Settings
                 onClose={() => {
                   if (this.state.isNew) {
-                    this.checkUnsavedContract(null)
+                    this.checkUnsavedContract()
                   } else {
-                    this.props.selectSection(
-                      this.state.view === CONTRACT_SECTION_SETTINGS
-                        ? CONTRACT_SECTION_ENTITY_TYPES
-                        : this.state.view
-                    )
+                    this.toggleSettings()
                   }
                 }}
-                onDelete={() => { this.setState({ showDeleteModal: true }) }}
                 onSave={() => { this.setState({ isNew: false }) }}
               />
           }
@@ -263,8 +247,6 @@ class Pipeline extends Component {
           {this.props.contract && <div className='pipeline-output'><Output /></div>}
         </div>
         {this.renderCancelationModal()}
-        {this.renderDeletionModal()}
-        {this.renderDeleteProgressModal()}
       </div>
     )
   }
@@ -275,15 +257,6 @@ class Pipeline extends Component {
     }, () => {
       this.props.startNewContract()
       this.props.selectSection(CONTRACT_SECTION_SETTINGS)
-    })
-  }
-
-  deleteContract (deleteOptions) {
-    this.props.deleteContract(this.props.contract.id, deleteOptions)
-    this.setState({
-      deleteOptions,
-      showDeleteModal: false,
-      showDeleteProgress: true
     })
   }
 
@@ -299,6 +272,32 @@ class Pipeline extends Component {
       />
     )
     const close = () => { this.setState({ showCancelModal: false }) }
+    const cancel = () => {
+      this.setState({
+        isNew: false,
+        showCancelModal: false
+      })
+      const { pipeline, contract } = this.props
+      const nextContractId = contract
+        ? contract.id
+        : pipeline.contracts.length > 0
+          ? pipeline.contracts[0].id
+          : null
+
+      this.props.selectContract(
+        pipeline.id,
+        nextContractId,
+        nextContractId ? this.state.view : PIPELINE_SECTION_INPUT
+      )
+
+      if (this.state.onContractSavedCallback) {
+        this.state.onContractSavedCallback()
+        this.setState({
+          onContractSavedCallback: null
+        })
+      }
+    }
+
     const buttons = (
       <div>
         <button
@@ -312,7 +311,7 @@ class Pipeline extends Component {
           />
         </button>
 
-        <button className='btn btn-w btn-primary' onClick={this.handleCancelContract}>
+        <button className='btn btn-w btn-primary' onClick={cancel}>
           <FormattedMessage
             id='pipeline.new.contract.cancel'
             defaultMessage='Yes, Cancel'
@@ -326,70 +325,9 @@ class Pipeline extends Component {
         header={header}
         buttons={buttons}
         onEscape={close}
-        onEnter={this.handleCancelContract}
+        onEnter={cancel}
       />
     )
-  }
-
-  renderDeletionModal () {
-    if (!this.state.showDeleteModal) {
-      return null
-    }
-
-    return (
-      <DeleteModal
-        onClose={() => { this.setState({ showDeleteModal: false }) }}
-        onDelete={(options) => { this.deleteContract(options) }}
-        objectType='contract'
-        obj={this.props.contract}
-      />
-    )
-  }
-
-  renderDeleteProgressModal () {
-    if (!this.state.showDeleteProgress) {
-      return null
-    }
-    return (
-      <DeleteStatus
-        header={
-          <FormattedMessage
-            id='contract.delete.status.header'
-            defaultMessage='Deleting contract '
-          />
-        }
-        deleteOptions={this.state.deleteOptions}
-        toggle={this.hideModalProgress}
-        showModal={this.state.showDeleteProgress}
-      />
-    )
-  }
-
-  hideModalProgress () {
-    this.setState({ showDeleteProgress: false })
-  }
-
-  handleCancelContract () {
-    this.setState({
-      isNew: false,
-      showCancelModal: false
-    })
-    const nextContract = this.props.pipeline.contracts.length > 0
-      ? this.props.pipeline.contracts[0]
-      : null
-
-    this.props.selectContract(
-      this.props.pipeline,
-      nextContract,
-      nextContract ? this.state.view : PIPELINE_SECTION_INPUT
-    )
-
-    if (this.state.onContractSavedCallback) {
-      this.state.onContractSavedCallback()
-      this.setState({
-        onContractSavedCallback: null
-      })
-    }
   }
 
   onContractTabSelected (contract) {
@@ -397,7 +335,11 @@ class Pipeline extends Component {
   }
 
   toggleSettings () {
-    this.props.selectSection(this.state.showSettings ? CONTRACT_SECTION_ENTITY_TYPES : CONTRACT_SECTION_SETTINGS)
+    this.props.selectSection(
+      this.state.showSettings
+        ? this.state.view || CONTRACT_SECTION_ENTITY_TYPES
+        : CONTRACT_SECTION_SETTINGS
+    )
   }
 
   renderContractTabs () {
@@ -537,20 +479,16 @@ class Pipeline extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  loading: pipelines.loading,
-  section: pipelines.currentSection,
-  pipeline: pipelines.currentPipeline,
   contract: pipelines.currentContract,
   newContract: pipelines.newContract,
-  error: pipelines.error,
-  deleteStatus: pipelines.deleteStatus
+  pipeline: pipelines.currentPipeline,
+  section: pipelines.currentSection
 })
 const mapDispatchToProps = {
   clearSelection,
   getPipelineById,
   selectContract,
   selectSection,
-  deleteContract,
   startNewContract
 }
 
