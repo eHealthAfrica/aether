@@ -26,21 +26,20 @@ import { addContract, updateContract } from '../redux'
 
 import ContractPublishButton from '../components/ContractPublishButton'
 import ContractRemoveButton from '../components/ContractRemoveButton'
-import IdentityContract from '../components/IdentityContract'
 import SubmissionCard from '../components/SubmissionCard'
+import { IdentityContract, IdentityWarning } from '../components/IdentityContract'
 
 const Settings = ({
   addContract,
   contract,
-  inputData,
-  inputSchema,
-  mappingset,
   onClose,
   onSave,
+  pipeline,
   updateContract
 }) => {
   const [prevContract, setPrevContract] = useState(contract)
   const [contractName, setContractName] = useState(contract.name)
+  const [identity, setIdentity] = useState({})
   const [showIdentityWarning, setShowIdentityWarning] = useState(false)
 
   useEffect(() => {
@@ -50,21 +49,23 @@ const Settings = ({
     }
   })
 
-  const handlePreSave = (contract) => {
-    if (contract.is_identity) {
+  const handlePreSave = () => {
+    if (contract.created && identity.is_identity) {
       setShowIdentityWarning(true)
     } else {
-      handleSave({ ...contract, name: contractName })
+      handleSave()
     }
   }
 
-  const handleSave = (contract) => {
+  const handleSave = () => {
+    const updatedContract = { ...contract, ...identity, name: contractName }
+
     setShowIdentityWarning(false)
-    if (!contract.created) {
-      addContract({ ...contract, name: contractName })
+    if (!updatedContract.created) {
+      addContract(updatedContract)
       onSave()
     } else {
-      updateContract({ ...contract, name: contractName })
+      updateContract(updatedContract)
       onClose()
     }
   }
@@ -93,10 +94,14 @@ const Settings = ({
         <IdentityContract
           key={contract.id}
           contract={contract}
-          inputSchema={inputSchema}
-          showWarning={showIdentityWarning}
-          onGenerate={handleSave}
+          inputSchema={pipeline.schema}
+          setIdentity={setIdentity}
+        />
+
+        <IdentityWarning
+          show={showIdentityWarning}
           onCancel={() => { setShowIdentityWarning(false) }}
+          onConfirm={() => { handleSave() }}
         />
 
         <div className='settings-section'>
@@ -111,18 +116,18 @@ const Settings = ({
             contract.published_on &&
               <div className='mt-4'>
                 <SubmissionCard
-                  mappingset={mappingset}
-                  inputData={inputData}
+                  mappingset={pipeline.mappingset}
+                  inputData={pipeline.input}
                 />
               </div>
           }
         </div>
         <div className='settings-actions'>
           <button
-            onClick={() => { onClose() }}
             type='button'
+            id='settings.cancel.button'
             className='btn btn-d btn-big'
-            id='pipeline.settings.cancel.button'
+            onClick={() => { onClose() }}
           >
             <span className='details-title'>
               <FormattedMessage
@@ -134,13 +139,14 @@ const Settings = ({
           {
             !contract.is_read_only &&
               <button
-                id='settings-contract-save'
+                type='button'
+                id='settings.save.button'
                 className='btn btn-d btn-primary btn-big ml-4'
-                onClick={() => { handlePreSave(contract) }}
+                onClick={() => { handlePreSave() }}
               >
                 <span className='details-title'>
                   <FormattedMessage
-                    id='settings.contract.save'
+                    id='settings.button.save'
                     defaultMessage='Save'
                   />
                 </span>
@@ -154,13 +160,15 @@ const Settings = ({
   )
 }
 
-const mapStateToProps = ({ pipelines }) => ({
-  mappingset: pipelines.currentPipeline && pipelines.currentPipeline.mappingset,
-  inputData: pipelines.currentPipeline && pipelines.currentPipeline.input,
-  inputSchema: pipelines.currentPipeline && pipelines.currentPipeline.schema,
-
-  contract: pipelines.newContract || pipelines.currentContract,
-  pipeline: pipelines.currentPipeline
+const mapStateToProps = ({
+  pipelines: {
+    currentContract,
+    newContract,
+    currentPipeline
+  }
+}) => ({
+  contract: newContract || currentContract,
+  pipeline: currentPipeline
 })
 const mapDispatchToProps = { addContract, updateContract }
 

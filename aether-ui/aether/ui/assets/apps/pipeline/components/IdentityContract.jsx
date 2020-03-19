@@ -26,162 +26,154 @@ import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
 
 import { Modal } from '../../components'
 
-const IdentityContract = ({
-  contract,
-  inputSchema,
-  showWarning,
-  onGenerate,
-  onCancel
-}) => {
+export const IdentityContract = ({ contract, inputSchema, setIdentity }) => {
   if (isEmpty(contract) || contract.is_read_only || isEmpty(inputSchema)) {
     return ''
   }
 
-  const [isIdentity, setIsIdentity] = useState(contract.is_identity)
+  if (contract.is_identity) {
+    return (
+      <div className='identity-contract'>
+        <h5>
+          <FormattedMessage
+            id='identity.contract.is.label.info'
+            defaultMessage='This is an identity contract'
+          />
+        </h5>
+        <p>
+          <FormattedMessage
+            id='identity.contract.is.label.message'
+            defaultMessage='All Entity Types and Mappings were automatically generated from the input data'
+          />
+        </p>
+      </div>
+    )
+  }
+
+  const [isIdentity, setIsIdentity] = useState(contract.is_identity || false)
   const [entityTypeName, setEntityTypeName] = useState(inputSchema.name)
 
-  const handleGenerate = () => {
-    const mappingRules = deriveMappingRules(inputSchema, entityTypeName)
-    const entityTypes = deriveEntityTypes(inputSchema, entityTypeName)
+  const buildIdentity = (checked) => {
+    setIsIdentity(checked)
+    if (checked) {
+      const mappingRules = deriveMappingRules(inputSchema, entityTypeName)
+      const entityTypes = deriveEntityTypes(inputSchema, entityTypeName)
 
-    const updatedContract = {
-      ...contract,
-      mapping_rules: mappingRules,
-      entity_types: entityTypes,
-      is_identity: true
+      const identityData = {
+        mapping_rules: mappingRules,
+        entity_types: entityTypes,
+        is_identity: true
+      }
+
+      setIdentity(identityData)
+    } else {
+      setIdentity({})
     }
-
-    onGenerate(updatedContract)
   }
 
   return (
-    <>
+    <div className='identity-contract'>
+      <div className='toggle-default'>
+        <input
+          type='checkbox'
+          id='toggle'
+          checked={isIdentity || false}
+          onChange={(event) => { buildIdentity(event.target.checked) }}
+        />
+        <label htmlFor='toggle' className='title-medium'>
+          <FormattedMessage
+            id='identity.contract.form.label'
+            defaultMessage='Create an identity contract'
+          />
+        </label>
+      </div>
+      <p>
+        <FormattedMessage
+          id='identity.contract.form.label.definition'
+          defaultMessage='An identity contract will produce entities
+            that are identical with the input. If you choose this setting,
+            Aether will generate an Entity Type and a Mapping for you.'
+        />
+      </p>
+      <p>
+        <FormattedMessage
+          id='identity.contract.form.label.explanation'
+          defaultMessage="This can be useful in situations where you
+            want to make use of Aether's functionality without transforming
+            the data. Alternatively, you can use the generate Entity Type
+            and Mapping as a starting point for a more complex contract."
+        />
+      </p>
       {
-        !contract.is_identity &&
-          <div className='identity-contract'>
-            <div className='toggle-default'>
-              <input
-                type='checkbox'
-                id='toggle'
-                checked={isIdentity}
-                onChange={(event) => { setIsIdentity(event.target.checked) }}
-              />
-              <label
-                htmlFor='toggle'
-                className='title-medium'
-              >
-                <FormattedMessage
-                  id='settings.identity.unchecked.help-1'
-                  defaultMessage='Create an identity contract'
-                />
-              </label>
-            </div>
-            <p>
+        isIdentity &&
+          <div className='form-group'>
+            <label className='form-label'>
               <FormattedMessage
-                id='settings.identity.unchecked.help-2'
-                defaultMessage='An identity contract will produce entities
-                  that are identical with the input. If you choose this setting,
-                  Aether will generate an Entity Type and Mapping for you.'
+                id='identity.contract.entity.type.name'
+                defaultMessage='Entity Type name'
               />
-            </p>
-            <p>
-              <FormattedMessage
-                id='settings.identity.unchecked.help-3'
-                defaultMessage="This can be useful in situations where you
-                  want to make use of Aether's functionality without transforming
-                  the data. Alternatively, you can use the generate Entity Type
-                  and Mapping as a starting point for a more complex contract."
-              />
-            </p>
-            {
-              isIdentity &&
-                <div className='form-group'>
-                  <label className='form-label'>
-                    <FormattedMessage
-                      id='settings.contract.identity.name'
-                      defaultMessage='Entity Type name'
-                    />
-                  </label>
-                  <input
-                    type='text'
-                    required
-                    name='name'
-                    className='input-d input-large'
-                    value={entityTypeName || ''}
-                    onChange={(e) => { setEntityTypeName(e.target.value) }}
-                  />
-                </div>
-            }
+            </label>
+            <input
+              type='text'
+              required
+              name='name'
+              className='input-d input-large'
+              value={entityTypeName || ''}
+              onChange={(e) => { setEntityTypeName(e.target.value) }}
+            />
           </div>
       }
-
-      {
-        contract.is_identity &&
-          <div className='identity-contract'>
-            <h5>
-              <FormattedMessage
-                id='settings.identity.checked.help-1'
-                defaultMessage='This is an identity contract'
-              />
-            </h5>
-            <p>
-              <FormattedMessage
-                id='settings.identity.checked.help-2'
-                defaultMessage='All Entity Types and Mappings were automatically generated from the input data'
-              />
-            </p>
-          </div>
-      }
-
-      {
-        showWarning &&
-          <Modal
-            onEscape={onCancel}
-            onEnter={handleGenerate}
-            header={
-              <FormattedMessage
-                id='settings.identity.header'
-                defaultMessage='Create identity contract'
-              />
-            }
-            buttons={
-              <div>
-                <button
-                  id='settings.identity.modal.cancel'
-                  className='btn btn-w'
-                  onClick={onCancel}
-                >
-                  <FormattedMessage
-                    id='settings.identity.button.cancel'
-                    defaultMessage='Cancel'
-                  />
-                </button>
-                <button
-                  data-qa='contract.identity.button.confirm'
-                  className='btn btn-w btn-primary'
-                  id='settings.identity.modal.yes'
-                  onClick={handleGenerate}
-                >
-                  <FormattedMessage
-                    id='settings.identity.button.confirm'
-                    defaultMessage='Yes'
-                  />
-                </button>
-              </div>
-            }
-          >
-            <FormattedMessage
-              id='settings.identity.content.question'
-              defaultMessage='Are you sure that you want to create an identity contract?'
-            />
-            <FormattedMessage
-              id='settings.identity.content.warning'
-              defaultMessage='This action will overwrite any entity types and mappings that you have created in this contract.'
-            />
-          </Modal>
-      }
-    </>
+    </div>
   )
 }
 
-export default IdentityContract
+export const IdentityWarning = ({ show, onCancel, onConfirm }) => {
+  if (!show) return ''
+
+  return (
+    <Modal
+      onEscape={onCancel}
+      onEnter={onConfirm}
+      header={
+        <FormattedMessage
+          id='identity.warning.header'
+          defaultMessage='Create identity contract'
+        />
+      }
+      buttons={
+        <div>
+          <button
+            id='identity.warning.button.cancel'
+            className='btn btn-w'
+            onClick={onCancel}
+          >
+            <FormattedMessage
+              id='identity.warning.button.cancel'
+              defaultMessage='Cancel'
+            />
+          </button>
+          <button
+            data-qa='identity.warning.button.confirm'
+            className='btn btn-w btn-primary'
+            id='identity.warning.button.yes'
+            onClick={onConfirm}
+          >
+            <FormattedMessage
+              id='identity.warning.button.confirm'
+              defaultMessage='Yes'
+            />
+          </button>
+        </div>
+      }
+    >
+      <FormattedMessage
+        id='identity.warning.content.question'
+        defaultMessage='Are you sure that you want to create an identity contract?'
+      />
+      <FormattedMessage
+        id='identity.warning.content.message'
+        defaultMessage='This action will overwrite any entity types and mappings that you have created in this contract.'
+      />
+    </Modal>
+  )
+}

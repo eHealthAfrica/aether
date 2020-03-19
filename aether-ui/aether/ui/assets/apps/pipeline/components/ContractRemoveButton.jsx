@@ -51,7 +51,7 @@ const ContractRemoveButton = ({ contract, deleteContract }) => {
       >
         <span className='details-title'>
           <FormattedMessage
-            id='settings.contract.delete'
+            id='contract.remove.title'
             defaultMessage='Delete Contract'
           />
         </span>
@@ -72,7 +72,7 @@ const ContractRemoveButton = ({ contract, deleteContract }) => {
           <DeleteStatus
             header={
               <FormattedMessage
-                id='contract.delete.status.header'
+                id='contract.remove.status.header'
                 defaultMessage='Deleting contract '
               />
             }
