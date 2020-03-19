@@ -385,7 +385,8 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...nextState,
-        newContract
+        newContract,
+        currentSection: CONTRACT_SECTION_ENTITY_TYPES
       }
     }
 
