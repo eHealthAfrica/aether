@@ -181,7 +181,7 @@ describe('Pipeline actions', () => {
   it('should dispatch a select contract action and update the redux store', () => {
     const expectedAction = {
       type: types.CONTRACT_SELECT,
-      payload: { pipeline: 2, contract: '2-1' }
+      payload: { pipeline: 2, contract: '2-1', section: 'section' }
     }
     expect(selectContract(2, '2-1')).toEqual(expectedAction)
 
@@ -200,6 +200,7 @@ describe('Pipeline actions', () => {
 
         expect(store.getState().currentPipeline.id).toEqual(2)
         expect(store.getState().currentContract.id).toEqual('2-1')
+        expect(store.getState().currentSection).toEqual('section')
       })
   })
 
