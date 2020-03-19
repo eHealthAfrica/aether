@@ -18,7 +18,9 @@
  * under the License.
  */
 
-import React, { Component } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
@@ -31,213 +33,180 @@ import ContractTabs from './components/ContractTabs'
 import { clearSelection, getPipelineById, selectContract } from './redux'
 import { PIPELINE_SECTION_INPUT } from '../utils/constants'
 
-class Pipeline extends Component {
-  constructor (props) {
-    super(props)
+const Pipeline = ({
+  pipeline,
+  contract,
+  section,
+  newContract,
+  clearSelection,
+  getPipelineById,
+  selectContract
+}) => {
+  const { pid, cid, view } = useParams()
+  const history = useHistory()
 
-    this.state = {
-      fullscreen: false,
-      onContractSavedCallback: null,
-      showCancelModal: false,
-      showOutput: false,
-      showSettings: !!this.props.newContract
+  const [fullscreen, setFullscreen] = useState(false)
+  const [showOutput, setShowOutput] = useState(false)
+  const [showSettings, setShowSettings] = useState(!!newContract)
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
+  const [unsavedCallback, setUnsavedCallback] = useState(null)
+
+  const [initialized, setInitialized] = useState(false)
+
+  useEffect(() => {
+    if (!initialized) {
+      setInitialized(true)
+      getPipelineById(pid)
     }
-  }
 
-  componentDidMount () {
-    // load current pipeline using location address (router props)
-    this.props.getPipelineById(this.props.match.params.pid)
-  }
-
-  componentDidUpdate (prevProps) {
-    if (
-      !this.props.newContract &&
-      this.props.contract &&
-      (
-        prevProps.section !== this.props.section ||
-        (prevProps.contract && prevProps.contract.id !== this.props.contract.id)
-      )
-    ) {
+    if (!newContract && contract && (section !== view || contract.id !== cid)) {
       // update router history
-      this.props.history.push(
-        `/${this.props.pipeline.id}/${this.props.contract.id}/${this.props.section}`
-      )
+      history.push(`/${pipeline.id}/${contract.id}/${section}`)
     }
 
-    if (prevProps.section !== this.props.section) {
-      // update state
-      if (this.props.section === PIPELINE_SECTION_INPUT) {
-        return this.setState({
-          showSettings: false,
-          showOutput: false,
-          fullscreen: false
-        })
-      }
+    if (section === PIPELINE_SECTION_INPUT) {
+      setShowSettings(false)
+      setShowOutput(false)
+    }
 
-      return this.setState({
-        showSettings: !!this.props.newContract
-      })
+    if (newContract) {
+      setShowSettings(true)
+    }
+  })
+
+  if (!pipeline) {
+    return <LoadingSpinner /> // still loading data
+  }
+
+  const checkUnsavedContract = (callback) => {
+    if (newContract) {
+      setShowUnsavedWarning(true)
+      setUnsavedCallback(callback)
+    } else {
+      setShowUnsavedWarning(false)
+      setUnsavedCallback(null)
+      callback && callback()
     }
   }
 
-  render () {
-    const { pipeline } = this.props
-    if (!pipeline) {
-      return <LoadingSpinner /> // still loading data
-    }
+  const backToList = () => {
+    checkUnsavedContract(() => {
+      history.push('/')
+      clearSelection()
+    })
+  }
 
-    const checkUnsavedContract = (cb) => {
-      if (this.props.newContract) {
-        this.setState({
-          showCancelModal: true,
-          onContractSavedCallback: cb
-        })
-      } else {
-        this.setState({
-          showCancelModal: false
-        }, () => { cb && cb() })
-      }
-    }
+  const closeUnsavedWarning = () => { setShowUnsavedWarning(false) }
+  const cancelUnsavedWarning = () => {
+    setShowUnsavedWarning(false)
+    setShowSettings(false)
 
-    const handleBackToPipelines = () => {
-      checkUnsavedContract(() => {
-        this.props.history.push('/')
-        this.props.clearSelection()
-      })
-    }
+    const nextContractId = contract
+      ? contract.id
+      : pipeline.contracts.length > 0
+        ? pipeline.contracts[0].id
+        : null
 
-    return (
-      <div className={`pipelines-container show-pipeline pipeline--${this.props.section}`}>
-        <NavBar showBreadcrumb onClick={handleBackToPipelines}>
-          <div className='breadcrumb-links'>
-            <a onClick={handleBackToPipelines}>
-              <FormattedMessage
-                id='pipeline.navbar.pipelines'
-                defaultMessage='Pipelines'
-              />
-            </a>
-            <span className='breadcrumb-pipeline-name'>
-              <span>// </span>
-              {pipeline.name}
-              {
-                pipeline.isInputReadOnly &&
-                  <span className='tag'>
-                    <FormattedMessage
-                      id='pipeline.navbar.read-only'
-                      defaultMessage='read-only'
-                    />
-                  </span>
-              }
-            </span>
-          </div>
-        </NavBar>
+    selectContract(
+      pipeline.id,
+      nextContractId,
+      nextContractId ? section : PIPELINE_SECTION_INPUT
+    )
 
-        <div className={`
-          pipeline
-          ${this.state.showOutput ? 'show-output' : ''}
-          ${this.state.fullscreen ? 'fullscreen' : ''}
-        `}
-        >
-          <ContractTabs
-            checkUnsavedContract={checkUnsavedContract.bind(this)}
-            showSettings={this.state.showSettings}
-            toggleSettings={() => { this.setState({ showSettings: !this.state.showSettings }) }}
-          />
+    unsavedCallback && unsavedCallback()
+    setUnsavedCallback(null)
+  }
 
-          <Sections
-            addNewContract={() => { this.setState({ showSettings: true }) }}
-            checkUnsavedContract={checkUnsavedContract.bind(this)}
-            fullscreen={this.state.fullscreen}
-            toggleFullscreen={() => { this.setState({ fullscreen: !this.state.fullscreen }) }}
-            toggleOutput={() => { this.setState({ showOutput: !this.state.showOutput }) }}
-          />
+  const unsavedWarningButtons = (
+    <>
+      <button
+        data-qa='pipeline.new.contract.continue'
+        className='btn btn-w'
+        onClick={closeUnsavedWarning}
+      >
+        <FormattedMessage
+          id='pipeline.new.contract.continue.message'
+          defaultMessage='No, Continue Editing'
+        />
+      </button>
 
-          {
-            (this.props.newContract || this.state.showSettings) &&
-              <Settings
-                onClose={() => {
-                  if (this.props.newContract) {
-                    checkUnsavedContract()
-                  } else {
-                    this.setState({ showSettings: false })
-                  }
-                }}
-                onSave={() => { this.setState({ showSettings: false }) }}
-              />
-          }
-          {this.renderCancelationModal()}
+      <button className='btn btn-w btn-primary' onClick={cancelUnsavedWarning}>
+        <FormattedMessage
+          id='pipeline.new.contract.cancel'
+          defaultMessage='Yes, Cancel'
+        />
+      </button>
+    </>
+  )
+
+  return (
+    <div className={`pipelines-container show-pipeline pipeline--${section}`}>
+      <NavBar showBreadcrumb onClick={backToList}>
+        <div className='breadcrumb-links'>
+          <a onClick={backToList}>
+            <FormattedMessage
+              id='pipeline.navbar.pipelines'
+              defaultMessage='Pipelines'
+            />
+          </a>
+          <span className='breadcrumb-pipeline-name'>
+            <span>// </span>
+            {pipeline.name}
+            {
+              pipeline.isInputReadOnly &&
+                <span className='tag'>
+                  <FormattedMessage
+                    id='pipeline.navbar.read-only'
+                    defaultMessage='read-only'
+                  />
+                </span>
+            }
+          </span>
         </div>
+      </NavBar>
+
+      <div
+        className={`pipeline ${showOutput ? 'show-output' : ''} ${fullscreen ? 'fullscreen' : ''}`}
+      >
+        <ContractTabs
+          checkUnsavedContract={checkUnsavedContract}
+          showSettings={showSettings}
+          toggleSettings={() => { setShowSettings(!showSettings) }}
+        />
+
+        <Sections
+          addNewContract={() => { setShowSettings(true) }}
+          checkUnsavedContract={checkUnsavedContract}
+          fullscreen={fullscreen}
+          toggleFullscreen={() => { setFullscreen(!fullscreen) }}
+          toggleOutput={() => { setShowOutput(!showOutput) }}
+        />
+
+        {
+          (newContract || showSettings) &&
+            <Settings
+              onClose={() => { checkUnsavedContract(() => { setShowSettings(false) }) }}
+              onSave={() => { setShowSettings(false) }}
+            />
+        }
+
+        {
+          showUnsavedWarning &&
+            <Modal
+              header={
+                <FormattedMessage
+                  id='pipeline.unsaved.contract.warning.header'
+                  defaultMessage='Cancel the new contract?'
+                />
+              }
+              buttons={unsavedWarningButtons}
+              onEscape={closeUnsavedWarning}
+              onEnter={cancelUnsavedWarning}
+            />
+        }
       </div>
-    )
-  }
-
-  renderCancelationModal () {
-    if (!this.state.showCancelModal) {
-      return null
-    }
-
-    const header = (
-      <FormattedMessage
-        id='pipeline.new.contract.header'
-        defaultMessage='Cancel the new contract?'
-      />
-    )
-    const close = () => { this.setState({ showCancelModal: false }) }
-    const cancel = () => {
-      this.setState({
-        showCancelModal: false,
-        showSettings: false
-      })
-      const { pipeline, contract } = this.props
-      const nextContractId = contract
-        ? contract.id
-        : pipeline.contracts.length > 0
-          ? pipeline.contracts[0].id
-          : null
-
-      this.props.selectContract(
-        pipeline.id,
-        nextContractId,
-        nextContractId ? this.props.section : PIPELINE_SECTION_INPUT
-      )
-
-      if (this.state.onContractSavedCallback) {
-        this.state.onContractSavedCallback()
-        this.setState({ onContractSavedCallback: null })
-      }
-    }
-
-    const buttons = (
-      <div>
-        <button
-          data-qa='pipeline.new.contract.continue'
-          className='btn btn-w'
-          onClick={close}
-        >
-          <FormattedMessage
-            id='pipeline.new.contract.continue.message'
-            defaultMessage='No, Continue Editing'
-          />
-        </button>
-
-        <button className='btn btn-w btn-primary' onClick={cancel}>
-          <FormattedMessage
-            id='pipeline.new.contract.cancel'
-            defaultMessage='Yes, Cancel'
-          />
-        </button>
-      </div>
-    )
-
-    return (
-      <Modal
-        header={header}
-        buttons={buttons}
-        onEscape={close}
-        onEnter={cancel}
-      />
-    )
-  }
+    </div>
+  )
 }
 
 const mapStateToProps = ({ pipelines }) => ({

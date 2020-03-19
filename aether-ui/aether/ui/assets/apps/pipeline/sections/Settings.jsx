@@ -58,16 +58,11 @@ const Settings = ({
   }
 
   const handleSave = () => {
-    const updatedContract = { ...contract, ...identity, name: contractName }
-
     setShowIdentityWarning(false)
-    if (!updatedContract.created) {
-      addContract(updatedContract)
-      onSave()
-    } else {
-      updateContract(updatedContract)
-      onClose()
-    }
+    const updatedContract = { ...contract, ...identity, name: contractName }
+    const save = updatedContract.created ? updateContract : addContract
+    save(updatedContract)
+    onSave()
   }
 
   return (
