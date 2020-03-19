@@ -18,7 +18,7 @@
  * under the License.
  */
 
-.pipeline-section__input {
+.pipeline-section--input {
   .section-body {
     display: flex;
     padding: 2rem 0 0;
@@ -171,13 +171,13 @@
   }
 }
 
-.pipeline--input .pipeline-section__input .section-right {
+.pipeline--input .pipeline-section--input .section-right {
   display: flex;
   animation: show 1s;
 }
 
 @media screen and (min-width: 1200px) {
-  .pipeline-section__input .section-left {
+  .pipeline-section--input .section-left {
     padding: $unit $unit-xl;
   }
 }

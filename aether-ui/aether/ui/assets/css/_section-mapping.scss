@@ -18,7 +18,7 @@
  * under the License.
  */
 
-.pipeline-section__mapping {
+.pipeline-section--mapping {
   background: $dark-blue;
   color: $white;
 
@@ -170,7 +170,7 @@
   }
 }
 
-.pipeline--mapping .pipeline-section__mapping .section-body {
+.pipeline--mapping .pipeline-section--mapping .section-body {
   display: flex;
   animation: show 1s;
 }

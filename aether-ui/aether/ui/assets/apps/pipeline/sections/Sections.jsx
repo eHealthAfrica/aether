@@ -62,59 +62,59 @@ const Sections = ({
     <>
       <div className='pipeline-nav'>
         <div className='pipeline-nav-items'>
-          <div className='pipeline-nav-item__input' onClick={showInput}>
+          <div className='pipeline-nav-item--input' onClick={showInput}>
             <div className='badge'>
               <i className='fas fa-file' />
             </div>
             <FormattedMessage
-              id='pipeline.navbar.input'
+              id='sections.bar.input'
               defaultMessage='Input'
             />
           </div>
 
-          <div className='pipeline-nav-item__contracts' onClick={showContracts}>
+          <div className='pipeline-nav-item--contracts' onClick={showContracts}>
             <div className='badge'>
               <i className='fas fa-caret-right' />
             </div>
             <FormattedMessage
-              id='pipeline.navbar.contracts'
+              id='sections.bar.contracts'
               defaultMessage='Contracts'
             />
           </div>
 
           <div
-            className='pipeline-nav-item__entityTypes'
+            className='pipeline-nav-item--entities'
             onClick={() => { selectSection(CONTRACT_SECTION_ENTITY_TYPES) }}
           >
             <div className='badge'>
               <i className='fas fa-caret-right' />
             </div>
             <FormattedMessage
-              id='pipeline.navbar.entity.types'
+              id='sections.bar.entity.types'
               defaultMessage='Entity Types'
             />
           </div>
 
           <div
-            className='pipeline-nav-item__mapping'
+            className='pipeline-nav-item--mapping'
             onClick={() => { selectSection(CONTRACT_SECTION_MAPPING) }}
           >
             <div className='badge'>
               <i className='fas fa-caret-right' />
             </div>
             <FormattedMessage
-              id='pipeline.navbar.mapping'
+              id='sections.bar.mapping'
               defaultMessage='Mapping'
             />
           </div>
         </div>
 
-        <div className='pipeline-nav-item__output' onClick={() => { toggleOutput() }}>
+        <div className='pipeline-nav-item--output' onClick={() => { toggleOutput() }}>
           <div className='badge'>
             <i className='fas fa-caret-right' />
           </div>
           <FormattedMessage
-            id='pipeline.navbar.output'
+            id='sections.bar.output'
             defaultMessage='Output'
           />
           {
@@ -125,15 +125,15 @@ const Sections = ({
       </div>
 
       <div className='pipeline-sections'>
-        <div className='pipeline-section__input'><Input /></div>
+        <div className='pipeline-section--input'><Input /></div>
         {
           contract &&
             <>
-              <div className='pipeline-section__entityTypes'>
+              <div className='pipeline-section--entities'>
                 <EntityTypes />
                 <Fullscreen value={fullscreen} toggle={toggleFullscreen} />
               </div>
-              <div className='pipeline-section__mapping'>
+              <div className='pipeline-section--mapping'>
                 <Mapping />
                 <Fullscreen value={fullscreen} toggle={toggleFullscreen} />
               </div>
