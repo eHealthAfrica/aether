@@ -22,18 +22,16 @@ import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { addContract, deleteContract, updateContract } from '../redux'
+import { addContract, updateContract } from '../redux'
 
 import ContractPublishButton from '../components/ContractPublishButton'
-import DeleteModal from '../components/DeleteModal'
-import DeleteStatus from '../components/DeleteStatus'
+import ContractRemoveButton from '../components/ContractRemoveButton'
 import IdentityContract from '../components/IdentityContract'
 import SubmissionCard from '../components/SubmissionCard'
 
 const Settings = ({
   addContract,
   contract,
-  deleteContract,
   inputData,
   inputSchema,
   mappingset,
@@ -44,10 +42,6 @@ const Settings = ({
   const [prevContract, setPrevContract] = useState(contract)
   const [contractName, setContractName] = useState(contract.name)
   const [showIdentityWarning, setShowIdentityWarning] = useState(false)
-
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showDeleteProgress, setShowDeleteProgress] = useState(false)
-  const [deleteOptions, setDeleteOptions] = useState()
 
   useEffect(() => {
     if (prevContract !== contract) {
@@ -73,13 +67,6 @@ const Settings = ({
       updateContract({ ...contract, name: contractName })
       onClose()
     }
-  }
-
-  const handleDelete = (options) => {
-    deleteContract(contract.id, deleteOptions)
-    setDeleteOptions(options)
-    setShowDeleteModal(false)
-    setShowDeleteProgress(true)
   }
 
   return (
@@ -159,47 +146,8 @@ const Settings = ({
                 </span>
               </button>
           }
-          {
-            !contract.is_read_only && contract.created &&
-              <>
-                <button
-                  className='btn btn-d btn-red btn-big'
-                  onClick={() => { setShowDeleteModal(true) }}
-                >
-                  <span className='details-title'>
-                    <FormattedMessage
-                      id='settings.contract.delete'
-                      defaultMessage='Delete Contract'
-                    />
-                  </span>
-                </button>
 
-                {
-                  showDeleteModal &&
-                    <DeleteModal
-                      onClose={() => { setShowDeleteModal(false) }}
-                      onDelete={(options) => { handleDelete(options) }}
-                      objectType='contract'
-                      obj={contract}
-                    />
-                }
-
-                {
-                  showDeleteProgress &&
-                    <DeleteStatus
-                      header={
-                        <FormattedMessage
-                          id='contract.delete.status.header'
-                          defaultMessage='Deleting contract '
-                        />
-                      }
-                      deleteOptions={deleteOptions}
-                      toggle={() => { setShowDeleteProgress(false) }}
-                      showModal={showDeleteProgress}
-                    />
-                }
-              </>
-          }
+          <ContractRemoveButton />
         </div>
       </div>
     </div>
@@ -214,6 +162,6 @@ const mapStateToProps = ({ pipelines }) => ({
   contract: pipelines.newContract || pipelines.currentContract,
   pipeline: pipelines.currentPipeline
 })
-const mapDispatchToProps = { addContract, deleteContract, updateContract }
+const mapDispatchToProps = { addContract, updateContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Settings)
