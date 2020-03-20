@@ -175,6 +175,7 @@ describe('Pipeline actions', () => {
 
         expect(store.getState().currentPipeline.id).toEqual(1)
         expect(store.getState().currentContract.id).toEqual('1-1')
+        expect(store.getState().currentSection).toEqual('input')
       })
   })
 
@@ -183,7 +184,7 @@ describe('Pipeline actions', () => {
       type: types.CONTRACT_SELECT,
       payload: { pipeline: 2, contract: '2-1', section: 'section' }
     }
-    expect(selectContract(2, '2-1')).toEqual(expectedAction)
+    expect(selectContract(2, '2-1', 'section')).toEqual(expectedAction)
 
     nock('http://localhost')
       .post('/api/pipelines/fetch/')
@@ -194,7 +195,7 @@ describe('Pipeline actions', () => {
         expect(store.getState().currentPipeline).toBeFalsy()
         expect(store.getState().currentContract).toBeFalsy()
 
-        store.dispatch(selectPipeline(2, '2-1'))
+        store.dispatch(selectContract(2, '2-1', 'section'))
         expect(store.getState().currentPipeline).toBeTruthy()
         expect(store.getState().currentContract).toBeTruthy()
 

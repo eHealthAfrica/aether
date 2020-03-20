@@ -323,7 +323,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentSection = action.payload.section
         ? action.payload.section
         : !state.currentSection || state.currentSection === PIPELINE_SECTION_INPUT
-          ? CONTRACT_SECTION_ENTITY_TYPES
+          ? currentContract.is_identity ? CONTRACT_SECTION_MAPPING : CONTRACT_SECTION_ENTITY_TYPES
           : state.currentSection
 
       return {
@@ -388,9 +388,9 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...nextState,
+        currentSection: CONTRACT_SECTION_ENTITY_TYPES,
         currentPipeline,
-        newContract,
-        currentSection: CONTRACT_SECTION_ENTITY_TYPES
+        newContract
       }
     }
 
@@ -403,10 +403,10 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...nextState,
         pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
+        currentSection: currentContract.is_identity ? CONTRACT_SECTION_MAPPING : CONTRACT_SECTION_ENTITY_TYPES,
         currentPipeline,
         currentContract,
-        newContract: null,
-        currentSection: currentContract.is_identity ? CONTRACT_SECTION_MAPPING : CONTRACT_SECTION_ENTITY_TYPES
+        newContract: null
       }
     }
 
@@ -431,10 +431,10 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
+        currentSection: currentContract ? state.currentSection : PIPELINE_SECTION_INPUT,
         currentPipeline,
         currentContract,
-        deleteStatus: action.payload,
-        currentSection: currentContract ? CONTRACT_SECTION_ENTITY_TYPES : PIPELINE_SECTION_INPUT
+        deleteStatus: action.payload
       }
     }
 
@@ -452,8 +452,7 @@ const reducer = (state = INITIAL_STATE, action) => {
         publishSuccess: (action.type === types.CONTRACT_PUBLISH_SUCCESS),
         pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline,
-        currentContract,
-        newContract: null
+        currentContract
       }
     }
 
@@ -476,8 +475,10 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...nextState,
         error: action.error,
+        currentSection: null,
         currentPipeline: null,
-        currentContract: null
+        currentContract: null,
+        newContract: null
       }
     }
 

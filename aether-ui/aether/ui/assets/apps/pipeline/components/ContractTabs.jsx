@@ -28,7 +28,7 @@ import ContractAddButton from './ContractAddButton'
 import { selectContract } from '../redux'
 
 const ContractTabs = ({
-  addingNew,
+  isAddingNew,
   checkUnsavedContract,
   current,
   list,
@@ -43,7 +43,7 @@ const ContractTabs = ({
         list.map(item => (
           <div
             key={item.id}
-            className={`pipeline-tab ${!addingNew && item.id === current.id ? 'active' : ''}`}
+            className={`pipeline-tab ${!isAddingNew && item.id === current.id ? 'active' : ''}`}
             onClick={() => {
               checkUnsavedContract(() => { selectContract(pipeline.id, item.id) })
             }}
@@ -66,7 +66,7 @@ const ContractTabs = ({
       }
 
       {
-        addingNew &&
+        isAddingNew &&
           <div key='new-contract' className='pipeline-tab active'>
             <span className='contract-name new'>
               <FormattedMessage
@@ -78,7 +78,7 @@ const ContractTabs = ({
       }
 
       {
-        !addingNew &&
+        !isAddingNew &&
           <ContractAddButton
             className='btn btn-c btn-sm new-contract'
             pipeline={pipeline}
@@ -89,7 +89,7 @@ const ContractTabs = ({
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  addingNew: !!pipelines.newContract,
+  isAddingNew: !!pipelines.newContract,
   current: pipelines.currentContract,
   list: pipelines.currentPipeline.contracts,
   pipeline: pipelines.currentPipeline
