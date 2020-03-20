@@ -120,7 +120,7 @@ const Pipeline = ({
   const unsavedWarningButtons = (
     <>
       <button
-        data-qa='pipeline.new.contract.continue'
+        data-test='pipeline.new.contract.continue'
         className='btn btn-w'
         onClick={closeUnsavedWarning}
       >
