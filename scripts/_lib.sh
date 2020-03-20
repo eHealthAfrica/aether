@@ -107,7 +107,7 @@ function start_db {
 # Usage:    start_container <container-name> <container-health-url>
 function start_container {
     local container=$1
-    local is_ready="docker-compose run --rm --no-deps kernel manage check_url -u $2"
+    local is_ready="docker-compose run --rm --no-deps kernel eval wget -q $2"
 
     _wait_for "$container" "$is_ready"
 }
@@ -124,8 +124,10 @@ function _wait_for {
         >&2 echo "Waiting for $container... $retries"
 
         ((retries++))
-        if [[ $retries -gt 30 ]]; then
+        if [[ $retries -gt 10 ]]; then
             echo_message "It was not possible to start $container"
+            docker-compose logs $container
+            echo_message ""
             exit 1
         fi
 
