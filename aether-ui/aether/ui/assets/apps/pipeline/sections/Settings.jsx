@@ -37,6 +37,8 @@ const Settings = ({
   pipeline,
   updateContract
 }) => {
+  if (!contract) return ''
+
   const [prevContract, setPrevContract] = useState(contract)
   const [contractName, setContractName] = useState(contract.name)
   const [identity, setIdentity] = useState({})
@@ -66,7 +68,7 @@ const Settings = ({
   }
 
   return (
-    <div className='pipeline-settings'>
+    <div data-test='contract-settings' className='pipeline-settings'>
       <div className='contract-form'>
         <div className='form-group'>
           <label className='form-label'>
@@ -76,6 +78,7 @@ const Settings = ({
             />
           </label>
           <input
+            data-test='settings.contract.name'
             type='text'
             required
             name='name'
@@ -119,8 +122,8 @@ const Settings = ({
         </div>
         <div className='settings-actions'>
           <button
+            data-test='settings.cancel.button'
             type='button'
-            id='settings.cancel.button'
             className='btn btn-d btn-big'
             onClick={() => { onClose() }}
           >
@@ -134,8 +137,8 @@ const Settings = ({
           {
             !contract.is_read_only &&
               <button
+                data-test='settings.save.button'
                 type='button'
-                id='settings.save.button'
                 className='btn btn-d btn-primary btn-big ml-4'
                 onClick={() => { handlePreSave() }}
               >
@@ -157,9 +160,9 @@ const Settings = ({
 
 const mapStateToProps = ({
   pipelines: {
+    currentPipeline,
     currentContract,
-    newContract,
-    currentPipeline
+    newContract
   }
 }) => ({
   contract: newContract || currentContract,

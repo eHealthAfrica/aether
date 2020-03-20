@@ -33,7 +33,7 @@ export const IdentityContract = ({ contract, inputSchema, setIdentity }) => {
 
   if (contract.is_identity) {
     return (
-      <div className='identity-contract'>
+      <div data-test='contract.is-identity' className='identity-contract'>
         <h5>
           <FormattedMessage
             id='identity.contract.is.label.info'
@@ -72,9 +72,10 @@ export const IdentityContract = ({ contract, inputSchema, setIdentity }) => {
   }
 
   return (
-    <div className='identity-contract'>
+    <div data-test='contract.is-not-identity' className='identity-contract'>
       <div className='toggle-default'>
         <input
+          data-test='identity-toggle'
           type='checkbox'
           id='toggle'
           checked={isIdentity || false}
@@ -114,6 +115,7 @@ export const IdentityContract = ({ contract, inputSchema, setIdentity }) => {
               />
             </label>
             <input
+              data-test='identity.contract.entity.type.name'
               type='text'
               required
               name='name'
@@ -132,6 +134,7 @@ export const IdentityWarning = ({ show, onCancel, onConfirm }) => {
 
   return (
     <Modal
+      data-test='identity-warning'
       onEscape={onCancel}
       onEnter={onConfirm}
       header={
@@ -143,7 +146,7 @@ export const IdentityWarning = ({ show, onCancel, onConfirm }) => {
       buttons={
         <div>
           <button
-            id='identity.warning.button.cancel'
+            data-test='identity.warning.button.cancel'
             className='btn btn-w'
             onClick={onCancel}
           >
@@ -153,9 +156,8 @@ export const IdentityWarning = ({ show, onCancel, onConfirm }) => {
             />
           </button>
           <button
-            data-qa='identity.warning.button.confirm'
+            data-test='identity.warning.button.confirm'
             className='btn btn-w btn-primary'
-            id='identity.warning.button.yes'
             onClick={onConfirm}
           >
             <FormattedMessage
