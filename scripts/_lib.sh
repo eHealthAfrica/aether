@@ -107,7 +107,7 @@ function start_db {
 # Usage:    start_container <container-name> <container-health-url>
 function start_container {
     local container=$1
-    local is_ready="docker-compose run --rm --no-deps kernel eval wget -q $2"
+    local is_ready="docker-compose run --rm --no-deps kernel eval wget -q --spider $2"
 
     _wait_for "$container" "$is_ready"
 }
