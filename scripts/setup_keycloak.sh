@@ -46,8 +46,8 @@ $PSQL <<- EOSQL
     UPDATE pg_database SET datallowconn = 'false' WHERE datname = '${KC_DB}';
     SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${KC_DB}';
 
-    DROP DATABASE ${KC_DB};
-    DROP USER ${KC_USER};
+    DROP DATABASE IF EXISTS ${KC_DB};
+    DROP USER IF EXISTS ${KC_USER};
 
     CREATE USER ${KC_USER} PASSWORD '${KEYCLOAK_DB_PASSWORD}';
     CREATE DATABASE ${KC_DB} OWNER ${KC_USER};
