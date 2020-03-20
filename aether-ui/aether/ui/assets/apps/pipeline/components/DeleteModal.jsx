@@ -54,7 +54,7 @@ const DeleteModal = ({ onClose, onDelete, obj, objectType }) => {
   const buttons = (
     <div>
       <button
-        data-qa='delete.modal.button.cancel'
+        data-test='delete.modal.button.cancel'
         className='btn btn-w'
         onClick={onClose}
       >

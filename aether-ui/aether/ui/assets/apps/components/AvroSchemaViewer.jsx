@@ -107,7 +107,7 @@ const AvroSchemaViewer = ({ className, hideChildren, highlight, pathPrefix, sche
       if (children) {
         children = (
           <div
-            data-qa={jsonPath + '.$'}
+            data-test={jsonPath + '.$'}
             key={generateGUID()}
             className={(isUnion ? 'group-union' : 'group-list')}
           >
@@ -118,7 +118,7 @@ const AvroSchemaViewer = ({ className, hideChildren, highlight, pathPrefix, sche
     }
 
     return (
-      <div data-qa={jsonPath} key={generateGUID()} className='group'>
+      <div data-test={jsonPath} key={generateGUID()} className='group'>
         {
           field.name &&
             <div className={highlightedClassName + (children ? ' group-title' : ' field')}>
@@ -149,7 +149,7 @@ const AvroSchemaViewer = ({ className, hideChildren, highlight, pathPrefix, sche
     return (
       <div className={className}>
         <div className='group'>
-          <div data-qa={`group-title-${schema.name}`} className='title group-title'>
+          <div data-test={`group-title-${schema.name}`} className='title group-title'>
             {schema.name}
           </div>
           <div className='properties group-list'>

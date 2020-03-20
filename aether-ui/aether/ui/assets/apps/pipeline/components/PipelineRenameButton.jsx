@@ -65,7 +65,7 @@ const RenameForm = ({ initialValue, placeholder, onSave, onCancel }) => {
 
       <div className='modal-actions'>
         <button
-          data-qa='rename.modal.button.cancel'
+          data-test='rename.modal.button.cancel'
           className='btn btn-w'
           onClick={onCancel}
         >
