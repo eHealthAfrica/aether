@@ -35,7 +35,3 @@ for container in "${containers[@]}"
 do
     build_container $container
 done
-
-create_readonly_user \
-    "$KERNEL_READONLY_DB_USERNAME" \
-    "$KERNEL_READONLY_DB_PASSWORD"

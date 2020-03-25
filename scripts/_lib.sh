@@ -88,16 +88,6 @@ function pip_freeze_container {
     $DC run --rm --no-deps $container pip_freeze
 }
 
-# kernel readonly user (used by Aether Producer)
-# Usage:    create_readonly_user <db-user-name> <db-user-password>
-function create_readonly_user {
-    docker-compose up -d db
-    docker-compose run --rm --no-deps kernel setup
-    docker-compose run --rm --no-deps kernel eval \
-        python3 /code/sql/create_readonly_user.py "$1" "$2"
-    docker-compose kill
-}
-
 # Start database container and wait till is up and responding
 function start_db {
     _wait_for "db" "docker-compose run --rm --no-deps kernel eval pg_isready -q"

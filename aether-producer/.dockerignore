@@ -14,5 +14,3 @@ Dockerfile
 **/*.cover
 
 **/*.log
-
-**/db.sqlite3

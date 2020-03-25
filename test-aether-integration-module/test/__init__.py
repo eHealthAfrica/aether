@@ -44,12 +44,16 @@ SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
 SEED_TYPE = 'CurrentStock'
 # realm is only required if Kernel is MultiTenant
 REALM = os.environ.get('KERNEL_REALM', '-')
+
 KAFKA_SEED_TYPE = f'{REALM}.{SEED_TYPE}'
+KAFKA_URL = os.environ['KAFKA_URL']
 
 PRODUCER_CREDS = [
     os.environ['PRODUCER_ADMIN_USER'],
-    os.environ['PRODUCER_ADMIN_PW']
+    os.environ['PRODUCER_ADMIN_PW'],
 ]
+PRODUCER_URL = os.environ['PRODUCER_URL']
+PRODUCER_MODE = os.environ['PRODUCER_MODE']
 
 
 @pytest.fixture(scope='function')
@@ -76,14 +80,16 @@ def wait_for_producer_status():
             status = producer_request('status')
             if not status:
                 raise ValueError('No status response from producer')
+
             kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
+
             person = status.get('topics', {}).get(KAFKA_SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
                 sleep(5)
-                return ok_count
+                return status
             else:
                 raise ValueError('Last changeset status has no successes. Not producing')
         except Exception as err:
@@ -99,8 +105,7 @@ def entities(client, schemadecorators):  # noqa: F811
     for sd in schemadecorators:
         name = sd['name']
         sd_id = sd.id
-        entities[name] = [i for i in client.entities.paginated(
-            'list', schemadecorator=sd_id)]
+        entities[name] = [i for i in client.entities.paginated('list', schemadecorator=sd_id)]
     return entities
 
 
@@ -110,10 +115,7 @@ def generate_entities(client, mappingset):  # noqa: F811
     entities = []
     for i in range(FORMS_TO_SUBMIT):
         Submission = client.get_model('Submission')
-        submission = Submission(
-            payload=next(payloads),
-            mappingset=mappingset.id
-        )
+        submission = Submission(payload=next(payloads), mappingset=mappingset.id)
         instance = client.submissions.create(data=submission)
         for entity in client.entities.paginated('list', submission=instance.id):
             entities.append(entity)
@@ -122,7 +124,7 @@ def generate_entities(client, mappingset):  # noqa: F811
 
 @pytest.fixture(scope='function')
 def read_people():
-    consumer = get_consumer(KAFKA_SEED_TYPE)
+    consumer = get_consumer(KAFKA_URL, KAFKA_SEED_TYPE)
     messages = read(consumer, start='FIRST', verbose=False, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
@@ -133,11 +135,8 @@ def read_people():
 
 def producer_request(endpoint, expect_json=True):
     auth = requests.auth.HTTPBasicAuth(*PRODUCER_CREDS)
-    url = '{base}/{endpoint}'.format(
-        base=os.environ['PRODUCER_URL'],
-        endpoint=endpoint)
     try:
-        res = requests.get(url, auth=auth)
+        res = requests.get(f'{PRODUCER_URL}/{endpoint}', auth=auth)
         if expect_json:
             return res.json()
         else:

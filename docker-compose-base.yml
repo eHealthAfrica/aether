@@ -298,29 +298,26 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
 
-      # default settings file
-      PRODUCER_SETTINGS_FILE: /code/producer/settings.json
-
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
 
       # These variables will override the ones indicated in the settings file
-      KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
-      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
+      AETHER_KERNEL_URL: http://kernel:8100
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
 
       POSTGRES_HOST: db
       POSTGRES_DBNAME: aether
-      POSTGRES_USER: ${KERNEL_READONLY_DB_USERNAME}
-      POSTGRES_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
+      POSTGRES_USER: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_PASSWORD: ${KERNEL_DB_PASSWORD}
 
       OFFSET_DB_HOST: db
       OFFSET_DB_USER: postgres
       OFFSET_DB_PORT: 5432
-      OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
+      OFFSET_DB_PASSWORD: ${PRODUCER_DB_PASSWORD}
       OFFSET_DB_NAME: producer_offset_db
-
-      SERVER_PORT: 5005
     volumes:
       - ./aether-producer:/code
     command: start

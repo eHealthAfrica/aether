@@ -256,6 +256,11 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
         source='mappings',
     )
 
+    schema_name = serializers.CharField(
+        read_only=True,
+        source='schema.name',
+    )
+
     schema_definition = serializers.JSONField(
         read_only=True,
         source='schema.definition',
