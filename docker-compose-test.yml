@@ -153,25 +153,16 @@ services:
       file: ./docker-compose-base.yml
       service: producer-base
     environment:
-      # These variables will override the ones indicated in the settings file
-      KAFKA_URL: kafka-test:29092
-      KERNEL_URL: http://kernel-test:9100
-      LOG_LEVEL: DEBUG
-
-      OFFSET_DB_HOST: db-test
-      OFFSET_DB_NAME: producer_offset_db_test
-      OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
-      OFFSET_DB_PORT: 5432
-      OFFSET_DB_USER: postgres
-
-      POSTGRES_HOST: db-test
-      POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
-
-      PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
-      PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
       PRODUCER_SETTINGS_FILE: /code/tests/conf/producer.json
 
-      SERVER_PORT: 9005
+      # These variables will override the ones indicated in the settings file
+      AETHER_KERNEL_URL: http://kernel-test:9100
+      KAFKA_URL: kafka-test:29092
+      KERNEL_ACCESS_TYPE: ${KERNEL_ACCESS_TYPE:-api}
+      OFFSET_DB_HOST: db-test
+      OFFSET_DB_NAME: producer_offset_db_test
+      POSTGRES_HOST: db-test
+      POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
 
 
   # ---------------------------------
@@ -182,6 +173,8 @@ services:
     image: aether-integration-test
     build: ./test-aether-integration-module
     environment:
+      KAFKA_URL: kafka-test:29092
+
       KERNEL_URL: http://kernel-test:9100
       KERNEL_USERNAME: ${CLIENT_USERNAME}
       KERNEL_PASSWORD: ${CLIENT_PASSWORD}
@@ -191,6 +184,7 @@ services:
       PRODUCER_URL: http://producer-test:9005
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
+      PRODUCER_MODE: ${KERNEL_ACCESS_TYPE:-api}
     volumes:
       - ./test-aether-integration-module:/code
     command: test

@@ -1,35 +1,26 @@
 {
-  "start_delay": 5,
-  "sleep_time": 10,
-  "log_level": "ERROR",
-  "window_size_sec": 2,
-  "postgres_pull_limit": 250,
-  "postgres_host": "db",
-  "postgres_port": 5432,
-  "postgres_dbname": "aether",
-  "postgres_user": "readonlyuser",
-  "postgres_password": "",
-  "offset_db_pool_size": 6,
-  "kernel_db_pool_size": 6,
-  "kernel_url": "http://kernel:8100",
-  "kernel_admin_username": "admin",
-  "kernel_admin_password": "",
-  "kafka_failure_wait_time": 10,
-  "kafka_url": "kafka:29092",
+  "fetch_size": 100,
+  "flask_settings": {
+    "max_connections": 3,
+    "pretty_json_status": true
+  },
   "kafka_default_topic_partitions": 1,
   "kafka_default_topic_replicas": 3,
+  "kafka_failure_wait_time": 10,
   "kafka_settings": {
     "default.topic.config": {
       "retention.ms": -1
     }
   },
-  "server_port": 5005,
+  "kernel_access_type": "api",
+  "log_level": "ERROR",
+  "offset_db_pool_size": 6,
   "server_ip": "",
-  "flask_settings": {
-    "max_connections": 3,
-    "pretty_json_status": true
-  },
+  "server_port": 9005,
+  "sleep_time": 10,
+  "start_delay": 5,
   "topic_settings": {
     "name_modifier": "%s"
-  }
+  },
+  "window_size_sec": 2
 }
