@@ -16,7 +16,7 @@
   "log_level": "ERROR",
   "offset_db_pool_size": 6,
   "server_ip": "",
-  "server_port": 9005,
+  "server_port": 5005,
   "sleep_time": 10,
   "start_delay": 5,
   "topic_settings": {
