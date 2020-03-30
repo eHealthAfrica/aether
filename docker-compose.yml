@@ -133,11 +133,6 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: ui-assets-base
-    volumes:
-      # static folder
-      - ./.persistent_data/static/ui:/var/www/static
-      # backup folder
-      - ./.persistent_data/backups/ui:/backups
     networks:
       - internal
 
@@ -145,6 +140,11 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: ui-base
+    volumes:
+      # static folder
+      - ./.persistent_data/static/ui:/var/www/static
+      # backup folder
+      - ./.persistent_data/backups/ui:/backups
     depends_on:
       db:
         condition: service_healthy

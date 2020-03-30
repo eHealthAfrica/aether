@@ -37,9 +37,9 @@ _CREATE_MT_VIEW_YES = '''
     ;
 '''
 
-_CREATE_MT_VIEW_NOT = '''
+_CREATE_MT_VIEW_NOT = f'''
     CREATE OR REPLACE VIEW multitenancy_mtinstance_vw AS
-        SELECT '-' AS realm, id AS instance_id
+        SELECT '{settings.NO_MULTITENANCY_REALM}' AS realm, id AS instance_id
         FROM kernel_project
     ;
 '''

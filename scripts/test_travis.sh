@@ -22,8 +22,6 @@ set -Eeuo pipefail
 
 source ./scripts/_lib.sh
 
-export BUILD_OPTIONS="--no-cache --force-rm --pull"
-
 create_credentials
 create_docker_assets
 
@@ -46,6 +44,13 @@ case "$1" in
         ./scripts/test_container.sh producer
 
         build_client
+
+        # check producer access to kernel via REST API
+        export KERNEL_ACCESS_TYPE=api
+        ./scripts/test_container.sh integration
+
+        # check producer access to kernel via database
+        export KERNEL_ACCESS_TYPE=db
         ./scripts/test_container.sh integration
     ;;
 
