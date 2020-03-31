@@ -45,13 +45,7 @@ from .entity_extractor import run_entity_extraction
 from .exporter import ExporterMixin
 from .mapping_validation import validate_mappings
 
-from . import (
-    filters,
-    models,
-    project_artefacts,
-    serializers,
-    utils
-)
+from . import filters, models, project_artefacts, serializers, utils
 
 
 class ProjectViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):

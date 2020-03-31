@@ -109,8 +109,6 @@ KERNEL_ADMIN_USERNAME=admin
 KERNEL_ADMIN_PASSWORD=$(gen_random_string)
 KERNEL_ADMIN_TOKEN=$(gen_random_string)
 KERNEL_DJANGO_SECRET_KEY=$(gen_random_string)
-KERNEL_READONLY_DB_USERNAME=readonlyuser
-KERNEL_READONLY_DB_PASSWORD=$(gen_random_string)
 KERNEL_DB_PASSWORD=$(gen_random_string)
 WRITE_ENTITIES_TO_REDIS=
 # ------------------------------------------------------------------
@@ -142,6 +140,7 @@ UI_DB_PASSWORD=$(gen_random_string)
 # ==================================================================
 PRODUCER_ADMIN_USER=admin
 PRODUCER_ADMIN_PW=$(gen_random_string)
+PRODUCER_DB_PASSWORD=$(gen_random_string)
 # ------------------------------------------------------------------
 
 

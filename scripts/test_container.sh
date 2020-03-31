@@ -135,20 +135,11 @@ else
             -r=$CLIENT_REALM
     fi
 
-    # Producer and Integration need readonlyuser to be present
-    if [[ $1 = "producer" || $1 == "integration" ]]; then
-        echo_message "Creating readonlyuser on Kernel DB"
-        $DC_KERNEL_RUN eval \
-            python3 /code/sql/create_readonly_user.py \
-            "$KERNEL_READONLY_DB_USERNAME" \
-            "$KERNEL_READONLY_DB_PASSWORD"
-
-        if [[ $1 = "integration" ]]; then
-            build_container producer
-            echo_message "Starting producer"
-            $DC_TEST up -d producer-test
-            echo_message "producer ready!"
-        fi
+    if [[ $1 = "integration" ]]; then
+        build_container producer
+        echo_message "Starting producer"
+        $DC_TEST up -d producer-test
+        echo_message "producer ready!"
     fi
 fi
 
