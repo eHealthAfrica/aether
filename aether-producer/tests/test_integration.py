@@ -72,14 +72,6 @@ def test_offset_pooling(OffsetQueue, OffsetDB):
         conn = promise.get()
         assert(OffsetQueue._test_connection(conn) is True)
         conns.append(conn)
-    # res = None
-    # try:
-    #     with timeout(.01):
-    #         res = OffsetDB.get_offset(osn)
-    # except TimeoutError:
-    #     pass
-    # if res:
-    #     assert(False), 'Operation should have timed out.'
     for conn in conns:
         OffsetQueue.release('test', conn)
     assert(OffsetQueue.max_connections is len(OffsetQueue.connection_pool))
@@ -146,22 +138,6 @@ def test_offset_fifo_timeouts(OffsetQueue, OffsetDB):
         OffsetQueue.release('test', conn)
     assert(OffsetQueue.max_connections is len(OffsetQueue.connection_pool))
 
-    # for x in range(3):
-    #     name = f'num-{x}'
-    #     k = (1, name)
-    #     promise = OffsetQueue.request_connection(*k)
-    #     _qs.append(tuple([name, promise]))
-
-    # for name, promise in _qs:
-    #     try:
-    #         with timeout(.01):
-    #             assert(promise.value is None)
-    #             promise.get()
-    #             raise RuntimeError('Should be Blocked')
-    #     except TimeoutError:
-    #         log.debug(f'{name} timed out')
-    #         promise.set(-1)
-
     _qs = []
     for x in range(100):
         name = f'num-{x}'
@@ -173,13 +149,10 @@ def test_offset_fifo_timeouts(OffsetQueue, OffsetDB):
             name, promise = _qs.pop(0)
             for _key, _promise in _qs:
                 try:
-                    # log.debug(f'requesting {_key} with busy resource')
                     _promise.get_nowait()
                     raise RuntimeError('Should be Blocked')
                 except TimeoutError:
                     # don't fail the promise here so we can check the order
-                    # promise.set(-1)
-                    # log.debug(f'{_key} timed out')
                     pass
             try:
                 with timeout(1):
