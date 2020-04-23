@@ -191,6 +191,9 @@ services:
       PRODUCER_URL: http://producer-test:9005
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
+
+      TEST_REALM: ${CLIENT_REALM}
+
     volumes:
       - ./test-aether-integration-module:/code
     command: test

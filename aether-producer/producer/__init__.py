@@ -43,6 +43,8 @@ from flask import Flask, Response, request, jsonify
 import gevent
 from gevent.pool import Pool
 from gevent.pywsgi import WSGIServer
+from gevent import Timeout as timeout
+from gevent.timeout import Timeout as TimeoutError
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import DictCursor
@@ -243,9 +245,11 @@ class ProducerManager(object):
     def get_schemas(self):
         name = 'schemas_query'
         query = sql.SQL(ProducerManager.SCHEMAS_STR)
+        conn = None
         try:
             # needs to be quick(ish)
-            promise = POSTGRES.request_connection(1, name)
+            with timeout(30):
+                promise = POSTGRES.request_connection(1, name)
             conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
@@ -256,9 +260,14 @@ class ProducerManager(object):
             self.logger.critical(
                 'Could not access db to get topic size: %s' % pgerr)
             return -1
+        except TimeoutError as ter:
+            self.logger.critical('Schema Query Timed out')
+            promise.set(-1)
+            raise ter
         finally:
             try:
-                POSTGRES.release(name, conn)
+                if conn:
+                    POSTGRES.release(name, conn)
             except UnboundLocalError:
                 self.logger.error(
                     f'{name} could not release a'
@@ -599,8 +608,10 @@ class TopicManager(object):
             schema_name=sql.Literal(self.name),
             realm=sql.Literal(self.realm)
         )
+        conn = None
         try:
-            promise = POSTGRES.request_connection(1, self.name)  # Medium priority
+            with timeout(30):
+                promise = POSTGRES.request_connection(1, self.name)  # Medium priority
             conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
@@ -609,9 +620,14 @@ class TopicManager(object):
             self.logger.critical(
                 'Could not access Database to look for updates: %s' % pgerr)
             return False
+        except TimeoutError:
+            promise.set(-1)
+            self.logger.critical(f'{self.name} timed out looking for updates')
+            return False
         finally:
             try:
-                POSTGRES.release(self.name, conn)
+                if conn:
+                    POSTGRES.release(self.name, conn)
             except UnboundLocalError:
                 self.logger.error(f'{self.name} could not release a connection it never received.')
 
@@ -647,10 +663,11 @@ class TopicManager(object):
             realm=sql.Literal(self.realm)
         )
         query_time = datetime.now()
-
+        conn = None
         try:
             promise = POSTGRES.request_connection(2, self.name)  # Lowest priority
-            conn = promise.get()
+            with timeout(60):
+                conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
             window_filter = self.get_time_window_filter(query_time)
@@ -659,9 +676,15 @@ class TopicManager(object):
             self.logger.critical(
                 'Could not access Database to look for updates: %s' % pgerr)
             return []
+        except TimeoutError:
+            promise.set(-1)
+            self.logger.critical(
+                f'{self.name} timed out trying to get updates.')
+            return []
         finally:
             try:
-                POSTGRES.release(self.name, conn)
+                if conn:
+                    POSTGRES.release(self.name, conn)
             except UnboundLocalError:
                 self.logger.error(f'{self.name} could not release a connection it never received.')
 
@@ -754,7 +777,13 @@ class TopicManager(object):
                 self.context.safe_sleep(self.wait_time)
                 continue
 
-            self.offset = self.get_offset()
+            try:
+                self.offset = self.get_offset()
+            except TimeoutError:
+                self.logger.debug(f'{self.name} timed out getting Offset')
+                self.context.safe_sleep(self.wait_time)
+                continue
+
             if not self.updates_available():
                 self.logger.debug('No updates')
                 self.context.safe_sleep(self.wait_time)

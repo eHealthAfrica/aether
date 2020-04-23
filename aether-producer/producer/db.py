@@ -32,6 +32,8 @@ import uuid
 import gevent
 from gevent.event import AsyncResult
 from gevent.queue import PriorityQueue, Queue
+from gevent import Timeout as timeout
+from gevent.timeout import Timeout as TimeoutError
 
 import psycopg2
 from psycopg2 import sql
@@ -174,7 +176,7 @@ class Offset(Base):
         }
         offset_creds = {k: SETTINGS.get(v) for k, v in offset_settings.items()}
         global OFFSET_DB
-        offset_db_pool_size = SETTINGS.get('offset_db_pool_size', 6)
+        offset_db_pool_size = int(SETTINGS.get('offset_db_pool_size', 6))
         OFFSET_DB = PriorityDatabasePool(offset_creds, 'OffsetDB', offset_db_pool_size)
 
     @classmethod
@@ -202,8 +204,11 @@ class Offset(Base):
     @classmethod
     def get_offset(cls, name):
         call = 'Offset-GET'
+        logger.debug(f'fetching offset for {name}')
+        conn = None
         try:
-            promise = OFFSET_DB.request_connection(1, call)  # Lower Priority than set
+            with timeout(30):
+                promise = OFFSET_DB.request_connection(1, call)  # Lower Priority than set
             conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             query = sql.SQL(Offset.GET_STR).format(schema_name=sql.Literal(name))
@@ -214,9 +219,13 @@ class Offset(Base):
             return res[0][1]
         except Exception as err:
             raise err
+        except TimeoutError as ter:
+            promise.set(-1)
+            raise ter
         finally:
             try:
-                OFFSET_DB.release(call, conn)
+                if conn:
+                    OFFSET_DB.release(call, conn)
             except UnboundLocalError:
                 logger.error(f'{call} could not release a connection it never received.')
 
@@ -280,26 +289,31 @@ class PriorityDatabasePool(object):
         # Dispatch function, with 1 dispatcher running per allocated connection.
         while self.running or not self.job_queue.empty():
             if not self.connection_pool.empty() and not self.job_queue.empty():
-                conn = self.connection_pool.get()
-                priority_level, request_time, data = self.job_queue.get()
-                name, promise = data
-                logger.debug(f'{self.name} pulled 1 for {name}: still {len(self.connection_pool)}')
-                sleep(0)  # allow other coroutines to work
+                try:
+                    conn = self.connection_pool.get_nowait()
+                except gevent.timeout.Timeout:
+                    logger.critical('Could not get DB connection... should be available')
+                    continue
                 while not self._test_connection(conn):
                     logger.error(f'Pooled connection is dead, getting new resource')
                     logger.error(f'Replacing dead pool member.')
                     conn = self._make_connection()
                     sleep(0)
-                logger.debug(f'Got job from {name} @priority {priority_level}')
+                priority_level, request_time, data = self.job_queue.get()
+                time_taken = (datetime.now() - request_time).total_seconds()
+                name, promise = data
+                logger.debug(f'New request {name} @ P{priority_level} in {self.name}. '
+                             f'WaitT: {time_taken}')
+                try:
+                    promise.get_nowait()
+                    logger.warn(f'Cancelled {name} WaitT: {time_taken}')
+                    self.connection_pool.put(conn)
+                    continue
+                except gevent.timeout.Timeout:
+                    pass
+                logger.debug(f'Servicing {name} @priority {priority_level}')
                 promise.set(conn)
-                sleep(0)
-            elif not self.job_queue.empty():
-                self.backlog = len(self.job_queue)
-                if self.backlog:
-                    logger.debug(f'{self.name} has job backlog of {self.backlog}')
-                sleep(0.1)
-            else:
-                sleep(0.1)
+            sleep(0)  # allow other coroutines to work
         self._shutdown_pool()
 
     def request_connection(self, priority_level, name):
@@ -331,5 +345,5 @@ class PriorityDatabasePool(object):
 # KernelDB
 pg_requires = ['user', 'dbname', 'port', 'host', 'password']
 pg_creds = {key: SETTINGS.get('postgres_%s' % key) for key in pg_requires}
-kernel_db_pool_size = SETTINGS.get('kernel_db_pool_size', 6)
+kernel_db_pool_size = int(SETTINGS.get('kernel_db_pool_size', 6))
 KERNEL_DB = PriorityDatabasePool(pg_creds, 'KernelDB', kernel_db_pool_size)  # imported from here
