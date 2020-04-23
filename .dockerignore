@@ -1,5 +1,6 @@
-.dockerignore
-Dockerfile
+**/.dockerignore
+**/Dockerfile
+**/*.Dockerfile
 
 **/__pycache__
 **/*.pyc
@@ -7,6 +8,10 @@ Dockerfile
 **/*.pyd
 **/.Python
 
+**/env
+**/.env
+
+**/.tox
 **/.coverage
 **/.coverage.*
 **/.cache
@@ -16,3 +21,5 @@ Dockerfile
 **/*.log
 
 **/node_modules
+
+!.git/

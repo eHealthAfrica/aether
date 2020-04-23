@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 #
-# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2020 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -19,22 +19,24 @@
 # under the License.
 #
 
-set -Eeuo pipefail
+# create resources directory
+mkdir -p ./resources/
 
-source .env
-source ./scripts/_lib.sh
+# install git (missing in alpine image)
+apk add --no-cache git
 
-create_credentials
-create_docker_assets
+# get branch and commit from git
 
-if [[ $1 == "ui" ]]; then
-    build_ui_assets
+# create REVISION resources
+GIT_COMMIT=`git rev-parse HEAD`
+echo $GIT_COMMIT > ./resources/REVISION
+
+# create VERSION resource (from branch name)
+GIT_BRANCH=`git rev-parse --abbrev-ref HEAD`
+# replace "release-" prefix with "v" (release-1.2 => v1.2)
+GIT_BRANCH=$(echo "$GIT_BRANCH" | sed "s/release-/v/")
+if [ $GIT_BRANCH = "develop" ]; then
+    echo "alpha" > ./resources/VERSION
+else
+    echo $GIT_BRANCH > ./resources/VERSION
 fi
-
-if [[ $1 == "integration" ]]; then
-    build_client
-fi
-
-build_container $1
-
-./scripts/clean_all.sh

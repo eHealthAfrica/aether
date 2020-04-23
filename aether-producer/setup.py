@@ -36,11 +36,4 @@ setup(
     author_email='shawn.sarwar@ehealthafrica.org',
     license='Apache2 License',
     keywords=['aet', 'aether', 'kafka', 'producer'],
-
-    setup_requires=['pytest'],
-    tests_require=[
-        'pytest',
-        'requests[security]',
-        'sqlalchemy',
-    ],
 )

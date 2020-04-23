@@ -1,11 +1,11 @@
-#!/usr/bin/env python
-
-# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
+#!/usr/bin/env bash
+#
+# Copyright (C) 2020 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
 #
-# Licensed under the Apache License, Version 2.0 (the 'License');
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
@@ -17,5 +17,17 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
 
-# Unit Tests were outdated, returning in true MT version
+set -Eeuo pipefail
+
+DEPLOY_APPS=( kernel producer odk ui )
+IMAGE_PREFIX="test-deployment-aether"
+
+for APP in "${DEPLOY_APPS[@]}"; do
+    docker build \
+        --force-rm \
+        --tag ${IMAGE_PREFIX}-${APP} \
+        --file ./scripts/deployment/${APP}.Dockerfile \
+        .
+done
