@@ -50,7 +50,7 @@ class ProducerManager(object):
         self.killed = False
         signal.signal(signal.SIGTERM, self.kill)
         signal.signal(signal.SIGINT, self.kill)
-        gevent.signal(signal.SIGTERM, self.kill)
+        gevent.signal_handler(signal.SIGTERM, self.kill)
 
         # Turn on Flask Endpoints
         # Get Auth details from env
