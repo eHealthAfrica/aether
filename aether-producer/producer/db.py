@@ -68,7 +68,12 @@ class PriorityDatabasePool(object):
         self.job_queue = PriorityQueue()
         self.connection_pool = Queue()
         self.running = True
-        gevent.signal(signal.SIGTERM, self._kill)
+        # Start Signal Handlers
+        self.killed = False
+        signal.signal(signal.SIGTERM, self._kill)
+        signal.signal(signal.SIGINT, self._kill)
+        gevent.signal_handler(signal.SIGTERM, self._kill)
+
         self._start_workers()
 
     def _start_workers(self):
