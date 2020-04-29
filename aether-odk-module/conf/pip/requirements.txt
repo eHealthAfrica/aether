@@ -12,10 +12,10 @@
 #
 ################################################################################
 
-aether.sdk==1.2.21
+aether.sdk==1.2.22
 autopep8==1.5.2
-boto3==1.12.45
-botocore==1.15.45
+boto3==1.12.48
+botocore==1.15.48
 cachetools==4.1.0
 certifi==2020.4.5.1
 cffi==1.14.0
@@ -30,7 +30,7 @@ django-cors-headers==3.2.1
 django-debug-toolbar==2.2
 django-minio-storage==0.3.7
 django-prometheus==2.0.0
-django-redis-sessions==0.6.1
+django-redis==4.11.0
 django-silk==4.0.1
 django-storages==1.9.1
 django-uwsgi==0.2.2
@@ -69,7 +69,7 @@ Pygments==2.6.1
 pyOpenSSL==19.1.0
 python-dateutil==2.8.1
 python-json-logger==0.1.11
-pytz==2019.3
+pytz==2020.1
 pyxform==0.15.1
 redis==3.4.1
 requests==2.23.0
