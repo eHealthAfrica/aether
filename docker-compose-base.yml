@@ -18,7 +18,7 @@ version: "2.1"
 services:
 
   # ---------------------------------
-  # Database + NGINX containers
+  # Auxiliary containers
   # ---------------------------------
 
   postgres-base:
