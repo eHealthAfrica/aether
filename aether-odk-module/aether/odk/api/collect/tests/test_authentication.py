@@ -343,7 +343,7 @@ class MultitenancyAuthenticationTests(UrlsTestCase):
         self.assertEqual(response.status_code, 401)
 
         self.assertIn('WWW-Authenticate', response)
-        auth = build_digest_header(self.username,  # with realm prefix
+        auth = build_digest_header(self.user.username,  # with realm prefix
                                    self.password,
                                    response['WWW-Authenticate'],
                                    'GET',
