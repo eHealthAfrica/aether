@@ -274,10 +274,24 @@ class AuthenticationTests(UrlsTestCase):
             self.assertEqual(response.status_code, 200)
 
 
+@override_settings(
+    DEFAULT_REALM='digest',
+    GATEWAY_ENABLED=False,
+)
 class MultitenancyAuthenticationTests(UrlsTestCase):
 
     def setUp(self):
         super(MultitenancyAuthenticationTests, self).setUp()
+
+        # in aether.sdk.multitenancy.utils
+        # def get_current_realm(request, default_realm=settings.DEFAULT_REALM):
+        modules_sdk = [
+            'aether.sdk.multitenancy.utils',
+            'aether.sdk.auth.utils',
+        ]
+        for module_sdk in modules_sdk:
+            reload(sys.modules[module_sdk])
+            import_module(module_sdk)
 
         self.username = 'surveyor'
         self.password = '~t]:vS3Q>e{2k]CE'
@@ -294,6 +308,8 @@ class MultitenancyAuthenticationTests(UrlsTestCase):
         self.assertTrue(user.is_valid(), user.errors)
         user.save()
         self.user = get_user_model().objects.get(pk=user.data['id'])
+        self.assertEqual(self.user.username, f'{settings.DEFAULT_REALM}__{self.username}')
+        self.assertTrue(self.user.groups.filter(name=settings.DEFAULT_REALM).exists())
 
     def test_challenge(self):
         response = self.client.get(self.url)
@@ -313,7 +329,7 @@ class MultitenancyAuthenticationTests(UrlsTestCase):
         self.assertEqual(response.status_code, 401)
 
         self.assertIn('WWW-Authenticate', response)
-        auth = build_digest_header(self.username,
+        auth = build_digest_header(self.username,  # without realm prefix
                                    self.password,
                                    response['WWW-Authenticate'],
                                    'GET',
@@ -327,7 +343,7 @@ class MultitenancyAuthenticationTests(UrlsTestCase):
         self.assertEqual(response.status_code, 401)
 
         self.assertIn('WWW-Authenticate', response)
-        auth = build_digest_header(f'{settings.DEFAULT_REALM}__{self.username}',
+        auth = build_digest_header(self.username,  # with realm prefix
                                    self.password,
                                    response['WWW-Authenticate'],
                                    'GET',
