@@ -111,6 +111,9 @@ function setup {
     # migrate data model if needed
     ./manage.py migrate --noinput
 
+    # clean out expired sessions
+    ./manage.py clearsessions
+
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 
