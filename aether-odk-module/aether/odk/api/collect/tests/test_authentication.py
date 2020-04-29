@@ -19,7 +19,10 @@
 import base64
 import hashlib
 import os
+import sys
 import time
+
+from importlib import reload, import_module
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -363,6 +366,16 @@ class GatewayAuthenticationTests(UrlsTestCase):
 
     def setUp(self):
         super(GatewayAuthenticationTests, self).setUp()
+
+        # in aether.sdk.multitenancy.utils
+        # def get_current_realm(request, default_realm=settings.DEFAULT_REALM):
+        modules_sdk = [
+            'aether.sdk.multitenancy.utils',
+            'aether.sdk.auth.utils',
+        ]
+        for module_sdk in modules_sdk:
+            reload(sys.modules[module_sdk])
+            import_module(module_sdk)
 
         self.username = 'surveyor'
         self.password = '~t]:vS3Q>e{2k]CE'
