@@ -42,6 +42,8 @@ services:
       BUCKET_NAME: test-kernel
       # use a different database when testing the integration with another container
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
+      DEFAULT_REALM: ${CLIENT_REALM}
+      DJANGO_USE_CACHE: null
       MULTITENANCY: "true"
       PGHOST: db-test
       PROFILING_ENABLED: null
@@ -83,6 +85,8 @@ services:
       APP_URL: /
       BUCKET_NAME: test-odk
       DB_NAME: test-odk
+      DEFAULT_REALM: ${CLIENT_REALM}
+      DJANGO_USE_CACHE: null
       MULTITENANCY: "true"
       ODK_COLLECT_ENDPOINT: collect-test/
       PGHOST: db-test
@@ -106,6 +110,8 @@ services:
       AETHER_KERNEL_URL: http://kernel-test:9100
       APP_URL: /
       DB_NAME: test-ui
+      DJANGO_USE_CACHE: null
+      DEFAULT_REALM: ${CLIENT_REALM}
       MULTITENANCY: "true"
       PGHOST: db-test
       PROFILING_ENABLED: null

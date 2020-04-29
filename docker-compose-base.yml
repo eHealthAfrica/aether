@@ -18,7 +18,7 @@ version: "2.1"
 services:
 
   # ---------------------------------
-  # Database + NGINX containers
+  # Auxiliary containers
   # ---------------------------------
 
   postgres-base:
@@ -68,7 +68,7 @@ services:
     command: minio server --quiet --address minio:9090 /data
 
   keycloak-base:
-    image: jboss/keycloak:9.0.0
+    image: jboss/keycloak:9.0.3
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: db
@@ -126,6 +126,18 @@ services:
       PGPASSWORD: ${KERNEL_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
+
+      DJANGO_USE_CACHE: "true"
+      REDIS_DJANGO_CACHE: "true"
+      REDIS_SESSION_CACHE: "true"
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+
+      REDIS_DB: 0
+      REDIS_DB_CACHEOPS: 1
+      REDIS_DB_DJANGO: 2
+      REDIS_DB_SESSION: 3
 
       EXPORT_CSV_ESCAPE: "\\"
       EXPORT_CSV_QUOTES: "\""
@@ -197,6 +209,18 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
+      DJANGO_USE_CACHE: "true"
+      REDIS_DJANGO_CACHE: "true"
+      REDIS_SESSION_CACHE: "true"
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+
+      REDIS_DB: 4
+      REDIS_DB_CACHEOPS: 5
+      REDIS_DB_DJANGO: 6
+      REDIS_DB_SESSION: 7
+
       WEB_SERVER_PORT: 8102
     volumes:
       - ./aether-odk-module:/code
@@ -246,6 +270,18 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
+      DJANGO_USE_CACHE: "true"
+      REDIS_DJANGO_CACHE: "true"
+      REDIS_SESSION_CACHE: "true"
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+
+      REDIS_DB: 8
+      REDIS_DB_CACHEOPS: 9
+      REDIS_DB_DJANGO: 10
+      REDIS_DB_SESSION: 11
+
       # use this value with "start_dev" command and webpack otherwise comment it out
       WEBPACK_STATS_FILE: /code/aether/ui/assets/bundles/webpack-stats.json
 
@@ -272,13 +308,13 @@ services:
   # ---------------------------------
 
   zookeeper-base:
-    image: confluentinc/cp-zookeeper:5.3.1
+    image: confluentinc/cp-zookeeper:5.4.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka-base:
-    image: confluentinc/cp-kafka:5.3.1
+    image: confluentinc/cp-kafka:5.4.0
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
