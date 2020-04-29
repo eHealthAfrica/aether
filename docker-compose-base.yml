@@ -19,7 +19,7 @@ version: "2.1"
 services:
 
   # ---------------------------------
-  # Database + NGINX containers
+  # Auxiliary containers
   # ---------------------------------
 
   postgres-base:
@@ -135,6 +135,18 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
+      DJANGO_USE_CACHE: "true"
+      REDIS_DJANGO_CACHE: "true"
+      REDIS_SESSION_CACHE: "true"
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+
+      REDIS_DB: 0
+      REDIS_DB_CACHEOPS: 1
+      REDIS_DB_DJANGO: 2
+      REDIS_DB_SESSION: 3
+
       EXPORT_CSV_ESCAPE: "\\"
       EXPORT_CSV_QUOTES: "\""
       EXPORT_CSV_SEPARATOR: ","
@@ -242,6 +254,18 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
+      DJANGO_USE_CACHE: "true"
+      REDIS_DJANGO_CACHE: "true"
+      REDIS_SESSION_CACHE: "true"
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+
+      REDIS_DB: 4
+      REDIS_DB_CACHEOPS: 5
+      REDIS_DB_DJANGO: 6
+      REDIS_DB_SESSION: 7
+
       WEB_SERVER_PORT: 8102
     volumes:
       - ./aether-odk-module:/code
@@ -290,6 +314,18 @@ services:
       PGPASSWORD: ${UI_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
+
+      DJANGO_USE_CACHE: "true"
+      REDIS_DJANGO_CACHE: "true"
+      REDIS_SESSION_CACHE: "true"
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+
+      REDIS_DB: 8
+      REDIS_DB_CACHEOPS: 9
+      REDIS_DB_DJANGO: 10
+      REDIS_DB_SESSION: 11
 
       # use this value with "start_dev" command and webpack otherwise comment it out
       WEBPACK_STATS_FILE: /code/aether/ui/assets/bundles/webpack-stats.json
