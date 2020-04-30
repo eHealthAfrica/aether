@@ -64,11 +64,11 @@ class KernelClient(object):
     def get_schemas(self):
         raise NotImplementedError
 
-    def check_updates(self, modified, schema_name, realm):
+    def check_updates(self, realm, schema_id, schema_name, modified):
         raise NotImplementedError
 
-    def count_updates(self, schema_name, realm):
+    def count_updates(self, realm, schema_id, schema_name, modified=''):
         raise NotImplementedError
 
-    def get_updates(self, modified, schema_name, realm):
+    def get_updates(self, realm, schema_id, schema_name, modified):
         raise NotImplementedError
