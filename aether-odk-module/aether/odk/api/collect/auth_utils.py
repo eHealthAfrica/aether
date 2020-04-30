@@ -26,7 +26,6 @@ from urllib.parse import unquote, urlparse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils import six
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -246,4 +245,4 @@ def _create_nonce(timestamp, realm):
 
 
 def _hash_fn(data):
-    return md5(six.b(data)).hexdigest()
+    return md5(data.encode('latin-1')).hexdigest()
