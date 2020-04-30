@@ -40,13 +40,13 @@ class MockKernelClient(object):
     def get_schemas(self):
         return []
 
-    def check_updates(self, modified, schema_name, realm):
+    def check_updates(self, realm, schema_id, schema_name, modified):
         return False
 
-    def count_updates(self, schema_name, realm):
+    def count_updates(self, realm, schema_id, schema_name, modified=''):
         return 0
 
-    def get_updates(self, modified, schema_name, realm):
+    def get_updates(self, realm, schema_id, schema_name, modified):
         return []
 
 
