@@ -137,7 +137,8 @@ else
 
     if [[ $1 = "integration" ]]; then
         build_container producer
-        echo_message "Starting producer"
+        export KERNEL_ACCESS_TYPE=${KERNEL_ACCESS_TYPE:-api}
+        echo_message "Starting producer in mode [${KERNEL_ACCESS_TYPE}]"
         $DC_TEST up -d producer-test
         echo_message "producer ready!"
     fi
