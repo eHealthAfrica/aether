@@ -61,6 +61,7 @@ class TopicManager(object):
 
     def __init__(self, context, schema, realm):
         self.context = context
+        self.pk = schema['schema_id']
         self.name = schema['schema_name']
         self.realm = realm
         self.offset = ''
@@ -72,7 +73,7 @@ class TopicManager(object):
         self.change_set = {}
         self.successful_changes = []
         self.failed_changes = {}
-        self.sleep_time = int(SETTINGS.get('sleep_time', 2))
+        self.sleep_time = int(SETTINGS.get('sleep_time', 10))
         self.window_size_sec = int(SETTINGS.get('window_size_sec', 3))
 
         self.kafka_failure_wait_time = float(SETTINGS.get('kafka_failure_wait_time', 10))
@@ -172,8 +173,9 @@ class TopicManager(object):
         # greened background task to handle rebuilding of topic
         self.operating_status = TopicStatus.REBUILDING
         tag = f'REBUILDING {self.name}:'
-        logger.info(f'{tag} waiting {self.sleep_time *1.5}(sec) for inflight ops to resolve')
-        self.context.safe_sleep(self.sleep_time * 1.5)
+        sleep_time = self.sleep_time * 1.5
+        logger.info(f'{tag} waiting {sleep_time}(sec) for inflight ops to resolve')
+        self.context.safe_sleep(sleep_time)
         logger.info(f'{tag} Deleting Topic')
         self.producer = None
 
@@ -203,13 +205,13 @@ class TopicManager(object):
         return False
 
     def updates_available(self):
-        return self.context.kernel_client.check_updates(self.offset, self.name, self.realm)
+        return self.context.kernel_client.check_updates(self.realm, self.pk, self.name, self.offset)
 
     def get_db_updates(self):
-        return self.context.kernel_client.get_updates(self.offset, self.name, self.realm)
+        return self.context.kernel_client.get_updates(self.realm, self.pk, self.name, self.offset)
 
     def get_topic_size(self):
-        return self.context.kernel_client.count_updates(self.name, self.realm)
+        return self.context.kernel_client.count_updates(self.realm, self.pk, self.name)
 
     def update_schema(self, schema_obj):
         self.schema_obj = self.parse_schema(schema_obj)

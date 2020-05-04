@@ -33,32 +33,42 @@ from producer.settings import SETTINGS
 from producer.kernel import KernelClient, logger
 
 
-_SCHEMAS_SQL = 'SELECT * FROM kernel_schema_vw'
+_SCHEMAS_SQL = '''
+    SELECT schema_id, schema_name, schema_definition, realm
+      FROM kernel_schema_vw
+'''
 
 _CHECK_UPDATES_SQL = '''
     SELECT id
-    FROM kernel_entity_vw
-    WHERE modified    > {modified}
-        AND schema_name = {schema_name}
-        AND realm       = {realm}
-    LIMIT 1;
+      FROM kernel_entity_vw
+     WHERE modified  > {modified}
+       AND schema_id = {schema}
+       AND realm     = {realm}
+     LIMIT 1;
 '''
 
 _COUNT_UPDATES_SQL = '''
     SELECT COUNT(id)
-    FROM kernel_entity_vw
-    WHERE schema_name = {schema_name}
-        AND realm       = {realm};
+      FROM kernel_entity_vw
+     WHERE schema_id = {schema}
+       AND realm     = {realm};
+'''
+_COUNT_MODIFIED_UPDATES_SQL = '''
+    SELECT COUNT(id)
+      FROM kernel_entity_vw
+     WHERE modified  > {modified}
+       AND schema_id = {schema}
+       AND realm     = {realm};
 '''
 
 _GET_UPDATES_SQL = '''
     SELECT *
-    FROM kernel_entity_vw
-    WHERE modified    > {modified}
-        AND schema_name = {schema_name}
-        AND realm       = {realm}
-    ORDER BY modified ASC
-    LIMIT {limit};
+      FROM kernel_entity_vw
+     WHERE modified  > {modified}
+       AND schema_id = {schema}
+       AND realm     = {realm}
+     ORDER BY modified ASC
+     LIMIT {limit};
 '''
 
 
@@ -89,10 +99,10 @@ class KernelDBClient(KernelClient):
             logger.critical('Could not access kernel database to get topics')
             return []
 
-    def check_updates(self, modified, schema_name, realm):
+    def check_updates(self, realm, schema_id, schema_name, modified):
         query = sql.SQL(_CHECK_UPDATES_SQL).format(
             modified=sql.Literal(modified),
-            schema_name=sql.Literal(schema_name),
+            schema=sql.Literal(schema_id),
             realm=sql.Literal(realm),
         )
         cursor = self._exec_sql(schema_name, 1, query)
@@ -102,11 +112,18 @@ class KernelDBClient(KernelClient):
             logger.critical('Could not access kernel database to look for updates')
             return False
 
-    def count_updates(self, schema_name, realm):
-        query = sql.SQL(_COUNT_UPDATES_SQL).format(
-            schema_name=sql.Literal(schema_name),
-            realm=sql.Literal(realm),
-        )
+    def count_updates(self, realm, schema_id, schema_name, modified=''):
+        if modified:
+            query = sql.SQL(_COUNT_MODIFIED_UPDATES_SQL).format(
+                modified=sql.Literal(modified),
+                schema=sql.Literal(schema_id),
+                realm=sql.Literal(realm),
+            )
+        else:
+            query = sql.SQL(_COUNT_UPDATES_SQL).format(
+                schema=sql.Literal(schema_id),
+                realm=sql.Literal(realm),
+            )
         cursor = self._exec_sql(schema_name, 0, query)
         if cursor:
             _count = cursor.fetchone()[0]
@@ -116,10 +133,10 @@ class KernelDBClient(KernelClient):
             logger.critical('Could not access kernel database to look for updates')
             return -1
 
-    def get_updates(self, modified, schema_name, realm):
+    def get_updates(self, realm, schema_id, schema_name, modified):
         query = sql.SQL(_GET_UPDATES_SQL).format(
             modified=sql.Literal(modified),
-            schema_name=sql.Literal(schema_name),
+            schema=sql.Literal(schema_id),
             realm=sql.Literal(realm),
             limit=sql.Literal(self.limit),
         )
