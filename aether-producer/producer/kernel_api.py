@@ -42,7 +42,7 @@ _SCHEMAS_URL = (
     f'{_KERNEL_URL}/'
     'schemadecorators.json?'
     '&page_size={page_size}'
-    '&fields=id,schema_name,schema_definition'
+    '&fields=id,schema,schema_name,schema_definition'
 )
 _ENTITIES_URL = (
     f'{_KERNEL_URL}/'
@@ -74,17 +74,17 @@ class KernelAPIClient(KernelClient):
                     _next_url = response['next']
 
                     for entry in response['results']:
-                        yield {'realm': realm, **entry}
+                        yield {'realm': realm, 'schema_id': entry['schema'], **entry}
 
         except Exception:
             self.last_check_error = 'Could not access kernel API to get topics'
             logger.critical(self.last_check_error)
             return []
 
-    def check_updates(self, modified, schema_name, realm):
+    def check_updates(self, realm, schema_id, schema_name, modified):
         url = _ENTITIES_URL.format(
             page_size=1,
-            schema=schema_name,
+            schema=schema_id,
             modified=modified,
         )
         try:
@@ -94,11 +94,11 @@ class KernelAPIClient(KernelClient):
             logger.critical('Could not access kernel API to look for updates')
             return False
 
-    def count_updates(self, schema_name, realm):
+    def count_updates(self, realm, schema_id, schema_name, modified=''):
         url = _ENTITIES_URL.format(
             page_size=1,
-            schema=schema_name,
-            modified='',
+            schema=schema_id,
+            modified=modified or '',
         )
         try:
             _count = self._fetch(url=url, realm=realm)['count']
@@ -108,10 +108,10 @@ class KernelAPIClient(KernelClient):
             logger.critical('Could not access kernel API to look for updates')
             return -1
 
-    def get_updates(self, modified, schema_name, realm):
+    def get_updates(self, realm, schema_id, schema_name, modified):
         url = _ENTITIES_URL.format(
             page_size=self.limit,
-            schema=schema_name,
+            schema=schema_id,
             modified=modified,
         )
 

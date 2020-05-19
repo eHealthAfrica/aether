@@ -117,27 +117,25 @@ class ProducerManager(object):
             md = self.kafka_admin_client.list_topics(timeout=10)
             for b in iter(md.brokers.values()):
                 if b.id == md.controller_id:
-                    res['brokers'].append('{}  (controller)'.format(b))
+                    res['brokers'].append(f'{b}  (controller)')
                 else:
-                    res['brokers'].append('{}'.format(b))
+                    res['brokers'].append(f'{b}')
 
             for t in iter(md.topics.values()):
                 t_str = []
-                if t.error is not None:
-                    errstr = ': {}'.format(t.error)
-                else:
-                    errstr = ''
-
-                t_str.append('{} with {} partition(s){}'.format(t, len(t.partitions), errstr))
+                t_str.append(
+                    f'{t} with {len(t.partitions)} partition(s)'
+                    (f', error: {t.error}' if t.error is not None else '')
+                )
 
                 for p in iter(t.partitions.values()):
-                    if p.error is not None:
-                        errstr = ': {}'.format(p.error)
-                    else:
-                        errstr = ''
-
-                    t_str.append('partition {} leader: {}, replicas: {}, isrs: {}'.format(
-                        p.id, p.leader, p.replicas, p.isrs, errstr))
+                    t_str.append(
+                        f'partition {p.id}'
+                        f', leader: {p.leader}'
+                        f', replicas: {p.replicas}'
+                        f', isrs: {p.isrs}'
+                        (f', error: {p.error}' if p.error is not None else '')
+                    )
                 res['topics'].append(t_str)
             return res
         except Exception as err:
@@ -179,7 +177,7 @@ class ProducerManager(object):
                         self.logger.debug(f'Schema {schema_name} unchanged')
 
             # Time between checks for schema change
-            self.safe_sleep(SETTINGS.get('sleep_time', 1))
+            self.safe_sleep(SETTINGS.get('sleep_time', 10))
         self.logger.debug('No longer checking schemas')
 
     # Flask Functions
