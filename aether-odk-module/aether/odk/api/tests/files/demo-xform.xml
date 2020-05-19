@@ -9,9 +9,51 @@
         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <h:head>
     <h:title>My Test Form</h:title>
-    <model>
+    <model odk:xforms-version="1.0.0">
       <itext>
         <translation default="true()" lang="English">
+          <text id="/Something_that_is_not_None/country/CM:label">
+            <value>Cameroon</value>
+          </text>
+          <text id="/Something_that_is_not_None/country/NG:label">
+            <value>Nigeria</value>
+          </text>
+          <text id="/Something_that_is_not_None/region/CM-1:label">
+            <value>Zone 1</value>
+          </text>
+          <text id="/Something_that_is_not_None/region/CM-2:label">
+            <value>Zone 2</value>
+          </text>
+          <text id="/Something_that_is_not_None/region/NG-N:label">
+            <value>North</value>
+          </text>
+          <text id="/Something_that_is_not_None/region/NG-S:label">
+            <value>South</value>
+          </text>
+          <text id="/Something_that_is_not_None/option/a:label">
+            <value>Option A</value>
+          </text>
+          <text id="/Something_that_is_not_None/option/b:label">
+            <value>Option B</value>
+          </text>
+          <text id="/Something_that_is_not_None/lang/EN:label">
+            <value>English</value>
+          </text>
+          <text id="/Something_that_is_not_None/lang/FR:label">
+            <value>French</value>
+          </text>
+          <text id="/Something_that_is_not_None/lang/GE:label">
+            <value>German</value>
+          </text>
+          <text id="/Something_that_is_not_None/ranking_lang/EN:label">
+            <value>English</value>
+          </text>
+          <text id="/Something_that_is_not_None/ranking_lang/FR:label">
+            <value>French</value>
+          </text>
+          <text id="/Something_that_is_not_None/ranking_lang/GE:label">
+            <value>German</value>
+          </text>
           <text id="static_instance-countries-0">
             <value>Cameroon</value>
           </text>
@@ -78,10 +120,20 @@
             <index/>
             <value/>
           </iterate>
+          <iterate>
+            <index/>
+            <value/>
+          </iterate>
           <iterate_one jr:template="">
             <it.em/>
           </iterate_one>
+          <iterate_one>
+            <it.em/>
+          </iterate_one>
           <iterate_none jr:template="">
+            <nothing/>
+          </iterate_none>
+          <iterate_none>
             <nothing/>
           </iterate_none>
           <value/>
@@ -111,23 +163,23 @@
         <root>
           <item>
             <itextId>static_instance-regions-0</itextId>
-            <name>CM-1</name>
             <country>CM</country>
+            <name>CM-1</name>
           </item>
           <item>
             <itextId>static_instance-regions-1</itextId>
-            <name>CM-2</name>
             <country>CM</country>
+            <name>CM-2</name>
           </item>
           <item>
             <itextId>static_instance-regions-2</itextId>
-            <name>NG-N</name>
             <country>NG</country>
+            <name>NG-N</name>
           </item>
           <item>
             <itextId>static_instance-regions-3</itextId>
-            <name>NG-S</name>
             <country>NG</country>
+            <name>NG-S</name>
           </item>
         </root>
       </instance>
@@ -180,8 +232,8 @@
               nodeset="/Something_that_is_not_None/deviceid"
               required="true()"
               type="string"/>
-      <bind aet="{'emit_level': '0', 'default_visualization': 'bar'}" nodeset="/Something_that_is_not_None/country" required="false()" type="select1"/>
-      <bind aet="{'emit_level': '1'}" nodeset="/Something_that_is_not_None/region" required="false()" type="select1"/>
+      <bind aet="{'emit_level': '0', 'default_visualization': 'bar'}" nodeset="/Something_that_is_not_None/country" required="false()" type="string"/>
+      <bind aet="{'emit_level': '1'}" nodeset="/Something_that_is_not_None/region" required="false()" type="string"/>
       <bind aet="{'emit_level': '2'}" nodeset="/Something_that_is_not_None/city" required="false()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/name" required="false()" type="string"/>
       <bind aet="{'default_visualization': 'line'}" nodeset="/Something_that_is_not_None/location" required="false()" type="geopoint"/>
@@ -193,12 +245,12 @@
       <bind aet="{'emit_level': '4'}" nodeset="/Something_that_is_not_None/number2" required="false()" type="decimal"/>
       <bind nodeset="/Something_that_is_not_None/date" required="false()" type="date"/>
       <bind nodeset="/Something_that_is_not_None/datetime" required="false()" type="dateTime"/>
-      <bind aet="{'emit_level': '3'}" jr:requiredMsg="Choice" nodeset="/Something_that_is_not_None/option" required="true()" type="select1"/>
+      <bind aet="{'emit_level': '3'}" jr:requiredMsg="Choice" nodeset="/Something_that_is_not_None/option" required="true()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/option-a" relevant=" /Something_that_is_not_None/option ='a'"/>
       <bind aet="{'default_visualization': 'pie'}" nodeset="/Something_that_is_not_None/option-a/choice.a" type="string"/>
       <bind nodeset="/Something_that_is_not_None/option-b" relevant=" /Something_that_is_not_None/option ='b'"/>
       <bind nodeset="/Something_that_is_not_None/option-b/choice.b" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
+      <bind nodeset="/Something_that_is_not_None/lang" type="string"/>
       <bind nodeset="/Something_that_is_not_None/ranking_lang" type="odk:rank"/>
       <bind nodeset="/Something_that_is_not_None/iterate/index" type="int"/>
       <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
@@ -222,11 +274,11 @@
     <select1 ref="/Something_that_is_not_None/country">
       <label>Country</label>
       <item>
-        <label>Cameroon</label>
+        <label ref="jr:itext('/Something_that_is_not_None/country/CM:label')"/>
         <value>CM</value>
       </item>
       <item>
-        <label>Nigeria</label>
+        <label ref="jr:itext('/Something_that_is_not_None/country/NG:label')"/>
         <value>NG</value>
       </item>
     </select1>
@@ -273,11 +325,11 @@
     <select1 ref="/Something_that_is_not_None/option">
       <label>Choice (A/B)</label>
       <item>
-        <label>Option A</label>
+        <label ref="jr:itext('/Something_that_is_not_None/option/a:label')"/>
         <value>a</value>
       </item>
       <item>
-        <label>Option B</label>
+        <label ref="jr:itext('/Something_that_is_not_None/option/b:label')"/>
         <value>b</value>
       </item>
     </select1>
@@ -296,37 +348,37 @@
     <select ref="/Something_that_is_not_None/lang">
       <label>Spoken languages</label>
       <item>
-        <label>English</label>
+        <label ref="jr:itext('/Something_that_is_not_None/lang/EN:label')"/>
         <value>EN</value>
       </item>
       <item>
-        <label>French</label>
+        <label ref="jr:itext('/Something_that_is_not_None/lang/FR:label')"/>
         <value>FR</value>
       </item>
       <item>
-        <label>German</label>
+        <label ref="jr:itext('/Something_that_is_not_None/lang/GE:label')"/>
         <value>GE</value>
       </item>
     </select>
     <odk:rank ref="/Something_that_is_not_None/ranking_lang">
       <label>Ranking of languages</label>
       <item>
-        <label>English</label>
+        <label ref="jr:itext('/Something_that_is_not_None/ranking_lang/EN:label')"/>
         <value>EN</value>
       </item>
       <item>
-        <label>French</label>
+        <label ref="jr:itext('/Something_that_is_not_None/ranking_lang/FR:label')"/>
         <value>FR</value>
       </item>
       <item>
-        <label>German</label>
+        <label ref="jr:itext('/Something_that_is_not_None/ranking_lang/GE:label')"/>
         <value>GE</value>
       </item>
     </odk:rank>
     <group ref="/Something_that_is_not_None/iterate">
       <label>Indicate loop elements</label>
       <repeat
-                nodeset="/Something_that_is_not_None/iterate">
+              nodeset="/Something_that_is_not_None/iterate">
         <input ref="/Something_that_is_not_None/iterate/index">
           <label>Index</label>
         </input>
