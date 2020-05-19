@@ -20,12 +20,7 @@ import logging
 from oauthlib import oauth2
 from time import sleep
 from urllib.parse import urlparse
-
-# monkey patch so that bulk insertion works
-from .patches import patched__marshal_object, patched__unmarshal_object
 import bravado_core
-bravado_core.marshal._marshal_object = patched__marshal_object        # noqa
-bravado_core.unmarshal._unmarshal_object = patched__unmarshal_object  # noqa
 
 import bravado
 from bravado.client import (
@@ -41,6 +36,12 @@ from .exceptions import AetherAPIException
 from .basic_auth import BasicRealmClient
 from .oidc import OauthClient
 from .logger import LOG
+
+# monkey patch so that bulk insertion works
+from .patches import patched__marshal_object, patched__unmarshal_object
+
+bravado_core.marshal._marshal_object = patched__marshal_object        # noqa
+bravado_core.unmarshal._unmarshal_object = patched__unmarshal_object  # noqa
 
 _SPEC_URL = '{}/v1/schema/?format=openapi'
 
