@@ -45,16 +45,16 @@ $colors-list: (
   }
 
   .entity-type-mapped-#{$i} {
-    background-color: rgba($current-color, .2);
+    background-color: rgba($current-color, 0.2);
     position: relative;
 
     &::after {
-      border-right: .6rem solid rgba($current-color, .2);
+      border-right: 0.6rem solid rgba($current-color, 0.2);
       content: '';
       display: block;
       position: absolute;
       top: 0;
-      left: -.6rem;
+      left: -0.6rem;
       width: 0;
       height: 0;
       border-top: $font-size-xs solid transparent;
@@ -69,13 +69,13 @@ $colors-list: (
       }
 
       &::after {
-        border-right: .6rem solid rgba($current-color, 1);
+        border-right: 0.6rem solid rgba($current-color, 1);
       }
     }
   }
 
   .input-schema-mapped-#{$i} {
-    background-color: rgba($current-color, .2);
+    background-color: rgba($current-color, 0.2);
     position: relative;
 
     &:hover {
@@ -90,12 +90,12 @@ $colors-list: (
       }
 
       &::after {
-        border-left: .6rem solid rgba($current-color, 1);
+        border-left: 0.6rem solid rgba($current-color, 1);
       }
     }
 
     &::before {
-      background-color: rgba($current-color, .2);
+      background-color: rgba($current-color, 0.2);
       content: '';
       display: block;
       position: absolute;
@@ -103,16 +103,16 @@ $colors-list: (
       left: -1rem;
       width: 1rem;
       height: 100%;
-      border-radius: .5rem 0 0 .5rem;
+      border-radius: 0.5rem 0 0 0.5rem;
     }
 
     &::after {
-      border-left: .6rem solid rgba($current-color, .2);
+      border-left: 0.6rem solid rgba($current-color, 0.2);
       content: '';
       display: block;
       position: absolute;
       top: 0;
-      right: -.6rem;
+      right: -0.6rem;
       width: 0;
       height: 0;
       border-top: $font-size-xs solid transparent;

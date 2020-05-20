@@ -24,7 +24,6 @@
 
 @import '~bootstrap/scss/bootstrap';
 
-
 // ************************************
 // custom styles
 // ************************************
@@ -32,6 +31,7 @@
 @import 'base/fonts';
 @import 'base/settings';
 @import 'base/color-codes';
+@import 'base/keyframes';
 @import 'base/mixins';
 @import 'base/keyframes';
 @import 'base/global';
@@ -49,5 +49,4 @@
 @import 'section-entity-types';
 @import 'section-mapping';
 @import 'section-output';
-
 @import 'base/styleguide';

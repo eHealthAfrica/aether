@@ -18,6 +18,8 @@
  * under the License.
  */
 
+// stylelint-disable block-opening-brace-space-before
+
 @keyframes fade-in {
   0%   { opacity: 0; }
   100% { opacity: 1; }
@@ -61,3 +63,5 @@
     background: rgba($text-color, .1);
   }
 }
+
+// stylelint-enable block-opening-brace-space-before
