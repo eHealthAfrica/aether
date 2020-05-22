@@ -51,26 +51,23 @@ const Pipeline = ({
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
   const [unsavedCallback, setUnsavedCallback] = useState(null)
 
-  const [initialized, setInitialized] = useState(false)
-
   useEffect(() => {
-    if (!initialized) {
-      setInitialized(true)
+    if (!pipeline || pipeline.id !== pid) {
       getPipelineById(pid)
-    }
+    } else {
+      if (!newContract && contract && (section !== view || contract.id !== cid)) {
+        // update router history
+        history.push(`/${pipeline.id}/${contract.id}/${section}`)
+      }
 
-    if (!newContract && contract && (section !== view || contract.id !== cid)) {
-      // update router history
-      history.push(`/${pipeline.id}/${contract.id}/${section}`)
-    }
+      if (section === PIPELINE_SECTION_INPUT) {
+        setShowSettings(false)
+        setShowOutput(false)
+      }
 
-    if (section === PIPELINE_SECTION_INPUT) {
-      setShowSettings(false)
-      setShowOutput(false)
-    }
-
-    if (newContract) {
-      setShowSettings(true)
+      if (newContract) {
+        setShowSettings(true)
+      }
     }
   })
 
@@ -175,7 +172,6 @@ const Pipeline = ({
         />
 
         <Sections
-          addNewContract={() => { setShowSettings(true) }}
           checkUnsavedContract={checkUnsavedContract}
           fullscreen={fullscreen}
           toggleFullscreen={() => { setFullscreen(!fullscreen) }}
@@ -213,7 +209,7 @@ const mapStateToProps = ({ pipelines }) => ({
   contract: pipelines.currentContract,
   newContract: pipelines.newContract,
   pipeline: pipelines.currentPipeline,
-  section: pipelines.currentSection
+  section: pipelines.currentSection || PIPELINE_SECTION_INPUT
 })
 
 const mapDispatchToProps = {

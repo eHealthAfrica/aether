@@ -21,6 +21,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
+import { useHistory } from 'react-router-dom'
 
 import { Fullscreen } from '../../components'
 
@@ -35,24 +36,28 @@ import {
   CONTRACT_SECTION_MAPPING
 } from '../../utils/constants'
 
-import { selectSection } from '../redux'
+import { selectSection, startNewContract } from '../redux'
 
 const Sections = ({
-  addNewContract,
   checkUnsavedContract,
   pipeline,
   contract,
   selectSection,
   fullscreen,
   toggleFullscreen,
-  toggleOutput
+  toggleOutput,
+  startNewContract
 }) => {
+  if (!pipeline) return ''
+
+  const history = useHistory()
   const showInput = () => {
     checkUnsavedContract(() => { selectSection(PIPELINE_SECTION_INPUT) })
   }
   const showContracts = () => {
-    if (!pipeline.contracts.length) {
-      addNewContract()
+    if (pipeline.contracts.length === 0) {
+      startNewContract(pipeline.id)
+      history.push(`/${pipeline.id}`)
     } else {
       selectSection(CONTRACT_SECTION_ENTITY_TYPES)
     }
@@ -149,6 +154,6 @@ const mapStateToProps = ({ pipelines }) => ({
   pipeline: pipelines.currentPipeline,
   contract: pipelines.currentContract
 })
-const mapDispatchToProps = { selectSection }
+const mapDispatchToProps = { selectSection, startNewContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Sections)
