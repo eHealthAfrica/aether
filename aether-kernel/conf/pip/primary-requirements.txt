@@ -34,4 +34,4 @@ lxml
 
 
 # Test libraries
-django-autofixture
+django-dynamic-fixture
