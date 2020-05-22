@@ -21,9 +21,9 @@
 /* global describe, it, expect, beforeEach */
 
 import React from 'react'
-import { mountWithIntl } from '../../tests/enzyme-helpers'
 import { MemoryRouter } from 'react-router'
 
+import { mountWithIntl } from '../../tests/enzyme-helpers'
 import NavBar from './NavBar'
 
 const mountWithRouter = (node) => mountWithIntl(<MemoryRouter>{node}</MemoryRouter>)

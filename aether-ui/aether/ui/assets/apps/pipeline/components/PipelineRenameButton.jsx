@@ -20,9 +20,9 @@
 
 import React, { useState } from 'react'
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
-import { Modal } from '../../components'
-
 import { connect } from 'react-redux'
+
+import { Modal } from '../../components'
 import { renamePipeline } from '../redux'
 
 const MESSAGES = defineMessages({

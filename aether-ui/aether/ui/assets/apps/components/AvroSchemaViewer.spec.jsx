@@ -21,8 +21,8 @@
 /* global describe, it, expect */
 
 import React from 'react'
-import { mountWithIntl } from '../../tests/enzyme-helpers'
 
+import { mountWithIntl } from '../../tests/enzyme-helpers'
 import { mockInputSchema } from '../../tests/mock'
 import { AvroSchemaViewer } from '../components'
 

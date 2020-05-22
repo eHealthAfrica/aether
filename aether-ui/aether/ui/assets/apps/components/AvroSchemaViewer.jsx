@@ -21,9 +21,9 @@
 import React from 'react'
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
 
-import { AVRO_EXTENDED_TYPE, MASKING_ANNOTATION, MASKING_PUBLIC } from '../utils/constants'
 import { clone, isEmpty, generateGUID } from '../utils'
 import { parseSchema, isOptionalType, isPrimitive, typeToString } from '../utils/avro-utils'
+import { AVRO_EXTENDED_TYPE, MASKING_ANNOTATION, MASKING_PUBLIC } from '../utils/constants'
 
 const MESSAGES = defineMessages({
   nullable: {

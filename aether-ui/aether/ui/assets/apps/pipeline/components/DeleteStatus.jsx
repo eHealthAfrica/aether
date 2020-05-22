@@ -19,9 +19,10 @@
  */
 
 import React, { useEffect } from 'react'
-import { Modal } from '../../components'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
+
+import { Modal } from '../../components'
 
 const DeleteStatus = ({
   deleteOptions,

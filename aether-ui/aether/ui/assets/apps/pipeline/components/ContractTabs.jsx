@@ -20,11 +20,9 @@
 
 import React from 'react'
 import { connect } from 'react-redux'
-
 import { FormattedMessage } from 'react-intl'
 
 import ContractAddButton from './ContractAddButton'
-
 import { selectContract } from '../redux'
 
 const ContractTabs = ({

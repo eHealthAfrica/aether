@@ -21,10 +21,9 @@
 import React, { useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 
+import { Modal } from '../../components'
 import { isEmpty } from '../../utils'
 import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
-
-import { Modal } from '../../components'
 
 export const IdentityContract = ({ contract, inputSchema, setIdentity }) => {
   if (isEmpty(contract) || contract.is_read_only || isEmpty(inputSchema)) {

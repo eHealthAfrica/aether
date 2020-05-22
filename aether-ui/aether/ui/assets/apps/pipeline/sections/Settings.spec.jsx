@@ -23,11 +23,12 @@
 import React from 'react'
 import { createStore, applyMiddleware } from 'redux'
 import { Provider } from 'react-redux'
-import { mountWithIntl } from '../../../tests/enzyme-helpers'
 import nock from 'nock'
 
-import Settings from './Settings'
+import { mountWithIntl } from '../../../tests/enzyme-helpers'
 import { mockInputSchema } from '../../../tests/mock'
+
+import Settings from './Settings'
 import middleware from '../../redux/middleware'
 import reducer from '../../redux/reducers'
 import { selectContract } from '../redux'
