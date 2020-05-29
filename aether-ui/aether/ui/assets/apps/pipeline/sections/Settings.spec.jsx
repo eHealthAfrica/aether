@@ -18,256 +18,290 @@
  * under the License.
  */
 
-/* global describe, it, expect, beforeEach, jest */
+/* global describe, it, expect, afterEach, beforeEach, jest */
 
 import React from 'react'
 import { createStore, applyMiddleware } from 'redux'
 import { Provider } from 'react-redux'
-import { mountWithIntl } from '../../../tests/enzyme-helpers'
 import nock from 'nock'
 
+import { mountWithIntl } from '../../../tests/enzyme-helpers'
+import { mockInputSchema } from '../../../tests/mock'
+
 import Settings from './Settings'
-import { mockPipeline } from '../../../tests/mock'
 import middleware from '../../redux/middleware'
 import reducer from '../../redux/reducers'
-import { contractChanged } from '../redux'
+import { selectContract } from '../redux'
 
-describe('Pipeline Settings Component', () => {
-  let store
-  const initialState = {
-    pipelines: {
-      currentPipeline: mockPipeline
+const INITIAL_STATE = {
+  pipelines: {
+    currentPipeline: {
+      id: 'pid',
+      name: 'pipeline',
+      schema: mockInputSchema, // no identity without schema
+      contracts: [
+        {
+          id: 'non-identity',
+          name: 'Non identity',
+          is_identity: false,
+          created: '2020-01-01'
+        },
+        {
+          id: 'identity',
+          name: 'Identity',
+          is_identity: true,
+          created: '2020-01-01'
+        }
+      ]
+    },
+    newContract: {
+      id: 'new',
+      name: 'New'
     }
   }
+}
+
+describe('Pipeline Settings Component', () => {
   const onClose = jest.fn()
   const onSave = jest.fn()
-  const onNew = jest.fn()
 
-  beforeEach(() => {
+  const mountComponent = (isNew, isIdentity = false) => {
     // create a new store instance for each test
-    store = createStore(
+    const store = createStore(
       reducer,
-      initialState,
+      INITIAL_STATE,
       applyMiddleware(...middleware)
     )
-  })
+    if (!isNew) {
+      store.dispatch(selectContract('pid', isIdentity ? 'identity' : 'non-identity'))
+      expect(store.getState().newContract).toBeFalsy()
+    }
 
-  it('should render the settings component', () => {
-    const component = mountWithIntl(
+    return mountWithIntl(
       <Provider store={store}>
         <Settings
           onClose={onClose}
           onSave={onSave}
-          onNew={onNew}
         />
       </Provider>
     )
-    expect(component.find('Settings').exists()).toBeTruthy()
-    expect(store.getState().pipelines.currentContract)
-      .toEqual(undefined)
-  })
+  }
 
-  it('should render the settings of selected contract', () => {
-    const selectedContract = mockPipeline.contracts[0]
-    store.dispatch(contractChanged(selectedContract))
-    const component = mountWithIntl(
-      <Provider store={store}>
-        <Settings
-          onClose={onClose}
-          onSave={onSave}
-          onNew={onNew}
-        />
-      </Provider>
-    )
-    expect(component.find('[className="input-d input-large"]')
-      .html()).toContain(`value="${selectedContract.name}"`)
-  })
-
-  it('should render the settings with a new contract', () => {
-    mountWithIntl(
-      <Provider store={store}>
-        <Settings
-          onClose={onClose}
-          isNew
-          onSave={onSave}
-          onNew={onNew}
-        />
-      </Provider>
-    )
-    expect(store.getState().pipelines.currentContract.name)
-      .toEqual('Contract 0')
-  })
-
-  it('should toggle identity mapping', () => {
-    const component = mountWithIntl(
-      <Provider store={store}>
-        <Settings
-          onClose={onClose}
-          isNew
-          onSave={onSave}
-          onNew={onNew}
-        />
-      </Provider>
-    )
-    expect(component.find('Settings').exists()).toBeTruthy()
-    const settings = component.find('Settings')
-
-    expect(settings.state().isIdentity).toBeFalsy()
-    expect(component.find('[id="settings.contract.identity.name"]')
-      .exists()).toBeFalsy()
-
-    const identityMappingToggle = component.find('input[id="toggle"]')
-    identityMappingToggle.simulate('change', { target: { checked: true } })
-    expect(settings.state().isIdentity).toBeTruthy()
-
-    expect(component.find('[id="settings.contract.identity.name"]')
-      .exists()).toBeTruthy()
-
-    identityMappingToggle.simulate('change', { target: { checked: false } })
-    expect(settings.state().isIdentity).toBeFalsy()
-    expect(component.find('[id="settings.contract.identity.name"]')
-      .exists()).toBeFalsy()
-  })
-
-  it('should render identity mapping warning', () => {
-    nock('http://localhost')
-      .post('/api/contracts/')
-      .reply(200, (_, reqBody) => {
-        return reqBody
-      })
-    const component = mountWithIntl(
-      <Provider store={store}>
-        <Settings
-          onClose={onClose}
-          isNew
-          onSave={onSave}
-          onNew={onNew}
-        />
-      </Provider>
-    )
-    expect(component.find('Settings').exists()).toBeTruthy()
-    const settings = component.find('Settings')
-
-    const identityMappingToggle = component.find('input[id="toggle"]')
-    identityMappingToggle.simulate('change', { target: { checked: true } })
-    expect(settings.state().isIdentity).toBeTruthy()
-
-    expect(component.find('Modal').exists()).toBeFalsy()
-    const saveButton = component.find('button[id="settings-contract-save"]')
-    saveButton.simulate('click')
-
-    expect(component.find('Modal').exists()).toBeTruthy()
-
-    const modalCancelButton = component.find('button[id="settings.identity.modal.cancel"]')
-    modalCancelButton.simulate('click')
-    expect(component.find('Modal').exists()).toBeFalsy()
-
-    saveButton.simulate('click')
-    expect(component.find('Modal').exists()).toBeTruthy()
-
-    const modalYesButton = component.find('button[id="settings.identity.modal.yes"]')
-    modalYesButton.simulate('click')
-    expect(component.find('Modal').exists()).toBeFalsy()
-  })
-
-  it('should save and close settings without warning', () => {
-    const selectedContract = mockPipeline.contracts[0]
-    let expectedContract
-    nock('http://localhost')
-      .put(`/api/contracts/${selectedContract.id}/`)
-      .reply(200, (_, reqBody) => {
-        expectedContract = reqBody
-        return reqBody
-      })
-
-    store.dispatch(contractChanged(selectedContract))
-    const component = mountWithIntl(
-      <Provider store={store}>
-        <Settings
-          onClose={onClose}
-          onSave={onSave}
-          onNew={onNew}
-        />
-      </Provider>
-    )
-    expect(component.find('Modal').exists()).toBeFalsy()
-
-    const inputContractName = component.find('input[className="input-d input-large"]')
-    inputContractName.simulate('change', { target: { value: 'contract-updated' } })
-
-    const settings = component.find('Settings').instance()
-    jest.spyOn(settings, 'handleSave')
-    const saveButton = component.find('button[id="settings-contract-save"]')
-    saveButton.simulate('click')
-
-    expect(component.find('Modal').exists()).toBeFalsy()
-    expect(settings.handleSave).toHaveBeenCalledWith(expectedContract)
-  })
-
-  it('should save and close settings without warning on a new contract', () => {
-    let expectedContract
-    nock('http://localhost')
-      .post('/api/contracts/')
-      .reply(200, (_, reqBody) => {
-        expectedContract = reqBody
-        return reqBody
-      })
-
-    const component = mountWithIntl(
-      <Provider store={store}>
-        <Settings
-          onClose={onClose}
-          onSave={onSave}
-          onNew={onNew}
-          isNew
-        />
-      </Provider>
-    )
-    expect(component.find('Modal').exists()).toBeFalsy()
-
-    const inputContractName = component.find('input[className="input-d input-large"]')
-    inputContractName.simulate('change', { target: { value: 'new-contract-updated' } })
-
-    const settings = component.find('Settings').instance()
-    jest.spyOn(settings, 'handleSave')
-    const saveButton = component.find('button[id="settings-contract-save"]')
-    saveButton.simulate('click')
-
-    expect(component.find('Modal').exists()).toBeFalsy()
-    expect(settings.handleSave).toHaveBeenCalledWith(expectedContract)
-  })
-
-  it('should create a new contract while an existing contract is selected', () => {
-    const component = mountWithIntl(
-      <Provider store={store}>
-        <Settings
-          onClose={onClose}
-          onSave={onSave}
-          onNew={onNew}
-        />
-      </Provider>
-    )
-    const settingInstance = component.find('Settings').instance()
-    jest.spyOn(settingInstance, 'createNewContract')
-    component.setProps({
-      children: <Settings onClose={onClose} onSave={onSave} onNew={onNew} isNew />
+  describe('on new contracts', () => {
+    let newComponent
+    beforeEach(() => {
+      newComponent = mountComponent(true)
     })
-    expect(settingInstance.createNewContract).toBeCalled()
+
+    afterEach(() => {
+      nock.isDone()
+      nock.cleanAll()
+    })
+
+    it('should render the settings component', () => {
+      expect(newComponent.find('[data-test="contract-settings"]').exists())
+        .toBeTruthy()
+    })
+
+    it('should close the settings component', () => {
+      const cancelButton = newComponent.find('button[data-test="settings.cancel.button"]')
+      cancelButton.simulate('click')
+      expect(onClose).toBeCalled()
+    })
+
+    it('should render the identity toggle', () => {
+      expect(newComponent.find('[data-test="settings.contract.name"]').html())
+        .toContain('value="New"')
+      expect(newComponent.find('[data-test="contract.is-identity"]').exists())
+        .toBeFalsy()
+      expect(newComponent.find('[data-test="contract.is-not-identity"]').exists())
+        .toBeTruthy()
+    })
+
+    it('should toggle identity contract', () => {
+      expect(newComponent.find('[data-test="identity.contract.entity.type.name"]').exists())
+        .toBeFalsy()
+
+      const identityToggle = newComponent.find('input[data-test="identity-toggle"]')
+      identityToggle.simulate('change', { target: { checked: true } })
+      expect(newComponent.find('[data-test="identity.contract.entity.type.name"]').exists())
+        .toBeTruthy()
+
+      identityToggle.simulate('change', { target: { checked: false } })
+      expect(newComponent.find('[data-test="identity.contract.entity.type.name"]').exists())
+        .toBeFalsy()
+    })
+
+    it('should save and close settings without warning', () => {
+      let newContract
+      nock('http://localhost')
+        .post('/api/contracts/', body => {
+          newContract = body
+          return body
+        })
+        .reply(201, {})
+
+      const inputContractName = newComponent.find('input[data-test="settings.contract.name"]')
+      inputContractName.simulate('change', { target: { value: 'new-contract-updated' } })
+
+      const saveButton = newComponent.find('button[data-test="settings.save.button"]')
+      saveButton.simulate('click')
+      expect(onSave).toBeCalled()
+      expect(newContract).toEqual({ id: 'new', name: 'new-contract-updated' })
+    })
   })
 
-  it('should close the settings component', () => {
-    const component = mountWithIntl(
-      <Provider store={store}>
-        <Settings
-          onClose={onClose}
-          onSave={onSave}
-          onNew={onNew}
-        />
-      </Provider>
-    )
-    const cancelButton = component.find('button[id="pipeline.settings.cancel.button"]')
-    cancelButton.simulate('click')
+  describe('on current non-identity contracts', () => {
+    let nonIdComponent
+    beforeEach(() => {
+      nonIdComponent = mountComponent(false, false)
+    })
 
-    expect(onClose).toBeCalled()
+    afterEach(() => {
+      nock.isDone()
+      nock.cleanAll()
+    })
+
+    it('should render the settings component', () => {
+      expect(nonIdComponent.find('[data-test="contract-settings"]').exists())
+        .toBeTruthy()
+    })
+
+    it('should close the settings component', () => {
+      const cancelButton = nonIdComponent.find('button[data-test="settings.cancel.button"]')
+      cancelButton.simulate('click')
+      expect(onClose).toBeCalled()
+    })
+
+    it('should render the identity toggle', () => {
+      expect(nonIdComponent.find('[data-test="settings.contract.name"]').html())
+        .toContain('value="Non identity"')
+      expect(nonIdComponent.find('[data-test="contract.is-identity"]').exists())
+        .toBeFalsy()
+      expect(nonIdComponent.find('[data-test="contract.is-not-identity"]').exists())
+        .toBeTruthy()
+    })
+
+    it('should toggle identity contract', () => {
+      expect(nonIdComponent.find('[data-test="identity.contract.entity.type.name"]').exists())
+        .toBeFalsy()
+
+      const identityToggle = nonIdComponent.find('input[data-test="identity-toggle"]')
+      identityToggle.simulate('change', { target: { checked: true } })
+      expect(nonIdComponent.find('[data-test="identity.contract.entity.type.name"]').exists())
+        .toBeTruthy()
+
+      identityToggle.simulate('change', { target: { checked: false } })
+      expect(nonIdComponent.find('[data-test="identity.contract.entity.type.name"]').exists())
+        .toBeFalsy()
+    })
+
+    it('should save and close settings without warning (while non identity)', () => {
+      let updatedContract
+      nock('http://localhost')
+        .put('/api/contracts/non-identity/', body => {
+          updatedContract = body
+          return body
+        })
+        .reply(200, {})
+
+      const inputContractName = nonIdComponent.find('input[data-test="settings.contract.name"]')
+      inputContractName.simulate('change', { target: { value: 'non-contract-updated' } })
+
+      const saveButton = nonIdComponent.find('button[data-test="settings.save.button"]')
+      saveButton.simulate('click')
+      expect(onSave).toBeCalled()
+      expect(updatedContract.name).toEqual('non-contract-updated')
+      expect(updatedContract.is_identity).toBeFalsy()
+    })
+
+    it('should render identity contract warning', () => {
+      let updatedContract
+      nock('http://localhost')
+        .put('/api/contracts/non-identity/', body => {
+          updatedContract = body
+          return body
+        })
+        .reply(200, {})
+
+      const saveButton = nonIdComponent.find('button[data-test="settings.save.button"]')
+      const identityToggle = nonIdComponent.find('input[data-test="identity-toggle"]')
+
+      identityToggle.simulate('change', { target: { checked: true } })
+      expect(nonIdComponent.find('Modal').exists()).toBeFalsy()
+
+      saveButton.simulate('click')
+      expect(nonIdComponent.find('Modal').exists()).toBeTruthy()
+
+      const modalCancelButton = nonIdComponent
+        .find('Modal')
+        .find('button[data-test="identity.warning.button.cancel"]')
+      expect(modalCancelButton.exists()).toBeTruthy()
+
+      modalCancelButton.simulate('click')
+      expect(nonIdComponent.find('Modal').exists()).toBeFalsy()
+
+      saveButton.simulate('click')
+      expect(nonIdComponent.find('Modal').exists()).toBeTruthy()
+
+      const modalYesButton = nonIdComponent
+        .find('Modal')
+        .find('button[data-test="identity.warning.button.confirm"]')
+      expect(modalYesButton.exists()).toBeTruthy()
+
+      modalYesButton.simulate('click')
+      expect(nonIdComponent.find('Modal').exists()).toBeFalsy()
+      expect(updatedContract.is_identity).toBeTruthy()
+    })
+  })
+
+  describe('on current identity contracts', () => {
+    let idComponent
+    beforeEach(() => {
+      idComponent = mountComponent(false, true)
+    })
+
+    afterEach(() => {
+      nock.isDone()
+      nock.cleanAll()
+    })
+
+    it('should render the settings component', () => {
+      expect(idComponent.find('[data-test="contract-settings"]').exists())
+        .toBeTruthy()
+    })
+
+    it('should close the settings component', () => {
+      const cancelButton = idComponent.find('button[data-test="settings.cancel.button"]')
+      cancelButton.simulate('click')
+      expect(onClose).toBeCalled()
+    })
+
+    it('should not render the identity toggle', () => {
+      expect(idComponent.find('[data-test="settings.contract.name"]').html())
+        .toContain('value="Identity"')
+      expect(idComponent.find('[data-test="contract.is-identity"]').exists())
+        .toBeTruthy()
+      expect(idComponent.find('[data-test="contract.is-not-identity"]').exists())
+        .toBeFalsy()
+    })
+
+    it('should save and close settings without warning', () => {
+      let updatedContract
+      nock('http://localhost')
+        .put('/api/contracts/identity/', body => {
+          updatedContract = body
+          return body
+        })
+        .reply(200, {})
+
+      const inputContractName = idComponent.find('input[data-test="settings.contract.name"]')
+      inputContractName.simulate('change', { target: { value: 'contract-updated' } })
+
+      const saveButton = idComponent.find('button[data-test="settings.save.button"]')
+      saveButton.simulate('click')
+      expect(onSave).toBeCalled()
+      expect(updatedContract.name).toEqual('contract-updated')
+    })
   })
 })

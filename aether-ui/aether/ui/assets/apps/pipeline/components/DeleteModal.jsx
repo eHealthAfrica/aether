@@ -20,6 +20,7 @@
 
 import React, { useState } from 'react'
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl'
+
 import { Modal } from '../../components'
 
 const MESSAGES = defineMessages({
@@ -54,7 +55,7 @@ const DeleteModal = ({ onClose, onDelete, obj, objectType }) => {
   const buttons = (
     <div>
       <button
-        data-qa='delete.modal.button.cancel'
+        data-test='delete.modal.button.cancel'
         className='btn btn-w'
         onClick={onClose}
       >

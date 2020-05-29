@@ -21,9 +21,9 @@
 /* global describe, it, expect, beforeEach */
 
 import React from 'react'
-import { mountWithIntl } from '../../tests/enzyme-helpers'
 import { MemoryRouter } from 'react-router'
 
+import { mountWithIntl } from '../../tests/enzyme-helpers'
 import NavBar from './NavBar'
 
 const mountWithRouter = (node) => mountWithIntl(<MemoryRouter>{node}</MemoryRouter>)
@@ -39,15 +39,15 @@ describe('NavBar', () => {
 
   it('should render the nav bar', () => {
     const component = mountWithRouter(<NavBar />)
-    expect(component.find('[data-qa="navbar"]').exists()).toBeTruthy()
-    expect(component.find('[data-qa="navbar-user"]').exists()).toBeTruthy()
-    expect(component.find('[data-qa="navbar-user"]').html()).toContain('user test')
-    expect(component.find('[data-qa="navbar-breadcrumb"]').exists()).toBeFalsy()
+    expect(component.find('[data-test="navbar"]').exists()).toBeTruthy()
+    expect(component.find('[data-test="navbar-user"]').exists()).toBeTruthy()
+    expect(component.find('[data-test="navbar-user"]').html()).toContain('user test')
+    expect(component.find('[data-test="navbar-breadcrumb"]').exists()).toBeFalsy()
   })
 
   it('should include the breadcrumb', () => {
     const component = mountWithRouter(<NavBar showBreadcrumb />)
-    const breadcrumb = component.find('[data-qa="navbar-breadcrumb"]')
+    const breadcrumb = component.find('[data-test="navbar-breadcrumb"]')
     expect(breadcrumb.exists()).toBeTruthy()
   })
 
@@ -57,7 +57,7 @@ describe('NavBar', () => {
         breadcrumb...
       </NavBar>
     )
-    const breadcrumb = component.find('[data-qa="navbar-breadcrumb"]')
+    const breadcrumb = component.find('[data-test="navbar-breadcrumb"]')
     expect(breadcrumb.exists()).toBeTruthy()
     expect(breadcrumb.html()).toContain('breadcrumb...')
   })

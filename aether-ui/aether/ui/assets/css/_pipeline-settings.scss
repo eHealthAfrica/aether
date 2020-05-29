@@ -18,20 +18,6 @@
  * under the License.
  */
 
-@keyframes show {
-  0% {
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
 .pipeline-settings {
   background: lighten($dark-blue, 5);
   position: absolute;
@@ -41,8 +27,8 @@
   transition: left $transition-speed;
   right: 0;
   z-index: 4;
-  animation: show .5s;
-  padding: .6rem 1rem;
+  animation: show 0.5s;
+  padding: 0.6rem 1rem;
   overflow: auto;
 
   .status-publish {
@@ -73,11 +59,11 @@ div.code {
   margin: 3rem 2.3rem 1rem;
 }
 
-.identity-mapping {
+.identity-contract {
   margin-top: 2rem;
   padding: 1.6rem 2rem 1.2rem 4rem;
   border-radius: $border-radius * 4;
-  background-color: rgba($light-grey, .1);
+  background-color: rgba($light-grey, 0.1);
 
   .toggle-default {
     margin-left: -2.4rem;
@@ -97,7 +83,7 @@ div.code {
 .settings-section {
   margin: 2rem 0;
   padding: 2rem 0;
-  border-top: 1px dashed rgba($light-grey, .4);
+  border-top: 1px dashed rgba($light-grey, 0.4);
 }
 
 .settings-actions {
@@ -110,7 +96,7 @@ div.code {
 
 .clipboard {
   font-size: 1rem;
-  margin: .2rem;
+  margin: 0.2rem;
   color: lighten($dark-blue, 5);
   cursor: pointer;
 }
