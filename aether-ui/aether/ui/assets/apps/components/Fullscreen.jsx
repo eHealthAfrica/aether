@@ -18,34 +18,17 @@
  * under the License.
  */
 
-import { useState, useEffect } from 'react'
-import ReactDOM from 'react-dom'
+import React from 'react'
+import { FormattedMessage } from 'react-intl'
 
-// https://reactjs.org/docs/portals.html
-
-const Portal = ({ children, onEscape, onEnter }) => {
-  const [element] = useState(document.createElement('div'))
-
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onEscape && onEscape(event)
-      }
-      if (event.key === 'Enter') {
-        onEnter && onEnter(event)
-      }
+const Fullscreen = ({ value, toggle }) => (
+  <div className='btn-icon fullscreen-toggle' onClick={() => { toggle() }}>
+    {
+      value
+        ? <FormattedMessage id='fullscreen.off' defaultMessage='fullscreen off' />
+        : <FormattedMessage id='fullscreen.on' defaultMessage='fullscreen on' />
     }
+  </div>
+)
 
-    document.body.appendChild(element)
-    document.addEventListener('keydown', onKeyDown)
-
-    return () => {
-      document.body.removeChild(element)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  })
-
-  return ReactDOM.createPortal(children, element)
-}
-
-export default Portal
+export default Fullscreen

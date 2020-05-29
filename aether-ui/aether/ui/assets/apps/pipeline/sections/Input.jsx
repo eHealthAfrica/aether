@@ -143,7 +143,7 @@ const Input = ({ pipeline, highlight, updatePipeline }) => {
         // TODO: do not generate a new schema if the current one conforms the input
         const schema = generateSchema(obj)
         // Take pipeline name and remove forbidden characters
-        const name = pipeline.name.replace(/[^a-zA-Z0-9]/g, '')
+        const name = pipeline.name.replace(/[^a-zA-Z0-9]/g, '').replace(/^[-\d\s]*/g, '')
         schema.name = name.substring(0, 25)
 
         updatePipeline({ ...pipeline, schema, input: obj })

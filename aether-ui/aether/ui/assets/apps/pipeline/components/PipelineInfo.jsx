@@ -21,8 +21,8 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
-
 import OutsideClickHandler from 'react-outside-click-handler'
+
 import Modal from '../../components/Modal'
 import SubmissionCard from './SubmissionCard'
 

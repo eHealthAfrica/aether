@@ -38,6 +38,5 @@ export const DATE_FORMAT = 'MMMM DD, YYYY HH:mm'
 
 // pipeline/contract view sections
 export const PIPELINE_SECTION_INPUT = 'input'
-export const CONTRACT_SECTION_ENTITY_TYPES = 'entityTypes'
+export const CONTRACT_SECTION_ENTITY_TYPES = 'entities'
 export const CONTRACT_SECTION_MAPPING = 'mapping'
-export const CONTRACT_SECTION_SETTINGS = 'settings'

@@ -33,32 +33,30 @@ $font-sizes: (
   xxl:       $font-size-xxl
 );
 
-// sass-lint:disable no-color-keywords
 $colors: (
   white:            $white,
   black:            $black,
-
+  //
   red:              $red,
   orange:           $orange,
   green:            $green,
-
+  //
   text-color:       $text-color,
   background-color: $background-color,
-
+  //
   dark-blue:        $dark-blue,
   purple:           $purple,
   light-grey:       $light-grey,
   grey:             $grey,
-
+  //
   shadow-color:     $shadow-color,
   action-color:     $action-color,
   hover-color:      $hover-color,
   action-color-b:   $action-color-b
 );
-// sass-lint:enable no-color-keywords
 
 .styleguide {
-  background-color: $white !important; // sass-lint:disable-line no-important
+  background-color: $white !important;
 
   .container {
     border-bottom: 1px dotted #4a4a4a;
@@ -123,7 +121,6 @@ $colors: (
     $i: index($colors-list, $current-color);
 
     .entity-color-sample:nth-child(#{$i}) {
-
       div {
         background-color: $current-color;
         height: 80px;

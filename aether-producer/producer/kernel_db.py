@@ -16,13 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from datetime import datetime
+# flake8: noqa: E402
 
-from gevent import monkey
 # need to patch sockets to make requests async
-monkey.patch_all()  # noqa
+from gevent import monkey
+monkey.patch_all()
 import psycogreen.gevent
-psycogreen.gevent.patch_psycopg()  # noqa
+psycogreen.gevent.patch_psycopg()
+
+from datetime import datetime
 
 import psycopg2
 from psycopg2 import sql
