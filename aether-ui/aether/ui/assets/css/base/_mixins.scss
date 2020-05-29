@@ -106,6 +106,7 @@
 @mixin selected {
   .badge {
     @include bg-gradient;
+
     opacity: 1;
 
     .fa-caret-right {

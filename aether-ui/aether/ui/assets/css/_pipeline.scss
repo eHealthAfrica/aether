@@ -306,6 +306,7 @@ div[class^='pipeline-section--'],
 
   div.pipeline-nav-item--input {
     @include selected;
+
     width: calc(100% - (#{$entities-nav-width} + #{$mapping-nav-width}));
     color: $text-color;
   }
@@ -398,7 +399,7 @@ div[class^='pipeline-section--'],
   }
 
   div.pipeline-section--mapping {
-    width: calc(100% - #{$column-width}*2);
+    width: calc(100% - #{$column-width} * 2);
 
     .fullscreen-toggle {
       display: flex;
