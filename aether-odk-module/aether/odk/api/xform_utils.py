@@ -686,13 +686,21 @@ def __get_xform_instance_skeleton(xml_definition):
                 schema[xpath]['type'] = bind_entry.get('@type')
                 schema[xpath]['required'] = bind_entry.get('@required') == 'true()'
 
-                if schema[xpath]['type'] in SELECT_TAGS:
-                    select_options = __get_xform_choices(xform_dict, xpath, itexts)
-                    if select_options:
-                        schema[xpath]['choices'] = select_options
             if AET_TAG in bind_entry:
                 xpath = bind_entry.get('@nodeset')
                 schema[xpath]['annotations'] = __parse_annotations(bind_entry.get(AET_TAG))
+
+    # search in body all the SELECT_TAGS entries
+    for tag in SELECT_TAGS:
+        for entries in __find_in_dict(xform_dict, tag):
+            entries = __wrap_as_list(entries)
+            for select_entry in entries:
+                xpath = select_entry.get('@ref')
+                schema[xpath]['type'] = tag
+
+                select_options = __get_xform_choices(xform_dict, xpath, itexts)
+                if select_options:
+                    schema[xpath]['choices'] = select_options
 
     # search in body all the repeat entries
     for entries in __find_in_dict(xform_dict, 'repeat'):
@@ -983,19 +991,28 @@ def __get_all_paths(dictionary):
 
     It's only used to get the jsonpaths (or xpaths)
     of the instance skeleton defined in the xForm.
-
-    Assumption: there are no lists in the skeleton.
     '''
     def walk(obj, parent_keys=[]):
         for k, v in obj.items():
             is_dict = isinstance(v, dict)
+            is_list = isinstance(v, list)
             if k.startswith('@'):  # ignore attributes
                 continue
             keys = parent_keys + [k]
             xpath = '/' + '/'.join(keys)
-            paths.append((xpath, isinstance(v, dict)))
+            paths.append((xpath, is_dict or is_list))
             if is_dict:
                 walk(v, keys)
+            elif is_list:
+                # in pyxform 1.x.x there could be duplicated entries like:
+                #    <entry jr:template="">
+                #       <child/>
+                #    </entry>
+                #    <entry>
+                #       <child/>
+                #    </entry>
+                # ignore the first entry
+                walk(v[1], keys)
 
     paths = []
     walk(dictionary)

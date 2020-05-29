@@ -21,7 +21,7 @@
 @mixin label {
   font-size: $font-size-s;
   font-weight: 400;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -40,40 +40,77 @@
 }
 
 @mixin stripy($bg, $stripe) {
-  background: repeating-linear-gradient(
-    -45deg,
-    $stripe,
-    $stripe 10%,
-    $bg 10%,
-    $bg 50%,
-    $stripe 50%) top left fixed;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      $stripe,
+      $stripe 10%,
+      $bg 10%,
+      $bg 50%,
+      $stripe 50%
+    ) top left fixed;
   background-size: 8px 8px;
 }
 
 @mixin shadow-flat-dark {
-  box-shadow: -1px -1px 0 rgba($black, .2), 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
+  box-shadow:
+    -1px -1px 0 rgba($black, 0.2),
+    1px 1px 0 rgba($white, 0.1) inset,
+    -1px -1px 0 rgba($black, 0.2) inset,
+    1px 1px 0 rgba($white, 0.1);
 }
 
 @mixin shadow-emboss-dark {
-  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset, 0 0 4px rgba($black, .3);
+  box-shadow:
+    1px 1px 0 rgba($white, 0.1) inset,
+    -1px -1px 0 rgba($black, 0.2) inset,
+    0 0 4px rgba($black, 0.3);
 }
 
 @mixin shadow-cutout-dark {
-  box-shadow: 1px 1px 1px rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
+  box-shadow:
+    1px 1px 1px rgba($black, 0.2) inset,
+    1px 1px 0 rgba($white, 0.1);
 }
 
 @mixin shadow-flat-white {
-  box-shadow: -1px -1px 0 rgba($text-color, .1), 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .1) inset, 1px 1px 0 rgba($white, .1);
+  box-shadow:
+    -1px -1px 0 rgba($text-color, 0.1),
+    1px 1px 0 rgba($white, 0.1) inset,
+    -1px -1px 0 rgba($text-color, 0.1) inset,
+    1px 1px 0 rgba($white, 0.1);
 }
 
 @mixin shadow-emboss-white {
-  box-shadow: 1px 1px 0 rgba($white, .2) inset, -1px -1px 0 rgba($text-color, .2) inset, 0 0 2px rgba($text-color, .1);
+  box-shadow:
+    1px 1px 0 rgba($white, 0.2) inset,
+    -1px -1px 0 rgba($text-color, 0.2) inset,
+    0 0 2px rgba($text-color, 0.1);
 }
 
 @mixin shadow-cutout-white {
-  box-shadow: 1px 1px 1px rgba($text-color, .1) inset, 1px 1px 0 rgba($white, .1);
+  box-shadow:
+    1px 1px 1px rgba($text-color, 0.1) inset,
+    1px 1px 0 rgba($white, 0.1);
 }
 
 @mixin shadow-emboss-color {
-  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset, 0 0 4px rgba($text-color, .1);
+  box-shadow:
+    1px 1px 0 rgba($white, 0.1) inset,
+    -1px -1px 0 rgba($text-color, 0.3) inset,
+    0 0 4px rgba($text-color, 0.1);
+}
+
+// STATES
+
+@mixin selected {
+  .badge {
+    @include bg-gradient;
+
+    opacity: 1;
+
+    .fa-caret-right {
+      transform: rotate(90deg);
+    }
+  }
 }

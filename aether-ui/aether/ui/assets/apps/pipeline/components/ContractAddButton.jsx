@@ -23,23 +23,20 @@ import { useHistory } from 'react-router-dom'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { selectPipeline } from '../redux'
+import { startNewContract } from '../redux'
 
-const ContractAddButton = ({ className, pipeline: { id }, selectPipeline }) => {
+const ContractAddButton = ({ className, pipeline: { id }, startNewContract }) => {
   const history = useHistory()
-  const handleCreateNewContract = () => {
-    selectPipeline(id)
-    history.push({
-      pathname: `/${id}`,
-      state: { isNewContract: true }
-    })
+  const startAddNewContract = () => {
+    startNewContract(id)
+    history.push(`/${id}`)
   }
 
   return (
     <button
       type='button'
       className={className || 'btn btn-c'}
-      onClick={handleCreateNewContract}
+      onClick={startAddNewContract}
     >
       <span className='details-title'>
         <FormattedMessage
@@ -52,6 +49,6 @@ const ContractAddButton = ({ className, pipeline: { id }, selectPipeline }) => {
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { selectPipeline }
+const mapDispatchToProps = { startNewContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(ContractAddButton)

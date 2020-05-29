@@ -21,12 +21,13 @@
 // Combines types, actions and reducers for a specific
 // module in one file for easy redux management
 
-import { replaceItemInList, removeItemFromList } from '../utils'
+import { generateGUID, replaceItemInList, removeItemFromList } from '../utils'
 import {
   PIPELINES_URL,
   CONTRACTS_URL,
   PIPELINE_SECTION_INPUT,
-  CONTRACT_SECTION_ENTITY_TYPES
+  CONTRACT_SECTION_ENTITY_TYPES,
+  CONTRACT_SECTION_MAPPING
 } from '../utils/constants'
 
 export const types = {
@@ -40,13 +41,12 @@ export const types = {
   PIPELINE_SELECT: 'pipeline.select',
   CONTRACT_SELECT: 'contract.select',
   SECTION_SELECT: 'section.select',
-  CONTRACT_CHANGED: 'contract.changed',
 
   PIPELINE_ADD: 'pipeline.add',
   PIPELINE_UPDATE: 'pipeline.update',
   PIPELINE_DELETE: 'pipeline.delete',
-  PIPELINE_CHANGED: 'pipeline.changed',
 
+  CONTRACT_NEW: 'contract.new',
   CONTRACT_ADD: 'contract.add',
   CONTRACT_UPDATE: 'contract.update',
   CONTRACT_DELETE: 'contract.delete',
@@ -71,7 +71,8 @@ export const INITIAL_STATE = {
 
   currentSection: null,
   currentPipeline: null,
-  currentContract: null
+  currentContract: null,
+  newContract: null
 }
 
 export const getPipelines = () => ({
@@ -91,9 +92,9 @@ export const selectPipeline = (pid) => ({
   payload: pid
 })
 
-export const selectContract = (pid, cid) => ({
+export const selectContract = (pid, cid, section = null) => ({
   type: types.CONTRACT_SELECT,
-  payload: { pipeline: pid, contract: cid }
+  payload: { pipeline: pid, contract: cid, section }
 })
 
 export const selectSection = (section) => ({
@@ -101,14 +102,9 @@ export const selectSection = (section) => ({
   payload: section
 })
 
-export const contractChanged = (contract) => ({
-  type: types.CONTRACT_CHANGED,
-  payload: contract
-})
-
-export const pipelineChanged = (pipeline) => ({
-  type: types.PIPELINE_CHANGED,
-  payload: pipeline
+export const startNewContract = (pid = null) => ({
+  type: types.CONTRACT_NEW,
+  payload: pid
 })
 
 export const getPipelineById = (pid) => {
@@ -251,6 +247,27 @@ const findContract = (pipeline, cid) => {
   return contract
 }
 
+const generateNewContractName = (contracts) => {
+  let count = 0
+  let newContractName = `Contract ${count}`
+
+  do {
+    if (!contracts.find(c => c.name === newContractName)) {
+      return newContractName
+    }
+    count++
+    newContractName = `Contract ${count}`
+  } while (true)
+}
+
+const createNewContractSkeleton = (pipeline) => {
+  return {
+    id: generateGUID(),
+    name: generateNewContractName(pipeline.contracts),
+    pipeline: pipeline.id
+  }
+}
+
 const reducer = (state = INITIAL_STATE, action) => {
   const nextState = { ...state, ...ACTIONS_INITIAL_STATE }
 
@@ -281,7 +298,8 @@ const reducer = (state = INITIAL_STATE, action) => {
         ...nextState,
         currentSection: null,
         currentPipeline: null,
-        currentContract: null
+        currentContract: null,
+        newContract: null
       }
     }
 
@@ -293,7 +311,8 @@ const reducer = (state = INITIAL_STATE, action) => {
         ...nextState,
         currentSection: PIPELINE_SECTION_INPUT,
         currentPipeline,
-        currentContract
+        currentContract,
+        newContract: null
       }
     }
 
@@ -301,15 +320,18 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentPipeline = (state.pipelinesList || [])
         .find(p => p.id === action.payload.pipeline) || state.currentPipeline
       const currentContract = findContract(currentPipeline, action.payload.contract)
-      const currentSection = !state.currentSection || state.currentSection === PIPELINE_SECTION_INPUT
-        ? CONTRACT_SECTION_ENTITY_TYPES
-        : state.currentSection
+      const currentSection = action.payload.section
+        ? action.payload.section
+        : !state.currentSection || state.currentSection === PIPELINE_SECTION_INPUT
+          ? currentContract.is_identity ? CONTRACT_SECTION_MAPPING : CONTRACT_SECTION_ENTITY_TYPES
+          : state.currentSection
 
       return {
         ...nextState,
         currentSection,
         currentPipeline,
-        currentContract
+        currentContract,
+        newContract: null
       }
     }
 
@@ -321,15 +343,6 @@ const reducer = (state = INITIAL_STATE, action) => {
     }
 
     // CHANGES
-
-    case types.PIPELINE_CHANGED: {
-      const currentPipeline = parsePipeline(action.payload)
-      return {
-        ...nextState,
-        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
-        currentPipeline
-      }
-    }
 
     case types.PIPELINE_ADD: {
       const newPipeline = parsePipeline(action.payload)
@@ -351,7 +364,8 @@ const reducer = (state = INITIAL_STATE, action) => {
         ...nextState,
         pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
         currentPipeline,
-        currentContract
+        currentContract,
+        newContract: null
       }
     }
 
@@ -361,7 +375,22 @@ const reducer = (state = INITIAL_STATE, action) => {
         pipelinesList: removeItemFromList(state.pipelinesList, state.currentPipeline),
         currentPipeline: null,
         currentContract: null,
+        newContract: null,
         deleteStatus: action.payload
+      }
+    }
+
+    case types.CONTRACT_NEW: {
+      const currentPipeline = action.payload
+        ? (state.pipelinesList || []).find(p => p.id === action.payload) || state.currentPipeline
+        : state.currentPipeline
+      const newContract = createNewContractSkeleton(currentPipeline)
+
+      return {
+        ...nextState,
+        currentSection: CONTRACT_SECTION_ENTITY_TYPES,
+        currentPipeline,
+        newContract
       }
     }
 
@@ -374,55 +403,38 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...nextState,
         pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
+        currentSection: currentContract.is_identity ? CONTRACT_SECTION_MAPPING : CONTRACT_SECTION_ENTITY_TYPES,
         currentPipeline,
-        currentContract
+        currentContract,
+        newContract: null
       }
     }
 
     case types.CONTRACT_UPDATE: {
       const currentContract = parseContract(action.payload)
-      const uPipeline = { ...state.currentPipeline }
-      uPipeline.contracts = replaceItemInList(state.currentPipeline.contracts, currentContract)
-
-      return {
-        ...state,
-        pipelinesList: replaceItemInList(state.pipelinesList, uPipeline),
-        currentPipeline: uPipeline,
-        currentContract: currentContract
-      }
-    }
-
-    case types.CONTRACT_DELETE: {
-      const uPipeline = { ...state.currentPipeline }
-      uPipeline.contracts = removeItemFromList(state.currentPipeline.contracts, state.currentContract)
-      const currentContract = uPipeline.contracts[0]
-
-      return {
-        ...state,
-        pipelinesList: replaceItemInList(state.pipelinesList, uPipeline),
-        currentPipeline: uPipeline,
-        currentContract: currentContract,
-        deleteStatus: action.payload,
-        currentSection: currentContract ? CONTRACT_SECTION_ENTITY_TYPES : PIPELINE_SECTION_INPUT
-      }
-    }
-
-    case types.CONTRACT_CHANGED: {
-      const currentContract = parseContract(action.payload)
-      let currentPipeline = state.currentPipeline
-      if (currentPipeline.id !== currentContract.pipeline) {
-        currentPipeline = (state.pipelinesList || []).find(p => p.id === currentContract.pipeline)
-        if (!currentPipeline) {
-          currentPipeline = state.currentPipeline
-          currentContract.pipeline = currentPipeline.id
-        }
-      }
+      const currentPipeline = { ...state.currentPipeline }
+      currentPipeline.contracts = replaceItemInList(state.currentPipeline.contracts, currentContract)
 
       return {
         ...state,
         pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
+        currentPipeline,
+        currentContract
+      }
+    }
+
+    case types.CONTRACT_DELETE: {
+      const currentPipeline = { ...state.currentPipeline }
+      currentPipeline.contracts = removeItemFromList(state.currentPipeline.contracts, state.currentContract)
+      const currentContract = currentPipeline.contracts.length ? currentPipeline.contracts[0] : null
+
+      return {
+        ...state,
+        pipelinesList: replaceItemInList(state.pipelinesList, currentPipeline),
+        currentSection: currentContract ? state.currentSection : PIPELINE_SECTION_INPUT,
+        currentPipeline,
         currentContract,
-        currentPipeline
+        deleteStatus: action.payload
       }
     }
 
@@ -463,8 +475,10 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...nextState,
         error: action.error,
+        currentSection: null,
         currentPipeline: null,
-        currentContract: null
+        currentContract: null,
+        newContract: null
       }
     }
 
