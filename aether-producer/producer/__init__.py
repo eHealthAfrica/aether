@@ -157,7 +157,7 @@ class ProducerManager(object):
             try:
                 schemas = self.kernel_client.get_schemas()
             except Exception as err:
-                self.logger.error(f'No Kernel connection: {err}')
+                self.logger.warning(f'No Kernel connection: {err}')
                 gevent.sleep(1)
                 continue
 

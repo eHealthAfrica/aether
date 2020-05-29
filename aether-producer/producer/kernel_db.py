@@ -96,7 +96,7 @@ class KernelDBClient(KernelClient):
                 yield {key: row[key] for key in row.keys()}
         else:
             self.last_check_error = 'Could not access kernel database to get topics'
-            logger.critical('Could not access kernel database to get topics')
+            logger.warning('Could not access kernel database to get topics')
             return []
 
     def check_updates(self, realm, schema_id, schema_name, modified):
@@ -109,7 +109,7 @@ class KernelDBClient(KernelClient):
         if cursor:
             return sum([1 for i in cursor]) > 0
         else:
-            logger.critical('Could not access kernel database to look for updates')
+            logger.warning('Could not access kernel database to look for updates')
             return False
 
     def count_updates(self, realm, schema_id, schema_name, modified=''):
@@ -130,7 +130,7 @@ class KernelDBClient(KernelClient):
             logger.debug(f'Reporting requested size for {schema_name} of {_count}')
             return {'count': _count}
         else:
-            logger.critical('Could not access kernel database to look for updates')
+            logger.warning('Could not access kernel database to look for updates')
             return -1
 
     def get_updates(self, realm, schema_id, schema_name, modified):
@@ -151,7 +151,7 @@ class KernelDBClient(KernelClient):
                 if window_filter(row)
             ]
         else:
-            logger.critical('Could not access kernel database to look for updates')
+            logger.warning('Could not access kernel database to look for updates')
             return []
 
     def _exec_sql(self, name, priority, query):
@@ -164,12 +164,12 @@ class KernelDBClient(KernelClient):
             return cursor
 
         except psycopg2.OperationalError as pgerr:
-            logger.critical(f'Error while accessing database: {pgerr}')
-            logger.exception(pgerr)
+            logger.warning(f'Error while accessing database: {pgerr}')
+            logger.debug(pgerr)
             return None
 
         finally:
             try:
                 self.pool.release(name, conn)
             except UnboundLocalError:
-                logger.error(f'{name} could not release a connection it never received.')
+                logger.warning(f'{name} could not release a connection it never received.')

@@ -117,8 +117,8 @@ class PriorityDatabasePool(object):
                 logger.debug(f'{self.name} pulled 1 for {name}: still {len(self.connection_pool)}')
                 sleep(0)  # allow other coroutines to work
                 while not self._test_connection(conn):
-                    logger.error('Pooled connection is dead, getting new resource.'
-                                 ' Replacing dead pool member.')
+                    logger.warning('Pooled connection is dead, getting new resource.'
+                                   ' Replacing dead pool member.')
                     conn = self._make_connection()
                     sleep(0)
                 logger.debug(f'Got job from {name} @priority {priority_level}')
@@ -154,7 +154,7 @@ class PriorityDatabasePool(object):
                 conn.close()
                 logger.debug(f'{self.name} shutdown connection #{c}')
             except Exception as err:
-                logger.error(f'{self.name} FAILED to shutdown connection #{c} | err: {err}')
+                logger.warning(f'{self.name} FAILED to shutdown connection #{c} | err: {err}')
             finally:
                 c += 1
 
@@ -232,14 +232,14 @@ class Offset(Base):
             return offset_value
 
         except Exception as err:
-            logger.error(err)
+            logger.warning(err)
             raise err
 
         finally:
             try:
                 Offset.__pool__.release(call, conn)
             except UnboundLocalError:
-                logger.error(f'{call} could not release a connection it never received.')
+                logger.warning(f'{call} could not release a connection it never received.')
 
     @classmethod
     def get_offset(cls, name):
@@ -254,14 +254,14 @@ class Offset(Base):
             return res[0][0] if res else None
 
         except Exception as err:
-            logger.error(err)
+            logger.warning(err)
             raise err
 
         finally:
             try:
                 Offset.__pool__.release(call, conn)
             except UnboundLocalError:
-                logger.error(f'{call} could not release a connection it never received.')
+                logger.warning(f'{call} could not release a connection it never received.')
 
 
 def init():
@@ -277,7 +277,7 @@ def init():
             sessionmaker(bind=engine)
             logger.info('Database initialized.')
         except SQLAlchemyError as err:
-            logger.error(f'Database could not be initialized | {err}')
+            logger.warning(f'Database could not be initialized | {err}')
             raise err
 
     def _create_db():
@@ -302,7 +302,7 @@ def init():
         Offset.create_pool()
         return
     except SQLAlchemyError as sqe:
-        logger.error(f'Start session failed (1st attempt): {sqe}')
+        logger.warning(f'Start session failed (1st attempt): {sqe}')
         pass
 
     # it was not possible to start session because the database does not exit
@@ -312,6 +312,6 @@ def init():
         _start_session(engine)
         Offset.create_pool()
     except SQLAlchemyError as sqe:
-        logger.error(f'Start session failed (2nd attempt): {sqe}')
+        logger.critical(f'Start session failed (2nd attempt): {sqe}')
         logger.exception(sqe)
         sys.exit(1)
