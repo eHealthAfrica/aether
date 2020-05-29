@@ -25,14 +25,13 @@ import { FormattedMessage } from 'react-intl'
 
 import ContractPublishButton from './ContractPublishButton'
 
-import { selectContract, selectSection } from '../redux'
+import { selectContract } from '../redux'
 import { CONTRACT_SECTION_ENTITY_TYPES } from '../../utils/constants'
 
-const ContractCard = ({ contract, selectContract, selectSection }) => {
+const ContractCard = ({ contract, selectContract }) => {
   const history = useHistory()
   const handleSelectContract = (pipelineId, contractId) => {
-    selectContract(pipelineId, contractId)
-    selectSection(CONTRACT_SECTION_ENTITY_TYPES)
+    selectContract(pipelineId, contractId, CONTRACT_SECTION_ENTITY_TYPES)
     history.push(`/${pipelineId}/${contractId}/${CONTRACT_SECTION_ENTITY_TYPES}`)
   }
 
@@ -94,6 +93,6 @@ const ContractCard = ({ contract, selectContract, selectSection }) => {
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { selectContract, selectSection }
+const mapDispatchToProps = { selectContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(ContractCard)

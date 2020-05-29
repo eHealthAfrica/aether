@@ -39,7 +39,7 @@ $mid-blue:           lighten($dark-blue, 5);
 $grey:               #aea8b4;
 $light-grey:         #ede9f2;
 
-$shadow-color:       rgba($text-color, .3);
+$shadow-color:       rgba($text-color, 0.3);
 
 $action-color:       #0093ff;
 $action-color-b:     #50aef3;
@@ -49,13 +49,13 @@ $hover-color:        $purple;
 // Fonts
 // ************************************
 
-$body-font-family: 'Open Sans', Arial, sans-serif;
-$code-font-family: 'Fira Mono', SFMono-Regular, Menlo, Monaco, monospace;
-$icon-font:        'Font Awesome 5 Free';
+$body-font-family:   'Open Sans', arial, sans-serif;
+$code-font-family:   'Fira Mono', sfmono-regular, menlo, monaco, monospace;
+$icon-font:          'Font Awesome 5 Free';
 
-$font-size-xxs:      .7rem;
-$font-size-xs:       .86rem;
-$font-size-s:        .94rem;
+$font-size-xxs:      0.7rem;
+$font-size-xs:       0.86rem;
+$font-size-s:        0.94rem;
 $font-size-standard: 1rem;
 $font-size-m:        1.2rem;
 $font-size-l:        1.6rem;
@@ -66,12 +66,14 @@ $font-size-xxl:      3.2rem;
 // Sizes
 // ************************************
 
-$unit: 1.2rem;
-$unit-xl: 2rem;
-$border-radius: 4px;
+$unit:               1.2rem;
+$unit-xl:            2rem;
+$border-radius:      4px;
 
-$column-width: 20vw;
-$output-width: 25vw;
-$navbar-height-xs: 2.3rem;
+$column-width:       20vw;
+$output-width:       25vw;
+$navbar-height-xs:   2.3rem;
 
-$indent: 1.2rem;
+$indent:             1.2rem;
+
+$transition-speed:   0.6s;

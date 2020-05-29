@@ -78,7 +78,6 @@ services:
 
       KEYCLOAK_USER: ${KEYCLOAK_ADMIN_USERNAME}
       KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KEYCLOAK_HTTP_PORT: 8080
 
 
   # ---------------------------------

@@ -21,7 +21,7 @@
 $duration: 1.8s;
 
 .loading-spinner {
-  background-color: rgba($text-color, .7);
+  background-color: rgba($text-color, 0.7);
   position: fixed;
   top: 0;
   left: 0;
@@ -30,14 +30,20 @@ $duration: 1.8s;
   z-index: 999;
 }
 
-// sass-lint:disable one-declaration-per-line
+/* stylelint-disable
+    block-opening-brace-space-before,
+    declaration-block-single-line-max-declarations
+*/
 @keyframes dot {
   0%   { opacity: 0; top: 20px; background: $purple; }
   10%  { opacity: 1; }
   30%  { opacity: 1; top: 5px; background: $action-color; }
   100% { opacity: 0; top: 5px; background: $action-color; }
 }
-// sass-lint:enable one-declaration-per-line
+/* stylelint-enable
+    block-opening-brace-space-before,
+    declaration-block-single-line-max-declarations
+*/
 
 .dot1,
 .dot2,
@@ -64,7 +70,6 @@ $duration: 1.8s;
     opacity: 0;
     animation: dot $duration infinite;
   }
-
 }
 
 .dot2 {

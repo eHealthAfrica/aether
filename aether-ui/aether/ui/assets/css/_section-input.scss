@@ -18,8 +18,7 @@
  * under the License.
  */
 
-.pipeline-section__input {
-
+.pipeline-section--input {
   .section-body {
     display: flex;
     padding: 2rem 0 0;
@@ -77,13 +76,13 @@
 
   i {
     color: $text-color;
-    font-size: .8em;
+    font-size: 0.8em;
     position: absolute;
-    top: .4rem;
+    top: 0.4rem;
   }
 
   i + .name {
-    padding-left: .8rem;
+    padding-left: 0.8rem;
   }
 
   .name {
@@ -91,7 +90,7 @@
   }
 
   .type {
-    margin-left: .5rem;
+    margin-left: 0.5rem;
     font-style: italic;
     font-size: $font-size-xs;
     color: $grey;
@@ -110,7 +109,7 @@
     padding-bottom: 4px;
     position: relative;
 
-    &>.name {
+    & > .name {
       font-weight: 400;
       position: relative;
 
@@ -123,8 +122,8 @@
         border-right: 4px solid transparent;
         border-top: 5px solid $grey;
         position: absolute;
-        left: -.8rem;
-        top: .5rem;
+        left: -0.8rem;
+        top: 0.5rem;
       }
     }
   }
@@ -135,11 +134,10 @@
   }
 
   .group .group {
-
     .field,
     .group-title {
-      padding-top: .1rem;
-      padding-bottom: .1rem;
+      padding-top: 0.1rem;
+      padding-bottom: 0.1rem;
     }
 
     div[class^='input-schema-mapped'] {
@@ -152,21 +150,18 @@
   }
 
   .group .group .group {
-
     .field,
     .group-title {
       padding-left: $indent;
     }
 
     .group-list:not(:only-child) {
-
       .field,
       .group-title {
         padding-left: $indent * 2;
       }
 
       .group-list:not(:only-child) {
-
         .field,
         .group-title {
           padding-left: $indent * 3;
@@ -176,28 +171,13 @@
   }
 }
 
-@keyframes show {
-  0% {
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
-.pipeline--input .pipeline-section__input .section-right {
+.pipeline--input .pipeline-section--input .section-right {
   display: flex;
   animation: show 1s;
 }
 
 @media screen and (min-width: 1200px) {
-
-  .pipeline-section__input .section-left {
+  .pipeline-section--input .section-left {
     padding: $unit $unit-xl;
   }
 }
