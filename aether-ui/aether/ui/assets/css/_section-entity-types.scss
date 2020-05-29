@@ -18,7 +18,7 @@
  * under the License.
  */
 
-.pipeline-section__entityTypes {
+.pipeline-section--entities {
   background: lighten($dark-blue, 5);
   color: $white;
 
@@ -123,29 +123,13 @@
   }
 }
 
-
-@keyframes show {
-  0% {
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
-.pipeline--entityTypes .pipeline-section__entityTypes .section-right {
+.pipeline--entities .pipeline-section--entities .section-right {
   display: block;
   animation: show .5s;
 }
 
 @media screen and (min-width: 1200px) {
-
-  .pipeline-section__entityTypes .section-left {
+  .pipeline-section--entities .section-left {
     padding: $unit $unit-xl;
   }
 }

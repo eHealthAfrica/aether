@@ -19,19 +19,16 @@
  */
 
 import React from 'react'
+import { FormattedMessage } from 'react-intl'
 
-const ModalDialog = ({ header, children, buttons }) => (
-  <div className='modal-dialog'>
-    <div className='modal-header'>
-      <span className='modal-title'>{header}</span>
-    </div>
-
-    <div className='modal-content'>
-      {children}
-
-      <div className='modal-actions'>{buttons}</div>
-    </div>
+const Fullscreen = ({ value, toggle }) => (
+  <div className='btn-icon fullscreen-toggle' onClick={() => { toggle() }}>
+    {
+      value
+        ? <FormattedMessage id='fullscreen.off' defaultMessage='fullscreen off' />
+        : <FormattedMessage id='fullscreen.on' defaultMessage='fullscreen on' />
+    }
   </div>
 )
 
-export default ModalDialog
+export default Fullscreen

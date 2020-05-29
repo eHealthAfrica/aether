@@ -33,6 +33,6 @@
   color: $red;
 }
 
-form .error-message+textarea {
+form .error-message + textarea {
   background: rgba($red, .1);
 }

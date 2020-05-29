@@ -33,15 +33,18 @@
 @import 'base/settings';
 @import 'base/color-codes';
 @import 'base/mixins';
+@import 'base/keyframes';
 @import 'base/global';
 @import 'base/buttons';
 @import 'base/nav-bar';
 @import 'base/loading-spinner';
 @import 'base/modal';
 @import 'base/messages';
+
 @import 'pipelines';
 @import 'pipeline';
 @import 'pipeline-settings';
+
 @import 'section-input';
 @import 'section-entity-types';
 @import 'section-mapping';

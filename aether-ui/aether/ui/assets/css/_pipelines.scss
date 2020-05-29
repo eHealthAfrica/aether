@@ -262,21 +262,6 @@
   }
 }
 
-@keyframes show-form {
-
-  0% {
-    max-height: 0;
-    padding: 0;
-    opacity: 0;
-  }
-
-  100% {
-    max-height: 200px;
-    padding: 2rem 0 3rem;
-    opacity: 1;
-  }
-}
-
 .pipeline-form {
   display: flex;
   align-items: center;
@@ -305,15 +290,8 @@
     width: 100%;
   }
 
-  @-webkit-keyframes autofill {
-    to {
-      color: $white;
-      background: rgba($text-color, .1);
-    }
-}
-
   .text-input:-webkit-autofill {
-    -webkit-animation-name: autofill;
+    -webkit-animation-name: autofill-dark;
     -webkit-animation-fill-mode: both;
   }
 
@@ -332,7 +310,6 @@
 }
 
 @media screen and (max-width: 1000px) {
-
   .pipelines {
     padding: 3rem 5vw;
   }
@@ -373,5 +350,4 @@
       margin-left: 1.5rem;
     }
   }
-
 }

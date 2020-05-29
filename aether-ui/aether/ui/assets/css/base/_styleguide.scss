@@ -123,7 +123,6 @@ $colors: (
     $i: index($colors-list, $current-color);
 
     .entity-color-sample:nth-child(#{$i}) {
-
       div {
         background-color: $current-color;
         height: 80px;

@@ -18,7 +18,7 @@
  * under the License.
  */
 
-.pipeline-section__mapping {
+.pipeline-section--mapping {
   background: $dark-blue;
   color: $white;
 
@@ -29,7 +29,6 @@
   }
 
   .tabs {
-
     .tab.selected {
       box-shadow: 1px 1px 1px rgba($black, .2) inset;
       background-color: darken($dark-blue, 3);
@@ -171,21 +170,7 @@
   }
 }
 
-@keyframes show {
-  0% {
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
-.pipeline--mapping .pipeline-section__mapping .section-body {
+.pipeline--mapping .pipeline-section--mapping .section-body {
   display: flex;
   animation: show 1s;
 }
