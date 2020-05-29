@@ -29,10 +29,10 @@
 
 .hint.error-message {
   border-radius: $border-radius * 4;
-  background: rgba($red, .1);
+  background: rgba($red, 0.1);
   color: $red;
 }
 
 form .error-message + textarea {
-  background: rgba($red, .1);
+  background: rgba($red, 0.1);
 }

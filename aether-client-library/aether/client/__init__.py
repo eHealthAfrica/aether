@@ -40,8 +40,8 @@ from .logger import LOG
 # monkey patch so that bulk insertion works
 from .patches import patched__marshal_object, patched__unmarshal_object
 
-bravado_core.marshal._marshal_object = patched__marshal_object        # noqa
-bravado_core.unmarshal._unmarshal_object = patched__unmarshal_object  # noqa
+bravado_core.marshal._marshal_object = patched__marshal_object
+bravado_core.unmarshal._unmarshal_object = patched__unmarshal_object
 
 _SPEC_URL = '{}/v1/schema/?format=openapi'
 

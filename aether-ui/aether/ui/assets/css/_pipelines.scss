@@ -20,6 +20,7 @@
 
 .pipelines-container {
   @include bg-gradient;
+
   color: $white;
   min-height: 100vh;
 
@@ -32,9 +33,9 @@
     width: 110vw;
     height: 110vw;
     border-radius: 100%;
-    border: 1vw solid rgba($white, .1);
-    border-right: 6vw solid rgba($white, .1);
-    border-top: 4vw solid rgba($white, .1);
+    border: 1vw solid rgba($white, 0.1);
+    border-right: 6vw solid rgba($white, 0.1);
+    border-top: 4vw solid rgba($white, 0.1);
   }
 
   &::after {
@@ -46,9 +47,9 @@
     width: 70vw;
     height: 70vw;
     border-radius: 100%;
-    border: .5vw solid rgba($white, .1);
-    border-right: 5vw solid rgba($white, .1);
-    border-top: 3vw solid rgba($white, .1);
+    border: 0.5vw solid rgba($white, 0.1);
+    border-right: 5vw solid rgba($white, 0.1);
+    border-top: 3vw solid rgba($white, 0.1);
     z-index: 0;
   }
 
@@ -70,7 +71,7 @@
 }
 
 .pipeline-previews {
-  border-top: 1px dashed rgba($white, .2);
+  border-top: 1px dashed rgba($white, 0.2);
 }
 
 .pipeline-preview {
@@ -79,7 +80,7 @@
   position: relative;
   padding: 1rem;
   margin-top: 1.4rem;
-  background: rgba($background-color, .2);
+  background: rgba($background-color, 0.2);
   border-radius: $border-radius;
 }
 
@@ -102,9 +103,10 @@
 
 .preview-input {
   @include card;
-  margin-right: .8rem;
+
+  margin-right: 0.8rem;
   width: 25%;
-  transition: box-shadow .5s;
+  transition: box-shadow 0.5s;
 
   .badge {
     margin-left: 0;
@@ -112,8 +114,10 @@
 
   &:hover {
     cursor: pointer;
-    box-shadow: 3px 3px 5px rgba($text-color, .4), -1px -1px 1px $light-grey inset;
     background: $background-color;
+    box-shadow:
+      3px 3px 5px rgba($text-color, 0.4),
+      -1px -1px 1px $light-grey inset;
   }
 }
 
@@ -122,7 +126,7 @@
 
   .tag {
     position: relative;
-    top: -.2rem;
+    top: -0.2rem;
   }
 }
 
@@ -153,11 +157,12 @@
 
 .preview-contract {
   @include card;
-  background: rgba($mid-blue, .8);
+
+  background: rgba($mid-blue, 0.8);
   color: $white;
-  margin-bottom: .8rem;
+  margin-bottom: 0.8rem;
   position: relative;
-  transition: box-shadow .5s;
+  transition: box-shadow 0.5s;
 
   &:last-child {
     margin-bottom: 0;
@@ -172,25 +177,25 @@
     color: $action-color-b;
     font-weight: 300;
     font-size: $font-size-xl;
-    margin-bottom: .5rem;
-    transition: color .3s;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s;
     word-wrap: break-word;
     flex: 1;
     min-width: 0;
   }
 
   &.pipeline-readonly {
-    @include stripy(rgba($mid-blue, .8), rgba($mid-blue, 1));
+    @include stripy(rgba($mid-blue, 0.8), rgba($mid-blue, 1));
 
     .tag {
       position: relative;
-      top: -.2rem;
+      top: -0.2rem;
     }
   }
 
   &:hover {
     cursor: pointer;
-    box-shadow: 3px 3px 5px rgba($text-color, .4);
+    box-shadow: 3px 3px 5px rgba($text-color, 0.4);
     background: rgba($mid-blue, 1);
 
     .contract-name {
@@ -233,7 +238,7 @@
 
 .contract-publish {
   padding-top: 1rem;
-  border-top: 1px dotted rgba($grey, .5);
+  border-top: 1px dotted rgba($grey, 0.5);
   width: 100%;
   display: flex;
   align-items: baseline;
@@ -266,7 +271,7 @@
   display: flex;
   align-items: center;
   padding: 2rem 0;
-  animation: show-form .5s;
+  animation: show-form 0.5s;
   overflow: hidden;
 
   .form-group {
@@ -279,12 +284,12 @@
     position: absolute;
     top: -2rem;
     opacity: 0;
-    transition: opacity .3s;
+    transition: opacity 0.3s;
   }
 
   .text-input {
     font-size: $font-size-xl;
-    background: rgba($text-color, .1);
+    background: rgba($text-color, 0.1);
     font-weight: 300;
     color: $white;
     width: 100%;
@@ -295,8 +300,8 @@
     -webkit-animation-fill-mode: both;
   }
 
-  .text-input::Placeholder {
-    color: rgba($white, .4);
+  .text-input::placeholder {
+    color: rgba($white, 0.4);
     line-height: 1.3em;
   }
 
@@ -328,7 +333,7 @@
       position: absolute;
       top: -2rem;
       opacity: 0;
-      transition: opacity .3s;
+      transition: opacity 0.3s;
     }
 
     .text-input {
@@ -338,8 +343,8 @@
       width: 100%;
     }
 
-    .text-input::Placeholder {
-      color: rgba($white, .4);
+    .text-input::placeholder {
+      color: rgba($white, 0.4);
     }
 
     .text-input:valid + .form-label {

@@ -16,6 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# flake8: noqa: E402
+
+# need to patch sockets to make requests async
+from gevent import monkey
+monkey.patch_all()
+import psycogreen.gevent
+psycogreen.gevent.patch_psycopg()
+
 from datetime import datetime
 import signal
 import sys
@@ -24,11 +32,6 @@ import gevent
 from gevent import monkey, sleep
 from gevent.event import AsyncResult
 from gevent.queue import PriorityQueue, Queue
-
-# need to patch sockets to make requests async
-monkey.patch_all()  # noqa
-import psycogreen.gevent
-psycogreen.gevent.patch_psycopg()  # noqa
 
 import psycopg2
 from psycopg2 import sql

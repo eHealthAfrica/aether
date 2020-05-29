@@ -26,14 +26,14 @@ $output-nav-width:      10rem;
 
 .pipeline {
   background: $white;
-  box-shadow: 0 -1px 3px rgba($text-color, .3);
+  box-shadow: 0 -1px 3px rgba($text-color, 0.3);
   position: fixed;
   display: flex;
   top: $navbar-height-xs;
   bottom: 0;
   width: 100vw;
-  transition: top .4s .5s;
-  animation: slide-up .6s;
+  transition: top 0.4s 0.5s;
+  animation: slide-up 0.6s;
   z-index: 4;
 }
 
@@ -48,13 +48,13 @@ $output-nav-width:      10rem;
 }
 
 .pipeline-tab {
-  padding: .4rem .8rem;
+  padding: 0.4rem 0.8rem;
   display: flex;
   align-items: center;
   height: $navbar-height-xs;
   cursor: pointer;
   min-width: 0;
-  border-left: 1px solid rgba($white, .1);
+  border-left: 1px solid rgba($white, 0.1);
 
   .contract-name {
     white-space: nowrap;
@@ -79,7 +79,7 @@ $output-nav-width:      10rem;
 
   &.active {
     background: lighten($dark-blue, 5);
-    border-bottom: 1px solid rgba($white, .1);
+    border-bottom: 1px solid rgba($white, 0.1);
     border-left: 0;
 
     .settings-button {
@@ -92,15 +92,15 @@ $output-nav-width:      10rem;
   }
 
   &:last-of-type {
-    margin-right: .3rem;
+    margin-right: 0.3rem;
   }
 }
 
 .new-contract {
   margin-left: auto;
-  transition: opacity .4s;
+  transition: opacity 0.4s;
   align-self: center;
-  margin-right: .3rem;
+  margin-right: 0.3rem;
   flex: 0 0 auto;
 }
 
@@ -125,8 +125,9 @@ $output-nav-width:      10rem;
   &::before,
   &::after {
     @include shadow-flat-dark;
+
     font: 1rem $icon-font;
-    padding: .5rem;
+    padding: 0.5rem;
     position: absolute;
     top: 0;
     width: 2rem;
@@ -150,14 +151,14 @@ $output-nav-width:      10rem;
   span {
     padding: 0 2.3rem;
     opacity: 0;
-    transition: opacity .2s;
+    transition: opacity 0.2s;
   }
 
   &:focus,
   &:hover {
     &::before,
     &::after {
-      background-color: rgba($action-color-b, .2);
+      background-color: rgba($action-color-b, 0.2);
     }
 
     span {
@@ -201,9 +202,10 @@ $output-nav-width:      10rem;
 
 div[class^='pipeline-nav-item--'] {
   @include label;
+
   color: $action-color-b;
   font-weight: 600;
-  padding: .6rem 0;
+  padding: 0.6rem 0;
   transition: all $transition-speed;
   cursor: pointer;
   overflow: hidden;
@@ -220,14 +222,15 @@ div[class^='pipeline-nav-item--'] {
     width: 1.8rem;
     min-width: 1.8rem;
     height: 1.8rem;
-    padding: .4rem 0;
-    opacity: .4;
-    margin: 0 .8rem;
+    padding: 0.4rem 0;
+    opacity: 0.4;
+    margin: 0 0.8rem;
   }
 
   &:hover {
     .badge {
       @include bg-gradient;
+
       opacity: 1;
     }
   }
@@ -274,7 +277,7 @@ div[class^='pipeline-section--'],
   width: 0;
   height: calc(100vh - #{$navbar-height-xs});
   padding-top: $pipeline-nav-height;
-  transition: width $transition-speed, height .4s .5s;
+  transition: width $transition-speed, height 0.4s 0.5s;
   position: relative;
 }
 
@@ -303,6 +306,7 @@ div[class^='pipeline-section--'],
 
   div.pipeline-nav-item--input {
     @include selected;
+
     width: calc(100% - (#{$entities-nav-width} + #{$mapping-nav-width}));
     color: $text-color;
   }
@@ -335,6 +339,7 @@ div[class^='pipeline-section--'],
 
   div.pipeline-nav-item--entities {
     @include selected;
+
     width: calc(100% - #{$column-width} - (#{$mapping-nav-width}));
     color: $white;
   }
@@ -388,12 +393,13 @@ div[class^='pipeline-section--'],
 
   div.pipeline-nav-item--mapping {
     @include selected;
-    width: calc(100% - #{$column-width}*2);
+
+    width: calc(100% - #{$column-width} * 2);
     color: $white;
   }
 
   div.pipeline-section--mapping {
-    width: calc(100% - #{$column-width}*2);
+    width: calc(100% - #{$column-width} * 2);
 
     .fullscreen-toggle {
       display: flex;
@@ -430,6 +436,7 @@ div[class^='pipeline-section--'],
 
   div.pipeline-nav-item--output {
     @include selected;
+
     width: $output-width;
   }
 
@@ -438,7 +445,7 @@ div[class^='pipeline-section--'],
   }
 
   .pipeline-output {
-    width: calc(#{$output-width} + .2vw);
-    border-left: 1px solid rgba($black, .5);
+    width: calc(#{$output-width} + 0.2vw);
+    border-left: 1px solid rgba($black, 0.5);
   }
 }
