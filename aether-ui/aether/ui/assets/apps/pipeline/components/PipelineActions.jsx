@@ -30,23 +30,22 @@ const PipelineOptions = ({ pipeline }) => {
 
   return (
     <OutsideClickHandler onOutsideClick={() => { setShowOptions(false) }}>
-      <button
-        type='button'
-        className='btn btn-c btn-square mr-2'
-        onClick={() => { setShowOptions(!showOptions) }}
-      >
-        <span className='details-title'>
-          <i className='fas fa-ellipsis-h' />
-        </span>
-      </button>
+      <>
+        <button
+          type='button'
+          className='btn btn-c btn-square mr-2'
+          onClick={() => { setShowOptions(!showOptions) }}
+        >
+          <span className='details-title'>
+            <i className='fas fa-ellipsis-h' />
+          </span>
+        </button>
 
-      {
-        showOptions &&
-          <ul className='options'>
-            <PipelineRemoveButton pipeline={pipeline} />
-            <PipelineRenameButton pipeline={pipeline} />
-          </ul>
-      }
+        <ul className={`options ${showOptions ? '' : 'd-none'}`}>
+          <PipelineRemoveButton pipeline={pipeline} />
+          <PipelineRenameButton pipeline={pipeline} />
+        </ul>
+      </>
     </OutsideClickHandler>
   )
 }

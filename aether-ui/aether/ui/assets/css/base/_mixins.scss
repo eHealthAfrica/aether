@@ -77,3 +77,16 @@
 @mixin shadow-emboss-color {
   box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset, 0 0 4px rgba($text-color, .1);
 }
+
+// STATES
+
+@mixin selected {
+  .badge {
+    @include bg-gradient;
+    opacity: 1;
+
+    .fa-caret-right {
+      transform: rotate(90deg);
+    }
+  }
+}

@@ -49,9 +49,9 @@ $hover-color:        $purple;
 // Fonts
 // ************************************
 
-$body-font-family: 'Open Sans', Arial, sans-serif;
-$code-font-family: 'Fira Mono', SFMono-Regular, Menlo, Monaco, monospace;
-$icon-font:        'Font Awesome 5 Free';
+$body-font-family:   'Open Sans', Arial, sans-serif;
+$code-font-family:   'Fira Mono', SFMono-Regular, Menlo, Monaco, monospace;
+$icon-font:          'Font Awesome 5 Free';
 
 $font-size-xxs:      .7rem;
 $font-size-xs:       .86rem;
@@ -66,12 +66,14 @@ $font-size-xxl:      3.2rem;
 // Sizes
 // ************************************
 
-$unit: 1.2rem;
-$unit-xl: 2rem;
-$border-radius: 4px;
+$unit:               1.2rem;
+$unit-xl:            2rem;
+$border-radius:      4px;
 
-$column-width: 20vw;
-$output-width: 25vw;
-$navbar-height-xs: 2.3rem;
+$column-width:       20vw;
+$output-width:       25vw;
+$navbar-height-xs:   2.3rem;
 
-$indent: 1.2rem;
+$indent:             1.2rem;
+
+$transition-speed:   .6s;

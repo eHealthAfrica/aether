@@ -172,17 +172,10 @@ textarea:active {
   outline: 0;
 }
 
-@-webkit-keyframes autofill {
-  to {
-    color: $white;
-    background: transparent;
-  }
-}
-
 input:-webkit-autofill,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-  -webkit-animation-name: autofill;
+  -webkit-animation-name: autofill-transparent;
   -webkit-animation-fill-mode: both;
 }
 
@@ -201,7 +194,7 @@ select:-webkit-autofill {
   }
 }
 
-.textarea-header+textarea {
+.textarea-header + textarea {
   border-radius: 0 0 $border-radius $border-radius;
 }
 
@@ -367,7 +360,6 @@ code {
   }
 
   input:checked + label {
-
     &::before {
       background: $action-color;
     }
@@ -430,7 +422,6 @@ code {
   @extend .check-default;
 
   input:checked + label {
-
     cursor: default;
 
     &::before {
@@ -458,9 +449,7 @@ code {
   }
 }
 
-
 @media screen and (max-width: 768px) {
-
   body,
   html {
     font-size: 13px;

@@ -18,20 +18,6 @@
  * under the License.
  */
 
-@keyframes show {
-  0% {
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
 .pipeline-settings {
   background: lighten($dark-blue, 5);
   position: absolute;
@@ -73,7 +59,7 @@ div.code {
   margin: 3rem 2.3rem 1rem;
 }
 
-.identity-mapping {
+.identity-contract {
   margin-top: 2rem;
   padding: 1.6rem 2rem 1.2rem 4rem;
   border-radius: $border-radius * 4;

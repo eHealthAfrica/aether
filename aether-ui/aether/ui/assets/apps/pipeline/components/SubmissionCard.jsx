@@ -21,8 +21,8 @@
 import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
-import { Clipboard } from '../../components'
 
+import { Clipboard } from '../../components'
 import { getKernelURL } from '../../redux/settings'
 import { objectToString } from '../../utils'
 
