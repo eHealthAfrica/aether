@@ -182,7 +182,7 @@ class ModelsTests(TestCase):
         )
         self.assertEqual(
             contract.mapping_errors,
-            [{'description': f'It was not possible to validate the contract: Internal Server Error'}]
+            [{'description': 'It was not possible to validate the contract: Internal Server Error'}]
         )
         self.assertEqual(contract.output, [])
         mock_post.assert_called_once()

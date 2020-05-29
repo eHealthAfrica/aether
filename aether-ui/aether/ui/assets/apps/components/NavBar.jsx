@@ -36,7 +36,7 @@ const NavBar = ({ children, showBreadcrumb, onClick }) => {
   const logoutUrl = window.location.origin + window.location.pathname + 'logout'
 
   return (
-    <div data-qa='navbar' className='navbar top-nav'>
+    <div data-test='navbar' className='navbar top-nav'>
       <a className='top-nav-logo' title='aether' onClick={onClick}>
         <div className='logo-container'>
           <div className='flipper'>
@@ -49,12 +49,12 @@ const NavBar = ({ children, showBreadcrumb, onClick }) => {
 
       {
         showBreadcrumb &&
-          <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
+          <div data-test='navbar-breadcrumb' className='top-nav-breadcrumb'>
             {children}
           </div>
       }
 
-      <div data-qa='navbar-user' className='top-nav-user'>
+      <div data-test='navbar-user' className='top-nav-user'>
         <span className='user-name'>
           {user.name}
         </span>

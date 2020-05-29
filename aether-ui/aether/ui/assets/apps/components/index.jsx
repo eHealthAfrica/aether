@@ -22,6 +22,7 @@
 import AppLayout from './AppLayout'
 import AvroSchemaViewer from './AvroSchemaViewer'
 import Clipboard from './Clipboard'
+import Fullscreen from './Fullscreen'
 import LoadingSpinner from './LoadingSpinner'
 import Modal from './Modal'
 import ModalError from './ModalError'
@@ -33,6 +34,7 @@ export {
   AppLayout,
   AvroSchemaViewer,
   Clipboard,
+  Fullscreen,
   LoadingSpinner,
   Modal,
   ModalError,
