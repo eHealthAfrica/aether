@@ -195,7 +195,7 @@ variables that set up the different authentication options.
 Used on Kernel and ODK Module for media files and on the rest to upload static files
 to a CDN.
 
-- `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/2.2/ref/settings/#default-file-storage).
+- `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/3.1/ref/settings/#default-file-storage).
   Available options: `minio`, `s3`, `gcs`.
   More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
   Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development

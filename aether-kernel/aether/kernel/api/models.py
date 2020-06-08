@@ -23,7 +23,6 @@ from datetime import datetime
 from hashlib import md5
 
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
 from django.utils.functional import cached_property
@@ -215,13 +214,13 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
 
     '''
 
-    schema = JSONField(
+    schema = models.JSONField(
         null=True,
         blank=True,
         validators=[wrapper_validate_schema_input_definition],
         verbose_name=_('AVRO schema'),
     )
-    input = JSONField(null=True, blank=True, verbose_name=_('input sample'))
+    input = models.JSONField(null=True, blank=True, verbose_name=_('input sample'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
 
@@ -285,7 +284,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     '''
 
-    payload = JSONField(verbose_name=_('payload'))
+    payload = models.JSONField(verbose_name=_('payload'))
 
     mappingset = models.ForeignKey(
         to=MappingSet,
@@ -435,7 +434,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
 
     name = models.TextField(unique=True, verbose_name=_('name'))
     type = models.TextField(default=NAMESPACE, verbose_name=_('schema type'))
-    definition = JSONField(validators=[wrapper_validate_schema_definition], verbose_name=_('AVRO schema'))
+    definition = models.JSONField(validators=[wrapper_validate_schema_definition], verbose_name=_('AVRO schema'))
 
     # this field is used to group different schemas created automatically
     # from different sources but that share a common structure
@@ -490,7 +489,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
     transport_rule = models.TextField(null=True, blank=True, verbose_name=_('transport rule'))
     masked_fields = models.TextField(null=True, blank=True, verbose_name=_('masked fields'))
     is_encrypted = models.BooleanField(default=False, verbose_name=_('encrypted?'))
-    topic = JSONField(null=True, blank=True, verbose_name=_('topic'))
+    topic = models.JSONField(null=True, blank=True, verbose_name=_('topic'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
@@ -542,7 +541,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
     '''
 
-    definition = JSONField(
+    definition = models.JSONField(
         validators=[wrapper_validate_mapping_definition],
         verbose_name=_('mapping rules'),
     )
@@ -634,7 +633,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     modified = models.CharField(max_length=100, editable=False, verbose_name=_('modified'))
 
-    payload = JSONField(verbose_name=_('payload'))
+    payload = models.JSONField(verbose_name=_('payload'))
     status = models.CharField(max_length=20, choices=ENTITY_STATUS_CHOICES, verbose_name=_('status'))
 
     submission = models.ForeignKey(
@@ -804,7 +803,7 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
         to=get_user_model(),
         verbose_name=_('Requested by'),
     )
-    settings = JSONField(
+    settings = models.JSONField(
         default=dict,
         editable=False,
         verbose_name=_('settings'),

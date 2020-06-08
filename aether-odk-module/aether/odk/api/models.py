@@ -21,7 +21,6 @@ import uuid
 from hashlib import md5
 
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
 from django.urls import reverse
@@ -180,7 +179,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
     form_id = models.TextField(default='', editable=False, verbose_name=_('xForm ID'))
     version = models.TextField(default='0', blank=True, verbose_name=_('xForm version'))
     md5sum = models.CharField(default='', editable=False, max_length=36, verbose_name=_('xForm md5sum'))
-    avro_schema = JSONField(null=True, blank=True, editable=False, verbose_name=_('AVRO schema'))
+    avro_schema = models.JSONField(null=True, blank=True, editable=False, verbose_name=_('AVRO schema'))
 
     # This is needed to submit data to kernel
     kernel_id = models.UUIDField(

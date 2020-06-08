@@ -926,7 +926,11 @@ def __generate_csv_files(
             for entry in cursor:
                 row = dict(zip(columns, entry))
                 data_from += 1
-                json_data = __flatten_dict(row.get(EXPORT_FIELD_DATA), flatten_list)
+                try:
+                    _data = json.loads(row.get(EXPORT_FIELD_DATA))
+                except Exception:  # pragma: no cover
+                    _data = row.get(EXPORT_FIELD_DATA)
+                json_data = __flatten_dict(_data, flatten_list)
                 walker(json_data, {'@': data_from, '@id': str(row.get(EXPORT_FIELD_ID))}, '$')
                 if counter:  # pragma: no cover
                     with counter.get_lock():
@@ -999,6 +1003,7 @@ def __flatten_dict(obj, flatten_list=False):
                     yield f'{key}.{subkey}', subvalue
             else:
                 yield key, value
+
     return dict(_items())
 
 
