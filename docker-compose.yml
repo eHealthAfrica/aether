@@ -7,7 +7,7 @@
 #  * Aether UI & UI Assets
 # ------------------------------------------------------------------------------
 
-version: "2.1"
+version: "2.4"
 
 networks:
   # docker network create ${NETWORK_NAME}
