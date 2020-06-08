@@ -18,16 +18,17 @@
 
 import json
 import random
-import string
 
-from autofixture import generators
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from aether.kernel.api import models
 from aether.kernel.api.filters import EntityFilter, SubmissionFilter
-from aether.kernel.api.tests.utils.generators import generate_project
+from aether.kernel.api.tests.utils.generators import (
+    generate_project,
+    generate_random_string,
+)
 
 
 @override_settings(MULTITENANCY=False)
@@ -261,9 +262,7 @@ class TestFilters(TestCase):
         # Generate projects.
         for _ in range(random.randint(5, 10)):
             generate_project(schema_field_values={
-                # The filter test fails if the generated string ends with a space.
-                # The serializer class removes any trailing whitespace sent to the field.
-                'family': generators.StringGenerator(min_length=10, max_length=30, chars=string.ascii_letters),
+                'family': generate_random_string(),
             })
         entities_count = models.Entity.objects.count()
         # Get a list of all schema families.
@@ -553,9 +552,9 @@ class TestFilters(TestCase):
             {'a': {'b': 'abcde'}, 'z': 3},
             {'a': {'b': {'c': [1, 2, 3]}}, 'z': 3}
         ]
-        gen_payload = generators.ChoicesGenerator(values=payloads)
-        generate_project(submission_field_values={'payload': gen_payload})
+        generate_project(submission_field_values={'payload': lambda x: random.choice(payloads)})
         submissions_count = models.Submission.objects.count()
+        self.assertTrue(submissions_count > 0)
 
         filtered_submissions_count = 0
         for kwargs, payload in zip(filters, payloads):
@@ -593,9 +592,9 @@ class TestFilters(TestCase):
             {'a': {'b': 'abcde'}, 'z': 3},
             {'a': {'b': {'c': [1, 2, 3]}}, 'z': 3}
         ]
-        gen_payload = generators.ChoicesGenerator(values=payloads)
-        generate_project(submission_field_values={'payload': gen_payload})
+        generate_project(submission_field_values={'payload': lambda x: random.choice(payloads)})
         submissions_count = models.Submission.objects.count()
+        self.assertTrue(submissions_count > 0)
 
         filtered_submissions_count = 0
         for kwargs, payload in zip(filters, payloads):

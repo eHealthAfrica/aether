@@ -521,7 +521,7 @@ def execute_records_task(task_id):
                 counter,
             )
         except Exception as e:
-            logger.error(f'Got an error while generating records file: {str(e)}')
+            logger.warning(f'Got an error while generating records file: {str(e)}')
             task.set_error_records(str(e))
             raise  # required to force exitcode != 0
 
@@ -610,7 +610,7 @@ def execute_records_task(task_id):
         logger.info(f'File "{file_name}" ready!')
 
     except Exception as e:
-        logger.error(f'Got an error while generating records file: {str(e)}')
+        logger.debug(f'Got an error while generating records file: {str(e)}')
         task.set_error_records(str(e))
         raise  # required to force exitcode != 0
 
@@ -659,7 +659,7 @@ def execute_attachments_task(task_id):
                     data_from = data_to
 
         except Exception as e:
-            logger.error(f'Got an error while generating attachments file: {str(e)}')
+            logger.debug(f'Got an error while generating attachments file: {str(e)}')
             task.set_error_attachments(str(e))
             raise  # required to force exitcode != 0
 
@@ -774,7 +774,7 @@ def execute_attachments_task(task_id):
             logger.info(f'File "{zip_name}.{zip_ext}" ready!')
 
     except Exception as e:
-        logger.error(f'Got an error while generating attachments file: {str(e)}')
+        logger.debug(f'Got an error while generating attachments file: {str(e)}')
         task.set_error_attachments(str(e))
 
 

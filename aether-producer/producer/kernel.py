@@ -50,7 +50,7 @@ class KernelClient(object):
 
             elif lag_time < -30.0:
                 # Sometimes fractional negatives show up. More than 30 seconds is an issue though.
-                logger.critical(f'INVALID LAG INTERVAL: {lag_time}. Check time settings on server.')
+                logger.warning(f'INVALID LAG INTERVAL: {lag_time}. Check time settings on server.')
 
             _id = row.get('id')
             logger.debug(f'WINDOW EXCLUDE: ID: {_id}, LAG: {lag_time}')
