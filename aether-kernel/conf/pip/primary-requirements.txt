@@ -31,9 +31,8 @@ python-dateutil
 openpyxl
 lxml
 
-
-# Test libraries
-django-autofixture
-
 # Caching libraries
 redis
+
+# Test libraries
+django-dynamic-fixture

@@ -131,7 +131,7 @@ class TopicManager(object):
                 logger.info(f'Created topic {self.name}')
                 return True
             else:
-                logger.critical(f'Topic {self.name} could not be created: {e}')
+                logger.warning(f'Topic {self.name} could not be created: {e}')
                 return False
 
     def get_producer(self):
@@ -180,7 +180,7 @@ class TopicManager(object):
         self.producer = None
 
         if not self.delete_this_topic():
-            logger.critical(f'{tag} FAILED. Topic will not resume.')
+            logger.warning(f'{tag} FAILED. Topic will not resume.')
             self.operating_status = TopicStatus.LOCKED
             return
 
@@ -237,7 +237,7 @@ class TopicManager(object):
     # Callback function registered with Kafka Producer to acknowledge receipt
     def kafka_callback(self, err=None, msg=None, _=None, **kwargs):
         if err:
-            logger.error(f'ERROR [{err}, {msg}, {kwargs}]')
+            logger.warning(f'ERROR [{err}, {msg}, {kwargs}]')
 
         with io.BytesIO() as obj:
             obj.write(msg.value())
@@ -296,7 +296,7 @@ class TopicManager(object):
 
                 end_offset = new_rows[-1].get('modified')
             except Exception as pge:
-                logger.error(f'Could not get new records from kernel: {pge}')
+                logger.warning(f'Could not get new records from kernel: {pge}')
                 self.context.safe_sleep(self.sleep_time)
                 continue
 
@@ -317,7 +317,7 @@ class TopicManager(object):
                             writer.append(msg)
                         else:
                             # Message doesn't have the proper format for the current schema.
-                            logger.critical(
+                            logger.warning(
                                 f'SCHEMA_MISMATCH: NOT SAVED! TOPIC: {self.name}, ID: {_id}')
 
                     writer.flush()
@@ -333,8 +333,8 @@ class TopicManager(object):
                 self.wait_for_kafka(end_offset, failure_wait_time=self.kafka_failure_wait_time)
 
             except Exception as ke:
-                logger.error(f'error in Kafka save: {ke}')
-                logger.error(traceback.format_exc())
+                logger.warning(f'error in Kafka save: {ke}')
+                logger.warning(traceback.format_exc())
                 self.context.safe_sleep(self.sleep_time)
 
     def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=10, failure_wait_time=10):
@@ -413,7 +413,7 @@ class TopicManager(object):
         if not all_failed:
             # Collect Error types for reporting
             for _id, err in self.failed_changes.items():
-                logger.critical(f'PRODUCER_FAILURE: T: {self.name} ID {_id}, ERR_MSG {err.name()}')
+                logger.warning(f'PRODUCER_FAILURE: T: {self.name} ID {_id}, ERR_MSG {err.name()}')
 
             dropped_messages = change_set_size - len(self.successful_changes)
             errors['NO_REPLY'] = dropped_messages - len(self.failed_changes)

@@ -130,7 +130,7 @@ def check_authorization_header(request):
     for field in _REQUIRED_FIELDS:
         if field not in challenge:
             msg = MSG_MISSING.format(field)
-            logger.error(msg)
+            logger.debug(msg)
             raise AuthenticationFailed(msg)
 
     # check field values
@@ -144,19 +144,19 @@ def check_authorization_header(request):
     for field in ('algorithm', 'nonce', 'qop', 'realm'):
         if challenge[field] != expected_values[field]:
             msg = MSG_WRONG.format(field)
-            logger.error(msg)
+            logger.debug(msg)
             raise AuthenticationFailed(msg)
 
     # check URI
     if unquote(urlparse(challenge['uri']).path) != request.path:
         msg = MSG_WRONG.format('uri')
-        logger.error(msg)
+        logger.debug(msg)
         raise AuthenticationFailed(msg)
 
     # SECURITY ENHANCEMENT: check if the nonce timepstamp is not older than ...
     if float(timestamp) <= lifespan.timestamp():
         msg = MSG_WRONG.format('nonce')
-        logger.error(msg)
+        logger.debug(msg)
         raise AuthenticationFailed(msg)
 
     # check nonce counter
@@ -171,7 +171,7 @@ def check_authorization_header(request):
 
     current_counter = int(challenge['nc'], 16)
     if last_counter is not None and last_counter >= current_counter:
-        logger.error(MSG_COUNTER)
+        logger.debug(MSG_COUNTER)
         raise AuthenticationFailed(MSG_COUNTER)
 
     else:
@@ -188,13 +188,13 @@ def check_authorization_header(request):
         user = get_user_model().objects.get(username=parse_username(request, username))
         partial = DigestPartial.objects.get(user=user, username=username)
     except ObjectDoesNotExist:
-        logger.error(MSG_USERNAME)
+        logger.debug(MSG_USERNAME)
         raise AuthenticationFailed(MSG_USERNAME)
 
     # check header response
     response_hash = _generate_response(request, partial.digest, challenge)
     if response_hash != challenge['response']:
-        logger.error(MSG_HEADER)
+        logger.debug(MSG_HEADER)
         raise AuthenticationFailed(MSG_HEADER)
 
     return user

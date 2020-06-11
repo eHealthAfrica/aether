@@ -456,7 +456,7 @@ def xform_submission(request, *args, **kwargs):
     except Exception as e:
         msg = MSG_SUBMISSION_FILE_ERR
         logger.warning(msg)
-        logger.error(str(e))
+        logger.debug(str(e))
         return _send_response(
             request=request,
             nature=NATURE_SUBMIT_ERROR,
@@ -490,7 +490,7 @@ def xform_submission(request, *args, **kwargs):
     xforms = _get_xforms(request).filter(form_id=form_id)
     if not xforms.exists():
         msg = MSG_SUBMISSION_XFORM_NOT_FOUND_ERR.format(form_id=form_id)
-        logger.error(msg)
+        logger.debug(msg)
         return _send_response(
             request=request,
             nature=NATURE_SUBMIT_ERROR,
@@ -501,7 +501,7 @@ def xform_submission(request, *args, **kwargs):
     xforms = xforms.filter(project__active=True, active=True)
     if not xforms.exists():
         msg = MSG_INSTANCE_INACTIVE.format(form_id=form_id)
-        logger.error(msg)
+        logger.debug(msg)
         return _send_response(
             request=request,
             nature=NATURE_SUBMIT_ERROR,
@@ -519,7 +519,7 @@ def xform_submission(request, *args, **kwargs):
 
     if not xform:
         msg = MSG_SUBMISSION_XFORM_UNAUTHORIZED_ERR.format(form_id=form_id)
-        logger.error(msg)
+        logger.debug(msg)
         return _send_response(
             request=request,
             nature=NATURE_SUBMIT_ERROR,
@@ -541,7 +541,7 @@ def xform_submission(request, *args, **kwargs):
     except KernelPropagationError as kpe:
         msg = MSG_SUBMISSION_KERNEL_ARTEFACTS_ERR.format(form_id=form_id)
         logger.warning(msg)
-        logger.error(str(kpe))
+        logger.debug(str(kpe))
         return _send_response(
             request=request,
             nature=NATURE_SUBMIT_ERROR,
@@ -652,7 +652,7 @@ def xform_submission(request, *args, **kwargs):
     except Exception as e:
         msg = MSG_SUBMISSION_SUBMIT_ERR.format(form_id=form_id)
         logger.warning(msg)
-        logger.error(str(e))
+        logger.debug(str(e))
 
         # delete submission and ignore response
         _rollback_submission(submission_id)

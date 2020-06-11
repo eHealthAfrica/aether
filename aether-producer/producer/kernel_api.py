@@ -78,7 +78,7 @@ class KernelAPIClient(KernelClient):
 
         except Exception:
             self.last_check_error = 'Could not access kernel API to get topics'
-            logger.critical(self.last_check_error)
+            logger.warning(self.last_check_error)
             return []
 
     def check_updates(self, realm, schema_id, schema_name, modified):
@@ -91,7 +91,7 @@ class KernelAPIClient(KernelClient):
             response = self._fetch(url=url, realm=realm)
             return response['count'] > 1
         except Exception:
-            logger.critical('Could not access kernel API to look for updates')
+            logger.warning('Could not access kernel API to look for updates')
             return False
 
     def count_updates(self, realm, schema_id, schema_name, modified=''):
@@ -105,7 +105,7 @@ class KernelAPIClient(KernelClient):
             logger.debug(f'Reporting requested size for {schema_name} of {_count}')
             return {'count': _count}
         except Exception:
-            logger.critical('Could not access kernel API to look for updates')
+            logger.warning('Could not access kernel API to look for updates')
             return -1
 
     def get_updates(self, realm, schema_id, schema_name, modified):
@@ -127,7 +127,7 @@ class KernelAPIClient(KernelClient):
             ]
 
         except Exception:
-            logger.critical('Could not access kernel API to look for updates')
+            logger.warning('Could not access kernel API to look for updates')
             return []
 
     def _fetch(self, url, realm=None):
@@ -153,7 +153,7 @@ class KernelAPIClient(KernelClient):
                 return response.json()
             except Exception as e:
                 if count >= _REQUEST_ERROR_RETRIES:
-                    logger.error(f'Error while fetching data from {url}')
-                    logger.error(e)
+                    logger.warning(f'Error while fetching data from {url}')
+                    logger.debug(e)
                     raise e
             sleep(count)  # sleep longer in each iteration

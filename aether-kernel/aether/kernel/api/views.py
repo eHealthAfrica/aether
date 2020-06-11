@@ -587,12 +587,12 @@ class SchemaViewSet(FilteredMixin, viewsets.ModelViewSet):
             # of the supplied mappings only
         }
         '''
-        mappings = filter_by_realm(
-            self.request,
-            models.Mapping.objects.filter(pk__in=request.data or []),
-            'mappingset__project'
-        ).values_list('id', flat=True)
         try:
+            mappings = filter_by_realm(
+                self.request,
+                models.Mapping.objects.filter(pk__in=request.data or []),
+                'mappingset__project'
+            ).values_list('id', flat=True)
             return Response(utils.get_unique_schemas_used(mappings))
         except Exception as e:
             return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
