@@ -157,6 +157,7 @@ CLIENT_REALM=test
 # ==================================================================
 # set to 1 to disable parallel execution
 TEST_PARALLEL=
+TEST_WORKERS=5
 
 # to speed up development changes in the SDK library
 # https://github.com/eHealthAfrica/aether-django-sdk-library
