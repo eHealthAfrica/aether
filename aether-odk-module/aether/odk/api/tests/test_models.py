@@ -185,8 +185,8 @@ class ModelsTests(CustomTestCase):
                 project=project,
                 xml_data=self.samples['xform']['xml-ok'],
             )
-            self.assertIn('duplicate key value violates unique constraint',
-                          str(ie.exception))
+        self.assertIn('Xform with this Project, XForm ID and XForm version already exists.',
+                      str(ie.exception))
 
         # it works with another version
         XForm.objects.create(
