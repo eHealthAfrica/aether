@@ -115,7 +115,7 @@ class UtilsTest(TestCase):
         project_id = str(project.pk)
 
         # publish with exceptions
-        with self.assertRaises(utils.PublishError) as pe:
+        with self.assertRaises(utils.PublishError) as pe1:
             with mock.patch('aether.ui.api.utils.kernel_data_request',
                             side_effect=Exception('Error in project')) as mock_kernel:
                 utils.publish_project(project)
@@ -125,9 +125,9 @@ class UtilsTest(TestCase):
                     data=mock.ANY,
                     headers={'Authorization': mock.ANY},
                 )
-            self.assertIn('Error in project', str(pe.exception))
+        self.assertIn('Error in project', str(pe1.exception))
 
-        with self.assertRaises(utils.PublishError) as pe:
+        with self.assertRaises(utils.PublishError) as pe2:
             with mock.patch('aether.ui.api.utils.kernel_data_request',
                             side_effect=Exception('Error in pipeline')) as mock_kernel:
                 utils.publish_pipeline(pipeline)
@@ -137,9 +137,9 @@ class UtilsTest(TestCase):
                     data=mock.ANY,
                     headers={'Authorization': mock.ANY},
                 )
-            self.assertIn('Error in pipeline', str(pe.exception))
+        self.assertIn('Error in pipeline', str(pe2.exception))
 
-        with self.assertRaises(utils.PublishError) as pe:
+        with self.assertRaises(utils.PublishError) as pe3:
             with mock.patch('aether.ui.api.utils.kernel_data_request',
                             side_effect=Exception('Error in contract')) as mock_kernel:
                 with mock.patch('aether.ui.api.utils.publish_preflight',
@@ -152,7 +152,7 @@ class UtilsTest(TestCase):
                         data=mock.ANY,
                         headers={'Authorization': mock.ANY},
                     )
-            self.assertIn('Error in contract', str(pe.exception))
+        self.assertIn('Error in contract', str(pe3.exception))
 
         # publish without exceptions
         with mock.patch('aether.ui.api.utils.kernel_data_request') as mock_kernel:
@@ -353,7 +353,7 @@ class UtilsTest(TestCase):
         contract.refresh_from_db()
         with self.assertRaises(utils.PublishError) as pe:
             utils.publish_contract(contract)
-            self.assertIn('Contract is read only', str(pe.exception))
+        self.assertIn('Contract is read only', str(pe.exception))
 
         contract.is_read_only = False
         contract.save()
