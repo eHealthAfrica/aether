@@ -773,7 +773,7 @@ def __get_xform_itexts(xform_dict):
             translation = tt
             break
 
-    # convert all text entries in a dict wich key is the text id
+    # convert all text entries in a dict which key is the text id
     itexts = {}
     for text_entry in __wrap_as_list(translation.get('text')):
         for value in __wrap_as_list(text_entry.get('value')):

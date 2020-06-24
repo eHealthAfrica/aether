@@ -147,7 +147,7 @@ class TestMappingValidation(TestCase):
         result = mapping_validation.validate_setter(valid_schemas, path)
         self.assertEqual(expected, result)
 
-    def test_validate_setter__success__set_array_at_idndex(self):
+    def test_validate_setter__success__set_array_at_index(self):
         path = 'Nested.geom.coordinates[0]'
         expected = mapping_validation.Success(path, [])
         result = mapping_validation.validate_setter(valid_schemas, path)
