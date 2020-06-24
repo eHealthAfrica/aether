@@ -956,17 +956,17 @@ def __find_in_dict(dictionary, key):
             yield result
 
 
-def __find_by_key_value(dictionary, key, value, hasOptions=False):
-    last_node = value.split('/')[-1] if hasOptions else None
+def __find_by_key_value(dictionary, key, value, has_options=False):
+    last_node = value.split('/')[-1] if has_options else None
 
     for k, v in dictionary.items():
         if k == key and v == value:
             yield dictionary
-        elif hasOptions and k == key and v == last_node:
+        elif has_options and k == key and v == last_node:
             yield dictionary
 
         # continue searching in the value keys
-        for result in __iterate_dict(v, __find_by_key_value, key, value, hasOptions):
+        for result in __iterate_dict(v, __find_by_key_value, key, value, has_options):
             yield result
 
 
