@@ -800,7 +800,7 @@ class ViewsTest(TestCase):
         response = self.client.post(url, data, content_type='application/json')
         self.assertEqual(response.status_code, 500)
 
-    def test_entity__submit_mutiple__success(self):
+    def test_entity__submit_multiple__success(self):
         response = self.client.post(reverse('entity-list'),
                                     json.dumps([]),
                                     content_type='application/json')
