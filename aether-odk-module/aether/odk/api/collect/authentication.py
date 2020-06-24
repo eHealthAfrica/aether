@@ -29,7 +29,7 @@ from .auth_utils import check_authorization_header, get_www_authenticate_header
 
 class CollectAuthentication(BaseAuthentication):
     '''
-    Use Basic or Digest authentication depending on the autorization header.
+    Use Basic or Digest authentication depending on the authorization header.
     '''
 
     def authenticate(self, request):

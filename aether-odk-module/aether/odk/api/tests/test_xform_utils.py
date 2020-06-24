@@ -23,12 +23,12 @@ from ..xform_utils import (
     __find_by_key_value as find_value,
     __get_all_paths as get_paths,
     __get_avro_primitive_type as get_type,
+    __get_xform_choices as get_choices,
     __get_xform_instance as get_instance,
     __get_xform_itexts as get_texts,
     __get_xform_label as get_label,
     __parse_xml_to_dict as parse_xml_to_dict,
     __validate_avro_name as validate_avro_name,
-    __get_xform_choices as get_choices,
 
     get_instance_data_from_xml,
 
@@ -271,8 +271,8 @@ class XFormUtilsParsersTests(CustomTestCase):
             xml_content = parse_xform_file('xform.xml', fp)
 
         self.assertEqual(
-            json.dumps(parse_xml_to_dict(xls_content), sort_keys=True),
-            json.dumps(parse_xml_to_dict(xml_content), sort_keys=True),
+            parse_xml_to_dict(xls_content),
+            parse_xml_to_dict(xml_content),
             'The XLS form and the XML form should define both the same form'
         )
 
@@ -671,10 +671,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         )
 
         # the same fields
-        self.assertEqual(
-            json.dumps(schema['fields'], sort_keys=True),
-            json.dumps(schema_i18n['fields'], sort_keys=True)
-        )
+        self.assertEqual(schema['fields'], schema_i18n['fields'])
 
     def test__parse_xform_to_avro_schema__nested_repeats(self):
         xml_definition = '''
@@ -1012,7 +1009,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                     </item>
                     <item>
                         <label>Non-residential</label>
-                        <value>non_residentia</value>
+                        <value>non_residential</value>
                     </item>
                     <item>
                         <label>Mixed</label>
@@ -1120,7 +1117,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                         },
                         {
                             'label': 'Non-residential',
-                            'value': 'non_residentia'
+                            'value': 'non_residential'
                         },
                         {
                             'label': 'Mixed',
@@ -1199,7 +1196,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        found_nodes = list(find_value(xform_dict, '@ref', '/nm/a/b/humidity',  True))
+        found_nodes = list(find_value(xform_dict, '@ref', '/nm/a/b/humidity', True))
         self.assertEqual(len(found_nodes), 2)
 
     def test__get_choices(self):
@@ -1267,6 +1264,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
+
         choices = get_choices(xform_dict, '/a/b/c/humidity')
         self.assertEqual(choices, expected)
 

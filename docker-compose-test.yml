@@ -13,6 +13,10 @@
 
 version: "2.4"
 
+volumes:
+  db_data_test: {}
+  redis_data_test: {}
+
 services:
 
   # ---------------------------------
@@ -23,11 +27,15 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: postgres-base
+    volumes:
+      - db_data_test:/var/lib/postgresql/data
 
   redis-test:
     extends:
       file: ./docker-compose-base.yml
       service: redis-base
+    volumes:
+      - redis_data_test:/var/lib/redis/data
 
 
   # ---------------------------------

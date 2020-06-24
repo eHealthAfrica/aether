@@ -21,6 +21,7 @@ aether.sdk[cache,server,storage,test]
 # Aether Python library
 aether.python
 
+
 # Django specific
 django<3
 django-filter
@@ -31,9 +32,6 @@ python-dateutil
 # XLSX libraries
 openpyxl
 lxml
-
-# Caching libraries
-redis
 
 # Test libraries
 django-dynamic-fixture

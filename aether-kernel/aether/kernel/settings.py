@@ -36,7 +36,7 @@ ROOT_URLCONF = 'aether.kernel.urls'
 
 INSTALLED_APPS += [
     'django_filters',
-    'drf_yasg'
+    'drf_yasg',
 ]
 
 MULTITENANCY_MODEL = 'kernel.Project'

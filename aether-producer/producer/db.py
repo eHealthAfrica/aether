@@ -54,7 +54,7 @@ class PriorityDatabasePool(object):
     # The large number of requests AEP makes was having a bad time with SQLAlchemy's
     # QueuePool implementation, causing a large number of connections in the pool to
     # be occupied, eventually overflowing. Additionally, a normal FIFO queue was
-    # causing imporant operations like offset.set() to sit idle for longer than acceptable.
+    # causing important operations like offset.set() to sit idle for longer than acceptable.
     # The priority queue is implemented to respect both stated priority and insert order.
     # So effectively for each priority level, a FIFO queue is implemented.
 

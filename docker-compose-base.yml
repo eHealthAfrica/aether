@@ -10,7 +10,7 @@
 #  * Aether Kafka Producer
 #
 # These container will be extended in the other DC files with dependencies and networks.
-# Volumes and environment variables can be overriden in those files too.
+# Volumes and environment variables can be overridden in those files too.
 # See more in: https://docs.docker.com/compose/extends/
 # ------------------------------------------------------------------------------
 
@@ -100,6 +100,7 @@ services:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
       PROFILING_ENABLED: "true"
 
@@ -184,6 +185,8 @@ services:
     stdin_open: true
     tty: true
     environment:
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
+
       DEFAULT_REALM: ${DEFAULT_REALM}
       REALM_COOKIE: ${REALM_COOKIE}
 
@@ -215,6 +218,7 @@ services:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
       PROFILING_ENABLED: "true"
 
@@ -287,6 +291,7 @@ services:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
       PROFILING_ENABLED: "true"
 
@@ -377,6 +382,7 @@ services:
     stdin_open: true
     environment:
       PYTHONUNBUFFERED: 1
+      LOG_LEVEL: ${LOGGING_LEVEL:-ERROR}
 
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
