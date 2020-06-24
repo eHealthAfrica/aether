@@ -39,4 +39,5 @@ router.register('export-tasks', views.ExportTaskViewSet)
 
 urlpatterns = router.urls + [
     path('validate-mappings/', view=views.validate_mappings_view, name='validate-mappings'),
+    path('generate-avro-input/', view=views.generate_avro_input, name='generate-avro-input'),
 ]

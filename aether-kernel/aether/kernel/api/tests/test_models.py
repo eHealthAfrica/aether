@@ -70,7 +70,7 @@ class ModelsTests(TransactionTestCase):
         self.assertFalse(schemadecorator.is_accessible(REALM))
         self.assertIsNone(schemadecorator.get_realm())
 
-        with self.assertRaises(IntegrityError) as err:
+        with self.assertRaises(IntegrityError) as err1:
             models.MappingSet.objects.create(
                 revision='a sample revision',
                 name='a sample mapping set',
@@ -78,9 +78,9 @@ class ModelsTests(TransactionTestCase):
                 input=EXAMPLE_SOURCE_DATA,
                 project=project,
             )
-            self.assertIn('Input does not conform to schema', str(err.exception))
+        self.assertIn('Input does not conform to schema', str(err1.exception))
 
-        with self.assertRaises(IntegrityError) as err:
+        with self.assertRaises(IntegrityError) as err2:
             models.MappingSet.objects.create(
                 revision='a sample revision',
                 name='a sample mapping set',
@@ -91,7 +91,7 @@ class ModelsTests(TransactionTestCase):
                 input={},
                 project=project,
             )
-            self.assertIn('Record schema requires a non-empty fields property.', str(err.exception))
+        self.assertIn('Record schema requires a non-empty fields property.', str(err2.exception))
 
         mappingset = models.MappingSet.objects.create(
             revision='a sample revision',
@@ -136,9 +136,9 @@ class ModelsTests(TransactionTestCase):
 
         # check mapping definition validation
         mapping.definition = {'entities': {'a': str(uuid.uuid4())}}
-        with self.assertRaises(IntegrityError) as err:
+        with self.assertRaises(IntegrityError) as err3:
             mapping.save()
-            self.assertIn('is not valid under any of the given schemas', str(err.exception))
+        self.assertIn('is not valid under any of the given schemas', str(err3.exception))
 
         submission = models.Submission.objects.create(
             revision='a sample revision',
@@ -184,15 +184,15 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(attachment_2.submission_revision, 'next revision')
         self.assertNotEqual(attachment_2.submission_revision, submission.revision)
 
-        with self.assertRaises(IntegrityError) as err:
+        with self.assertRaises(IntegrityError) as err4:
             models.Entity.objects.create(
                 revision='a sample revision',
                 payload=EXAMPLE_SOURCE_DATA,  # this is the submission payload without ID
                 status='Publishable',
                 schemadecorator=schemadecorator,
             )
-            self.assertIn('Extracted record did not conform to registered schema',
-                          str(err.exception))
+        self.assertIn('Extracted record did not conform to registered schema',
+                      str(err4.exception))
 
         entity = models.Entity.objects.create(
             revision='a sample revision',
@@ -285,7 +285,7 @@ class ModelsTests(TransactionTestCase):
         # it's trying to create a new schema (not replacing the current one)
         with self.assertRaises(IntegrityError) as ie:
             schema.save()
-            self.assertIn('Key (name)=(a first schema name) already exists.', str(ie.exception))
+        self.assertIn('Key (name)=(a first schema name) already exists.', str(ie.exception))
 
         # if we change the name we'll end up with two schemas
         schema.name = 'a second schema name'

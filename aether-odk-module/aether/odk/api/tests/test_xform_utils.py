@@ -46,7 +46,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
     def test__validate_xform__not_valid(self):
         with self.assertRaises(XFormParseError) as ve:
             validate_xform(self.samples['xform']['xml-err'])
-            self.assertIn('Not valid xForm definition.', str(ve.exception), ve)
+        self.assertIn('Not valid xForm definition.', str(ve.exception), ve)
 
     def test__validate_xform__missing_required__html(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -55,8 +55,8 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     <html></html>
                 '''
             )
-            self.assertIn('Missing required tags:', str(ve.exception), ve)
-            self.assertIn('<h:html>', str(ve.exception), ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<h:html>', str(ve.exception), ve)
 
     def test__validate_xform__missing_required__html__children(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -68,9 +68,9 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required tags:', str(ve.exception), ve)
-            self.assertIn('<h:body> in <h:html>', str(ve.exception), ve)
-            self.assertIn('<h:head> in <h:html>', str(ve.exception), ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<h:body> in <h:html>', str(ve.exception), ve)
+        self.assertIn('<h:head> in <h:html>', str(ve.exception), ve)
 
     def test__validate_xform__missing_required__head__children(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -85,9 +85,9 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required tags:', str(ve.exception), ve)
-            self.assertIn('<h:title> in <h:html><h:head>', str(ve.exception), ve)
-            self.assertIn('<model> in <h:html><h:head>', str(ve.exception), ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<h:title> in <h:html><h:head>', str(ve.exception), ve)
+        self.assertIn('<model> in <h:html><h:head>', str(ve.exception), ve)
 
     def test__validate_xform__missing_required__model__children(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -104,8 +104,8 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required tags:', str(ve.exception), ve)
-            self.assertIn('<instance> in <h:html><h:head><model>', str(ve.exception), ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<instance> in <h:html><h:head><model>', str(ve.exception), ve)
 
     def test__validate_xform__no_instance(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -125,7 +125,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__validate_xform__no_title__no_form_id(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -146,7 +146,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required form title and instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required form title and instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__no_title__blank(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -167,7 +167,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required form title.', str(ve.exception), ve)
+        self.assertIn('Missing required form title.', str(ve.exception), ve)
 
     def test__validate_xform__no_xform_id(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -188,7 +188,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__no_xform_id__blank(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -209,7 +209,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__with__title__and__xform_id(self):
         try:
@@ -375,7 +375,7 @@ class XFormUtilsAvroTests(CustomTestCase):
     def test__get_xform_instance__error(self):
         with self.assertRaises(XFormParseError) as ve:
             get_instance({})
-            self.assertIn('Missing required instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance__error__no_instances(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -388,7 +388,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                     }
                 }
             })
-            self.assertIn('Missing required instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance__error___no_default_instance(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -405,7 +405,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                     }
                 }
             })
-            self.assertIn('Missing required instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance(self):
         xform_dict = {
