@@ -17,20 +17,78 @@
 # under the License.
 
 from django.db import transaction
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
-from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS, extract_create_entities
-from . import models
+from aether.python.entity.extractor import (
+    ENTITY_EXTRACTION_ERRORS as KEY,
+    extract_create_entities,
+)
+
+from .models import SchemaDecorator, Submission, Entity
+from .utils import send_model_item_to_redis
+
+
+class ExtractMixin(object):
+
+    @action(detail=True, methods=['patch'])
+    def extract(self, request, pk, *args, **kwargs):
+        '''
+        Executes the entity extraction for the submission or the linked submissions.
+
+        Optionally expects as query parameter:
+
+        - `overwrite` to indicate that even the submissions with extracted
+          entities should repeat the extraction process. It's only taken into
+          consideration for projects or mapping sets, single submissions are
+          always processed.
+
+        Reachable at ``PATCH /{model}/{pk}/extract/``
+        '''
+
+        instance = self.get_object_or_404(pk=pk)
+
+        if isinstance(instance, Submission):
+            run_extraction(instance, True, True)
+
+        else:
+            overwrite = bool(self.request.query_params.get('overwrite'))
+            if overwrite:
+                submissions = instance.submissions.all()
+            else:
+                submissions = instance.submissions.filter(is_extracted=False)
+
+            # send to EXM if the number of submissions is too big
+            local = submissions.count() < 100
+
+            for submission in submissions:
+                run_extraction(submission, overwrite, local)
+
+        return Response(
+            data=self.serializer_class(instance, context={'request': request}).data,
+        )
+
+
+def run_extraction(submission, overwrite=False, local=True):
+    if local:
+        try:
+            run_entity_extraction(submission, overwrite)
+        except Exception as e:
+            # capture here the exception so the transaction can rollback any
+            # changed ocurred during the extraction
+            submission.payload[KEY] = submission.payload.get(KEY, [])
+            submission.payload[KEY] += [str(e)]
+            submission.save(update_fields=['payload'])
+    else:
+        send_model_item_to_redis(submission)
 
 
 @transaction.atomic
 def run_entity_extraction(submission, overwrite=False):
     if overwrite:
-        # FIXME:
-        # there should be a better way to detect the generated entities and
-        # replace their payloads with the new ones
         submission.entities.all().delete()
         payload = submission.payload
-        del payload[ENTITY_EXTRACTION_ERRORS]
+        payload.pop(KEY, None)
         submission.payload = payload
         submission.is_extracted = False
         submission.save(update_fields=['payload', 'is_extracted'])
@@ -48,12 +106,12 @@ def run_entity_extraction(submission, overwrite=False):
         entity_sd_ids = mapping.definition.get('entities')
         # Get the schema of the schemadecorator
         schema_decorator = {
-            name: models.SchemaDecorator.objects.get(pk=_id)
+            name: SchemaDecorator.objects.get(pk=_id)
             for name, _id in entity_sd_ids.items()
         }
         schemas = {
-            name: ps.schema.definition
-            for name, ps in schema_decorator.items()
+            name: sd.schema.definition
+            for name, sd in schema_decorator.items()
         }
         _, entities = extract_create_entities(
             submission_payload=submission.payload,
@@ -62,24 +120,15 @@ def run_entity_extraction(submission, overwrite=False):
         )
 
         for entity in entities:
-            schemadecorator_name = entity.schemadecorator_name
-            schemadecorator = schema_decorator[schemadecorator_name]
-            entity_instance = models.Entity(
+            Entity(
                 payload=entity.payload,
                 status=entity.status,
-                schemadecorator=schemadecorator,
+                schemadecorator=schema_decorator[entity.schemadecorator_name],
                 submission=submission,
                 mapping=mapping,
                 mapping_revision=mapping.revision,
                 project=submission.project,
-            )
-            entity_instance.save()
+            ).save()
 
-    # this should include in the submission payload the following properties
-    # generated during the extraction:
-    # - ``aether_errors``, with all the errors that made not possible
-    #   to create the entities.
-    # - ``aether_extractor_enrichment``, with the generated values that allow us
-    #   to re-execute this process again with the same result.
     submission.is_extracted = submission.entities.count() > 0
     submission.save(update_fields=['payload', 'is_extracted'])

@@ -32,7 +32,7 @@ class ExtractEntitiesCommandTest(TestCase):
         # Redirect to /dev/null in order to not clutter the test log.
         self.out = open(os.devnull, 'w')
 
-    @mock.patch('aether.kernel.management.commands.extract_entities.run_entity_extraction')
+    @mock.patch('aether.kernel.management.commands.extract_entities.run_extraction')
     def test__extract_entities__no_data(self, mock_extractor):
         try:
             call_command('extract_entities', stdout=self.out, stderr=self.out)

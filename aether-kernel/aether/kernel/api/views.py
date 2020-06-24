@@ -42,14 +42,14 @@ from aether.python.entity.extractor import (
 )
 
 from .constants import LINKED_DATA_MAX_DEPTH
-from .entity_extractor import run_entity_extraction
+from .entity_extractor import ExtractMixin
 from .exporter import ExporterMixin
 from .mapping_validation import validate_mappings
 
 from . import filters, models, project_artefacts, serializers, utils
 
 
-class ProjectViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
+class ProjectViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
@@ -304,7 +304,7 @@ class ProjectViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
         return Response(data=results)
 
 
-class MappingSetViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
+class MappingSetViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, viewsets.ModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetSerializer
     filter_class = filters.MappingSetFilter
@@ -354,7 +354,7 @@ class MappingViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
         return Response(topics)
 
 
-class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.ModelViewSet):
+class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMixin, viewsets.ModelViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
@@ -474,33 +474,6 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.M
         if result['is_valid']:
             return Response(result)
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['patch'])
-    def extract(self, request, pk, *args, **kwargs):
-        '''
-        Forces entity extraction.
-
-        Reachable at ``PATCH /submissions/{pk}/extract/``
-        '''
-
-        instance = self.get_object_or_404(pk=pk)
-
-        try:
-            run_entity_extraction(instance, overwrite=True)
-
-            return Response(
-                data=self.serializer_class(instance, context={'request': request}).data,
-                status=status.HTTP_200_OK,
-            )
-        except Exception as e:
-            key = ENTITY_EXTRACTION_ERRORS
-            instance.payload[key] = instance.payload.get(key, []) + [str(e)]
-            instance.save()
-
-            return Response(
-                data=self.serializer_class(instance, context={'request': request}).data,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
     def destroy(self, request, pk=None, *args, **kwargs):
         '''

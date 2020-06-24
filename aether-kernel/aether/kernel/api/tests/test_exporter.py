@@ -38,7 +38,7 @@ from django.urls import reverse
 
 from aether.kernel.api import models
 
-from aether.kernel.api.entity_extractor import run_entity_extraction
+from aether.kernel.api.entity_extractor import run_extraction
 from aether.kernel.api.project_artefacts import upsert_project_with_avro_schemas
 
 from aether.kernel.api.exporter import (
@@ -403,7 +403,7 @@ class ExporterViewsTest(TransactionTestCase):
             mappingset=models.MappingSet.objects.get(pk=artefacts_id),
         )
         # extract entities
-        run_entity_extraction(submission)
+        run_extraction(submission)
         self.assertEqual(models.Entity.objects.count(), 1)
 
         self.assertEqual(models.ExportTask.objects.count(), 0)
@@ -1185,7 +1185,7 @@ class ExporterViewsTest(TransactionTestCase):
         )
         self.assertEqual(models.Attachment.objects.count(), 3)
 
-        run_entity_extraction(submission)
+        run_extraction(submission)
         self.assertEqual(models.Entity.objects.count(), 2)
         entity_2 = submission.entities.first()
 
@@ -1193,7 +1193,7 @@ class ExporterViewsTest(TransactionTestCase):
         submission.pk = None
         submission.save()
         self.assertEqual(models.Submission.objects.count(), 3)
-        run_entity_extraction(submission)
+        run_extraction(submission)
         self.assertEqual(models.Entity.objects.count(), 3)
 
         response = self.client.post(
