@@ -22,6 +22,7 @@ aether.sdk[cache,server,storage,test]
 aether.python
 
 # Django specific
+django<3
 django-filter
 django-model-utils
 drf-yasg

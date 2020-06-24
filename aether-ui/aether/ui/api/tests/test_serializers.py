@@ -126,7 +126,7 @@ class SerializersTests(TestCase):
 
         with self.assertRaises(Exception) as ve_c:
             contract_3.save()
-            self.assertIn('Contract is read only', str(ve_c.exception))
+        self.assertIn('Contract is read only', str(ve_c.exception))
 
         # try to update the pipeline
         pipeline_3 = serializers.PipelineSerializer(
@@ -141,4 +141,4 @@ class SerializersTests(TestCase):
 
         with self.assertRaises(Exception) as ve_p:
             pipeline_3.save()
-            self.assertIn('Pipeline is read only', str(ve_p.exception))
+        self.assertIn('Pipeline is read only', str(ve_p.exception))
