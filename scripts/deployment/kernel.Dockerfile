@@ -14,7 +14,7 @@ RUN /tmp/setup_revision.sh
 ## using python image to build app
 ################################################################################
 
-FROM python:3.7-slim-buster
+FROM python:3.8-slim-buster
 
 LABEL description="Aether Kernel" \
       name="aether-kernel" \
