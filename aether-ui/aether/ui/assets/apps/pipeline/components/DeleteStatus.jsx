@@ -166,7 +166,7 @@ const DeleteStatus = ({
             <label className='form-label mt-4'>
               <span className='badge badge-b'>{deleteStatus.submissions}</span>
               <FormattedMessage
-                id='delete.modal.sumbissions.status'
+                id='delete.modal.submissions.status'
                 defaultMessage='Submissions deleted'
               />
             </label>

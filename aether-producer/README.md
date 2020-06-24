@@ -6,13 +6,13 @@ The Aether Producer (AP) provides a bridge between the RDBMS world of the kernel
 
 #### Method of Operation
 
-The AP interacts directly with the kernel database. It polls to keep state on all registered entity types. Once a type is registered, the AP will continuously query the kernel database for new entities that have been added to that type. 
- - By default all entities of the same type are produced to a Kafka topic bearing the name of that entity type. 
- - By default messages adhereing to the same schema are serialized into Avro objects containing between 1 -> 250 messages to save space.
+The AP interacts directly with the kernel database. It polls to keep state on all registered entity types. Once a type is registered, the AP will continuously query the kernel database for new entities that have been added to that type.
+ - By default all entities of the same type are produced to a Kafka topic bearing the name of that entity type.
+ - By default messages adhering to the same schema are serialized into Avro objects containing between 1 -> 250 messages to save space.
 
 #### Persistence
 
-In kernel, all entities contain a modified datetime field which the AP uses to determine which entities have already been sent to Kafka. The AP refers to this value as an offset, and for each entity type, it maintains a record of the lastest offset that has been accepted by Kafka. On shutdown or failure, the AP will resume polling for at `modified > last_offset`.
+In kernel, all entities contain a modified datetime field which the AP uses to determine which entities have already been sent to Kafka. The AP refers to this value as an offset, and for each entity type, it maintains a record of the latest offset that has been accepted by Kafka. On shutdown or failure, the AP will resume polling for at `modified > last_offset`.
 
 #### Control
 

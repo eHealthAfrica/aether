@@ -9,7 +9,7 @@
 #  * Aether Kafka Producer
 #
 # These container will be extended in the other DC files with dependencies and networks.
-# Volumes and environment variables can be overriden in those files too.
+# Volumes and environment variables can be overridden in those files too.
 # See more in: https://docs.docker.com/compose/extends/
 # ------------------------------------------------------------------------------
 

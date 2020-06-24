@@ -146,7 +146,7 @@ logger.setLevel(settings.LOGGING_LEVEL)
 
 def _get_host(request, current_path):
     # ODK Collect needs the full URL to get the resources. They have only the path
-    # like /my/resouce/path/id but not the scheme or the host name,
+    # like /my/resource/path/id but not the scheme or the host name,
     # using the current path we try to figure out the real host to build the
     # linked URLs in the XML templates.
     #
