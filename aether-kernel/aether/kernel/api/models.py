@@ -25,7 +25,7 @@ from hashlib import md5
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.db import models, IntegrityError, transaction
+from django.db import models, IntegrityError
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -312,16 +312,10 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         name = self.mappingset.name if self.mappingset else self.id
         return f'{self.project.name}-{name}'
 
-    @transaction.atomic
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project if self.mappingset else self.project
         super(Submission, self).save(*args, **kwargs)
-        try:
-            send_model_item_to_redis(self)
-        except Exception as e:  # pragma: no cover : rollback if redis is offline
-            raise ValidationError(
-                str(e)
-            )
+        send_model_item_to_redis(self)
 
         # invalidates cached properties
         for p in ['payload_prettified']:  # pragma: no cover
@@ -591,16 +585,17 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
         self.project = self.mappingset.project
         super(Mapping, self).save(*args, **kwargs)
 
-        # invalidates cached properties
-        for p in ['definition_prettified']:  # pragma: no cover
-            if p in self.__dict__:
-                del self.__dict__[p]
-
         self.schemadecorators.set([
             SchemaDecorator.objects.get(pk=entity_pk, project=self.project)
             for entity_pk in self.definition.get('entities', {}).values()
         ])
+
         send_model_item_to_redis(self)
+
+        # invalidates cached properties
+        for p in ['definition_prettified']:  # pragma: no cover
+            if p in self.__dict__:
+                del self.__dict__[p]
 
     def get_mt_instance(self):
         # because project can be null we need to override the method

@@ -166,6 +166,8 @@ def entity_extraction(task, submission_queue, redis=None):
     # receive task from redis
     # if artifacts found on redis, get from kernel and cache on redis
     # if artifacts not found on kernel ==> flag submission as invalid and skip extraction
+    if not hasattr(task, 'data'):
+        return
 
     try:
         tenant = task.tenant
@@ -188,7 +190,7 @@ def entity_extraction(task, submission_queue, redis=None):
             # get required artefacts
             schemas = {}
             schema_decorators = mapping['definition']['entities']
-            for schemadecorator_id in mapping[utils.ARTEFACT_NAMES.schemadecorators]:
+            for schemadecorator_id in schema_decorators.values():
                 sd = utils.get_from_redis_or_kernel(
                     id=schemadecorator_id,
                     model_type=utils.ARTEFACT_NAMES.schemadecorators,
@@ -221,6 +223,7 @@ def entity_extraction(task, submission_queue, redis=None):
                 mapping_definition=mapping['definition'],
                 schemas=schemas,
             )
+
             for entity in extracted_entities:
                 submission_entities.append({
                     'id': entity.payload['id'],
@@ -246,11 +249,11 @@ def entity_extraction(task, submission_queue, redis=None):
             SUBMISSION_EXTRACTION_FLAG: is_extracted,
             SUBMISSION_ENTITIES_FIELD: submission_entities,
         }
-        _logger.debug(f'finished task {task.id}')
+        _logger.info(f'finished task {task.id}')
         return 1
 
     except Exception as err:
-        _logger.info(f'extractor error: {err}')
+        _logger.info(f'extraction error on task {task.id}: {err}')
         processed_submission = {
             'id': task.id,
             SUBMISSION_PAYLOAD_FIELD: {

@@ -60,6 +60,7 @@ def run_entity_extraction(submission, overwrite=False):
             mapping_definition=mapping.definition,
             schemas=schemas,
         )
+
         for entity in entities:
             schemadecorator_name = entity.schemadecorator_name
             schemadecorator = schema_decorator[schemadecorator_name]
