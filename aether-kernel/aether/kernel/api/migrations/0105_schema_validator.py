@@ -2,7 +2,7 @@
 
 import aether.kernel.api.validators
 import django.contrib.postgres.fields.jsonb
-from django.db import migrations, models
+from django.db import migrations
 
 
 class Migration(migrations.Migration):

@@ -18,7 +18,7 @@
 
 from django.core.exceptions import ValidationError
 from aether.python import exceptions, validators
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from .redis import in_same_project_and_cache
 
