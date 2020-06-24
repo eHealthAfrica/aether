@@ -43,8 +43,8 @@ class KernelClient(object):
         # based on the insert time and now() to provide a buffer.
 
         def fn(row):
-            commited = datetime.strptime(row.get('modified')[:26], _TIME_FORMAT)
-            lag_time = (query_time - commited).total_seconds()
+            committed = datetime.strptime(row.get('modified')[:26], _TIME_FORMAT)
+            lag_time = (query_time - committed).total_seconds()
             if lag_time > _WINDOW_SIZE_SEC:
                 return True
 

@@ -254,7 +254,7 @@ class TopicManager(object):
     def update_kafka(self):
         # Main update loop
         # Monitors postgres for changes via TopicManager.updates_available
-        # Consumes updates to the Posgres DB via TopicManager.get_db_updates
+        # Consumes updates to the Postgres DB via TopicManager.get_db_updates
         # Sends new messages to Kafka
         # Registers message callback (ok or fail) to TopicManager.kafka_callback
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
@@ -359,7 +359,7 @@ class TopicManager(object):
                 logger.debug(f'All changes saved ok in topic {self.name}.')
                 break
 
-            # Remove successful and errored changes
+            # Remove successful and failed changes
             for k in self.failed_changes:
                 try:
                     del self.change_set[k]

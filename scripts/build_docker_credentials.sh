@@ -155,6 +155,8 @@ CLIENT_REALM=test
 # ------------------------------------------------------------------
 # Other
 # ==================================================================
+LOGGING_LEVEL=INFO
+
 # set to 1 to disable parallel execution
 TEST_PARALLEL=
 TEST_WORKERS=5

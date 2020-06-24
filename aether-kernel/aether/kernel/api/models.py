@@ -421,7 +421,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
 
     :ivar text      type:        Schema namespace
-    :ivar JSON      definition:  AVRO schema definiton.
+    :ivar JSON      definition:  AVRO schema definition.
     :ivar text      family:      Schema family.
 
     '''

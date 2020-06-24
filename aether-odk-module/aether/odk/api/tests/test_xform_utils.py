@@ -1009,7 +1009,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                     </item>
                     <item>
                         <label>Non-residential</label>
-                        <value>non_residentia</value>
+                        <value>non_residential</value>
                     </item>
                     <item>
                         <label>Mixed</label>
@@ -1117,7 +1117,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                         },
                         {
                             'label': 'Non-residential',
-                            'value': 'non_residentia'
+                            'value': 'non_residential'
                         },
                         {
                             'label': 'Mixed',
