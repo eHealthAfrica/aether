@@ -34,7 +34,4 @@ setup(
     author='eHealth Africa',
     author_email='aether@ehealthafrica.org',
     license='Apache2 License',
-
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
 )

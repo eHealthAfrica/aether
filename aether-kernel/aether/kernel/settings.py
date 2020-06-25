@@ -23,6 +23,7 @@ import os
 
 from aether.sdk.conf.settings_aether import *  # noqa
 from aether.sdk.conf.settings_aether import (
+    DJANGO_USE_CACHE,
     INSTALLED_APPS,
     MIGRATION_MODULES,
     REST_FRAMEWORK,
@@ -107,3 +108,21 @@ SWAGGER_SETTINGS = {
         'drf_yasg.inspectors.StringDefaultFieldInspector',
     ],
 }
+
+# To improve performance
+if DJANGO_USE_CACHE:
+    from aether.sdk.conf.settings_aether import CACHEOPS
+
+    _CACHED_MODULES = [
+        'kernel.attachment',
+        'kernel.entity',
+        'kernel.mapping',
+        'kernel.mappingset',
+        'kernel.project',
+        'kernel.schema',
+        'kernel.schemadecorator',
+        'kernel.submission',
+    ]
+
+    for k in _CACHED_MODULES:
+        CACHEOPS[k] = {'ops': ('fetch', 'get', 'exists')}

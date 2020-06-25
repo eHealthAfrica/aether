@@ -26,7 +26,6 @@ IMAGE_PREFIX="test-deployment-aether"
 
 for APP in "${DEPLOY_APPS[@]}"; do
     docker build \
-        --force-rm \
         --tag ${IMAGE_PREFIX}-${APP} \
         --file ./scripts/deployment/${APP}.Dockerfile \
         .
