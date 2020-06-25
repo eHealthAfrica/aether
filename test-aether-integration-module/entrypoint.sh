@@ -32,18 +32,23 @@ function show_help {
     """
 }
 
+function clean_py {
+    rm -rf ./*.egg*
+    rm -rf .pytest_cache
+}
+
 function test_flake8 {
     flake8
 }
 
 function test_python {
-    # Python3 Tests
+    clean_py
+
     export PYTHONDONTWRITEBYTECODE=1
     python3 setup.py -q test "${@:1}"
 
     cat /code/conf/extras/good_job.txt
-    rm -R ./*.egg*
-    rm -R .pytest_cache
+    clean_py
 }
 
 
