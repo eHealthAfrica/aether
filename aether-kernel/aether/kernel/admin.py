@@ -16,54 +16,73 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.contrib import admin
 
 from .api import models, forms
 
+if settings.MULTITENANCY:  # pragma: no cover
+    PROJECT_LIST_FILTER = ('mt__realm',)
+    CHILD_LIST_FILTER = ('project__mt__realm',)
+    ATTACH_LIST_FILTER = ('submission__project__mt__realm',)
+else:  # pragma: no cover
+    PROJECT_LIST_FILTER = []
+    CHILD_LIST_FILTER = []
+    ATTACH_LIST_FILTER = []
+
 
 class BaseAdmin(admin.ModelAdmin):
+    date_hierarchy = 'modified'
     empty_value_display = '---'
     list_per_page = 25
-    readonly_fields = ('id',)
+    readonly_fields = ('id', 'created', 'modified',)
     show_full_result_count = True
 
 
 class ProjectAdmin(BaseAdmin):
-    list_display = ('id', 'name', 'revision',)
+    list_display = ('id', 'name',)
+    list_filter = ('active',) + PROJECT_LIST_FILTER
 
 
 class MappingSetAdmin(BaseAdmin):
     form = forms.MappingSetForm
     list_display = ('id', 'name', 'revision', 'project',)
+    list_filter = CHILD_LIST_FILTER
 
 
 class MappingAdmin(BaseAdmin):
     form = forms.MappingForm
     list_display = ('id', 'name', 'revision', 'mappingset',)
+    list_filter = ('is_active', 'is_read_only',) + CHILD_LIST_FILTER
 
 
 class SubmissionAdmin(BaseAdmin):
     form = forms.SubmissionForm
-    list_display = ('id', 'revision', 'mappingset',)
+    list_display = ('id', 'mappingset', 'is_extracted',)
+    list_filter = ('is_extracted',) + CHILD_LIST_FILTER
 
 
 class AttachmentAdmin(BaseAdmin):
     list_display = ('id', 'name', 'md5sum', 'submission',)
     readonly_fields = ('id', 'md5sum',)
+    list_filter = ATTACH_LIST_FILTER
 
 
 class SchemaAdmin(BaseAdmin):
     form = forms.SchemaForm
-    list_display = ('id', 'name', 'revision',)
+    list_display = ('id', 'name', 'family',)
 
 
 class SchemaDecoratorAdmin(BaseAdmin):
-    list_display = ('id', 'name', 'revision', 'project', 'schema',)
+    list_display = ('id', 'name', 'project', 'schema',)
+    list_filter = CHILD_LIST_FILTER
 
 
 class EntityAdmin(BaseAdmin):
+    date_hierarchy = 'created'
     form = forms.EntityForm
-    list_display = ('id', 'revision', 'status', 'submission', 'mapping',)
+    list_display = ('id', 'status', 'submission', 'mapping',)
+    list_filter = ('status',) + CHILD_LIST_FILTER
 
 
 class ExportTaskAdmin(BaseAdmin):
@@ -72,6 +91,7 @@ class ExportTaskAdmin(BaseAdmin):
         'status_records', 'status_attachments',
     )
     readonly_fields = ('id', 'name',)
+    list_filter = CHILD_LIST_FILTER
 
 
 admin.site.register(models.Project, ProjectAdmin)
