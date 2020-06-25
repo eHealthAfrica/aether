@@ -21,38 +21,36 @@ import uuid
 
 from locust import TaskSet, task
 
-from settings import AETHER_KERNEL_URL, AETHER_AUTH_HEADER
+from settings import (
+    AETHER_AUTH_HEADER,
+    AETHER_KERNEL_URL,
+
+    CREATE_PROJECT_PRIORITY,
+    CREATE_SUBMISSION_PRIORITY,
+    HEALTH_CHECK_PRIORITY,
+    VIEW_PROJECTS_PRIORITY,
+)
 
 
 class KernelTaskSet(TaskSet):
 
-    def on_start(self):
-        response = self.client.get(
-            name='/',
-            headers=AETHER_AUTH_HEADER,
-            url=f'{AETHER_KERNEL_URL}/',
-        )
-
-        # create initial project
-        self.create_avro_schemas()
-
-    @task(1)
-    def health_page(self):
-        response = self.client.get(
+    ###################################################
+    # HELPERS
+    ###################################################
+    def health_check(self):
+        self.client.get(
             name='/health',
             url=f'{AETHER_KERNEL_URL}/health',
         )
 
-    @task(5)
     def view_projects(self):
-        response = self.client.get(
+        self.client.get(
             name='/projects',
             headers=AETHER_AUTH_HEADER,
             url=f'{AETHER_KERNEL_URL}/projects.json',
         )
 
-    @task(2)
-    def create_avro_schemas(self):
+    def create_avro_schema(self):
         project_id = str(uuid.uuid4())
         avro_schema = {
             'name': f'simple-{project_id}',
@@ -69,7 +67,7 @@ class KernelTaskSet(TaskSet):
             ],
         }
 
-        response = self.client.request(
+        self.client.request(
             name='/projects/avro-schemas',
             headers=AETHER_AUTH_HEADER,
             method='PATCH',
@@ -80,7 +78,6 @@ class KernelTaskSet(TaskSet):
             },
         )
 
-    @task(15)
     def create_submission(self):
         # get list of mapping set ids
         response = self.client.get(
@@ -88,7 +85,6 @@ class KernelTaskSet(TaskSet):
             name='/mappingsets',
             headers=AETHER_AUTH_HEADER,
         )
-        response.raise_for_status()
         data = response.json()
         if data['count'] == 0:
             return
@@ -105,7 +101,7 @@ class KernelTaskSet(TaskSet):
             'name': f'Name {submission_id}',
         }
 
-        response = self.client.request(
+        self.client.request(
             name='/submissions',
             headers=AETHER_AUTH_HEADER,
             method='POST',
@@ -116,3 +112,35 @@ class KernelTaskSet(TaskSet):
                 'payload': submission_payload,
             },
         )
+
+    ###################################################
+    # ON START
+    ###################################################
+    def on_start(self):
+        self.client.get(
+            name='/',
+            headers=AETHER_AUTH_HEADER,
+            url=f'{AETHER_KERNEL_URL}/',
+        )
+
+        # create initial project
+        self.create_avro_schema()
+
+    ###################################################
+    # TASKS
+    ###################################################
+    @task(HEALTH_CHECK_PRIORITY)
+    def task_health_check(self):
+        self.health_check()
+
+    @task(VIEW_PROJECTS_PRIORITY)
+    def task_view_projects(self):
+        self.view_projects()
+
+    @task(CREATE_PROJECT_PRIORITY)
+    def task_create_avro_schema(self):
+        self.create_avro_schema()
+
+    @task(CREATE_SUBMISSION_PRIORITY)
+    def task_create_submission(self):
+        self.create_submission()
