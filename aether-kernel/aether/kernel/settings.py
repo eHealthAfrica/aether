@@ -114,6 +114,7 @@ SWAGGER_SETTINGS = {
 
 WRITE_ENTITIES_TO_REDIS = bool(os.environ.get('WRITE_ENTITIES_TO_REDIS'))
 
+# To improve performance
 if DJANGO_USE_CACHE:
     from aether.sdk.conf.settings_aether import CACHEOPS
 

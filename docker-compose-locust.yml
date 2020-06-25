@@ -28,6 +28,13 @@ services:
       BASE_HOST: http://${NETWORK_DOMAIN}
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
       AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
+
+      # Task priorities
+      CREATE_PROJECT_PRIORITY: ${TEST_CREATE_PROJECT:-2}
+      CREATE_SUBMISSION_PRIORITY: ${TEST_CREATE_SUBMISSION:-100}
+      HEALTH_CHECK_PRIORITY: ${TEST_HEALTH_CHECK:-2}
+      VIEW_PROJECTS_PRIORITY: ${TEST_VIEW_PROJECTS:-5}
+
     volumes: &locust_volumes
       - ./tests/performance:/mnt/locust
     ports:
