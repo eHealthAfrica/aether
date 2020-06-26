@@ -16,9 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import gevent
 import signal
 import sys
-import time
 
 from collections import defaultdict
 from queue import Queue, Empty
@@ -61,6 +61,7 @@ class ExtractionManager():
         self.processed_submissions = self.manager.Queue()
 
         self.worker_thread = Thread(target=self.worker, daemon=True)
+        self.pull_thread = Thread(target=self.pull, daemon=True)
 
     def start(self):
         if not self.stopped:
@@ -70,12 +71,14 @@ class ExtractionManager():
 
         signal.signal(signal.SIGINT, self.stop)
         signal.signal(signal.SIGTERM, self.stop)
+        gevent.signal_handler(signal.SIGTERM, self.stop)
 
         # start jobs
         self.stopped = False
 
         # run the main worker loop in a new thread, no need to MP it.
         self.worker_thread.start()
+        self.pull_thread.start()
 
         # Report on permanently failed submissions
         # (Failed with 400 Bad Request)
@@ -113,6 +116,7 @@ class ExtractionManager():
         self.extraction_pool.join()
         self.kernel_comm_pool.join()
         self.worker_thread.join()
+        self.pull_thread.join()
 
         _logger.info('stopped')
 
@@ -134,7 +138,20 @@ class ExtractionManager():
                         self.redis,
                     ))
 
-            time.sleep(settings.WAIT_INTERVAL)
+            self.safe_sleep(settings.WAIT_INTERVAL)
+
+        _logger.info('Manager caught stop signal')
+
+    def pull(self):
+        while not self.stopped:
+            _logger.debug('Looking for missing work')
+
+            try:
+                utils.kernel_data_request(url=settings.PULL_ENDPOINT, method='post')
+            except Exception:
+                _logger.warning('Could not access kernel to get missing work')
+
+            self.safe_sleep(settings.PULL_INTERVAL)
 
         _logger.info('Manager caught stop signal')
 
@@ -160,6 +177,12 @@ class ExtractionManager():
                 self.redis,
             )
         )
+
+    def safe_sleep(self, dur):
+        # keeps shutdown time low by yielding during sleep and checking if stopped.
+        for x in range(int(dur * 10)):
+            if not self.stopped:
+                gevent.sleep(0.1)
 
 
 def entity_extraction(task, submission_queue, redis=None):

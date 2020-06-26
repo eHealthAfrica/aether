@@ -13,11 +13,11 @@
 ################################################################################
 
 aether.python
+gevent
 
 # Test libraries
 coverage
 fakeredis
 flake8-quotes
-gevent
 pytest
 tblib
