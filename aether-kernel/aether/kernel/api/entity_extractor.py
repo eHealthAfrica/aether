@@ -22,7 +22,14 @@ from datetime import timedelta
 from django.db import transaction
 from django.utils.timezone import now
 
-from rest_framework.decorators import action
+from rest_framework.decorators import (
+    action,
+    api_view,
+    permission_classes,
+    renderer_classes,
+)
+from rest_framework.permissions import IsAdminUser
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from aether.python.entity.extractor import (
@@ -66,7 +73,7 @@ class ExtractMixin(object):
           single submissions are always processed immediately.
 
         - `delta` to filter the submissions whose last modification time was
-          not after the indicated delta `1d` (1 day ago), `weeks2` (2 weeks ago).
+          not before the indicated delta `1d` (1 day ago), `weeks2` (2 weeks ago).
           It's only taken into consideration for projects or mapping sets.
 
         Reachable at ``PATCH /{model}/{pk}/extract/``
@@ -98,6 +105,33 @@ class ExtractMixin(object):
         return Response(
             data=self.serializer_class(instance, context={'request': request}).data,
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+@renderer_classes([JSONRenderer])
+def extract_view(request, *args, **kwargs):
+    '''
+    Send to redis the submissions that are not yet extracted and
+    whose last modification time was not before the indicated delta (1 day).
+
+    Reachable at ``POST /admin/~extract?delta=1d``
+    '''
+
+    delta = request.query_params.get('delta', '1d')
+    modified = parse_delta(delta)
+    submissions = Submission.objects.filter(is_extracted=False, modified__lte=modified)
+    count = submissions.count()
+
+    for submission in submissions:
+        send_model_item_to_redis(submission)
+
+    return Response(data={
+        'count': count,
+        'delta': delta,
+        'modified': modified,
+        'timestamp': now(),
+    })
 
 
 def run_extraction(submission, overwrite=False, schedule=False):

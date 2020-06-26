@@ -60,7 +60,7 @@ class ViewsTest(TestCase):
         username = 'test'
         email = 'test@example.com'
         password = 'testtest'
-        self.user = get_user_model().objects.create_user(username, email, password)
+        get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
         # Set up test model instances:

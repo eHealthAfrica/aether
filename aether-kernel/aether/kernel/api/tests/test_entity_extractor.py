@@ -37,7 +37,7 @@ class EntityExtractorTest(TestCase):
         username = 'test'
         email = 'test@example.com'
         password = 'testtest'
-        self.user = get_user_model().objects.create_user(username, email, password)
+        get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
         # Set up test model instances:
@@ -169,7 +169,7 @@ class EntityExtractorTest(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 405, 'only PATCH')
 
-        # create more than 100 submissions
+        # create several submissions
         for _ in range(100):
             models.Submission.objects.create(
                 payload=EXAMPLE_SOURCE_DATA,
@@ -216,3 +216,35 @@ class EntityExtractorTest(TestCase):
         response = self.client.patch(url)
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(self.submission.entities.count(), 0)
+
+    def test_admin_extract__endpoint(self):
+        url = reverse('admin-extract')
+        self.assertEqual(url, '/admin/~extract')
+
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 403, 'Only admin users')
+
+        username = 'admin-test'
+        email = 'admin-test@example.com'
+        password = 'testtest'
+        get_user_model().objects.create_superuser(username, email, password)
+        self.assertTrue(self.client.login(username=username, password=password))
+
+        # create several submissions
+        for _ in range(100):
+            models.Submission.objects.create(
+                payload=EXAMPLE_SOURCE_DATA,
+                mappingset=self.mappingset,
+                project=self.project,
+            )
+        self.assertEqual(self.mappingset.submissions.count(), 101)
+        self.assertEqual(self.mappingset.submissions.filter(is_extracted=False).count(), 101)
+
+        # request extraction
+        with mock.patch('aether.kernel.api.entity_extractor.send_model_item_to_redis') as mock_fn_1:
+            response = self.client.post(url + '?delta=0microseconds')
+
+        mock_fn_1.assert_called()
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['delta'], '0microseconds')
