@@ -43,7 +43,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-from producer.settings import SETTINGS, get_logger
+from aether.producer.settings import SETTINGS, get_logger
 
 Base = declarative_base()
 logger = get_logger('producer-db')

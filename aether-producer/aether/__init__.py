@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -18,17 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
-import sys
-
-if __name__ == '__main__':
-
-    try:
-        settings_path = os.environ['PRODUCER_SETTINGS_FILE']
-    except KeyError:
-        print('PRODUCER_SETTINGS_FILE not set in environment.')
-        sys.exit(1)
-
-    from aether.producer import main
-    main()
-    print('Started Producer with path %s' % settings_path)
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)

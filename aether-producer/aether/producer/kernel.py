@@ -18,7 +18,7 @@
 
 from datetime import datetime
 
-from producer.settings import SETTINGS, get_logger
+from aether.producer.settings import SETTINGS, get_logger
 
 
 logger = get_logger('producer-kernel')
