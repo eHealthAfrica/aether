@@ -31,7 +31,7 @@ from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 from rest_framework import status
 
 from aether.kernel.api import models
-from aether.kernel.api.entity_extractor import run_extraction, run_entity_extraction
+from aether.kernel.api.entity_extractor import run_extraction
 from aether.kernel.api.tests.utils.generators import generate_project
 
 from . import (
@@ -47,8 +47,6 @@ from . import (
     MAPPINGSET,
     PAYLOAD,
 )
-
-WAIT_FOR_ENTITY_EXTRACTION = 1
 
 
 @override_settings(MULTITENANCY=False)
@@ -737,108 +735,6 @@ class ViewsTest(TestCase):
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             'name': 'a project name-Person',
         })
-
-    def test_project__extract__endpoint(self):
-        def my_side_effect(submission, overwrite):
-            # let the submission 2 pass but raise an error for self.submission
-            if submission == self.submission:
-                raise Exception('oops')
-            else:
-                run_entity_extraction(submission, overwrite)
-
-        self.assertEqual(reverse('project-extract', kwargs={'pk': 1}),
-                         '/projects/1/extract/')
-        url = reverse('project-extract', kwargs={'pk': self.project.pk})
-
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 405, 'only PATCH')
-
-        # create a second submission
-        submission_2 = models.Submission.objects.create(
-            payload=EXAMPLE_SOURCE_DATA,
-            mappingset=self.mappingset,
-            project=self.project,
-        )
-        models.Entity.objects.all().delete()  # remove all entities
-
-        self.assertEqual(self.project.submissions.count(), 2)
-        self.assertEqual(self.project.entities.count(), 0)
-        self.submission.is_extracted = False
-        self.submission.save()
-
-        with mock.patch('aether.kernel.api.entity_extractor.run_entity_extraction',
-                        side_effect=my_side_effect) as mock_fn:
-            response = self.client.patch(url)
-
-        mock_fn.assert_has_calls([
-            mock.call(self.submission, False),
-            mock.call(submission_2, False),
-        ])
-
-        self.assertEqual(response.status_code, 200)
-        self.assertNotEqual(self.project.entities.count(), 0)
-        self.assertNotEqual(submission_2.entities.count(), 0)
-        self.assertEqual(self.submission.entities.count(), 0)
-        self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload['aether_errors'], ['oops'])
-
-    def test_mappingset__extract__endpoint(self):
-        def my_side_effect(submission, overwrite):
-            # let the submission 2 pass but raise an error for self.submission
-            if submission == self.submission:
-                raise Exception('oops')
-            else:
-                run_entity_extraction(submission, overwrite)
-
-        self.assertEqual(reverse('mappingset-extract', kwargs={'pk': 1}),
-                         '/mappingsets/1/extract/')
-        url = reverse('mappingset-extract', kwargs={'pk': self.mappingset.pk})
-
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 405, 'only PATCH')
-
-        # create more than 100 submissions
-        for _ in range(100):
-            models.Submission.objects.create(
-                payload=EXAMPLE_SOURCE_DATA,
-                mappingset=self.mappingset,
-                project=self.project,
-            )
-        self.assertEqual(self.mappingset.submissions.count(), 101)
-
-        # force extraction and send to redis
-        with mock.patch('aether.kernel.api.entity_extractor.send_model_item_to_redis') as mock_fn:
-            response = self.client.patch(url + '?overwrite=t')
-
-        mock_fn.assert_called()
-        self.assertEqual(response.status_code, 200)
-
-    def test_submission__extract__endpoint(self):
-        self.assertEqual(reverse('submission-extract', kwargs={'pk': 1}),
-                         '/submissions/1/extract/')
-        url = reverse('submission-extract', kwargs={'pk': self.submission.pk})
-
-        models.Entity.objects.all().delete()  # remove all entities
-        self.assertEqual(self.submission.entities.count(), 0)
-        self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload['aether_errors'], [])
-
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 405, 'only PATCH')
-
-        with mock.patch('aether.kernel.api.entity_extractor.extract_create_entities',
-                        side_effect=Exception('oops')) as mock_fn:
-            response = self.client.patch(url)
-
-        mock_fn.assert_called()
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.submission.entities.count(), 0)
-        self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload['aether_errors'], ['oops'])
-
-        response = self.client.patch(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertNotEqual(self.submission.entities.count(), 0)
 
     def test_schema_unique_usage(self):
         url = reverse('schema-unique-usage')

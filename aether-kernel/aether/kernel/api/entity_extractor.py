@@ -16,7 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import re
+from datetime import timedelta
+
 from django.db import transaction
+from django.utils.timezone import now
+
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -28,6 +33,18 @@ from aether.python.entity.extractor import (
 from .models import SchemaDecorator, Submission, Entity
 from .utils import send_model_item_to_redis
 
+# The maximum number of submissions that are extracted locally
+# instead of sending them to redis => exm.
+LOCAL_MAXIMUM = 20
+
+DELTA_UNITS = {
+    'd': 'days',
+    'h': 'hours',
+    'm': 'minutes',
+    's': 'seconds',
+    'w': 'weeks',
+}
+
 
 class ExtractMixin(object):
 
@@ -36,12 +53,21 @@ class ExtractMixin(object):
         '''
         Executes the entity extraction for the submission or the linked submissions.
 
-        Optionally expects as query parameter:
+        Optionally expects as query parameters:
 
         - `overwrite` to indicate that even the submissions with extracted
-          entities should repeat the extraction process. It's only taken into
-          consideration for projects or mapping sets, single submissions are
-          always processed.
+          entities should repeat the extraction process.
+          It's only taken into consideration for projects or mapping sets,
+          single submissions are always processed immediately.
+
+        - `schedule` to indicate if the extraction process is executed in
+          background by the extraction service and not immediately.
+          It's only taken into consideration for projects or mapping sets,
+          single submissions are always processed immediately.
+
+        - `delta` to filter the submissions whose last modification time was
+          not after the indicated delta `1d` (1 day ago), `weeks2` (2 weeks ago).
+          It's only taken into consideration for projects or mapping sets.
 
         Reachable at ``PATCH /{model}/{pk}/extract/``
         '''
@@ -49,7 +75,7 @@ class ExtractMixin(object):
         instance = self.get_object_or_404(pk=pk)
 
         if isinstance(instance, Submission):
-            run_extraction(instance, True, True)
+            run_extraction(instance, overwrite=True, schedule=False)
 
         else:
             overwrite = bool(self.request.query_params.get('overwrite'))
@@ -58,19 +84,24 @@ class ExtractMixin(object):
             else:
                 submissions = instance.submissions.filter(is_extracted=False)
 
+            delta = self.request.query_params.get('delta')
+            if delta:
+                submissions = submissions.filter(modified__lte=parse_delta(delta))
+
             # send to EXM if the number of submissions is too big
-            local = submissions.count() < 100
+            schedule = bool(self.request.query_params.get('schedule'))
+            schedule = schedule or submissions.count() > LOCAL_MAXIMUM
 
             for submission in submissions:
-                run_extraction(submission, overwrite, local)
+                run_extraction(submission, overwrite, schedule)
 
         return Response(
             data=self.serializer_class(instance, context={'request': request}).data,
         )
 
 
-def run_extraction(submission, overwrite=False, local=True):
-    if local:
+def run_extraction(submission, overwrite=False, schedule=False):
+    if not schedule:
         try:
             run_entity_extraction(submission, overwrite)
         except Exception as e:
@@ -132,3 +163,13 @@ def run_entity_extraction(submission, overwrite=False):
 
     submission.is_extracted = submission.entities.count() > 0
     submission.save(update_fields=['payload', 'is_extracted'])
+
+
+def parse_delta(interval):
+    try:
+        value = list(filter(lambda x: x != '', re.split(r'\D', interval, flags=re.I)))[0]
+        unit = list(filter(lambda x: x != '', re.split(r'\d', interval, flags=re.I)))[0]
+        unit_name = DELTA_UNITS.get(unit, unit)
+        return now() - timedelta(**{unit_name: int(value)})
+    except Exception:
+        return now() - timedelta(days=1)
