@@ -6,7 +6,7 @@ First off, thank you for considering contributing to Aether. It's people like yo
 
 ## How you can help
 
-Aether is an open source project and we love to receive contributions from our community. There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into Aether itself. 
+Aether is an open source project and we love to receive contributions from our community. There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into Aether itself.
 
 If you decide that you want to help out with development, you should start by getting Aether installed locally. Follow the [guide](https://aether.ehealthafrica.org/documentation/try/index.html) on the Aether website (and of course, if you have any problems following that guide, or you think it could be improved in any way, feel free to open and issue!). Once you’ve got Aether running and you’ve got a feel for the fundamental concepts and architecture, then you can dive right in and start writing code.
 
@@ -28,7 +28,7 @@ If the answer to either of those two questions are "yes", then you're probably d
 
 When you file an issue, please ensure that you have answered every question in the issue template.
 
-## Getting started with Aether developement
+## Getting started with Aether development
 
 ### Fork and clone the repository
 You will need to fork the main Aether repository and clone it to your local machine. See [github help page](https://help.github.com/articles/fork-a-repo) for help.
