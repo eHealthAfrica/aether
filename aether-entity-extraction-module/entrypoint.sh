@@ -40,10 +40,14 @@ function test_flake8 {
     flake8
 }
 
+function clean_py {
+    rm -rf .pytest_cache
+    rm -rf aether/extractor/tests/__pycache__
+    rm -rf /code/.coverage*
+}
+
 function test_py {
-    rm -R .pytest_cache || true
-    rm -rf extractor/tests/__pycache__ || true
-    rm -R /code/.coverage* 2>/dev/null || true
+    clean_py
 
     coverage run -m pytest "${@:1}"
 
@@ -51,8 +55,7 @@ function test_py {
     coverage report
 
     coverage erase
-    rm -R .pytest_cache || true
-    rm -rf extractor/tests/__pycache__ || true
+    clean_py
 
     cat /code/conf/extras/good_job.txt
 }

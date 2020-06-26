@@ -20,5 +20,5 @@
 
 if __name__ == '__main__':
 
-    from extractor import main
+    from aether.extractor import main
     main()

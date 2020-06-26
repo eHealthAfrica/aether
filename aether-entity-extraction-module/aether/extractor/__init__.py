@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from extractor.manager import ExtractionManager
+from aether.extractor.manager import ExtractionManager
 
 
 def main():

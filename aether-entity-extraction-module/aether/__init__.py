@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
 #
-# Licensed under the Apache License, Version 2.0 (the 'License');
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
@@ -18,24 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from io import open
-from setuptools import setup, find_packages
-
-
-def read(f):
-    return open(f, 'r', encoding='utf-8').read()
-
-
-setup(
-    version=read('/var/tmp/VERSION').strip(),
-    name='aether.extractor',
-    description='Entity Extractor for Aether',
-    keywords=['aet', 'aether', 'redis', 'extraction', 'entity'],
-
-    url='https://github.com/eHealthAfrica/aether',
-    author='eHealth Africa',
-    author_email='aether@ehealthafrica.org',
-    license='Apache2 License',
-
-    packages=find_packages(),
-)
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)
