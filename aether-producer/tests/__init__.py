@@ -18,8 +18,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from producer import ProducerManager
-from producer.settings import SETTINGS, get_logger
+from aether.producer import ProducerManager
+from aether.producer.settings import SETTINGS, get_logger
 
 
 class MockAdminInterface(object):

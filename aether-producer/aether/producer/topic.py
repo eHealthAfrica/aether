@@ -34,8 +34,8 @@ from spavro.datafile import DataFileWriter, DataFileReader
 from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
 
-from producer.db import Offset
-from producer.settings import SETTINGS, KAFKA_SETTINGS, get_logger
+from aether.producer.db import Offset
+from aether.producer.settings import SETTINGS, KAFKA_SETTINGS, get_logger
 
 logger = get_logger('producer-topic')
 

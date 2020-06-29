@@ -30,9 +30,9 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import DictCursor
 
-from producer.db import PriorityDatabasePool
-from producer.settings import SETTINGS
-from producer.kernel import KernelClient, logger
+from aether.producer.db import PriorityDatabasePool
+from aether.producer.settings import SETTINGS
+from aether.producer.kernel import KernelClient, logger
 
 
 _SCHEMAS_SQL = '''

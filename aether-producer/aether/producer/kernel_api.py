@@ -21,8 +21,8 @@ import requests
 from datetime import datetime
 from gevent import sleep
 
-from producer.settings import SETTINGS
-from producer.kernel import KernelClient, logger
+from aether.producer.settings import SETTINGS
+from aether.producer.kernel import KernelClient, logger
 
 
 _REQUEST_ERROR_RETRIES = int(SETTINGS.get('request_error_retries', 3))
