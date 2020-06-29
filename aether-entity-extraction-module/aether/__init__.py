@@ -16,10 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from extractor.manager import ExtractionManager
-
-
-def main():
-    extractor = ExtractionManager()
-    extractor.start()
-    return extractor
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)
