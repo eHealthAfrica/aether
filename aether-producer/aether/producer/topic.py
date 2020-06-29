@@ -70,9 +70,7 @@ class TopicManager(object):
             'last_errors_set': {},
             'last_changeset_status': {}
         }
-        self.change_set = {}
-        self.successful_changes = []
-        self.failed_changes = {}
+
         self.sleep_time = int(SETTINGS.get('sleep_time', 10))
         self.window_size_sec = int(SETTINGS.get('window_size_sec', 3))
 
@@ -231,25 +229,51 @@ class TopicManager(object):
     def get_status(self):
         # Updates inflight status and returns to Flask called
         self.status['operating_status'] = str(self.operating_status)
-        self.status['inflight'] = [i for i in self.change_set.keys()]
+        self.status['inflight'] = None
         return self.status
 
-    # Callback function registered with Kafka Producer to acknowledge receipt
-    def kafka_callback(self, err=None, msg=None, _=None, **kwargs):
-        if err:
-            logger.warning(f'ERROR [{err}, {msg}, {kwargs}]')
+    def _make_kafka_callback(self, topic, end_offset):
 
+        def _callback(err=None, msg=None, _=None, **kwargs):
+            if err:
+                logger.warning(f'ERROR [{err}, {msg}, {kwargs}]')
+                return self._kafka_failed(topic, err, msg)
+            return self._kafka_ok(topic, end_offset, msg)
+
+        return _callback
+
+    def _kafka_ok(self, topic, end_offset, msg):
+        _change_size = 0
+        with io.BytesIO() as obj:
+            obj.write(msg.value())
+            reader = DataFileReader(obj, DatumReader())
+            _change_size = sum([1 for i in reader])
+            logger.debug(f'saved {_change_size} messages in topic {topic}. Offset: {end_offset}')
+        self.set_offset(end_offset)
+        self.status['last_changeset_status'] = {
+            'changes': _change_size,
+            'failed': 0,
+            'succeeded': _change_size,
+            'timestamp': datetime.now().isoformat(),
+        }
+
+    def _kafka_failed(self, topic, err, msg):
+        _change_size = 0
         with io.BytesIO() as obj:
             obj.write(msg.value())
             reader = DataFileReader(obj, DatumReader())
             for message in reader:
+                _change_size += 1
                 _id = message.get('id')
-                if err:
-                    logger.debug(f'NO-SAVE: {_id} in topic {self.topic_name} | err {err.name()}')
-                    self.failed_changes[_id] = err
-                else:
-                    logger.debug(f'SAVE: {_id} in topic {self.topic_name}')
-                    self.successful_changes.append(_id)
+                logger.debug(f'NO-SAVE: {_id} in topic {self.topic_name} | err {err.name()}')
+        last_error_set = {
+            'changes': _change_size,
+            'errors': str(err),
+            'outcome': 'RETRY',
+            'timestamp': datetime.now().isoformat(),
+        }
+        self.status['last_errors_set'] = last_error_set
+        self.context.kafka_status = KafkaStatus.SUBMISSION_FAILURE
 
     def update_kafka(self):
         # Main update loop
@@ -288,7 +312,6 @@ class TopicManager(object):
 
             try:
                 logger.debug(f'Getting Changeset for {self.name}')
-                self.change_set = {}
                 new_rows = self.get_db_updates()
                 if not new_rows:
                     self.context.safe_sleep(self.sleep_time)
@@ -313,7 +336,6 @@ class TopicManager(object):
                             # Message validates against current schema
                             logger.debug(
                                 f'ENQUEUE MSG TOPIC: {self.name}, ID: {_id}, MOD: {modified}')
-                            self.change_set[_id] = row
                             writer.append(msg)
                         else:
                             # Message doesn't have the proper format for the current schema.
@@ -327,110 +349,14 @@ class TopicManager(object):
                 self.producer.produce(
                     self.topic_name,
                     raw_bytes,
-                    callback=self.kafka_callback
+                    callback=self._make_kafka_callback(self.topic_name, end_offset)
                 )
-                self.producer.flush()
-                self.wait_for_kafka(end_offset, failure_wait_time=self.kafka_failure_wait_time)
+                self.producer.flush(timeout=20)
 
             except Exception as ke:
                 logger.warning(f'error in Kafka save: {ke}')
                 logger.warning(traceback.format_exc())
                 self.context.safe_sleep(self.sleep_time)
-
-    def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=10, failure_wait_time=10):
-        # Waits for confirmation of message receipt from Kafka before moving to next changeset
-        # Logs errors and status to log and to web interface
-
-        sleep_time = timeout / (timeout * iters_per_sec)
-        change_set_size = len(self.change_set)
-        errors = {}
-        for i in range(timeout * iters_per_sec):
-            # whole changeset failed; systemic failure likely; sleep it off and try again
-            if len(self.failed_changes) >= change_set_size:
-                self.handle_kafka_errors(change_set_size, True, failure_wait_time)
-                self.clear_changeset()
-                logger.info(
-                    f'Changeset not saved; likely broker outage, sleeping worker for {self.name}')
-                self.context.safe_sleep(failure_wait_time)
-                return  # all failed; ignore changeset
-
-            # All changes were saved
-            elif len(self.successful_changes) == change_set_size:
-                logger.debug(f'All changes saved ok in topic {self.name}.')
-                break
-
-            # Remove successful and failed changes
-            for k in self.failed_changes:
-                try:
-                    del self.change_set[k]
-                except KeyError:
-                    pass  # could have been removed on previous iter
-
-            for k in self.successful_changes:
-                try:
-                    del self.change_set[k]
-                except KeyError:
-                    pass  # could have been removed on previous iter
-
-            # All changes registered
-            if len(self.change_set) == 0:
-                break
-
-            gevent.sleep(sleep_time)
-
-        # Timeout reached or all messages returned ( and not all failed )
-
-        self.status['last_changeset_status'] = {
-            'changes': change_set_size,
-            'failed': len(self.failed_changes),
-            'succeeded': len(self.successful_changes),
-            'timestamp': datetime.now().isoformat(),
-        }
-        if errors:
-            self.handle_kafka_errors(change_set_size, all_failed=False)
-        self.clear_changeset()
-        # Once we're satisfied, we set the new offset past the processed messages
-        self.context.kafka_status = KafkaStatus.SUBMISSION_SUCCESS
-        self.set_offset(end_offset)
-        # Sleep so that elements passed in the current window become eligible
-        self.context.safe_sleep(self.window_size_sec)
-
-    def handle_kafka_errors(self, change_set_size, all_failed=False, failure_wait_time=10):
-        # Errors in saving data to Kafka are handled and logged here
-        errors = {}
-        for _id, err in self.failed_changes.items():
-            # accumulate error types
-            error_type = str(err.name())
-            errors[error_type] = errors.get(error_type, 0) + 1
-
-        last_error_set = {
-            'changes': change_set_size,
-            'errors': errors,
-            'outcome': 'RETRY',
-            'timestamp': datetime.now().isoformat(),
-        }
-
-        if not all_failed:
-            # Collect Error types for reporting
-            for _id, err in self.failed_changes.items():
-                logger.warning(f'PRODUCER_FAILURE: T: {self.name} ID {_id}, ERR_MSG {err.name()}')
-
-            dropped_messages = change_set_size - len(self.successful_changes)
-            errors['NO_REPLY'] = dropped_messages - len(self.failed_changes)
-
-            last_error_set['failed'] = len(self.failed_changes)
-            last_error_set['succeeded'] = len(self.successful_changes)
-            last_error_set['outcome'] = f'MSGS_DROPPED : {dropped_messages}'
-
-        self.status['last_errors_set'] = last_error_set
-        if all_failed:
-            self.context.kafka_status = KafkaStatus.SUBMISSION_FAILURE
-        return
-
-    def clear_changeset(self):
-        self.failed_changes = {}
-        self.successful_changes = []
-        self.change_set = {}
 
     def get_offset(self):
         # Get current offset from Database

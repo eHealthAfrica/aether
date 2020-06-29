@@ -146,6 +146,27 @@ class ProducerManager(object):
         init_offset_db()
         self.logger.info('OffsetDB initialized')
 
+    # TODO swap over
+
+    # # main update loop
+    # # creates a manager / producer for each Realm
+    # def check_realms(self):
+    #     while not self.killed:
+    #         realms = []
+    #         try:
+    #             self.logger.debug('Checking for new realms')
+    #             realms = self.kernel_client.get_realms()
+    #             for realm in realms:
+    #                 if realm not in self.topic_manager.keys():
+    #                     self.logger.info(f'Realm connected: {realm}')
+    #                     self.topic_managers[realm] = TopicManager(self, realm)
+    #             gevent.sleep(60)
+    #         except Exception as err:
+    #             self.logger.warning(f'No Kernel connection: {err}')
+    #             gevent.sleep(1)
+    #             continue
+    #     self.logger.debug('No longer checking for new Realms')
+
     # Main Schema Loop
     # Spawns TopicManagers for new schemas, updates schemas for workers on change.
     def check_schemas(self):
