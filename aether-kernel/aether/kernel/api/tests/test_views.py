@@ -31,7 +31,7 @@ from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 from rest_framework import status
 
 from aether.kernel.api import models
-from aether.kernel.api.entity_extractor import run_entity_extraction
+from aether.kernel.api.entity_extractor import run_extraction
 from aether.kernel.api.tests.utils.generators import generate_project
 
 from . import (
@@ -48,8 +48,6 @@ from . import (
     PAYLOAD,
 )
 
-WAIT_FOR_ENTITY_EXTRACTION = 1
-
 
 @override_settings(MULTITENANCY=False)
 class ViewsTest(TestCase):
@@ -62,7 +60,7 @@ class ViewsTest(TestCase):
         username = 'test'
         email = 'test@example.com'
         password = 'testtest'
-        self.user = get_user_model().objects.create_user(username, email, password)
+        get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
         # Set up test model instances:
@@ -107,7 +105,7 @@ class ViewsTest(TestCase):
         )
 
         # extract entities
-        run_entity_extraction(self.submission)
+        run_extraction(self.submission)
         self.entity = models.Entity.objects.first()
 
     def tearDown(self):
@@ -737,31 +735,6 @@ class ViewsTest(TestCase):
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             'name': 'a project name-Person',
         })
-
-    def test_submission__extract__endpoint(self):
-        self.assertEqual(reverse('submission-extract', kwargs={'pk': 1}),
-                         '/submissions/1/extract/')
-        url = reverse('submission-extract', kwargs={'pk': self.submission.pk})
-
-        models.Entity.objects.all().delete()  # remove all entities
-        self.assertEqual(self.submission.entities.count(), 0)
-        self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload['aether_errors'], [])
-
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 405, 'only PATCH')
-
-        with mock.patch('aether.kernel.api.views.run_entity_extraction',
-                        side_effect=Exception('oops')):
-            response = self.client.patch(url)
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(self.submission.entities.count(), 0)
-        self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload['aether_errors'], ['oops'])
-
-        response = self.client.patch(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertNotEqual(self.submission.entities.count(), 0)
 
     def test_schema_unique_usage(self):
         url = reverse('schema-unique-usage')

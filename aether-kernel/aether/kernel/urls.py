@@ -16,22 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.urls import include, path, re_path
 
 from aether.sdk.conf.urls import generate_urlpatterns
 from aether.kernel.views import AetherSchemaView
+from aether.kernel.api.entity_extractor import extract_view
 
 API_PREFIX = '^(?P<version>v1)'
 
 
 urlpatterns = generate_urlpatterns(token=True, app=[
-    path('', include('aether.kernel.api.urls')),
-    re_path(f'{API_PREFIX}/', include('aether.kernel.api.urls')),
+    path(route='', view=include('aether.kernel.api.urls')),
+    re_path(route=f'{API_PREFIX}/', view=include('aether.kernel.api.urls')),
 
-    re_path(f'{API_PREFIX}/schema/',
+    re_path(route=f'{API_PREFIX}/schema/',
             view=AetherSchemaView.without_ui(cache_timeout=0),
             name='api_schema'),
-    re_path(f'{API_PREFIX}/swagger/$',
+    re_path(route=f'{API_PREFIX}/swagger/$',
             view=AetherSchemaView.with_ui('swagger', cache_timeout=0),
             name='schema-swagger-ui'),
+
+    path(route=f'{settings.ADMIN_URL}/~extract', view=extract_view, name='admin-extract'),
 ])

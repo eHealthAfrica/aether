@@ -45,6 +45,8 @@ REALM_COOKIE = os.environ.get('REALM_COOKIE', 'eha-realm')
 SUBMISSION_CHANNEL = os.environ.get('SUBMISSION_CHANNEL', '_submissions*')
 WAIT_INTERVAL = float(os.environ.get('WAIT_INTERVAL', 1.0))  # in seconds
 MAX_PUSH_SIZE = int(os.environ.get('MAX_PUSH_SIZE', 40))
+PULL_INTERVAL = float(os.environ.get('PULL_INTERVAL', 3600))  # 1 hour
+PULL_ENDPOINT = os.environ.get('PULL_ENDPOINT', '/admin/~extract?delta=1d')
 
 
 # https://docs.python.org/3.7/library/logging.html#levels

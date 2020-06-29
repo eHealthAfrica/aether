@@ -148,6 +148,7 @@ class PostSubmissionTests(CustomTestCase):
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
+
         # delete the test objects created in kernel testing server
         requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.SCHEMA_URL, headers=self.KERNEL_HEADERS)
@@ -168,18 +169,17 @@ class PostSubmissionTests(CustomTestCase):
 
         if succeed:
             submission = content['results'][0]
-            submisison_url = submission['url']
+            submission_url = submission['url']
 
             # -----------------------------------------
             # get entities (give time to extractor)
             count = 0
-            while count < ATTEMPTS_EXTRACTOR:
-                if not submission['is_extracted']:
-                    count += 1
-                    time.sleep(WAIT_FOR_EXTRACTOR)
-                    # check again
-                    resp = requests.get(submisison_url, headers=self.KERNEL_HEADERS)
-                    submission = resp.json()
+            while count < ATTEMPTS_EXTRACTOR and not submission['is_extracted']:
+                count += 1
+                time.sleep(WAIT_FOR_EXTRACTOR)
+                # check again
+                resp = requests.get(submission_url, headers=self.KERNEL_HEADERS)
+                submission = resp.json()
 
             response = requests.get(submission['entities_url'], headers=self.KERNEL_HEADERS)
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)

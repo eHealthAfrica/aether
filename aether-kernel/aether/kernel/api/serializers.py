@@ -231,7 +231,6 @@ class EntityListSerializer(serializers.ListSerializer):
         for entity_data in validated_data:
             entity_data.pop('merge', None)
             try:
-                # set ignore_submission_check to True to avoid a race condition on bulk submissions
                 entity_data['project'] = validators.validate_entity_project(entity_data)
                 entity = models.Entity(**entity_data)
                 entity.clean()
@@ -240,15 +239,12 @@ class EntityListSerializer(serializers.ListSerializer):
                 raise(serializers.ValidationError(str(e)))
 
         # bulk database operation
-        try:
-            created_entities = models.Entity.objects.bulk_create(entities)
-            if settings.WRITE_ENTITIES_TO_REDIS:  # pragma: no cover : .env setting
-                # send created entities to redis
-                for entity in entities:
-                    send_model_item_to_redis(entity)
-            return created_entities
-        except Exception as e:  # pragma: no cover : happens only when redis is offline
-            raise(serializers.ValidationError(e))
+        created_entities = models.Entity.objects.bulk_create(entities, ignore_conflicts=True)
+        if settings.WRITE_ENTITIES_TO_REDIS:  # pragma: no cover : .env setting
+            # send created entities to redis
+            for entity in entities:
+                send_model_item_to_redis(entity)
+        return created_entities
 
 
 class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
@@ -353,7 +349,12 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
 class SubmissionListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
-        submissions = self._get_validated_list(validated_data)
+        for s in validated_data:
+            if not s.get('mappingset'):
+                raise serializers.ValidationError(
+                    {'mappingset': [_('Mapping set must be provided on initial submission')]}
+                )
+        submissions = self._get_validated_list(validated_data, fields=['mappingset'])
 
         # bulk database operation
         results = models.Submission.objects.bulk_create(submissions)
@@ -385,19 +386,19 @@ class SubmissionListSerializer(serializers.ListSerializer):
         fields.remove('id')
 
         # bulk database operation
-        submissions = self._get_validated_list(validated_data)
+        submissions = self._get_validated_list(validated_data, fields)
         models.Submission.objects.bulk_update(submissions, fields)
         return submissions
 
-    def _get_validated_list(self, validated_data):
+    def _get_validated_list(self, validated_data, fields=[]):
         submissions = [models.Submission(**s) for s in validated_data]
-        for submission in submissions:
-            submission.project = submission.mappingset.project
+        if 'mappingset' in fields:
+            for submission in submissions:
+                submission.project = submission.mappingset.project
         return submissions
 
     def _send_to_redis(self, submissions):
-        submission_list = list(submissions)
-        for s in submission_list:
+        for s in list(submissions):
             send_model_item_to_redis(s)
         return submissions
 

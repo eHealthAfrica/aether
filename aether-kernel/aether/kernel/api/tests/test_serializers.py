@@ -299,10 +299,10 @@ class SerializersTests(TestCase):
         )
         self.assertTrue(entity.is_valid(), entity.errors)
 
-        with self.assertRaises(Exception) as ve_e:
+        with self.assertRaises(ValidationError) as ve_e:
             entity.save()
-            self.assertIn('Extracted record did not conform to registered schema',
-                          str(ve_e.exception))
+        self.assertIn('Extracted record did not conform to registered schema',
+                      str(ve_e.exception))
 
         # create entity
         entity_2 = serializers.EntitySerializer(
@@ -331,7 +331,7 @@ class SerializersTests(TestCase):
         )
         self.assertTrue(entity_3.is_valid(), entity_3.errors)
 
-        with self.assertRaises(Exception) as ve_3:
+        with self.assertRaises(ValidationError) as ve_3:
             entity_3.save()
         self.assertIn('Extracted record did not conform to registered schema',
                       str(ve_3.exception))
@@ -373,12 +373,10 @@ class SerializersTests(TestCase):
             context={'request': self.request},
         )
         self.assertTrue(entity_6.is_valid(), entity_6.errors)
-        with self.assertRaises(ValidationError) as ve:
+        with self.assertRaises(ValidationError) as ve_6:
             entity_6.save()
-            self.assertIn(
-                'Schema Decorator MUST be provided with entities',
-                str(ve.exception)
-            )
+        self.assertIn('Schema Decorator MUST be provided with entities',
+                      str(ve_6.exception))
 
         entity_7 = serializers.EntitySerializer(
             data={
@@ -388,12 +386,10 @@ class SerializersTests(TestCase):
             context={'request': self.request},
         )
         self.assertTrue(entity_7.is_valid(), entity_7.errors)
-        with self.assertRaises(ValidationError) as ve:
+        with self.assertRaises(ValidationError) as ve_7:
             entity_7.save()
-            self.assertIn(
-                'Schema Decorator MUST be provided with entities',
-                str(ve.exception)
-            )
+        self.assertIn('Schema Decorator MUST be provided with entities',
+                      str(ve_7.exception))
         entity_8 = serializers.EntitySerializer(
             data={
                 'submission': submission.data['id'],
@@ -405,14 +401,93 @@ class SerializersTests(TestCase):
             context={'request': self.request},
         )
         self.assertTrue(entity_8.is_valid(), entity_8.errors)
-        with self.assertRaises(ValidationError) as ve:
+        with self.assertRaises(ValidationError) as ve_8:
             entity_8.save()
-            self.assertIn(
-                'Submission, Mapping and Schema Decorator MUST belong to the same Project',
-                str(ve.exception)
-            )
+        self.assertIn('Submission, Mapping and Schema Decorator MUST belong to the same Project',
+                      str(ve_8.exception))
 
-        # bulk create
+        # ----------------------------------------------------------------------
+        # BULK OPERATIONS
+
+        # ----------------------------------------------------------------------
+        # SUBMISSIONS
+
+        # create submissions
+        submissions = [{
+            'mappingset': 'wrong-id',
+            'project': project.data['id'],
+            'payload': EXAMPLE_SOURCE_DATA,
+        }]
+        bulk_submissions = serializers.SubmissionSerializer(
+            data=submissions,
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertFalse(bulk_submissions.is_valid(), bulk_submissions.errors)
+
+        # missing mappingset
+        submissions = [{
+            'payload': EXAMPLE_SOURCE_DATA,
+        }]
+        bulk_submissions = serializers.SubmissionSerializer(
+            data=submissions,
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertTrue(bulk_submissions.is_valid(), bulk_submissions.errors)
+        with self.assertRaises(ValidationError) as ve_bs:
+            bulk_submissions.save()
+        self.assertIn('Mapping set must be provided on initial submission',
+                      str(ve_bs.exception))
+
+        # good bulk
+        submissions = [
+            {
+                'mappingset': mappingset.data['id'],
+                'project': project.data['id'],
+                'payload': EXAMPLE_SOURCE_DATA,
+            }
+            for __ in range(10)
+        ]
+        bulk_submissions = serializers.SubmissionSerializer(
+            data=submissions,
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertTrue(bulk_submissions.is_valid(), bulk_submissions.errors)
+        bulk_submissions.save()
+
+        # bulk check update
+        submission_instances = models.Submission.objects.filter(pk__in=[
+            s['id'] for s in bulk_submissions.data
+        ])
+        bulk_submissions = serializers.SubmissionSerializer(
+            submission_instances,
+            data=[
+                {'id': s.id, 'is_extracted': False}
+                for s in submission_instances
+            ],
+            many=True,
+            partial=True,
+            context={'request': self.request},
+        )
+        self.assertTrue(bulk_submissions.is_valid(), bulk_submissions.errors)
+        bulk_submissions.save()
+
+        bulk_submissions = serializers.SubmissionSerializer(
+            submission_instances,
+            data=[
+                {'id': s.id, 'mappingset': 'wrong-id'}
+                for s in submission_instances
+            ],
+            many=True,
+            partial=True,
+            context={'request': self.request},
+        )
+        self.assertFalse(bulk_submissions.is_valid(), bulk_submissions.errors)
+
+        # ----------------------------------------------------------------------
+        # ENTITIES
 
         # bad bulk entity
         bad_bulk = serializers.EntitySerializer(
@@ -425,16 +500,14 @@ class SerializersTests(TestCase):
             context={'request': self.request},
         )
         self.assertTrue(bad_bulk.is_valid(), bad_bulk.errors)
-        with self.assertRaises(Exception) as ve_be:
+        with self.assertRaises(ValidationError) as ve_be:
             bad_bulk.save()
         self.assertIn('Extracted record did not conform to registered schema',
                       str(ve_be.exception))
 
         # good bulk
-
-        create_count = 6
         # make objects
-        payloads = [EXAMPLE_SOURCE_DATA_ENTITY for i in range(create_count)]
+        payloads = [EXAMPLE_SOURCE_DATA_ENTITY for __ in range(6)]
         for pl in payloads:
             pl.update({'id': str(uuid.uuid4())})
         data = [
@@ -452,42 +525,3 @@ class SerializersTests(TestCase):
         )
         self.assertTrue(bulk_entities.is_valid(), bulk_entities.errors)
         bulk_entities.save()
-
-        submissions = []
-        [
-            submissions.append({
-                'mappingset': mappingset.data['id'],
-                'project': project.data['id'],
-                'payload': EXAMPLE_SOURCE_DATA,
-            })
-            for _ in range(10)
-        ]
-        bulk_submissions = serializers.SubmissionSerializer(
-            data=submissions,
-            many=True,
-            context={'request': self.request},
-        )
-        self.assertTrue(bulk_submissions.is_valid(), bulk_submissions.errors)
-        bulk_submissions.save()
-
-        submissions.append({
-            'mappingset': 'wrong-id',
-            'project': project.data['id'],
-            'payload': EXAMPLE_SOURCE_DATA,
-        })
-        bulk_submissions = serializers.SubmissionSerializer(
-            data=submissions,
-            many=True,
-            context={'request': self.request},
-        )
-        self.assertFalse(bulk_submissions.is_valid(), bulk_submissions.errors)
-
-        submissions.append({
-            'payload': EXAMPLE_SOURCE_DATA,
-        })
-        bulk_submissions = serializers.SubmissionSerializer(
-            data=submissions,
-            many=True,
-            context={'request': self.request},
-        )
-        self.assertFalse(bulk_submissions.is_valid(), bulk_submissions.errors)

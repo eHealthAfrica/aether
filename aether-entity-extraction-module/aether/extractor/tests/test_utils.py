@@ -46,7 +46,7 @@ class UtilsTests(TestCase):
 
         with self.assertRaises(Exception) as e:
             kernel_data_request('test-url-400', realm='TENANT')
-            self.assertTrue('400 Client Error' in str(e.exception))
+        self.assertTrue('400 Client Error' in str(e.exception))
 
         mock_request.assert_has_calls([
             mock.call(

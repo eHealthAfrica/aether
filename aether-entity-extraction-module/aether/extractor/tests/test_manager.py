@@ -143,20 +143,25 @@ class ExtractionManagerTests(TestCase):
             tenant=TENANT,
         )
 
-    def test_entity_extraction(self):
+    def helper__initial_extraction(self):
         # test extraction with missing schema definition in schema decorator
         self.assertEqual(len(SCHEMA_DECORATORS), 3)
-        remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
-        for sd in remove_definitions:
-            sd.pop(ARTEFACT_NAMES.schema_definition)
-            self.redis.set(
-                build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
-                json.dumps(sd)
-            )
+
+        # remove the definition for one of the schema decorators
+        sd = copy.deepcopy(SCHEMA_DECORATORS)[1]
+        sd.pop(ARTEFACT_NAMES.schema_definition)
+        self.redis.set(
+            build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
+            json.dumps(sd)
+        )
 
         sub_queue = Queue()
         self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
         self.assertEqual(sub_queue.qsize(), 1)
+        return sub_queue
+
+    def test_entity_extraction(self):
+        sub_queue = self.helper__initial_extraction()
 
         tenant, submission = sub_queue.get_nowait()
         self.assertEqual(tenant, TENANT)
@@ -272,19 +277,7 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(q.qsize(), 0)
 
     def test_workflow(self):
-        # test extraction with missing schema definition in schema decorator
-        self.assertEqual(len(SCHEMA_DECORATORS), 3)
-        remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
-        for sd in remove_definitions:
-            sd.pop(ARTEFACT_NAMES.schema_definition)
-            self.redis.set(
-                build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
-                json.dumps(sd)
-            )
-
-        sub_queue = Queue()
-        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
-        self.assertEqual(sub_queue.qsize(), 1)
+        sub_queue = self.helper__initial_extraction()
 
         prepared = get_prepared(sub_queue, self.redis)
         self.assertEqual(sub_queue.qsize(), 0)
@@ -312,19 +305,7 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
 
     def test_workflow__error(self):
-        # test extraction with missing schema definition in schema decorator
-        self.assertEqual(len(SCHEMA_DECORATORS), 3)
-        remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
-        for sd in remove_definitions:
-            sd.pop(ARTEFACT_NAMES.schema_definition)
-            self.redis.set(
-                build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
-                json.dumps(sd)
-            )
-
-        sub_queue = Queue()
-        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
-        self.assertEqual(sub_queue.qsize(), 1)
+        sub_queue = self.helper__initial_extraction()
 
         prepared = get_prepared(sub_queue, self.redis)
         self.assertEqual(sub_queue.qsize(), 0)
@@ -352,19 +333,7 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 1)
 
     def test_workflow__quarantine(self):
-        # test extraction with missing schema definition in schema decorator
-        self.assertEqual(len(SCHEMA_DECORATORS), 3)
-        remove_definitions = copy.deepcopy(SCHEMA_DECORATORS)
-        for sd in remove_definitions:
-            sd.pop(ARTEFACT_NAMES.schema_definition)
-            self.redis.set(
-                build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
-                json.dumps(sd)
-            )
-
-        sub_queue = Queue()
-        self.assertEqual(entity_extraction(self.submission_task, sub_queue, self.redis), 1)
-        self.assertEqual(sub_queue.qsize(), 1)
+        sub_queue = self.helper__initial_extraction()
 
         prepared = get_prepared(sub_queue, self.redis)
         self.assertEqual(sub_queue.qsize(), 0)
