@@ -61,6 +61,9 @@ class KernelClient(object):
     def mode(self):
         raise NotImplementedError
 
+    def get_realms(self):
+        raise NotImplementedError
+
     def get_schemas(self):
         raise NotImplementedError
 
