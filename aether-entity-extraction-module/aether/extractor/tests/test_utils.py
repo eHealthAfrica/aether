@@ -21,13 +21,13 @@ import requests
 
 from unittest import TestCase, mock
 
-from extractor.settings import (
+from aether.extractor.settings import (
     DEFAULT_REALM,
     KERNEL_TOKEN,
     KERNEL_URL,
     REALM_COOKIE,
 )
-from extractor.utils import (
+from aether.extractor.utils import (
     get_from_redis_or_kernel,
     get_redis_subscribed_message,
     halve_iterable,
@@ -38,7 +38,7 @@ from extractor.utils import (
 
 class UtilsTests(TestCase):
 
-    @mock.patch('extractor.utils.request')
+    @mock.patch('aether.extractor.utils.request')
     def test_kernel_request__raise_for_status(self, mock_request):
         mock_response = requests.Response()
         mock_response.status_code = 400
@@ -60,7 +60,7 @@ class UtilsTests(TestCase):
             ),
         ])
 
-    @mock.patch('extractor.utils.request')
+    @mock.patch('aether.extractor.utils.request')
     def test_kernel_request(self, mock_request):
         mock_response = requests.Response()
         mock_response.status_code = 200
@@ -90,7 +90,7 @@ class UtilsTests(TestCase):
 
         # not in redis or kernel
         with mock.patch(
-            'extractor.utils.kernel_data_request',
+            'aether.extractor.utils.kernel_data_request',
             return_value=None
         ) as mocked_1:
             result = get_from_redis_or_kernel('id', 'model', 'tenant', redis)
@@ -99,7 +99,7 @@ class UtilsTests(TestCase):
             mocked_1.assert_called()
 
         with mock.patch(
-            'extractor.utils.kernel_data_request',
+            'aether.extractor.utils.kernel_data_request',
             return_value={'id': 'id'}
         ) as mocked_2:
             result = get_from_redis_or_kernel('id', 'model', 'tenant', redis)
@@ -109,7 +109,7 @@ class UtilsTests(TestCase):
             mocked_2.assert_called()
 
         with mock.patch(
-            'extractor.utils.kernel_data_request',
+            'aether.extractor.utils.kernel_data_request',
             return_value={'id': 'jd'}
         ) as mocked_3:
             result = get_from_redis_or_kernel('id', 'model', 'tenant', redis)

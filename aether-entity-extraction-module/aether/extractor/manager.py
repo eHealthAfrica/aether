@@ -35,7 +35,7 @@ from aether.python.entity.extractor import (
     extract_create_entities,
 )
 
-from extractor import settings, utils
+from aether.extractor import settings, utils
 
 SUBMISSION_EXTRACTION_FLAG = 'is_extracted'
 SUBMISSION_PAYLOAD_FIELD = 'payload'

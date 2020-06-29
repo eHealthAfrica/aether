@@ -18,7 +18,7 @@
 
 from unittest import TestCase
 
-from extractor import main
+from aether.extractor import main
 
 
 class InitTests(TestCase):

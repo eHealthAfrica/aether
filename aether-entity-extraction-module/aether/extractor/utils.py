@@ -33,7 +33,7 @@ from requests.exceptions import HTTPError
 from aether.python.redis.task import TaskHelper
 from aether.python.utils import request
 
-from extractor import settings
+from aether.extractor import settings
 
 Constants = namedtuple(
     'Constants',

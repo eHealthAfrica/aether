@@ -31,7 +31,7 @@ from aether.python.entity.extractor import (
     ENTITY_EXTRACTION_ENRICHMENT,
 )
 
-from extractor.manager import (
+from aether.extractor.manager import (
     SUBMISSION_EXTRACTION_FLAG,
     SUBMISSION_PAYLOAD_FIELD,
     SUBMISSION_ENTITIES_FIELD,
@@ -40,7 +40,7 @@ from extractor.manager import (
     push_to_kernel,
 )
 
-from extractor.utils import (
+from aether.extractor.utils import (
     ARTEFACT_NAMES,
     CacheType,
     Task,
@@ -232,7 +232,7 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
         self.assertEqual(dict(prepared), {TENANT: [_obj_t1], TENANT_2: [_obj_t1, _obj_t2]})
 
-        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+        with mock.patch('aether.extractor.utils.kernel_data_request') as _mock_fn:
             _mock_fn.side_effect = _mock_fn_side_effect
             # emulate worker
             for realm, objs in prepared.items():
@@ -290,7 +290,7 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
         self.assertIn(TENANT, dict(prepared))
 
-        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+        with mock.patch('aether.extractor.utils.kernel_data_request') as _mock_fn:
             # emulate worker
             for realm, objs in prepared.items():
                 push_to_kernel(realm, objs, sub_queue, self.redis)
@@ -330,7 +330,7 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
         self.assertIn(TENANT, dict(prepared))
 
-        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+        with mock.patch('aether.extractor.utils.kernel_data_request') as _mock_fn:
             _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=500))
             # emulate worker
             for realm, objs in prepared.items():
@@ -370,7 +370,7 @@ class ExtractionManagerTests(TestCase):
         self.assertEqual(sub_queue.qsize(), 0)
         self.assertIn(TENANT, dict(prepared))
 
-        with mock.patch('extractor.utils.kernel_data_request') as _mock_fn:
+        with mock.patch('aether.extractor.utils.kernel_data_request') as _mock_fn:
             _mock_fn.side_effect = HTTPError(response=mock.Mock(status_code=400))
             # emulate worker
             for realm, objs in prepared.items():
