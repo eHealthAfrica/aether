@@ -24,6 +24,7 @@ import io
 import json
 import sys
 import traceback
+from typing import (Any, Dict)
 from datetime import datetime
 
 from confluent_kafka import Producer
@@ -38,6 +39,47 @@ from aether.producer.db import Offset
 from aether.producer.settings import SETTINGS, KAFKA_SETTINGS, get_logger
 
 logger = get_logger('producer-topic')
+
+
+class SchemaWrapper(object):
+    definition: Dict[str, Any]
+    name: str
+    schema: spavro.schema.Schema
+    schema_id: str
+
+    def __init__(self, name=None, schema_id=None, definition=None, aether_definition=None):
+        if aether_definition:
+            self.name = aether_definition['schema_name']
+            self.schema_id = aether_definition['schema_id']
+        elif all([name, schema_id]):
+            self.name = name
+            self.schema_id = schema_id
+        else:
+            raise RuntimeError('Requires either name and id, or aether_definition')
+        if any([definition, aether_definition]):
+            self.update(aether_definition, definition)
+
+    def definition_from_aether(self, aether_definition: Dict[str, Any]):
+        # expects schema object from Aether
+        # We split this method from update_schema because schema_obj as it is can not
+        # be compared for differences. literal_eval fixes this. As such, this is used
+        # by the schema_changed() method.
+        # schema_obj is a nested OrderedDict, which needs to be stringified
+        return ast.literal_eval(json.dumps(aether_definition['schema_definition']))
+
+    def equal(self, new_aether_definition) -> bool:
+        return (
+            json.dumps(self.definition_from_aether(new_aether_definition))
+            == json.dumps(self.definition))
+
+    def update(self, aether_definition: Dict[str, Any] = None, definition: Dict[str, Any] = None):
+        if not any([aether_definition, definition]):
+            raise RuntimeError('Expected one of [definition, aether_definition]')
+        if aether_definition:
+            self.definition = self.definition_from_aether(aether_definition)
+        elif definition:
+            self.definition = definition
+        self.schema = spavro.schema.parse(json.dumps(self.definition))
 
 
 class KafkaStatus(enum.Enum):
@@ -86,7 +128,8 @@ class TopicManager(object):
             # so the configuration can be updated.
             sys.exit(1)
 
-        self.update_schema(schema)
+        # self.update_schema(schema)
+        self.schema = SchemaWrapper(aether_definition=schema)
         self.get_producer()
         # Spawn worker and give to pool.
         logger.debug(f'Spawning kafka update thread: {self.topic_name}')
@@ -183,7 +226,7 @@ class TopicManager(object):
             return
 
         logger.warn(f'{tag} Resetting Offset.')
-        self.set_offset('')
+        self.set_offset('', self.schema)
         logger.info(f'{tag} Rebuilding Topic Producer')
         self.producer = Producer(**KAFKA_SETTINGS)
         logger.warn(f'{tag} Wipe Complete. /resume to complete operation.')
@@ -211,20 +254,26 @@ class TopicManager(object):
     def get_topic_size(self):
         return self.context.kernel_client.count_updates(self.realm, self.pk, self.name)
 
-    def update_schema(self, schema_obj):
-        self.schema_obj = self.parse_schema(schema_obj)
-        self.schema = spavro.schema.parse(json.dumps(self.schema_obj))
+    # def update_schema(self, schema_obj):
+    #     self.schema_obj = self.parse_schema(schema_obj)
+    #     self.schema = spavro.schema.parse(json.dumps(self.schema_obj))
 
-    def parse_schema(self, schema_obj):
-        # We split this method from update_schema because schema_obj as it is can not
-        # be compared for differences. literal_eval fixes this. As such, this is used
-        # by the schema_changed() method.
-        # schema_obj is a nested OrderedDict, which needs to be stringified
-        return ast.literal_eval(json.dumps(schema_obj['schema_definition']))
+    # def parse_schema(self, schema_obj):
+    #     # We split this method from update_schema because schema_obj as it is can not
+    #     # be compared for differences. literal_eval fixes this. As such, this is used
+    #     # by the schema_changed() method.
+    #     # schema_obj is a nested OrderedDict, which needs to be stringified
+    #     return ast.literal_eval(json.dumps(schema_obj['schema_definition']))
+
+    # def schema_changed(self, schema_candidate):
+    #     # for use by ProducerManager.check_schemas()
+    #     return self.parse_schema(schema_candidate) != self.schema_obj
+
+    def update_schema(self, schema_obj):
+        self.schema.update(schema_obj)
 
     def schema_changed(self, schema_candidate):
-        # for use by ProducerManager.check_schemas()
-        return self.parse_schema(schema_candidate) != self.schema_obj
+        return not self.schema.equal(schema_candidate)
 
     def get_status(self):
         # Updates inflight status and returns to Flask called
@@ -249,7 +298,7 @@ class TopicManager(object):
             reader = DataFileReader(obj, DatumReader())
             _change_size = sum([1 for i in reader])
             logger.debug(f'saved {_change_size} messages in topic {topic}. Offset: {end_offset}')
-        self.set_offset(end_offset)
+        self.set_offset(end_offset, self.schema)
         self.status['last_changeset_status'] = {
             'changes': _change_size,
             'failed': 0,
@@ -304,7 +353,7 @@ class TopicManager(object):
                 self.context.safe_sleep(self.sleep_time)
                 continue
 
-            self.offset = self.get_offset() or ''
+            self.offset = self.get_offset(self.schema) or ''
             if not self.updates_available():
                 logger.debug('No updates')
                 self.context.safe_sleep(self.sleep_time)
@@ -326,13 +375,13 @@ class TopicManager(object):
             try:
                 with io.BytesIO() as bytes_writer:
                     writer = DataFileWriter(
-                        bytes_writer, DatumWriter(), self.schema, codec='deflate')
+                        bytes_writer, DatumWriter(), self.schema.schema, codec='deflate')
 
                     for row in new_rows:
                         _id = row['id']
                         msg = row.get('payload')
                         modified = row.get('modified')
-                        if validate(self.schema, msg):
+                        if validate(self.schema.schema, msg):
                             # Message validates against current schema
                             logger.debug(
                                 f'ENQUEUE MSG TOPIC: {self.name}, ID: {_id}, MOD: {modified}')
@@ -358,19 +407,22 @@ class TopicManager(object):
                 logger.warning(traceback.format_exc())
                 self.context.safe_sleep(self.sleep_time)
 
-    def get_offset(self):
+    def get_offset(self, sw: SchemaWrapper):
         # Get current offset from Database
-        offset = Offset.get_offset(self.name)
+        offset = Offset.get_offset(sw.name)
         if offset:
-            logger.debug(f'Got offset for {self.name} | {offset}')
+            logger.debug(f'Got offset for {sw.name} | {offset}')
             return offset
         else:
-            logger.debug(f'Could not get offset for {self.name}, it is a new type')
-            # No valid offset so return None; query will use empty string which is < any value
-            return None
+            logger.debug(f'Could not get offset for {sw.name}, checking legacy names')
+            return self._migrate_legacy_offset(sw) or None
 
-    def set_offset(self, offset):
+    def set_offset(self, offset, sw: SchemaWrapper):
         # Set a new offset in the database
-        new_offset = Offset.update(self.name, offset)
-        logger.debug(f'Set new offset for {self.name} | {new_offset}')
+        new_offset = Offset.update(sw.name, offset)
+        logger.debug(f'Set new offset for {sw.name} | {new_offset}')
         self.status['offset'] = new_offset
+
+    # TODO
+    def _migrate_legacy_offset(self, sw: SchemaWrapper):
+        return None
