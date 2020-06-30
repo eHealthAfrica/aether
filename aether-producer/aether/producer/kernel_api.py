@@ -23,7 +23,7 @@ from gevent import sleep
 
 from aether.producer.settings import SETTINGS
 from aether.producer.kernel import KernelClient, logger
-
+from aether.producer.utils import utf8size
 
 _REQUEST_ERROR_RETRIES = int(SETTINGS.get('request_error_retries', 3))
 
@@ -154,11 +154,20 @@ class KernelAPIClient(KernelClient):
             window_filter = self.get_time_window_filter(query_time)
 
             response = self._fetch(url=url, realm=realm)
-            return [
-                entry
-                for entry in response['results']
-                if window_filter(entry)
-            ]
+            res = []
+            size = 0
+            for entry in response['results']:
+                if window_filter(entry):
+                    new_size = size + utf8size(entry)
+                    res.append(entry)
+                    if new_size >= self.batch_size:
+                        # when we get over the batch size, truncate
+                        # this means even with a batch size of 1, if a message
+                        # is 10, we still emit one message
+                        return res
+                    size = new_size
+
+            return res
 
         except Exception:
             logger.warning('Could not access kernel API to look for updates')

@@ -213,11 +213,23 @@ class KernelDBClient(KernelClient):
         cursor = self._exec_sql(schema_name or 'All', 2, query)
         if cursor:
             window_filter = self.get_time_window_filter(query_time)
-            return [
-                {key: row[key] for key in row.keys()}
-                for row in cursor
-                if window_filter(row)
-            ]
+
+            res = []
+            size = 0
+            for row in cursor:
+                if window_filter(row):
+                    entry = {key: row[key] for key in row.keys()}
+                    new_size = size + utf8size(entry)
+                    res.append(entry)
+                    if new_size >= self.batch_size:
+                        # when we get over the batch size, truncate
+                        # this means even with a batch size of 1, if a message
+                        # is 10, we still emit one message
+                        return res
+                    size = new_size
+
+            return res
+
         else:
             logger.warning('Could not access kernel database to look for updates')
             return []

@@ -33,7 +33,10 @@ class KernelClient(object):
         # last time kernel was checked for new updates
         self.last_check = None
         self.last_check_error = None
+        # limit number of messages in a single batch
         self.limit = int(SETTINGS.get('fetch_size', 100))
+        # send when message volume >= batch_size (kafka hard limit is 2MB)
+        self.batch_size = int(SETTINGS.get('publish_size', 100_000))
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
