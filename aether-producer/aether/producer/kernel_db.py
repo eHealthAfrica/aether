@@ -36,7 +36,7 @@ from aether.producer.kernel import KernelClient, logger
 
 
 _REALMS_SQL = '''
-    SELECT DISTINCT ON (realm)
+    SELECT DISTINCT ON (realm) realm
       FROM kernel_schema_vw
 '''
 
