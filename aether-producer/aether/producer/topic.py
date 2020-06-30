@@ -245,7 +245,7 @@ class RealmManager(object):
             res = 0
             for sw in self.schemas.values():
                 res += self.update_kafka(sw) or 0
-            self.context.safe_sleep(1)  # yield
+            self.context.safe_sleep(self.sleep_time)  # yield
             if res:
                 self.producer.flush(timeout=20)
             else:
