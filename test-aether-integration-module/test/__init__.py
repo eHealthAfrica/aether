@@ -81,8 +81,6 @@ def wait_for_producer_status():
             status = producer_request('status')
             if not status:
                 raise ValueError('No status response from producer')
-            import json
-            print(json.dumps(status, indent=2))
             kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
@@ -95,7 +93,6 @@ def wait_for_producer_status():
             else:
                 raise ValueError('Last changeset status has no successes. Not producing')
         except Exception as err:
-            print(err)
             failure_mode = str(err)
             sleep(1)
 

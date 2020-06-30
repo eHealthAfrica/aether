@@ -60,7 +60,6 @@ _ENTITIES_ALL_URL = (
     '&fields=id,modified,payload,schema'
     '&ordering=modified'
     '&modified__gt={modified}'
-    '&schema={schema}'
 )
 
 
