@@ -46,8 +46,11 @@ class SchemaWrapper(object):
     name: str
     schema: spavro.schema.Schema
     schema_id: str
+    realm: str
+    topic: str
 
-    def __init__(self, name=None, schema_id=None, definition=None, aether_definition=None):
+    def __init__(self, realm, name=None, schema_id=None, definition=None, aether_definition=None):
+        self.realm = realm
         if aether_definition:
             self.name = aether_definition['schema_name']
             self.schema_id = aether_definition['schema_id']
@@ -58,6 +61,7 @@ class SchemaWrapper(object):
             raise RuntimeError('Requires either name and id, or aether_definition')
         if any([definition, aether_definition]):
             self.update(aether_definition, definition)
+        self.get_topic_name()
 
     def definition_from_aether(self, aether_definition: Dict[str, Any]):
         # expects schema object from Aether
@@ -80,6 +84,10 @@ class SchemaWrapper(object):
         elif definition:
             self.definition = definition
         self.schema = spavro.schema.parse(json.dumps(self.definition))
+
+    def get_topic_name(self):
+        topic_base = SETTINGS.get('topic_settings', {}).get('name_modifier', '%s') % self.name
+        self.topic = f'{self.realm}.{topic_base}'
 
 
 class KafkaStatus(enum.Enum):
@@ -129,17 +137,17 @@ class TopicManager(object):
             sys.exit(1)
 
         # self.update_schema(schema)
-        self.schema = SchemaWrapper(aether_definition=schema)
+        self.schema = SchemaWrapper(realm, aether_definition=schema)
         self.get_producer()
         # Spawn worker and give to pool.
         logger.debug(f'Spawning kafka update thread: {self.topic_name}')
-        self.context.threads.append(gevent.spawn(self.update_kafka))
+        self.context.threads.append(gevent.spawn(self.update_loop))
         logger.debug(f'Checking for existence of topic {self.topic_name}')
         while not self.check_topic():
             if self.create_topic():
                 break
-            logger.debug(f'Waiting 30 seconds to retry creation of topic {self.topic_name}')
-            self.context.safe_sleep(30)
+            logger.debug(f'Waiting 3 seconds to retry creation of topic {self.topic_name}')
+            self.context.safe_sleep(3)
         self.operating_status = TopicStatus.NORMAL
 
     def check_topic(self):
@@ -254,20 +262,7 @@ class TopicManager(object):
     def get_topic_size(self):
         return self.context.kernel_client.count_updates(self.realm, self.pk, self.name)
 
-    # def update_schema(self, schema_obj):
-    #     self.schema_obj = self.parse_schema(schema_obj)
-    #     self.schema = spavro.schema.parse(json.dumps(self.schema_obj))
-
-    # def parse_schema(self, schema_obj):
-    #     # We split this method from update_schema because schema_obj as it is can not
-    #     # be compared for differences. literal_eval fixes this. As such, this is used
-    #     # by the schema_changed() method.
-    #     # schema_obj is a nested OrderedDict, which needs to be stringified
-    #     return ast.literal_eval(json.dumps(schema_obj['schema_definition']))
-
-    # def schema_changed(self, schema_candidate):
-    #     # for use by ProducerManager.check_schemas()
-    #     return self.parse_schema(schema_candidate) != self.schema_obj
+    # TODO remove on migrate
 
     def update_schema(self, schema_obj):
         self.schema.update(schema_obj)
@@ -281,23 +276,23 @@ class TopicManager(object):
         self.status['inflight'] = None
         return self.status
 
-    def _make_kafka_callback(self, topic, end_offset):
+    def _make_kafka_callback(self, sw: SchemaWrapper, end_offset):
 
         def _callback(err=None, msg=None, _=None, **kwargs):
             if err:
                 logger.warning(f'ERROR [{err}, {msg}, {kwargs}]')
-                return self._kafka_failed(topic, err, msg)
-            return self._kafka_ok(topic, end_offset, msg)
+                return self._kafka_failed(sw, err, msg)
+            return self._kafka_ok(sw, end_offset, msg)
 
         return _callback
 
-    def _kafka_ok(self, topic, end_offset, msg):
+    def _kafka_ok(self, sw: SchemaWrapper, end_offset, msg):
         _change_size = 0
         with io.BytesIO() as obj:
             obj.write(msg.value())
             reader = DataFileReader(obj, DatumReader())
             _change_size = sum([1 for i in reader])
-            logger.debug(f'saved {_change_size} messages in topic {topic}. Offset: {end_offset}')
+            logger.debug(f'saved {_change_size} messages in topic {sw.topic}. Offset: {end_offset}')
         self.set_offset(end_offset, self.schema)
         self.status['last_changeset_status'] = {
             'changes': _change_size,
@@ -306,7 +301,7 @@ class TopicManager(object):
             'timestamp': datetime.now().isoformat(),
         }
 
-    def _kafka_failed(self, topic, err, msg):
+    def _kafka_failed(self, sw: SchemaWrapper, err, msg):
         _change_size = 0
         with io.BytesIO() as obj:
             obj.write(msg.value())
@@ -314,7 +309,7 @@ class TopicManager(object):
             for message in reader:
                 _change_size += 1
                 _id = message.get('id')
-                logger.debug(f'NO-SAVE: {_id} in topic {self.topic_name} | err {err.name()}')
+                logger.debug(f'NO-SAVE: {_id} in topic {sw.topic} | err {err.name()}')
         last_error_set = {
             'changes': _change_size,
             'errors': str(err),
@@ -324,7 +319,15 @@ class TopicManager(object):
         self.status['last_errors_set'] = last_error_set
         self.context.kafka_status = KafkaStatus.SUBMISSION_FAILURE
 
-    def update_kafka(self):
+    def update_loop(self):
+        while not self.context.killed:
+            self.producer.poll(0)
+            res = self.update_kafka(self.schema)
+            if res:
+                self.producer.flush(timeout=20)
+            self.context.safe_sleep(self.sleep_time)
+
+    def update_kafka(self, sw: SchemaWrapper):
         # Main update loop
         # Monitors postgres for changes via TopicManager.updates_available
         # Consumes updates to the Postgres DB via TopicManager.get_db_updates
@@ -333,96 +336,92 @@ class TopicManager(object):
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
         logger.debug(f'Topic {self.name}: Initializing')
 
-        while self.operating_status is TopicStatus.INITIALIZING:
-            if self.context.killed:
-                return
+        if self.operating_status is TopicStatus.INITIALIZING:
             logger.debug(f'Waiting for topic {self.name} to initialize...')
-            self.context.safe_sleep(self.sleep_time)
-            pass
+            return
 
-        while not self.context.killed:
-            if self.operating_status is not TopicStatus.NORMAL:
-                logger.debug(
-                    f'Topic {self.name} not updating, status: {self.operating_status}'
-                    f', waiting {self.sleep_time}(sec)')
-                self.context.safe_sleep(self.sleep_time)
-                continue
+        if self.operating_status is not TopicStatus.NORMAL:
+            logger.debug(
+                f'Topic {self.name} not updating, status: {self.operating_status}'
+                f', waiting {self.sleep_time}(sec)')
+            return
 
-            if not self.context.kafka_available():
-                logger.debug('Kafka Container not accessible, waiting.')
-                self.context.safe_sleep(self.sleep_time)
-                continue
+        if not self.context.kafka_available():
+            logger.debug('Kafka Container not accessible, waiting.')
+            return
 
-            self.offset = self.get_offset(self.schema) or ''
-            if not self.updates_available():
-                logger.debug('No updates')
-                self.context.safe_sleep(self.sleep_time)
-                continue
+        self.offset = self.get_offset(self.schema) or ''
+        if not self.updates_available():
+            logger.debug(f'No updates on {sw.topic}')
+            return
 
-            try:
-                logger.debug(f'Getting Changeset for {self.name}')
-                new_rows = self.get_db_updates()
-                if not new_rows:
-                    self.context.safe_sleep(self.sleep_time)
-                    continue
+        try:
+            logger.debug(f'Getting Changeset for {sw.topic}')
+            new_rows = self.get_db_updates()
+            if not new_rows:
+                logger.debug(f'No changes on {sw.topic}')
+                return
+            end_offset = new_rows[-1].get('modified')
+        except Exception as pge:
+            logger.warning(f'Could not get new records from kernel: {pge}')
+            return
 
-                end_offset = new_rows[-1].get('modified')
-            except Exception as pge:
-                logger.warning(f'Could not get new records from kernel: {pge}')
-                self.context.safe_sleep(self.sleep_time)
-                continue
+        try:
+            with io.BytesIO() as bytes_writer:
+                writer = DataFileWriter(
+                    bytes_writer, DatumWriter(), sw.schema, codec='deflate')
 
-            try:
-                with io.BytesIO() as bytes_writer:
-                    writer = DataFileWriter(
-                        bytes_writer, DatumWriter(), self.schema.schema, codec='deflate')
+                for row in new_rows:
+                    _id = row['id']
+                    msg = row.get('payload')
+                    modified = row.get('modified')
+                    if validate(sw.schema, msg):
+                        # Message validates against current schema
+                        logger.debug(
+                            f'ENQUEUE MSG TOPIC: {sw.topic}, ID: {_id}, MOD: {modified}')
+                        writer.append(msg)
+                    else:
+                        # Message doesn't have the proper format for the current schema.
+                        logger.warning(
+                            f'SCHEMA_MISMATCH: NOT SAVED! TOPIC: {sw.topic}, ID: {_id}')
 
-                    for row in new_rows:
-                        _id = row['id']
-                        msg = row.get('payload')
-                        modified = row.get('modified')
-                        if validate(self.schema.schema, msg):
-                            # Message validates against current schema
-                            logger.debug(
-                                f'ENQUEUE MSG TOPIC: {self.name}, ID: {_id}, MOD: {modified}')
-                            writer.append(msg)
-                        else:
-                            # Message doesn't have the proper format for the current schema.
-                            logger.warning(
-                                f'SCHEMA_MISMATCH: NOT SAVED! TOPIC: {self.name}, ID: {_id}')
+                writer.flush()
+                raw_bytes = bytes_writer.getvalue()
 
-                    writer.flush()
-                    raw_bytes = bytes_writer.getvalue()
+            self.producer.produce(
+                sw.topic,
+                raw_bytes,
+                callback=self._make_kafka_callback(sw, end_offset)
+            )
+            return len(new_rows)
 
-                self.producer.poll(0)
-                self.producer.produce(
-                    self.topic_name,
-                    raw_bytes,
-                    callback=self._make_kafka_callback(self.topic_name, end_offset)
-                )
-                self.producer.flush(timeout=20)
-
-            except Exception as ke:
-                logger.warning(f'error in Kafka save: {ke}')
-                logger.warning(traceback.format_exc())
-                self.context.safe_sleep(self.sleep_time)
+        except Exception as ke:
+            logger.warning(f'error in Kafka save: {ke}')
+            logger.warning(traceback.format_exc())
 
     def get_offset(self, sw: SchemaWrapper):
         # Get current offset from Database
-        offset = Offset.get_offset(sw.name)
+        offset = Offset.get_offset(sw.schema_id)
         if offset:
-            logger.debug(f'Got offset for {sw.name} | {offset}')
+            logger.debug(f'Got offset for {sw.topic} | {offset}')
             return offset
         else:
-            logger.debug(f'Could not get offset for {sw.name}, checking legacy names')
+            logger.debug(f'Could not get offset for {sw.topic}, checking legacy names')
             return self._migrate_legacy_offset(sw) or None
 
     def set_offset(self, offset, sw: SchemaWrapper):
         # Set a new offset in the database
-        new_offset = Offset.update(sw.name, offset)
-        logger.debug(f'Set new offset for {sw.name} | {new_offset}')
+        new_offset = Offset.update(sw.schema_id, offset)
+        logger.debug(f'Set new offset for {sw.topic} | {new_offset}')
         self.status['offset'] = new_offset
 
-    # TODO
+    # handles move from {AetherName} which can collide over realms -> schema_id which should not
+    # and is what we use to query the entities anyway
     def _migrate_legacy_offset(self, sw: SchemaWrapper):
+        old_offset = Offset.get_offset(sw.name)
+        if old_offset:
+            logger.warn(f'Found legacy offset for id: {sw.schema_id} at {sw.name}: {old_offset}')
+            self.set_offset(old_offset, sw)
+            logger.warn(f'Migrated offset {sw.name} -> {sw.schema_id}')
+            return old_offset
         return None
