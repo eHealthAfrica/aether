@@ -44,6 +44,7 @@ logger = get_logger('producer-topic')
 class SchemaWrapper(object):
     definition: Dict[str, Any]
     name: str
+    offset: str  # current offset
     schema: spavro.schema.Schema
     schema_id: str
     realm: str
@@ -109,12 +110,9 @@ class TopicManager(object):
 
     # Creates a long running job on TopicManager.update_kafka
 
-    def __init__(self, context, schema, realm):
+    def __init__(self, context, realm):
         self.context = context
-        self.pk = schema['schema_id']
-        self.name = schema['schema_name']
         self.realm = realm
-        self.offset = ''
         self.operating_status = TopicStatus.INITIALIZING
         self.status = {
             'last_errors_set': {},
@@ -126,149 +124,159 @@ class TopicManager(object):
 
         self.kafka_failure_wait_time = float(SETTINGS.get('kafka_failure_wait_time', 10))
 
-        try:
-            topic_base = SETTINGS.get('topic_settings', {}).get('name_modifier', '%s') % self.name
-            self.topic_name = f'{self.realm}.{topic_base}'
-        except Exception:  # Bad Name
-            logger.critical((f'invalid name_modifier using topic name for topic: {self.name}.'
-                             ' Update configuration for topic_settings.name_modifier'))
-            # This is a failure which could cause topics to collide. We'll kill the producer
-            # so the configuration can be updated.
-            sys.exit(1)
-
-        # self.update_schema(schema)
-        self.schema = SchemaWrapper(realm, aether_definition=schema)
+        self.schemas = {}
+        self.known_topics = []
         self.get_producer()
         # Spawn worker and give to pool.
-        logger.debug(f'Spawning kafka update thread: {self.topic_name}')
         self.context.threads.append(gevent.spawn(self.update_loop))
-        logger.debug(f'Checking for existence of topic {self.topic_name}')
-        while not self.check_topic():
-            if self.create_topic():
-                break
-            logger.debug(f'Waiting 3 seconds to retry creation of topic {self.topic_name}')
-            self.context.safe_sleep(3)
         self.operating_status = TopicStatus.NORMAL
 
-    def check_topic(self):
-        topics = [t for t in self.producer.list_topics().topics.keys()]
-        if self.topic_name in topics:
-            logger.debug(f'Topic {self.topic_name} already exists.')
-            return True
+    # def check_topic(self):
+    #     topics = [t for t in self.producer.list_topics().topics.keys()]
+    #     if self.topic_name in topics:
+    #         logger.debug(f'Topic {self.topic_name} already exists.')
+    #         return True
 
-        logger.debug(f'Topic {self.name} does not exist. current topics: {topics}')
-        return False
+    #     logger.debug(f'Topic {self.name} does not exist. current topics: {topics}')
+    #     return False
 
-    def create_topic(self):
-        logger.debug(f'Trying to create topic {self.topic_name}')
+    def update_topics(self):
+        self.known_topics = [t for t in self.producer.list_topics().topics.keys()]
 
-        kadmin = self.context.kafka_admin_client
-        topic_config = SETTINGS.get('kafka_settings', {}).get('default.topic.config')
-        partitions = int(SETTINGS.get('kafka_default_topic_partitions', 1))
-        replicas = int(SETTINGS.get('kafka_default_topic_replicas', 1))
-        topic = NewTopic(
-            self.topic_name,
-            num_partitions=partitions,
-            replication_factor=replicas,
-            config=topic_config,
-        )
-        fs = kadmin.create_topics([topic])
+    def create_topic(self, topic=None, topics=None):
+        topic_objects = []
+        if not topics:
+            topics = [topic]
+        for t in topics:
+            logger.debug(f'Trying to create topic {t}')
+
+            kadmin = self.context.kafka_admin_client
+            topic_config = SETTINGS.get('kafka_settings', {}).get('default.topic.config')
+            partitions = int(SETTINGS.get('kafka_default_topic_partitions', 1))
+            replicas = int(SETTINGS.get('kafka_default_topic_replicas', 1))
+            topic_objects.append(
+                NewTopic(
+                    t,
+                    num_partitions=partitions,
+                    replication_factor=replicas,
+                    config=topic_config,
+                )
+            )
+
+        kadmin.create_topics(topic_objects)
+        # fs = kadmin.create_topics([topic])
         # future must return before timeout
-        for f in concurrent.futures.as_completed(iter(fs.values()), timeout=60):
-            e = f.exception()
-            if not e:
-                logger.info(f'Created topic {self.name}')
-                return True
-            else:
-                logger.warning(f'Topic {self.name} could not be created: {e}')
-                return False
+        # for f in concurrent.futures.as_completed(iter(fs.values()), timeout=60):
+        #     e = f.exception()
+        #     if not e:
+        #         logger.info(f'Created topic {self.name}')
+        #         return True
+        #     else:
+        #         logger.warning(f'Topic {self.name} could not be created: {e}')
+        #         return False
 
     def get_producer(self):
         self.producer = Producer(**KAFKA_SETTINGS)
-        logger.debug(f'Producer for {self.name} started...')
+        logger.debug(f'Producer for {self.realm} started...')
+
+    # TODO !MIGRATE!
 
     # API Calls to Control Topic
 
-    def pause(self):
-        # Stops sending of data on this topic until resume is called or Producer restarts.
-        if self.operating_status is not TopicStatus.NORMAL:
-            logger.info(f'Topic {self.name} could not pause, status: {self.operating_status}.')
-            return False
+    # def pause(self):
+    #     # Stops sending of data on this topic until resume is called or Producer restarts.
+    #     if self.operating_status is not TopicStatus.NORMAL:
+    #         logger.info(f'Topic {self.name} could not pause, status: {self.operating_status}.')
+    #         return False
 
-        logger.info(f'Topic {self.name} is pausing.')
-        self.operating_status = TopicStatus.PAUSED
-        return True
+    #     logger.info(f'Topic {self.name} is pausing.')
+    #     self.operating_status = TopicStatus.PAUSED
+    #     return True
 
-    def resume(self):
-        # Resume sending data after pausing.
-        if self.operating_status is not TopicStatus.PAUSED:
-            logger.info(f'Topic {self.name} could not resume, status: {self.operating_status}.')
-            return False
+    # def resume(self):
+    #     # Resume sending data after pausing.
+    #     if self.operating_status is not TopicStatus.PAUSED:
+    #         logger.info(f'Topic {self.name} could not resume, status: {self.operating_status}.')
+    #         return False
 
-        logger.info(f'Topic {self.name} is resuming.')
-        self.operating_status = TopicStatus.NORMAL
-        return True
+    #     logger.info(f'Topic {self.name} is resuming.')
+    #     self.operating_status = TopicStatus.NORMAL
+    #     return True
 
-    # Functions to rebuilt this topic
+    # # Functions to rebuilt this topic
 
-    def rebuild(self):
-        # API Call
-        logger.warn(f'Topic {self.name} is being REBUIT!')
-        # kick off rebuild process
-        self.context.threads.append(gevent.spawn(self.handle_rebuild))
-        return True
+    # def rebuild(self):
+    #     # API Call
+    #     logger.warn(f'Topic {self.name} is being REBUIT!')
+    #     # kick off rebuild process
+    #     self.context.threads.append(gevent.spawn(self.handle_rebuild))
+    #     return True
 
-    def handle_rebuild(self):
-        # greened background task to handle rebuilding of topic
-        self.operating_status = TopicStatus.REBUILDING
-        tag = f'REBUILDING {self.name}:'
-        sleep_time = self.sleep_time * 1.5
-        logger.info(f'{tag} waiting {sleep_time}(sec) for inflight ops to resolve')
-        self.context.safe_sleep(sleep_time)
-        logger.info(f'{tag} Deleting Topic')
-        self.producer = None
+    # def handle_rebuild(self):
+    #     # greened background task to handle rebuilding of topic
+    #     self.operating_status = TopicStatus.REBUILDING
+    #     tag = f'REBUILDING {self.name}:'
+    #     sleep_time = self.sleep_time * 1.5
+    #     logger.info(f'{tag} waiting {sleep_time}(sec) for inflight ops to resolve')
+    #     self.context.safe_sleep(sleep_time)
+    #     logger.info(f'{tag} Deleting Topic')
+    #     self.producer = None
 
-        if not self.delete_this_topic():
-            logger.warning(f'{tag} FAILED. Topic will not resume.')
-            self.operating_status = TopicStatus.LOCKED
-            return
+    #     if not self.delete_this_topic():
+    #         logger.warning(f'{tag} FAILED. Topic will not resume.')
+    #         self.operating_status = TopicStatus.LOCKED
+    #         return
 
-        logger.warn(f'{tag} Resetting Offset.')
-        self.set_offset('', self.schema)
-        logger.info(f'{tag} Rebuilding Topic Producer')
-        self.producer = Producer(**KAFKA_SETTINGS)
-        logger.warn(f'{tag} Wipe Complete. /resume to complete operation.')
-        self.operating_status = TopicStatus.PAUSED
+    #     logger.warn(f'{tag} Resetting Offset.')
+    #     self.set_offset('', self.schema)
+    #     logger.info(f'{tag} Rebuilding Topic Producer')
+    #     self.producer = Producer(**KAFKA_SETTINGS)
+    #     logger.warn(f'{tag} Wipe Complete. /resume to complete operation.')
+    #     self.operating_status = TopicStatus.PAUSED
 
-    def delete_this_topic(self):
-        kadmin = self.context.kafka_admin_client
-        fs = kadmin.delete_topics([self.name], operation_timeout=60)
-        future = fs.get(self.name)
-        for x in range(60):
-            if not future.done():
-                if (x % 5 == 0):
-                    logger.debug(f'REBUILDING {self.name}: Waiting for future to complete')
-                gevent.sleep(1)
+    # def delete_this_topic(self):
+    #     kadmin = self.context.kafka_admin_client
+    #     fs = kadmin.delete_topics([self.name], operation_timeout=60)
+    #     future = fs.get(self.name)
+    #     for x in range(60):
+    #         if not future.done():
+    #             if (x % 5 == 0):
+    #                 logger.debug(f'REBUILDING {self.name}: Waiting for future to complete')
+    #             gevent.sleep(1)
+    #         else:
+    #             return True
+    #     return False
+
+    def updates_available(self, sw: SchemaWrapper):
+        return self.context.kernel_client.check_updates(sw.realm, sw.schema_id, sw.name, sw.offset)
+
+    def get_db_updates(self, sw: SchemaWrapper):
+        return self.context.kernel_client.get_updates(sw.realm, sw.schema_id, sw.name, sw.offset)
+
+    def get_topic_size(self, sw: SchemaWrapper):
+        return self.context.kernel_client.count_updates(sw.realm, sw.schema_id, sw.name)
+
+    # TODO
+
+    def update_schemas(self):
+        schemas = self.context.kernel_client.get_schemas(realm=self.realm)
+        self.update_topics()
+        new_topics = []
+        for aether_definition in schemas:
+            schema_id = aether_definition['schema_id']
+            if schema_id not in self.schemas:
+                self.schemas[schema_id] = SchemaWrapper(
+                    self.realm, aether_definition=aether_definition
+                )
+                topic = self.schemas[schema_id].topic
+                if topic not in self.known_topics:
+                    new_topics.append(topic)
+
             else:
-                return True
-        return False
-
-    def updates_available(self):
-        return self.context.kernel_client.check_updates(self.realm, self.pk, self.name, self.offset)
-
-    def get_db_updates(self):
-        return self.context.kernel_client.get_updates(self.realm, self.pk, self.name, self.offset)
-
-    def get_topic_size(self):
-        return self.context.kernel_client.count_updates(self.realm, self.pk, self.name)
-
-    # TODO remove on migrate
-
-    def update_schema(self, schema_obj):
-        self.schema.update(schema_obj)
-
-    def schema_changed(self, schema_candidate):
-        return not self.schema.equal(schema_candidate)
+                if not self.schemas[schema_id].equal(aether_definition):
+                    self.schemas[schema_id].update(aether_definition=aether_definition)
+        if new_topics:
+            self.create_topic(topics=new_topics)
 
     def get_status(self):
         # Updates inflight status and returns to Flask called
@@ -293,7 +301,7 @@ class TopicManager(object):
             reader = DataFileReader(obj, DatumReader())
             _change_size = sum([1 for i in reader])
             logger.debug(f'saved {_change_size} messages in topic {sw.topic}. Offset: {end_offset}')
-        self.set_offset(end_offset, self.schema)
+        self.set_offset(end_offset, sw)
         self.status['last_changeset_status'] = {
             'changes': _change_size,
             'failed': 0,
@@ -322,7 +330,10 @@ class TopicManager(object):
     def update_loop(self):
         while not self.context.killed:
             self.producer.poll(0)
-            res = self.update_kafka(self.schema)
+            self.update_schemas()
+            res = 0
+            for sw in self.schemas.values():
+                res += self.update_kafka(sw) or 0
             if res:
                 self.producer.flush(timeout=20)
             self.context.safe_sleep(self.sleep_time)
@@ -334,15 +345,15 @@ class TopicManager(object):
         # Sends new messages to Kafka
         # Registers message callback (ok or fail) to TopicManager.kafka_callback
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
-        logger.debug(f'Topic {self.name}: Initializing')
+        logger.debug(f'Checking {sw.topic}')
 
         if self.operating_status is TopicStatus.INITIALIZING:
-            logger.debug(f'Waiting for topic {self.name} to initialize...')
+            logger.debug(f'Waiting for topic {sw.topic} to initialize...')
             return
 
         if self.operating_status is not TopicStatus.NORMAL:
             logger.debug(
-                f'Topic {self.name} not updating, status: {self.operating_status}'
+                f'Topic {sw.topic} not updating, status: {self.operating_status}'
                 f', waiting {self.sleep_time}(sec)')
             return
 
@@ -350,14 +361,15 @@ class TopicManager(object):
             logger.debug('Kafka Container not accessible, waiting.')
             return
 
-        self.offset = self.get_offset(self.schema) or ''
-        if not self.updates_available():
+        sw.offset = self.get_offset(sw) or ''
+
+        if not self.updates_available(sw):
             logger.debug(f'No updates on {sw.topic}')
             return
 
         try:
             logger.debug(f'Getting Changeset for {sw.topic}')
-            new_rows = self.get_db_updates()
+            new_rows = self.get_db_updates(sw)
             if not new_rows:
                 logger.debug(f'No changes on {sw.topic}')
                 return
