@@ -129,7 +129,7 @@ class KernelDBClient(KernelClient):
         self.last_check = datetime.now().isoformat()
         name = 'schemas_query'
         if realm:
-            query = sql.SQL(_SCHEMAS_SQL_SINGLE_REALM.format(realm=realm))
+            query = sql.SQL(_SCHEMAS_SQL_SINGLE_REALM.format(realm=sql.Literal(realm)))
         else:
             query = sql.SQL(_SCHEMAS_SQL_ALL_REALMS)
         cursor = self._exec_sql(name, 1, query)
