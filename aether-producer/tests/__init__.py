@@ -60,4 +60,4 @@ class MockProducerManager(ProducerManager):
         self.kafka_status = False
         self.kafka_admin_client = MockAdminInterface()
         self.logger = get_logger('tests')
-        self.topic_managers = {}
+        self.realm_managers = {}

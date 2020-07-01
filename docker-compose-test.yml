@@ -178,7 +178,6 @@ services:
       POSTGRES_HOST: db-test
       POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
 
-
   # ---------------------------------
   # Aether Integration Tests
   # ---------------------------------

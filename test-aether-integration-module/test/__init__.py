@@ -27,6 +27,7 @@ import requests
 from aether.client.test import (  # noqa
     client,
     project,
+    realm_client,
     schemas,
     schemadecorators,
     mapping,
@@ -80,12 +81,11 @@ def wait_for_producer_status():
             status = producer_request('status')
             if not status:
                 raise ValueError('No status response from producer')
-
             kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
 
-            person = status.get('topics', {}).get(KAFKA_SEED_TYPE, {})
+            person = status.get('topics', {}).get(REALM, {}).get(SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
                 sleep(5)
@@ -110,16 +110,20 @@ def entities(client, schemadecorators):  # noqa: F811
 
 
 @pytest.fixture(scope='function')
-def generate_entities(client, mappingset):  # noqa: F811
-    payloads = iter(fixtures.get_submission_payloads())
-    entities = []
-    for i in range(FORMS_TO_SUBMIT):
-        Submission = client.get_model('Submission')
-        submission = Submission(payload=next(payloads), mappingset=mappingset.id)
-        instance = client.submissions.create(data=submission)
-        for entity in client.entities.paginated('list', submission=instance.id):
-            entities.append(entity)
-    return entities
+def generate_entities(realm_client, mappingset):  # noqa: F811
+
+    def fn(realm):
+        _client = realm_client(realm)
+        payloads = iter(fixtures.get_submission_payloads())
+        entities = []
+        for i in range(FORMS_TO_SUBMIT):
+            Submission = _client.get_model('Submission')
+            submission = Submission(payload=next(payloads), mappingset=mappingset.id)
+            instance = _client.submissions.create(data=submission)
+            for entity in _client.entities.paginated('list', submission=instance.id):
+                entities.append(entity)
+        return entities
+    return fn
 
 
 @pytest.fixture(scope='function')
@@ -146,16 +150,16 @@ def producer_request(endpoint, expect_json=True):
         sleep(1)
 
 
-def topic_status(topic):
+def topic_status(realm, topic):
     status = producer_request('status')
-    return status['topics'][topic]
+    return status['topics'][realm][topic]
 
 
-def producer_topic_count(topic):
+def producer_topic_count(realm, topic):
     status = producer_request('topics')
-    return status[topic]['count']
+    return status[realm][topic]['count']
 
 
-def producer_control_topic(topic, operation):
-    endpoint = f'{operation}?topic={topic}'
+def producer_control_topic(realm, topic, operation):
+    endpoint = f'{operation}?topic={topic}&realm={realm}'
     return producer_request(endpoint, False)

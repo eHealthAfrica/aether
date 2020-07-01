@@ -29,7 +29,7 @@ from gevent.pywsgi import WSGIServer
 
 from aether.producer.db import init as init_offset_db
 from aether.producer.settings import KAFKA_SETTINGS, SETTINGS, LOG_LEVEL, get_logger
-from aether.producer.topic import KafkaStatus, TopicStatus, TopicManager
+from aether.producer.topic import KafkaStatus, TopicStatus, RealmManager
 
 # How to access Kernel: API (default) | DB
 if SETTINGS.get('kernel_access_type', 'api').lower() != 'db':
@@ -42,8 +42,8 @@ class ProducerManager(object):
     # Serves status & healthcheck over HTTP
     # Dispatches Signals
     # Keeps track of schemas
-    # Spawns a TopicManager for each schema type in Kernel
-    # TopicManager registers own eventloop greenlet (update_kafka) with ProducerManager
+    # Spawns a RealmManager for each schema type in Kernel
+    # RealmManager registers own eventloop greenlet (update_kafka) with ProducerManager
 
     def __init__(self):
         # Start Signal Handlers
@@ -66,7 +66,7 @@ class ProducerManager(object):
 
         # Clear objects and start
         self.kafka_status = KafkaStatus.SUBMISSION_PENDING
-        self.topic_managers = {}
+        self.realm_managers = {}
         self.run()
 
     def keep_alive_loop(self):
@@ -77,9 +77,9 @@ class ProducerManager(object):
     def run(self):
         self.threads = []
         self.threads.append(gevent.spawn(self.keep_alive_loop))
-        self.threads.append(gevent.spawn(self.check_schemas))
+        self.threads.append(gevent.spawn(self.check_realms))
         # Also going into this greenlet pool:
-        # Each TopicManager.update_kafka() from TopicManager.init
+        # Each RealmManager.update_kafka() from RealmManager.init
         gevent.joinall(self.threads)
 
     def kill(self, *args, **kwargs):
@@ -88,13 +88,21 @@ class ProducerManager(object):
         self.http.stop()
         self.http.close()
         self.worker_pool.kill()
-        self.killed = True  # Flag checked by spawned TopicManagers to stop themselves
+        self.killed = True  # Flag checked by spawned RealmManagers to stop themselves
 
     def safe_sleep(self, dur):
         # keeps shutdown time low by yielding during sleep and checking if killed.
+        # limit sleep calls to prevent excess context switching that occurs on gevent.sleep
+        if dur < 5:
+            unit = 1
+        else:
+            res = dur % 5
+            dur = (dur - res) / 5
+            unit = 5
+            gevent.sleep(res)
         for x in range(int(dur)):
             if not self.killed:
-                gevent.sleep(1)
+                gevent.sleep(unit)
 
     # Connectivity
 
@@ -146,39 +154,29 @@ class ProducerManager(object):
         init_offset_db()
         self.logger.info('OffsetDB initialized')
 
-    # Main Schema Loop
-    # Spawns TopicManagers for new schemas, updates schemas for workers on change.
-    def check_schemas(self):
-        # Checks for schemas in Kernel
-        # Creates TopicManagers for found schemas.
-        # Updates TopicManager.schema on schema change
+    # TODO swap over
+
+    # # main update loop
+    # # creates a manager / producer for each Realm
+    def check_realms(self):
         while not self.killed:
-            schemas = []
+            realms = []
             try:
-                schemas = self.kernel_client.get_schemas()
+                self.logger.debug('Checking for new realms')
+                realms = self.kernel_client.get_realms()
+                for realm in realms:
+                    if realm not in self.realm_managers.keys():
+                        self.logger.info(f'Realm connected: {realm}')
+                        self.realm_managers[realm] = RealmManager(self, realm)
+                if not realms:
+                    gevent.sleep(5)
+                else:
+                    gevent.sleep(30)
             except Exception as err:
                 self.logger.warning(f'No Kernel connection: {err}')
                 gevent.sleep(1)
                 continue
-
-            for schema in schemas:
-                name = schema['schema_name']
-                realm = schema['realm']
-                schema_name = f'{realm}.{name}'
-                if schema_name not in self.topic_managers.keys():
-                    self.logger.info(f'Topic connected: {schema_name}')
-                    self.topic_managers[schema_name] = TopicManager(self, schema, realm)
-                else:
-                    topic_manager = self.topic_managers[schema_name]
-                    if topic_manager.schema_changed(schema):
-                        topic_manager.update_schema(schema)
-                        self.logger.debug(f'Schema {schema_name} updated')
-                    else:
-                        self.logger.debug(f'Schema {schema_name} unchanged')
-
-            # Time between checks for schema change
-            self.safe_sleep(SETTINGS.get('sleep_time', 10))
-        self.logger.debug('No longer checking schemas')
+        self.logger.debug('No longer checking for new Realms')
 
     # Flask Functions
 
@@ -244,17 +242,21 @@ class ProducerManager(object):
             'kafka_container_accessible': self.kafka_available(),
             'kafka_broker_information': self.broker_info(),
             'kafka_submission_status': str(self.kafka_status),  # This is just a status flag
-            'topics': {k: v.get_status() for k, v in self.topic_managers.items()},
+            'topics': {k: v.get_status() for k, v in self.realm_managers.items()},
         }
         with self.app.app_context():
             return jsonify(**status)
 
     @requires_auth
     def request_topics(self):
-        if not self.topic_managers:
+        if not self.realm_managers:
             return Response({})
 
-        status = {k: v.get_topic_size() for k, v in self.topic_managers.items()}
+        status = {}
+        for topic, manager in self.realm_managers.items():
+            status[topic] = {}
+            for name, sw in manager.schemas.items():
+                status[topic][name] = manager.get_topic_size(sw)
         with self.app.app_context():
             return jsonify(**status)
 
@@ -275,12 +277,18 @@ class ProducerManager(object):
     @requires_auth
     def handle_topic_command(self, request, status):
         topic = request.args.get('topic')
+        realm = request.args.get('realm')
+        if not realm:
+            return Response('A realm must be specified', 422)
         if not topic:
             return Response('A topic must be specified', 422)
-        if not self.topic_managers.get(topic):
-            return Response(f'Bad topic name {topic}', 422)
+        if not self.realm_managers.get(realm):
+            return Response(f'Bad realm name: {realm}', 422)
 
-        manager = self.topic_managers[topic]
+        manager = self.realm_managers[realm]
+        schema_wrapper = manager.schemas.get(topic)
+        if not schema_wrapper:
+            return Response(f'realm {realm} has no topic {topic}', 422)
         if status is TopicStatus.PAUSED:
             fn = manager.pause
         if status is TopicStatus.NORMAL:
@@ -289,7 +297,7 @@ class ProducerManager(object):
             fn = manager.rebuild
 
         try:
-            res = fn()
+            res = fn(schema_wrapper)
             if not res:
                 return Response(f'Operation failed on {topic}', 500)
 
