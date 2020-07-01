@@ -155,8 +155,17 @@ CLIENT_REALM=test
 # ------------------------------------------------------------------
 # Other
 # ==================================================================
+LOGGING_LEVEL=INFO
+
 # set to 1 to disable parallel execution
 TEST_PARALLEL=
+TEST_WORKERS=5
+
+# task priorities (higher value higher priority)
+TEST_CREATE_PROJECT=1
+TEST_CREATE_SUBMISSION=100
+TEST_HEALTH_CHECK=2
+TEST_VIEW_PROJECTS=5
 
 # to speed up development changes in the SDK library
 # https://github.com/eHealthAfrica/aether-django-sdk-library

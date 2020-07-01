@@ -1,11 +1,11 @@
 # ------------------------------------------------------------------------------
 # Config file for these containers:
 #
-#  * Zookeper & Kafka
+#  * Zookeeper & Kafka
 #  * Aether Kafka Producer
 # ------------------------------------------------------------------------------
 
-version: "2.1"
+version: "2.4"
 
 networks:
   aether:

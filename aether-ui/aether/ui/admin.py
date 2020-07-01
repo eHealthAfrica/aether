@@ -17,11 +17,21 @@
 # under the License.
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.postgres.forms.jsonb import JSONField
 from django.utils.translation import gettext as _
 
 from .api import models, utils
+
+if settings.MULTITENANCY:  # pragma: no cover
+    PROJECT_LIST_FILTER = ('mt__realm',)
+    PIPELINE_LIST_FILTER = ('project__mt__realm',)
+    CONTRACT_LIST_FILTER = ('pipeline__project__mt__realm',)
+else:  # pragma: no cover
+    PROJECT_LIST_FILTER = []
+    PIPELINE_LIST_FILTER = []
+    CONTRACT_LIST_FILTER = []
 
 
 class PipelineForm(forms.ModelForm):
@@ -64,6 +74,7 @@ class ProjectAdmin(BaseAdmin):
     actions = ['publish']
 
     list_display = ('name', 'project_id', 'is_default',)
+    list_filter = ('active',) + PROJECT_LIST_FILTER
     search_fields = list_display
     ordering = list_display
 
@@ -89,6 +100,7 @@ class PipelineAdmin(BaseAdmin):
     form = PipelineForm
 
     list_display = ('name', 'project', 'mappingset',)
+    list_filter = PIPELINE_LIST_FILTER
     search_fields = list_display
     ordering = list_display
 
@@ -117,6 +129,7 @@ class ContractAdmin(BaseAdmin):
         'name', 'pipeline', 'published_on', 'mapping',
         'is_active', 'is_read_only',
     )
+    list_filter = ('is_active', 'is_read_only',) + CONTRACT_LIST_FILTER
     search_fields = ('name',)
     ordering = list_display
 

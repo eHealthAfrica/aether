@@ -5,15 +5,15 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * Aether UI & UI Assets
-#  * Zookeper & Kafka
+#  * Zookeeper & Kafka
 #  * Aether Kafka Producer
 #
 # These container will be extended in the other DC files with dependencies and networks.
-# Volumes and environment variables can be overriden in those files too.
+# Volumes and environment variables can be overridden in those files too.
 # See more in: https://docs.docker.com/compose/extends/
 # ------------------------------------------------------------------------------
 
-version: "2.1"
+version: "2.4"
 
 services:
 
@@ -78,7 +78,6 @@ services:
 
       KEYCLOAK_USER: ${KEYCLOAK_ADMIN_USERNAME}
       KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KEYCLOAK_HTTP_PORT: 8080
 
 
   # ---------------------------------
@@ -94,8 +93,13 @@ services:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
       PROFILING_ENABLED: "true"
+      SILKY_PYTHON_PROFILER: "true"
+      SILKY_MAX_REQUEST_BODY_SIZE: 128
+      SILKY_MAX_RESPONSE_BODY_SIZE: 128
+      SILKY_INTERCEPT_PERCENT: 1
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -172,8 +176,9 @@ services:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
-      PROFILING_ENABLED: "true"
+      PROFILING_ENABLED: null
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -244,8 +249,9 @@ services:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
-      PROFILING_ENABLED: "true"
+      PROFILING_ENABLED: null
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -334,13 +340,14 @@ services:
     stdin_open: true
     environment:
       PYTHONUNBUFFERED: 1
+      LOG_LEVEL: ${LOGGING_LEVEL:-ERROR}
 
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
 
       # These variables will override the ones indicated in the settings file
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://kernel:8100
+      AETHER_KERNEL_URL: http://kernel:8100/kernel
       DEFAULT_REALM: ${DEFAULT_REALM}
       REALM_COOKIE: ${REALM_COOKIE}
 

@@ -18,7 +18,7 @@
 
 from datetime import datetime
 
-from producer.settings import SETTINGS, get_logger
+from aether.producer.settings import SETTINGS, get_logger
 
 
 logger = get_logger('producer-kernel')
@@ -33,7 +33,10 @@ class KernelClient(object):
         # last time kernel was checked for new updates
         self.last_check = None
         self.last_check_error = None
+        # limit number of messages in a single batch
         self.limit = int(SETTINGS.get('fetch_size', 100))
+        # send when message volume >= batch_size (kafka hard limit is 2MB)
+        self.batch_size = int(SETTINGS.get('publish_size', 100_000))
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
@@ -43,14 +46,14 @@ class KernelClient(object):
         # based on the insert time and now() to provide a buffer.
 
         def fn(row):
-            commited = datetime.strptime(row.get('modified')[:26], _TIME_FORMAT)
-            lag_time = (query_time - commited).total_seconds()
+            committed = datetime.strptime(row.get('modified')[:26], _TIME_FORMAT)
+            lag_time = (query_time - committed).total_seconds()
             if lag_time > _WINDOW_SIZE_SEC:
                 return True
 
             elif lag_time < -30.0:
                 # Sometimes fractional negatives show up. More than 30 seconds is an issue though.
-                logger.critical(f'INVALID LAG INTERVAL: {lag_time}. Check time settings on server.')
+                logger.warning(f'INVALID LAG INTERVAL: {lag_time}. Check time settings on server.')
 
             _id = row.get('id')
             logger.debug(f'WINDOW EXCLUDE: ID: {_id}, LAG: {lag_time}')
@@ -61,14 +64,17 @@ class KernelClient(object):
     def mode(self):
         raise NotImplementedError
 
+    def get_realms(self):
+        raise NotImplementedError
+
     def get_schemas(self):
         raise NotImplementedError
 
-    def check_updates(self, modified, schema_name, realm):
+    def check_updates(self, realm, schema_id, schema_name, modified):
         raise NotImplementedError
 
-    def count_updates(self, schema_name, realm):
+    def count_updates(self, realm, schema_id, schema_name, modified=''):
         raise NotImplementedError
 
-    def get_updates(self, modified, schema_name, realm):
+    def get_updates(self, realm, schema_id, schema_name, modified):
         raise NotImplementedError

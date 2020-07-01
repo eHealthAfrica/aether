@@ -68,7 +68,7 @@ def read(consumer, start='LATEST', verbose=False, timeout_ms=5000, max_records=2
 
 def _read_poll_result(new_records, verbose=False):
     flattened = []
-    for parition_key, packages in new_records.items():
+    for packages in new_records.values():
         for package in packages:
             messages = package.get('messages')
             for msg in messages:

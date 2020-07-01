@@ -23,9 +23,9 @@ import os
 
 from aether.sdk.conf.settings_aether import *  # noqa
 from aether.sdk.conf.settings_aether import (
+    DJANGO_USE_CACHE,
     INSTALLED_APPS,
     MIGRATION_MODULES,
-    PROFILING_ENABLED,
     REST_FRAMEWORK,
 )
 
@@ -84,20 +84,6 @@ if EXPORT_NUM_CHUNKS < 1:
     EXPORT_NUM_CHUNKS = 1
 
 
-# Profiling workaround
-# ------------------------------------------------------------------------------
-#
-# Issue: The entities bulk creation is failing with Silk enabled.
-# The reported bug, https://github.com/jazzband/django-silk/issues/348,
-# In the meantime we will disable silk for those requests.
-
-if PROFILING_ENABLED:
-    def ignore_entities_post(request):
-        return request.method != 'POST' or '/entities' not in request.path
-
-    SILKY_INTERCEPT_FUNC = ignore_entities_post
-
-
 # Swagger workaround
 # ------------------------------------------------------------------------------
 # The ``bravado`` lib in ``aether.client`` cannot deal with JSON fields handled
@@ -122,3 +108,21 @@ SWAGGER_SETTINGS = {
         'drf_yasg.inspectors.StringDefaultFieldInspector',
     ],
 }
+
+# To improve performance
+if DJANGO_USE_CACHE:
+    from aether.sdk.conf.settings_aether import CACHEOPS
+
+    _CACHED_MODULES = [
+        'kernel.attachment',
+        'kernel.entity',
+        'kernel.mapping',
+        'kernel.mappingset',
+        'kernel.project',
+        'kernel.schema',
+        'kernel.schemadecorator',
+        'kernel.submission',
+    ]
+
+    for k in _CACHED_MODULES:
+        CACHEOPS[k] = {'ops': ('fetch', 'get', 'exists')}

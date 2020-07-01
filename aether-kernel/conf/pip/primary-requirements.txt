@@ -23,6 +23,7 @@ aether.python
 
 
 # Django specific
+django<3
 django-filter
 django-model-utils
 drf-yasg
@@ -34,4 +35,4 @@ lxml
 
 
 # Test libraries
-django-autofixture
+django-dynamic-fixture

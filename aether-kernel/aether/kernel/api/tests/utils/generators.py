@@ -18,7 +18,7 @@
 
 import random
 
-from autofixture import AutoFixture
+from ddf import G, M
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -93,8 +93,7 @@ def generate_project(
     Generate an Aether Project.
 
     This function can be used in unit tests to generate instances of all kernel
-    models. It wraps https://github.com/gregmuellegger/django-autofixture and
-    provides an Aether-specific fixture generator.
+    models.
 
     If necessary, the default field values of a model can be overridden,
     using either static values:
@@ -103,59 +102,57 @@ def generate_project(
 
     or generators:
 
-    >>> from autofixture import generators
-    >>> names = generators.ChoicesGenerator(values=['a', 'b', 'c'])
+    >>> import random
+    >>> names = lambda x: random.choice(['a', 'b', 'c'])
     >>> generate_project(project_field_values={'name': names})
     '''
 
-    project = AutoFixture(
+    project = G(
         models.Project,
-        field_values=get_field_values(
+        **get_field_values(
             default=dict(),
             values=project_field_values,
         ),
-    ).create_one()
+    )
 
-    schema = AutoFixture(
-        model=models.Schema,
-        field_values=get_field_values(
+    schema = G(
+        models.Schema,
+        **get_field_values(
             default=dict(
                 definition=schema_definition(),
             ),
             values=schema_field_values,
         ),
-    ).create_one()
+    )
 
-    schemadecorator = AutoFixture(
+    schemadecorator = G(
         model=models.SchemaDecorator,
-        field_values=get_field_values(
+        **get_field_values(
             default=dict(
                 project=project,
                 schema=schema,
             ),
             values=schemadecorator_field_values,
         ),
-    ).create_one()
+    )
 
     for _ in range(random.randint(*MAPPINGS_COUNT_RANGE)):
-        mappingset = AutoFixture(
-            model=models.MappingSet,
-            field_values=get_field_values(
+        mappingset = G(
+            models.MappingSet,
+            **get_field_values(
                 default=dict(
                     project=project,
                     schema=mappingset_schema(),
                 ),
                 values=mappingset_field_values,
             ),
-        ).create_one()
+        )
 
         # create a random input based on the schema
         if not mappingset.input and mappingset.schema:
             mappingset.input = random_avro(mappingset.schema)
             mappingset.save()
 
-        # django-autofixture does not support Django 2 models with m2m relations.
-        # https://github.com/gregmuellegger/django-autofixture/pull/110
         models.Mapping.objects.create(
             **get_field_values(
                 default=dict(
@@ -168,9 +165,9 @@ def generate_project(
         )
 
         for _ in range(random.randint(*SUBMISSIONS_COUNT_RANGE)):
-            submission = AutoFixture(
-                model=models.Submission,
-                field_values=get_field_values(
+            submission = G(
+                models.Submission,
+                **get_field_values(
                     default=dict(
                         # use mappingset schema to generate random payloads
                         payload=random_avro(mappingset.schema),
@@ -179,7 +176,7 @@ def generate_project(
                     ),
                     values=submission_field_values,
                 ),
-            ).create_one()
+            )
 
             if include_attachments:
                 for index in range(random.randint(*ATTACHMENTS_COUNT_RANGE)):
@@ -190,3 +187,9 @@ def generate_project(
 
             # extract entities
             run_entity_extraction(submission)
+
+    return project, schema
+
+
+def generate_random_string():
+    return M('---------------------')

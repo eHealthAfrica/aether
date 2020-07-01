@@ -20,8 +20,10 @@ import json
 
 from . import CustomTestCase
 from ..xform_utils import (
+    __find_by_key_value as find_value,
     __get_all_paths as get_paths,
     __get_avro_primitive_type as get_type,
+    __get_xform_choices as get_choices,
     __get_xform_instance as get_instance,
     __get_xform_itexts as get_texts,
     __get_xform_label as get_label,
@@ -44,7 +46,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
     def test__validate_xform__not_valid(self):
         with self.assertRaises(XFormParseError) as ve:
             validate_xform(self.samples['xform']['xml-err'])
-            self.assertIn('Not valid xForm definition.', str(ve.exception), ve)
+        self.assertIn('Not valid xForm definition.', str(ve.exception), ve)
 
     def test__validate_xform__missing_required__html(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -53,8 +55,8 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     <html></html>
                 '''
             )
-            self.assertIn('Missing required tags:', str(ve.exception), ve)
-            self.assertIn('<h:html>', str(ve.exception), ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<h:html>', str(ve.exception), ve)
 
     def test__validate_xform__missing_required__html__children(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -66,9 +68,9 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required tags:', str(ve.exception), ve)
-            self.assertIn('<h:body> in <h:html>', str(ve.exception), ve)
-            self.assertIn('<h:head> in <h:html>', str(ve.exception), ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<h:body> in <h:html>', str(ve.exception), ve)
+        self.assertIn('<h:head> in <h:html>', str(ve.exception), ve)
 
     def test__validate_xform__missing_required__head__children(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -83,9 +85,9 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required tags:', str(ve.exception), ve)
-            self.assertIn('<h:title> in <h:html><h:head>', str(ve.exception), ve)
-            self.assertIn('<model> in <h:html><h:head>', str(ve.exception), ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<h:title> in <h:html><h:head>', str(ve.exception), ve)
+        self.assertIn('<model> in <h:html><h:head>', str(ve.exception), ve)
 
     def test__validate_xform__missing_required__model__children(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -102,8 +104,8 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required tags:', str(ve.exception), ve)
-            self.assertIn('<instance> in <h:html><h:head><model>', str(ve.exception), ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<instance> in <h:html><h:head><model>', str(ve.exception), ve)
 
     def test__validate_xform__no_instance(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -123,7 +125,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__validate_xform__no_title__no_form_id(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -144,7 +146,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required form title and instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required form title and instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__no_title__blank(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -165,7 +167,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required form title.', str(ve.exception), ve)
+        self.assertIn('Missing required form title.', str(ve.exception), ve)
 
     def test__validate_xform__no_xform_id(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -186,7 +188,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__no_xform_id__blank(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -207,7 +209,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                     </h:html>
                 '''
             )
-            self.assertIn('Missing required instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__with__title__and__xform_id(self):
         try:
@@ -373,7 +375,7 @@ class XFormUtilsAvroTests(CustomTestCase):
     def test__get_xform_instance__error(self):
         with self.assertRaises(XFormParseError) as ve:
             get_instance({})
-            self.assertIn('Missing required instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance__error__no_instances(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -386,7 +388,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                     }
                 }
             })
-            self.assertIn('Missing required instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance__error___no_default_instance(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -403,7 +405,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                     }
                 }
             })
-            self.assertIn('Missing required instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance(self):
         xform_dict = {
@@ -1007,7 +1009,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                     </item>
                     <item>
                         <label>Non-residential</label>
-                        <value>non_residentia</value>
+                        <value>non_residential</value>
                     </item>
                     <item>
                         <label>Mixed</label>
@@ -1115,7 +1117,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                         },
                         {
                             'label': 'Non-residential',
-                            'value': 'non_residentia'
+                            'value': 'non_residential'
                         },
                         {
                             'label': 'Mixed',
@@ -1132,3 +1134,145 @@ class XFormUtilsAvroTests(CustomTestCase):
         project_name = 'TestProject'
         schema = parse_xform_to_avro_schema(xml_definition, project_name)
         self.assertEqual(schema, expected, json.dumps(schema, indent=2))
+
+    def test__find_by_key_value(self):
+        xform_dict = {
+            'h:html': {
+                'h:body': {
+                    'any-tag': {
+                        '@ref': 'humidity',
+                        'item': [
+                            {
+                                'label': 'Dry or low',
+                                'value': 'low'
+                            },
+                            {
+                                'label': 'Normal or medium',
+                                'value': 'med'
+                            },
+                            {
+                                'label': 'Wet or High',
+                                'value': 'high'
+                            }
+                        ],
+                        'label': 'Humidity:'
+                    },
+                    'another-tag': {
+                        '@ref': '/nm/a/b/humidity',
+                        'item': [
+                            {
+                                'label': 'Another Dry or low',
+                                'value': 'another-low'
+                            },
+                            {
+                                'label': 'Another Normal or medium',
+                                'value': 'another-med'
+                            },
+                            {
+                                'label': 'Another Wet or High',
+                                'value': 'another-high'
+                            }
+                        ],
+                        'label': 'Humidity:'
+                    },
+                    'wrong-tag': {
+                        '@ref': '/nm/a/b/humidity-wrong',
+                        'item': [
+                            {
+                                'label': 'Wrong Dry or low',
+                                'value': 'wrong-low'
+                            },
+                            {
+                                'label': 'Wrong Normal or medium',
+                                'value': 'wrong-med'
+                            },
+                            {
+                                'label': 'Wrong Wet or High',
+                                'value': 'wrong-high'
+                            }
+                        ],
+                        'label': 'Humidity:'
+                    }
+                }
+            }
+        }
+        found_nodes = list(find_value(xform_dict, '@ref', '/nm/a/b/humidity', True))
+        self.assertEqual(len(found_nodes), 2)
+
+    def test__get_choices(self):
+        expected = [
+            {
+                'label': 'Dry or low',
+                'value': 'low'
+            },
+            {
+                'label': 'Normal or medium',
+                'value': 'med'
+            },
+            {
+                'label': 'Wet or High',
+                'value': 'high'
+            }
+        ]
+        expected_wrong = [
+            {
+                'label': 'Wrong Dry or low',
+                'value': 'wrong-low'
+            },
+            {
+                'label': 'Wrong Normal or medium',
+                'value': 'wrong-med'
+            },
+            {
+                'label': 'Wrong Wet or High',
+                'value': 'wrong-high'
+            }
+        ]
+        expected_default = [
+            {
+                'label': 'Another Dry or low',
+                'value': 'another-low'
+            },
+            {
+                'label': 'Another Normal or medium',
+                'value': 'another-med'
+            },
+            {
+                'label': 'Another Wet or High',
+                'value': 'another-high'
+            }
+        ]
+
+        xform_dict = {
+            'h:html': {
+                'h:body': {
+                    'another-tag': {
+                        '@ref': 'humidity',
+                        'item': expected_default,
+                        'label': 'Humidity:'
+                    },
+                    'any-tag': {
+                        '@ref': '/a/b/c/humidity',
+                        'item': expected,
+                        'label': 'Humidity:'
+                    },
+                    'wrong-tag': {
+                        '@ref': '/nm/a/b/humidity-wrong',
+                        'item': expected_wrong,
+                        'label': 'Humidity:'
+                    }
+                }
+            }
+        }
+
+        choices = get_choices(xform_dict, '/a/b/c/humidity')
+        self.assertEqual(choices, expected)
+
+        choices = get_choices(xform_dict, '/nm/a/b/humidity-wrong')
+        self.assertEqual(choices, expected_wrong)
+
+        choices = get_choices(xform_dict, '/a/b/c/does-not-exist')
+        self.assertIsNone(choices)
+
+        choices = get_choices(xform_dict, '/unknown/humidity')
+        self.assertEqual(choices, expected_default)

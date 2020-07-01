@@ -548,7 +548,7 @@ def execute_records_task(task_id):
                 counter,
             )
         except Exception as e:
-            logger.error(f'Got an error while generating records file: {str(e)}')
+            logger.warning(f'Got an error while generating records file: {str(e)}')
             task.set_error_records(str(e))
             raise  # required to force exitcode != 0
 
@@ -637,7 +637,7 @@ def execute_records_task(task_id):
         logger.info(f'File "{file_name}" ready!')
 
     except Exception as e:
-        logger.error(f'Got an error while generating records file: {str(e)}')
+        logger.debug(f'Got an error while generating records file: {str(e)}')
         task.set_error_records(str(e))
         raise  # required to force exitcode != 0
 
@@ -686,7 +686,7 @@ def execute_attachments_task(task_id):
                     data_from = data_to
 
         except Exception as e:
-            logger.error(f'Got an error while generating attachments file: {str(e)}')
+            logger.debug(f'Got an error while generating attachments file: {str(e)}')
             task.set_error_attachments(str(e))
             raise  # required to force exitcode != 0
 
@@ -801,7 +801,7 @@ def execute_attachments_task(task_id):
             logger.info(f'File "{zip_name}.{zip_ext}" ready!')
 
     except Exception as e:
-        logger.error(f'Got an error while generating attachments file: {str(e)}')
+        logger.debug(f'Got an error while generating attachments file: {str(e)}')
         task.set_error_attachments(str(e))
 
 
@@ -1069,7 +1069,7 @@ def __filter_headers(paths, group, headers):
 def __order_headers(headers):
     '''
     ISSUE: order the headers so the nested arrays appear together and in order.
-    The sorting algorithm MUST be STABLE (luckly python "sorted" method is).
+    The sorting algorithm MUST be STABLE (luckily python "sorted" method is).
 
     ASSUMPTIONS:
         a) The are no numeric properties outside the nested list items. (AVRO naming restrictions)
@@ -1082,13 +1082,13 @@ def __order_headers(headers):
         ``1`` and ``3`` without ``2``:
             [ ..., "any_path.1.and_more", ..., "any_path.3.and_more",... ]
 
-    IMPLEMENTED SOLUTION: assign a weigth to each list element
+    IMPLEMENTED SOLUTION: assign a weight to each list element
 
         A) it's not a flatten array element
                 then set its position in the array
 
         B) it's a flatten array element
-              then set the same weigth as the first flatten element in the list
+              then set the same weight as the first flatten element in the list
               along with its index (recursively)
               For "any_path.3.and_more" set ("any_path" row, 3) pair
 

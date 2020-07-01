@@ -17,11 +17,11 @@
 
 # Aether Django SDK library with extras
 aether.sdk[cache,server,storage,test]
+django<3
 
 
 # xForm and data manipulation
 lxml
 python-dateutil
-# BREAKING CHANGES
-pyxform<1
+pyxform
 spavro

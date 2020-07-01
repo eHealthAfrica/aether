@@ -31,7 +31,6 @@ create_docker_assets
 build_client
 build_ui_assets
 
-for container in "${containers[@]}"
-do
+for container in "${containers[@]}"; do
     build_container $container
 done

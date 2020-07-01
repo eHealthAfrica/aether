@@ -203,8 +203,6 @@ class SerializersTests(CustomTestCase):
         self.assertTrue(user.is_valid(), user.errors)
         with self.assertRaises(ValidationError) as ve:
             user.save()
-
-        self.assertIsNotNone(ve)
         self.assertIn('This field is required.', str(ve.exception), ve)
 
     def test_surveyor_serializer__empty_password(self):

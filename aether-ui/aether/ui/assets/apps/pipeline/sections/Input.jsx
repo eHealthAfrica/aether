@@ -36,7 +36,7 @@ const MESSAGES = defineMessages({
     defaultMessage: 'Avro Schema',
     id: 'input.schema.view'
   },
-  avroSchemaPlacehoder: {
+  avroSchemaPlaceholder: {
     defaultMessage: 'Paste an AVRO Schema and Sample Data will be generated for your convenience to use in the pipeline.',
     id: 'input.schema.placeholder'
   },
@@ -143,7 +143,7 @@ const Input = ({ pipeline, highlight, updatePipeline }) => {
         // TODO: do not generate a new schema if the current one conforms the input
         const schema = generateSchema(obj)
         // Take pipeline name and remove forbidden characters
-        const name = pipeline.name.replace(/[^a-zA-Z0-9]/g, '')
+        const name = pipeline.name.replace(/[^a-zA-Z0-9]/g, '').replace(/^[-\d\s]*/g, '')
         schema.name = name.substring(0, 25)
 
         updatePipeline({ ...pipeline, schema, input: obj })
@@ -177,7 +177,7 @@ const Input = ({ pipeline, highlight, updatePipeline }) => {
     }
   }
 
-  const placeholder = view === DATA_VIEW ? MESSAGES.inputDataPlaceholder : MESSAGES.avroSchemaPlacehoder
+  const placeholder = view === DATA_VIEW ? MESSAGES.inputDataPlaceholder : MESSAGES.avroSchemaPlaceholder
   const submitLabel = view === DATA_VIEW ? MESSAGES.inputDataSubmitButton : MESSAGES.avroSchemaSubmitButton
 
   const setValue = view === DATA_VIEW ? setInputStr : setSchemaStr

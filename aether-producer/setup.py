@@ -28,12 +28,12 @@ def read(f):
 
 setup(
     version=read('/var/tmp/VERSION').strip(),
-    name='aether_producer',
-    decription='Kafka Producer for Aether',
+    name='aether.producer',
+    description='Kafka Producer for Aether',
+    keywords=['aet', 'aether', 'kafka', 'producer'],
 
     url='https://github.com/eHealthAfrica/aether',
     author='Shawn Sarwar',
     author_email='shawn.sarwar@ehealthafrica.org',
     license='Apache2 License',
-    keywords=['aet', 'aether', 'kafka', 'producer'],
 )

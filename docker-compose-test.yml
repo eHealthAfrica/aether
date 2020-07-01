@@ -5,12 +5,16 @@
 #  * Aether Kernel Client
 #  * ODK Module
 #  * Aether UI
-#  * Zookeper & Kafka
+#  * Zookeeper & Kafka
 #  * Aether Kafka Producer
 #  * Aether Integration Tests
 # ------------------------------------------------------------------------------
 
-version: "2.1"
+version: "2.4"
+
+volumes:
+  db_data_test: {}
+  redis_data_test: {}
 
 services:
 
@@ -22,11 +26,15 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: postgres-base
+    volumes:
+      - db_data_test:/var/lib/postgresql/data
 
   redis-test:
     extends:
       file: ./docker-compose-base.yml
       service: redis-base
+    volumes:
+      - redis_data_test:/var/lib/redis/data
 
 
   # ---------------------------------
@@ -169,7 +177,6 @@ services:
       OFFSET_DB_NAME: producer_offset_db_test
       POSTGRES_HOST: db-test
       POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
-
 
   # ---------------------------------
   # Aether Integration Tests

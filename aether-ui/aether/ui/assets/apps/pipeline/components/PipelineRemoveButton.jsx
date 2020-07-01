@@ -20,8 +20,8 @@
 
 import React, { useState } from 'react'
 import { FormattedMessage } from 'react-intl'
-
 import { connect } from 'react-redux'
+
 import { deletePipeline } from '../redux'
 
 import DeleteStatus from './DeleteStatus'

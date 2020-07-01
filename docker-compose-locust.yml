@@ -1,0 +1,57 @@
+# ---------------------------------------------------------------------------- #
+#                        Performance Tests
+#
+# Steps:
+#
+# 1. Start the app as usual.
+#
+# 2. Run:    docker-compose -f docker-compose-locust.yml up --quiet-pull
+#
+# 3. Go to:  http://localhost:8089
+#
+# 4. Indicate number of total users and hatch rate (>0) and press "start".
+#
+# ---------------------------------------------------------------------------- #
+
+version: "2.4"
+
+networks:
+  internal:
+    external:
+      name: ${NETWORK_NAME}
+
+
+services:
+  locust-master:
+    image: locustio/locust
+    environment: &locust_env
+      BASE_HOST: http://${NETWORK_DOMAIN}
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
+      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
+
+      # Task priorities
+      CREATE_PROJECT_PRIORITY: ${TEST_CREATE_PROJECT:-2}
+      CREATE_SUBMISSION_PRIORITY: ${TEST_CREATE_SUBMISSION:-100}
+      HEALTH_CHECK_PRIORITY: ${TEST_HEALTH_CHECK:-2}
+      VIEW_PROJECTS_PRIORITY: ${TEST_VIEW_PROJECTS:-5}
+
+    volumes: &locust_volumes
+      - ./tests/performance:/mnt/locust
+    ports:
+      - 8089:8089
+    command: -f /mnt/locust/locustfile.py --master
+    networks:
+      - internal
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
+
+  locust-worker:
+    image: locustio/locust
+    environment: *locust_env
+    volumes: *locust_volumes
+    scale: ${TEST_WORKERS:-5}
+    command: -f /mnt/locust/locustfile.py --worker --master-host locust-master
+    networks:
+      - internal
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}

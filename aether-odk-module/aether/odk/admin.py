@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.contrib import admin, messages
 from django.utils.translation import gettext as _
 
@@ -26,6 +27,15 @@ from .api.kernel_utils import (
     propagate_kernel_artefacts,
     propagate_kernel_project,
 )
+
+if settings.MULTITENANCY:  # pragma: no cover
+    PROJECT_LIST_FILTER = ('mt__realm',)
+    XFORM_LIST_FILTER = ('project__mt__realm',)
+    MEDIAFILE_LIST_FILTER = ('xform__project__mt__realm',)
+else:  # pragma: no cover
+    PROJECT_LIST_FILTER = []
+    XFORM_LIST_FILTER = []
+    MEDIAFILE_LIST_FILTER = []
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -53,10 +63,8 @@ class ProjectAdmin(BaseAdmin):
 
     actions = ['propagate']
     form = ProjectForm
-    list_display = (
-        'project_id',
-        'name',
-    )
+    list_display = ('project_id', 'name', 'active',)
+    list_filter = ('active',) + PROJECT_LIST_FILTER
     search_fields = ('name',)
     ordering = list_display
 
@@ -99,11 +107,16 @@ class XFormAdmin(BaseAdmin):
         'title',
         'form_id',
         'description',
-        'created_at',
+        'modified_at',
         'version',
+        'active',
     )
-    date_hierarchy = 'created_at'
-    readonly_fields = ('title', 'form_id', 'version', 'md5sum', 'avro_schema', 'avro_schema_prettified',)
+    list_filter = ('active',) + XFORM_LIST_FILTER
+    date_hierarchy = 'modified_at'
+    readonly_fields = (
+        'title', 'form_id', 'version', 'md5sum',
+        'avro_schema', 'avro_schema_prettified',
+    )
     search_fields = ('project', 'title', 'form_id',)
     ordering = list_display
 
@@ -129,12 +142,8 @@ class XFormAdmin(BaseAdmin):
 
 class MediaFileAdmin(BaseAdmin):
 
-    list_display = (
-        'xform',
-        'name',
-        'md5sum',
-        'media_file',
-    )
+    list_display = ('xform', 'name', 'md5sum', 'media_file',)
+    list_filter = MEDIAFILE_LIST_FILTER
     readonly_fields = ('md5sum',)
     search_fields = ('xform', 'name',)
     ordering = list_display

@@ -43,10 +43,7 @@ setup(
         'requests[security]',
         'requests_oauthlib'
     ],
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
 
     packages=find_packages(),
     include_package_data=True,
-    namespace_packages=['aether'],
 )

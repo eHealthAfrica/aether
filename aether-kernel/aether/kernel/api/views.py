@@ -35,11 +35,12 @@ from rest_framework.renderers import JSONRenderer
 
 from aether.sdk.multitenancy.views import MtViewSetMixin
 from aether.sdk.drf.views import FilteredMixin
+from aether.python.avro.tools import random_avro, extract_jsonpaths_and_docs
 from aether.python.entity.extractor import (
     extract_create_entities,
     ENTITY_EXTRACTION_ERRORS,
 )
-from aether.python.avro.tools import extract_jsonpaths_and_docs
+
 from .constants import LINKED_DATA_MAX_DEPTH
 from .entity_extractor import run_entity_extraction
 from .exporter import ExporterMixin
@@ -559,12 +560,12 @@ class SchemaViewSet(FilteredMixin, viewsets.ModelViewSet):
             # of the supplied mappings only
         }
         '''
-        mappings = filter_by_realm(
-            self.request,
-            models.Mapping.objects.filter(pk__in=request.data or []),
-            'mappingset__project'
-        ).values_list('id', flat=True)
         try:
+            mappings = filter_by_realm(
+                self.request,
+                models.Mapping.objects.filter(pk__in=request.data or []),
+                'mappingset__project'
+            ).values_list('id', flat=True)
             return Response(utils.get_unique_schemas_used(mappings))
         except Exception as e:
             return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -849,3 +850,27 @@ def validate_mappings_view(request, *args, **kwargs):
         })
     except Exception as e:
         return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@renderer_classes([JSONRenderer])
+@permission_classes([permissions.IsAuthenticated])
+def generate_avro_input(request, *args, **kwargs):
+    '''
+    Given a `schema` returns an input sample that conforms that schema.
+    '''
+
+    if 'schema' in request.data:
+        schema = request.data['schema']
+        input_sample = random_avro(schema)
+
+        return Response({
+            'schema': schema,
+            'input': input_sample,
+        })
+
+    else:
+        return Response(
+            data={'message': _('Missing "schema" data')},
+            status=status.HTTP_400_BAD_REQUEST,
+        )

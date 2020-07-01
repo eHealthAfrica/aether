@@ -2,4 +2,4 @@
 
 This is the official Python Client for the Aether Kernel.
 
-For usage patterns see `./aether/tests/test_client.py`
+For usage patterns see `./aether/client/test/test.py`

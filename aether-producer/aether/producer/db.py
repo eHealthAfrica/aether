@@ -16,6 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# flake8: noqa: E402
+
+# need to patch sockets to make requests async
+from gevent import monkey
+monkey.patch_all()
+import psycogreen.gevent
+psycogreen.gevent.patch_psycopg()
+
 from datetime import datetime
 import signal
 import sys
@@ -24,11 +32,6 @@ import gevent
 from gevent import monkey, sleep
 from gevent.event import AsyncResult
 from gevent.queue import PriorityQueue, Queue
-
-# need to patch sockets to make requests async
-monkey.patch_all()  # noqa
-import psycogreen.gevent
-psycogreen.gevent.patch_psycopg()  # noqa
 
 import psycopg2
 from psycopg2 import sql
@@ -40,7 +43,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-from producer.settings import SETTINGS, get_logger
+from aether.producer.settings import SETTINGS, get_logger
 
 Base = declarative_base()
 logger = get_logger('producer-db')
@@ -51,7 +54,7 @@ class PriorityDatabasePool(object):
     # The large number of requests AEP makes was having a bad time with SQLAlchemy's
     # QueuePool implementation, causing a large number of connections in the pool to
     # be occupied, eventually overflowing. Additionally, a normal FIFO queue was
-    # causing imporant operations like offset.set() to sit idle for longer than acceptable.
+    # causing important operations like offset.set() to sit idle for longer than acceptable.
     # The priority queue is implemented to respect both stated priority and insert order.
     # So effectively for each priority level, a FIFO queue is implemented.
 
@@ -117,8 +120,8 @@ class PriorityDatabasePool(object):
                 logger.debug(f'{self.name} pulled 1 for {name}: still {len(self.connection_pool)}')
                 sleep(0)  # allow other coroutines to work
                 while not self._test_connection(conn):
-                    logger.error('Pooled connection is dead, getting new resource.'
-                                 ' Replacing dead pool member.')
+                    logger.warning('Pooled connection is dead, getting new resource.'
+                                   ' Replacing dead pool member.')
                     conn = self._make_connection()
                     sleep(0)
                 logger.debug(f'Got job from {name} @priority {priority_level}')
@@ -154,7 +157,7 @@ class PriorityDatabasePool(object):
                 conn.close()
                 logger.debug(f'{self.name} shutdown connection #{c}')
             except Exception as err:
-                logger.error(f'{self.name} FAILED to shutdown connection #{c} | err: {err}')
+                logger.warning(f'{self.name} FAILED to shutdown connection #{c} | err: {err}')
             finally:
                 c += 1
 
@@ -232,14 +235,14 @@ class Offset(Base):
             return offset_value
 
         except Exception as err:
-            logger.error(err)
+            logger.warning(err)
             raise err
 
         finally:
             try:
                 Offset.__pool__.release(call, conn)
             except UnboundLocalError:
-                logger.error(f'{call} could not release a connection it never received.')
+                logger.warning(f'{call} could not release a connection it never received.')
 
     @classmethod
     def get_offset(cls, name):
@@ -254,14 +257,14 @@ class Offset(Base):
             return res[0][0] if res else None
 
         except Exception as err:
-            logger.error(err)
+            logger.warning(err)
             raise err
 
         finally:
             try:
                 Offset.__pool__.release(call, conn)
             except UnboundLocalError:
-                logger.error(f'{call} could not release a connection it never received.')
+                logger.warning(f'{call} could not release a connection it never received.')
 
 
 def init():
@@ -277,7 +280,7 @@ def init():
             sessionmaker(bind=engine)
             logger.info('Database initialized.')
         except SQLAlchemyError as err:
-            logger.error(f'Database could not be initialized | {err}')
+            logger.warning(f'Database could not be initialized | {err}')
             raise err
 
     def _create_db():
@@ -302,7 +305,7 @@ def init():
         Offset.create_pool()
         return
     except SQLAlchemyError as sqe:
-        logger.error(f'Start session failed (1st attempt): {sqe}')
+        logger.warning(f'Start session failed (1st attempt): {sqe}')
         pass
 
     # it was not possible to start session because the database does not exit
@@ -312,6 +315,6 @@ def init():
         _start_session(engine)
         Offset.create_pool()
     except SQLAlchemyError as sqe:
-        logger.error(f'Start session failed (2nd attempt): {sqe}')
+        logger.critical(f'Start session failed (2nd attempt): {sqe}')
         logger.exception(sqe)
         sys.exit(1)

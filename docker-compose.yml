@@ -7,7 +7,7 @@
 #  * Aether UI & UI Assets
 # ------------------------------------------------------------------------------
 
-version: "2.1"
+version: "2.4"
 
 networks:
   # docker network create ${NETWORK_NAME}
@@ -21,7 +21,7 @@ volumes:
   database_data:
     external:
       name: ${DB_VOLUME}
-
+  redis_data: {}
 
 services:
 
@@ -42,6 +42,8 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: redis-base
+    volumes:
+      - redis_data:/var/lib/redis/data
     networks:
       - internal
 

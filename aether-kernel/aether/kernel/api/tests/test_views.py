@@ -800,7 +800,7 @@ class ViewsTest(TestCase):
         response = self.client.post(url, data, content_type='application/json')
         self.assertEqual(response.status_code, 500)
 
-    def test_entity__submit_mutiple__success(self):
+    def test_entity__submit_multiple__success(self):
         response = self.client.post(reverse('entity-list'),
                                     json.dumps([]),
                                     content_type='application/json')
@@ -1049,3 +1049,43 @@ class ViewsTest(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual('No values to update', response.json())
+
+    def test__generate_avro_input(self):
+        url = reverse('generate-avro-input')
+
+        # no data
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 400)
+        data = json.loads(response.content)
+        self.assertEqual(data['message'], 'Missing "schema" data')
+
+        # from schema to input
+        schema = {
+            'name': 'Dummy',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'id',
+                    'type': 'string'
+                },
+                {
+                    'name': 'name',
+                    'type': 'string'
+                },
+            ],
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps({'schema': schema}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['schema'], schema)
+        # input conforms the schema
+        self.assertIn('input', data)
+        self.assertIn('id', data['input'])
+        self.assertTrue(isinstance(data['input']['id'], str))
+        self.assertIn('name', data['input'])
+        self.assertTrue(isinstance(data['input']['name'], str))

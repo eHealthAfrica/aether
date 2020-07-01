@@ -105,3 +105,6 @@ fi
 if [[ $env = "yes" ]]; then
     rm -f .env
 fi
+
+# clean docker cache
+docker image prune -f

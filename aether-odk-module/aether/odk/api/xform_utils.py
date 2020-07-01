@@ -686,13 +686,21 @@ def __get_xform_instance_skeleton(xml_definition):
                 schema[xpath]['type'] = bind_entry.get('@type')
                 schema[xpath]['required'] = bind_entry.get('@required') == 'true()'
 
-                if schema[xpath]['type'] in SELECT_TAGS:
-                    select_options = __get_xform_choices(xform_dict, xpath, itexts)
-                    if select_options:
-                        schema[xpath]['choices'] = select_options
             if AET_TAG in bind_entry:
                 xpath = bind_entry.get('@nodeset')
                 schema[xpath]['annotations'] = __parse_annotations(bind_entry.get(AET_TAG))
+
+    # search in body all the SELECT_TAGS entries
+    for tag in SELECT_TAGS:
+        for entries in __find_in_dict(xform_dict, tag):
+            entries = __wrap_as_list(entries)
+            for select_entry in entries:
+                xpath = select_entry.get('@ref')
+                schema[xpath]['type'] = tag
+
+                select_options = __get_xform_choices(xform_dict, xpath, itexts)
+                if select_options:
+                    schema[xpath]['choices'] = select_options
 
     # search in body all the repeat entries
     for entries in __find_in_dict(xform_dict, 'repeat'):
@@ -705,7 +713,12 @@ def __get_xform_instance_skeleton(xml_definition):
 
 
 def __get_xform_choices(xform_dict, xpath, texts={}):
-    select_node = list(__find_by_key_value(xform_dict, '@ref', xpath))[0]
+    found_nodes = list(__find_by_key_value(xform_dict, '@ref', xpath, True))
+    if len(found_nodes) > 1:
+        exact_node = [d for d in found_nodes if d['@ref'] == xpath]
+        select_node = exact_node[0] if exact_node else found_nodes[0]
+    else:
+        select_node = found_nodes[0] if found_nodes else {}
     select_options = __wrap_as_list(select_node.get('item', []))
 
     # limitation: skips selects linked to a datasource with 'itemset'
@@ -760,7 +773,7 @@ def __get_xform_itexts(xform_dict):
             translation = tt
             break
 
-    # convert all text entries in a dict wich key is the text id
+    # convert all text entries in a dict which key is the text id
     itexts = {}
     for text_entry in __wrap_as_list(translation.get('text')):
         for value in __wrap_as_list(text_entry.get('value')):
@@ -943,13 +956,17 @@ def __find_in_dict(dictionary, key):
             yield result
 
 
-def __find_by_key_value(dictionary, key, value):
+def __find_by_key_value(dictionary, key, value, has_options=False):
+    last_node = value.split('/')[-1] if has_options else None
+
     for k, v in dictionary.items():
         if k == key and v == value:
             yield dictionary
+        elif has_options and k == key and v == last_node:
+            yield dictionary
 
         # continue searching in the value keys
-        for result in __iterate_dict(v, __find_by_key_value, key, value):
+        for result in __iterate_dict(v, __find_by_key_value, key, value, has_options):
             yield result
 
 
@@ -974,19 +991,28 @@ def __get_all_paths(dictionary):
 
     It's only used to get the jsonpaths (or xpaths)
     of the instance skeleton defined in the xForm.
-
-    Assumption: there are no lists in the skeleton.
     '''
     def walk(obj, parent_keys=[]):
         for k, v in obj.items():
             is_dict = isinstance(v, dict)
+            is_list = isinstance(v, list)
             if k.startswith('@'):  # ignore attributes
                 continue
             keys = parent_keys + [k]
             xpath = '/' + '/'.join(keys)
-            paths.append((xpath, isinstance(v, dict)))
+            paths.append((xpath, is_dict or is_list))
             if is_dict:
                 walk(v, keys)
+            elif is_list:
+                # in pyxform 1.x.x there could be duplicated entries like:
+                #    <entry jr:template="">
+                #       <child/>
+                #    </entry>
+                #    <entry>
+                #       <child/>
+                #    </entry>
+                # ignore the first entry
+                walk(v[1], keys)
 
     paths = []
     walk(dictionary)
