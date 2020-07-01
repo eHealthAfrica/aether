@@ -21,7 +21,7 @@
 
 set -Eeuo pipefail
 
-DEPLOY_APPS=( kernel producer odk ui )
+DEPLOY_APPS=( exm kernel producer odk ui )
 IMAGE_PREFIX="test-deployment-aether"
 
 for APP in "${DEPLOY_APPS[@]}"; do

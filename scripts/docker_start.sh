@@ -111,24 +111,24 @@ done
 case $app in
     kernel)
         PRE_CONTAINERS=(db redis nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel)
+        SETUP_CONTAINERS=(kernel exm)
     ;;
 
     odk)
         PRE_CONTAINERS=(db redis nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel odk)
+        SETUP_CONTAINERS=(kernel exm odk)
     ;;
 
     ui)
         PRE_CONTAINERS=(ui-assets db redis nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel ui)
+        SETUP_CONTAINERS=(kernel exm ui)
     ;;
 
     *)
         app=
 
         PRE_CONTAINERS=(ui-assets db redis nginx minio keycloak)
-        SETUP_CONTAINERS=(kernel odk ui)
+        SETUP_CONTAINERS=(kernel exm odk ui)
     ;;
 esac
 

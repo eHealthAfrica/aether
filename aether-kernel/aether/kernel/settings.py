@@ -48,7 +48,6 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
 
-
 # Upload files
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/2.2/ref/settings/#std:setting-DATA_UPLOAD_MAX_MEMORY_SIZE
@@ -108,6 +107,12 @@ SWAGGER_SETTINGS = {
         'drf_yasg.inspectors.StringDefaultFieldInspector',
     ],
 }
+
+
+# Redis Configuration
+# ------------------------------------------------------------------------------
+
+WRITE_ENTITIES_TO_REDIS = bool(os.environ.get('WRITE_ENTITIES_TO_REDIS'))
 
 # To improve performance
 if DJANGO_USE_CACHE:
