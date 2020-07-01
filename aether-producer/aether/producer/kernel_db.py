@@ -33,6 +33,7 @@ from psycopg2.extras import DictCursor
 from aether.producer.db import PriorityDatabasePool
 from aether.producer.settings import SETTINGS
 from aether.producer.kernel import KernelClient, logger
+from aether.producer.utils import utf8size
 
 
 _REALMS_SQL = '''
@@ -129,7 +130,7 @@ class KernelDBClient(KernelClient):
         self.last_check = datetime.now().isoformat()
         name = 'schemas_query'
         if realm:
-            query = sql.SQL(_SCHEMAS_SQL_SINGLE_REALM.format(realm=sql.Literal(realm)))
+            query = sql.SQL(_SCHEMAS_SQL_SINGLE_REALM).format(realm=sql.Literal(realm))
         else:
             query = sql.SQL(_SCHEMAS_SQL_ALL_REALMS)
         cursor = self._exec_sql(name, 1, query)

@@ -92,9 +92,17 @@ class ProducerManager(object):
 
     def safe_sleep(self, dur):
         # keeps shutdown time low by yielding during sleep and checking if killed.
+        # limit sleep calls to prevent excess context switching that occurs on gevent.sleep
+        if dur < 5:
+            unit = 1
+        else:
+            res = dur % 5
+            dur = (dur - res) / 5
+            unit = 5
+            gevent.sleep(res)
         for x in range(int(dur)):
             if not self.killed:
-                gevent.sleep(1)
+                gevent.sleep(unit)
 
     # Connectivity
 
@@ -160,7 +168,10 @@ class ProducerManager(object):
                     if realm not in self.realm_managers.keys():
                         self.logger.info(f'Realm connected: {realm}')
                         self.realm_managers[realm] = RealmManager(self, realm)
-                gevent.sleep(60)
+                if not realms:
+                    gevent.sleep(5)
+                else:
+                    gevent.sleep(30)
             except Exception as err:
                 self.logger.warning(f'No Kernel connection: {err}')
                 gevent.sleep(1)

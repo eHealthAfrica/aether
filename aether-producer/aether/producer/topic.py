@@ -245,11 +245,12 @@ class RealmManager(object):
             res = 0
             for sw in self.schemas.values():
                 res += self.update_kafka(sw) or 0
-            self.context.safe_sleep(self.sleep_time)  # yield
             if res:
+                self.context.safe_sleep(1)  # yield instead of waiting for flush
                 self.producer.flush(timeout=20)
             else:
                 logger.info(f'No updates on: {self.realm}')
+            self.context.safe_sleep(self.sleep_time)  # wait for next batch
 
     # # Schema Update
 
