@@ -124,7 +124,7 @@ class KernelDBClient(KernelClient):
     def get_realms(self):
         query = sql.SQL(_REALMS_SQL)
         cursor = self._exec_sql('get_realms', 1, query)
-        return [row['realm'] for row in cursor]
+        return [row['realm'] for row in cursor if row['realm']]
 
     def get_schemas(self, realm=None):
         self.last_check = datetime.now().isoformat()
