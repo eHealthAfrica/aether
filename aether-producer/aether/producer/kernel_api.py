@@ -69,7 +69,10 @@ class KernelAPIClient(KernelClient):
         return 'api'
 
     def get_realms(self):
-        return self._fetch(url=_REALMS_URL)['realms']
+        return [
+            r for r in self._fetch(url=_REALMS_URL)['realms']
+            if r  # realm "" can exist, so we must filter for it.
+        ]
 
     def get_schemas(self, realm=None):
         self.last_check = datetime.now().isoformat()
