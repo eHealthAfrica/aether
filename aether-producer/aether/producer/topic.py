@@ -36,7 +36,8 @@ from spavro.io import validate
 from aether.producer.db import Offset
 from aether.producer.settings import SETTINGS, KAFKA_SETTINGS, get_logger
 
-logger = get_logger('producer-topic')
+
+logger = get_logger('topic')
 
 
 class SchemaWrapper(object):
