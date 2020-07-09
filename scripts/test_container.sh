@@ -62,6 +62,13 @@ function _wait_for {
     echo_message "$container is ready!"
 }
 
+function start_exm_test {
+    build_container exm
+    echo_message "Starting extractor"
+    $DC_TEST up -d exm-test
+    echo_message "extractor ready!"
+}
+
 function start_database_test {
     _wait_for "db" "$DC_KERNEL_RUN eval pg_isready -q"
 }
@@ -97,22 +104,28 @@ if [[ $1 == "ui" ]]; then
     echo_message "Tested and built ui assets"
 fi
 
-
 echo_message "Starting databases"
 $DC_TEST up -d db-test redis-test
+
 if [[ $1 = "integration" ]]; then
     echo_message "Starting Zookeeper and Kafka"
     $DC_TEST up -d zookeeper-test kafka-test
     $DC_RUN --no-deps kafka-test dub wait kafka-test 29092 60
 fi
 
+if [[ $1 == "kernel" ]]; then
+    start_exm_test
 
-if [[ $1 != "kernel" ]]; then
+else
     # rename kernel test database in each case
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")
 
     build_container kernel
     start_kernel_test
+
+    if [[ $1 != "exm" ]]; then
+        start_exm_test
+    fi
 
     if [[ $1 = "client" || $1 == "integration" ]]; then
         echo_message "Creating client user on Kernel"
@@ -131,13 +144,11 @@ if [[ $1 != "kernel" ]]; then
     fi
 fi
 
-
 echo_message "Preparing $1 container"
 build_container $1
 echo_message "$1 ready!"
 start_database_test
 $DC_RUN "$1"-test test
 echo_message "$1 tests passed!"
-
 
 kill_test

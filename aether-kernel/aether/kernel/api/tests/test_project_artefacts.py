@@ -20,7 +20,7 @@ import uuid
 
 from django.test import TestCase
 
-from aether.kernel.api.models import Project, Schema, SchemaDecorator, Mapping, MappingSet
+from aether.kernel.api.models import Project, Schema, SchemaDecorator, Mapping, MappingSet, Submission
 from aether.kernel.api.project_artefacts import (
     get_project_artefacts as retrieve,
     upsert_project_artefacts as generate,
@@ -356,6 +356,16 @@ class ProjectArtefactsTests(TestCase):
         self.assertNotEqual(mapping.definition['entities'], {})
         self.assertIn('Person', mapping.definition['entities'])
         self.assertIn('Contact', mapping.definition['entities'])
+
+        submission_id = uuid.uuid4()
+        submission = Submission.objects.create(
+            id=submission_id,
+            payload={},
+            mappingset=mappingset
+        )
+        artefacts = retrieve(project=project, include_submissions=True)
+        self.assertIn('submissions', artefacts)
+        self.assertIn(str(submission.pk), artefacts['submissions'])
 
     def test__upsert_project_artefacts__duplicated_name(self):
         SCHEMA_NAME = 'Schema'

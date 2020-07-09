@@ -24,7 +24,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from aether.python.avro.tools import random_avro
 from aether.kernel.api import models
-from aether.kernel.api.entity_extractor import run_entity_extraction
+from aether.kernel.api.entity_extractor import run_extraction
 
 MAPPINGS_COUNT_RANGE = (1, 3)
 SUBMISSIONS_COUNT_RANGE = (2, 3)
@@ -186,7 +186,7 @@ def generate_project(
                     )
 
             # extract entities
-            run_entity_extraction(submission)
+            run_extraction(submission)
 
     return project, schema
 

@@ -19,6 +19,7 @@
 import json
 from unittest import mock
 import requests
+import time
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, override_settings
@@ -33,6 +34,10 @@ from ... import kernel_utils
 from ...surveyors_utils import is_granted_surveyor
 
 from ..views import XML_SUBMISSION_PARAM
+
+# variables to check if the extractor module has finished
+WAIT_FOR_EXTRACTOR = 1  # in seconds
+ATTEMPTS_EXTRACTOR = 5  # how many times?
 
 
 @override_settings(MULTITENANCY=False)
@@ -116,11 +121,12 @@ class PostSubmissionTests(CustomTestCase):
         )
         self.assertTrue(is_granted_surveyor(self.request, self.xform))
         self.assertIsNotNone(self.xform.kernel_id)
-        # propagate in kernel
-        self.assertTrue(kernel_utils.propagate_kernel_artefacts(self.xform))
 
         # check Kernel testing server
         self.assertTrue(kernel_utils.check_kernel_connection())
+        # propagate in kernel
+        self.assertTrue(kernel_utils.propagate_kernel_artefacts(self.xform))
+
         self.KERNEL_HEADERS = kernel_utils.get_kernel_auth_header()
         self.KERNEL_URL = kernel_utils.get_kernel_url()
         self.MAPPINGSET_URL = f'{self.KERNEL_URL}/mappingsets/{str(self.xform.kernel_id)}/'
@@ -163,8 +169,18 @@ class PostSubmissionTests(CustomTestCase):
 
         if succeed:
             submission = content['results'][0]
+            submission_url = submission['url']
 
-            # get entities
+            # -----------------------------------------
+            # get entities (give time to extractor)
+            count = 0
+            while count < ATTEMPTS_EXTRACTOR and not submission['is_extracted']:
+                count += 1
+                time.sleep(WAIT_FOR_EXTRACTOR)
+                # check again
+                resp = requests.get(submission_url, headers=self.KERNEL_HEADERS)
+                submission = resp.json()
+
             response = requests.get(submission['entities_url'], headers=self.KERNEL_HEADERS)
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
             content = response.json()

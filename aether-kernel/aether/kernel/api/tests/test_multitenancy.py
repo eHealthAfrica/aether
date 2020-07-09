@@ -120,19 +120,51 @@ class MultitenancyTests(TestCase):
 
     def test_views(self):
         # create data assigned to different realms
+        _simple_schema = {
+            'name': 'Perf',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'id',
+                    'type': 'string'
+                },
+                {
+                    'name': 'body',
+                    'type': [
+                        'null',
+                        'string'
+                    ]
+                }
+            ]
+        }
+        _simple_mapping = {'mapping': [], 'entities': {}}
+
         obj1 = models.Project.objects.create(name='one')
         child1 = models.MappingSet.objects.create(name='child1', project=obj1)
         obj1.add_to_realm(self.request)
+        schema1 = models.Schema.objects.create(name='schema1', definition=_simple_schema)
+        schemadecorator1 = models.SchemaDecorator.objects.create(name='sd1', project=obj1, schema=schema1)
         self.assertEqual(obj1.mt.realm, CURRENT_REALM)
 
         # change realm
         obj2 = models.Project.objects.create(name='two')
         MtInstance.objects.create(instance=obj2, realm='another')
         child2 = models.MappingSet.objects.create(name='child2', project=obj2)
+        schema2 = models.Schema.objects.create(name='schema2', definition=_simple_schema)
+        schemadecorator2 = models.SchemaDecorator.objects.create(name='sd2', project=obj2, schema=schema2)
         self.assertEqual(obj2.mt.realm, 'another')
 
-        self.assertEqual(models.Project.objects.count(), 2)
-        self.assertEqual(models.MappingSet.objects.count(), 2)
+        # second project in original realm
+        obj1a = models.Project.objects.create(name='1a')
+        MtInstance.objects.create(instance=obj1a, realm=CURRENT_REALM)
+        child1a = models.MappingSet.objects.create(name='child1a', project=obj1a)
+        mapping1a = models.Mapping.objects.create(
+            name='mapping1a', mappingset=child1a, definition=_simple_mapping
+        )
+        self.assertEqual(obj1a.mt.realm, CURRENT_REALM)
+
+        self.assertEqual(models.Project.objects.count(), 3)
+        self.assertEqual(models.MappingSet.objects.count(), 3)
 
         # check that views only return instances linked to CURRENT_REALM
         url = reverse('project-list')
@@ -141,7 +173,7 @@ class MultitenancyTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(data['count'], 1)
+        self.assertEqual(data['count'], 2)
 
         url = reverse('project-detail', kwargs={'pk': obj1.pk})
         response = self.client.get(url)
@@ -170,7 +202,7 @@ class MultitenancyTests(TestCase):
 
         # try to create an entity linked to a project that belongs to this realm
         entity_data_1 = {
-            'project': str(obj1.pk),
+            'schemadecorator': str(schemadecorator2.pk),
             'name': 'playing with realms',
             'status': 'Pending Approval',
             'payload': {
@@ -182,6 +214,31 @@ class MultitenancyTests(TestCase):
             json.dumps(entity_data_1),
             content_type='application/json'
         )
+        # SD2 Does not exists on Realm1
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.json())
+        data = response.json()
+        self.assertIn('schemadecorator', data)
+        self.assertEqual(
+            data['schemadecorator'],
+            [f'Invalid pk "{str(schemadecorator2.pk)}" - object does not exist.'],
+        )
+        # Correct Realm, but add bad mapping-set id
+        entity_data_1['schemadecorator'] = str(schemadecorator1.pk)
+        entity_data_1['mapping'] = str(mapping1a.pk)
+        response = self.client.post(
+            reverse('entity-list'),
+            json.dumps(entity_data_1),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.json())
+        # Correct Realm, no bad artifacts
+        del entity_data_1['mapping']
+        response = self.client.post(
+            reverse('entity-list'),
+            json.dumps(entity_data_1),
+            content_type='application/json'
+        )
+        # Correct Realm
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
         entity_1 = response.json()['id']
 

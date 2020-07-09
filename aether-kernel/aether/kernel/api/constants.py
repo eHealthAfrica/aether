@@ -19,3 +19,5 @@
 LINKED_DATA_MAX_DEPTH = 3
 
 NAMESPACE = 'org.ehealthafrica.aether'
+
+PROJECT_ARTEFACT_CACHE = 'project_artefacts'
