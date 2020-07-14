@@ -110,7 +110,6 @@ def entities(client, schemadecorators):  # noqa: F811
 
 
 @pytest.fixture(scope='function')
-
 def generate_entities(realm_client, mappingset):  # noqa: F811
 
     def fn(realm):
