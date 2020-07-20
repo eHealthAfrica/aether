@@ -6,7 +6,7 @@
 #  * Entity Extractor
 #  * ODK Module
 #  * Aether UI & UI Assets
-#  * Zookeper & Kafka
+#  * Zookeeper & Kafka
 #  * Aether Kafka Producer
 #
 # These container will be extended in the other DC files with dependencies and networks.

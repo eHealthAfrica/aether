@@ -16,4 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+import json
+
+
+def halve_iterable(obj):
+    _size = len(obj)
+    _chunk_size = int(_size / 2) + (_size % 2)
+    for i in range(0, _size, _chunk_size):
+        yield obj[i:i + _chunk_size]
+
+
+def utf8size(obj) -> int:
+    if not isinstance(obj, str):
+        try:
+            obj = json.dumps(obj)
+        except json.JSONDecodeError:
+            obj = str(obj)
+    return len(obj.encode('utf-8'))
+
+
+def sanitize_topic(topic):
+    return ''.join(
+        [i if i.isalnum() or i in ['-', '_', '.'] else '_' for i in topic]
+    )

@@ -45,6 +45,20 @@ def simple_entity(value_size=10):
 
 
 @pytest.fixture(scope='session')
+def realm_client():
+    def fn(realm):
+        return Client(
+            URL,
+            USER,
+            PW,
+            log_level=LOG_LEVEL,
+            auth_type='basic',
+            realm=realm
+        )
+    return fn
+
+
+@pytest.fixture(scope='session')
 def client():
     return Client(
         URL,

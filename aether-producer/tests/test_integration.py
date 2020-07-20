@@ -22,8 +22,8 @@ import requests
 import uuid
 from gevent import sleep
 
-from producer.settings import SETTINGS
-from producer.db import Offset
+from aether.producer.settings import SETTINGS
+from aether.producer.db import Offset
 
 from .timeout import timeout as Timeout
 from . import MockProducerManager

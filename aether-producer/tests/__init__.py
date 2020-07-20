@@ -18,8 +18,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from producer import ProducerManager
-from producer.settings import SETTINGS, get_logger
+from aether.producer import ProducerManager
+from aether.producer.settings import SETTINGS, get_logger
 
 
 class MockAdminInterface(object):
@@ -60,4 +60,4 @@ class MockProducerManager(ProducerManager):
         self.kafka_status = False
         self.kafka_admin_client = MockAdminInterface()
         self.logger = get_logger('tests')
-        self.topic_managers = {}
+        self.realm_managers = {}
