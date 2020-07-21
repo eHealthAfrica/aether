@@ -31,7 +31,7 @@ jobs:
       stage: test
       env: 'TEST_MODE=ui'
 
-    - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
+    - name: "Integration tests (Kernel with Kafka/Zookeeper and Producer)"
       stage: test
       env: 'TEST_MODE=integration'
 

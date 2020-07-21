@@ -29,6 +29,6 @@ if __name__ == '__main__':
         print('PRODUCER_SETTINGS_FILE not set in environment.')
         sys.exit(1)
 
-    from producer import main
+    from aether.producer import main
     main()
     print('Started Producer with path %s' % settings_path)

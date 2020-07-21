@@ -6,7 +6,7 @@
 #  * Aether Kernel Client
 #  * ODK Module
 #  * Aether UI
-#  * Zookeper & Kafka
+#  * Zookeeper & Kafka
 #  * Aether Kafka Producer
 #  * Aether Integration Tests
 # ------------------------------------------------------------------------------
@@ -198,7 +198,6 @@ services:
       OFFSET_DB_NAME: producer_offset_db_test
       POSTGRES_HOST: db-test
       POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
-
 
   # ---------------------------------
   # Aether Integration Tests
