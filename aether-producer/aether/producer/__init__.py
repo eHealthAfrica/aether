@@ -130,21 +130,25 @@ class ProducerManager(object):
                     res['brokers'].append(f'{b}')
 
             for t in iter(md.topics.values()):
-                t_str = []
-                t_str.append(
+                topics = []
+
+                msg_t = (
                     f'{t} with {len(t.partitions)} partition(s)'
                     (f', error: {t.error}' if t.error is not None else '')
                 )
+                topics.append(msg_t)
 
                 for p in iter(t.partitions.values()):
-                    t_str.append(
+                    msg_p = (
                         f'partition {p.id}'
                         f', leader: {p.leader}'
                         f', replicas: {p.replicas}'
                         f', isrs: {p.isrs}'
                         (f', error: {p.error}' if p.error is not None else '')
                     )
-                res['topics'].append(t_str)
+                    topics.append(msg_p)
+
+                res['topics'].append(topics)
             return res
         except Exception as err:
             return {'error': f'{err}'}
