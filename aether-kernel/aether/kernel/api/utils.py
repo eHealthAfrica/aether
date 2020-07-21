@@ -16,15 +16,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import time
+
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count
 from django.forms.models import model_to_dict
+
 from aether.python.redis.task import TaskHelper
-from django.conf import settings
 
 from . import models, redis
 
 REDIS_TASK = TaskHelper(settings)
+
+
+def safe_sleep():
+    # wait for 100ms in 10 intervals of 10ms
+    for x in range(10):
+        time.sleep(.01)
 
 
 def get_unique_schemas_used(mappings_ids):
