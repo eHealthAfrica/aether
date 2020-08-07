@@ -157,9 +157,9 @@ services:
       - ./aether-kernel:/code
       # -------------------------------------------------------------
       # to speed up SDK development changes
-      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.8/site-packages/aether/sdk
       # to speed up Aether Python Library development changes
-      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.7/site-packages/aether/python
+      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.8/site-packages/aether/python
     command: start_dev
 
 
@@ -232,7 +232,7 @@ services:
       - ./aether-odk-module:/code
       # -------------------------------------------------------------
       # to speed up SDK development changes
-      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.8/site-packages/aether/sdk
     command: start_dev
 
 
@@ -297,7 +297,7 @@ services:
       - ./aether-ui:/code
       # -------------------------------------------------------------
       # to speed up SDK development changes
-      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.7/site-packages/aether/sdk
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.8/site-packages/aether/sdk
     command: start_dev
 
   ui-assets-base:
