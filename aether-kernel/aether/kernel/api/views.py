@@ -387,10 +387,10 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.M
         expected response:
 
         {
-            #   Bool indicating if the submission is valid or not
+            # flag indicating if the submission is valid or not
             'is_valid': True|False,
 
-            #   list of entities successfully generated from the submitted payload
+            # list of entities successfully generated from the submitted payload
             'entities': [],
 
             # list of encountered errors
@@ -409,13 +409,11 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.M
         try:
             mappingset = get_object_or_404(models.MappingSet.objects.all(), pk=mappingset_id)
         except Exception as e:
-            return Response(
-                str(e),
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         if not self.check_realm_permission(request, mappingset):
             raise PermissionDenied(_('Not accessible by this realm'))
+
         mappings = mappingset.mappings.all()
         result = {
             'is_valid': True,
@@ -432,20 +430,20 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.M
                     submission_payload=payload,
                     mapping_definition=mapping.definition,
                     schemas=schemas,
+                    mapping_id=mapping.id,
                 )
                 if submission_data.get(ENTITY_EXTRACTION_ERRORS):
                     result['is_valid'] = False
                     result[ENTITY_EXTRACTION_ERRORS] += submission_data[ENTITY_EXTRACTION_ERRORS]
                 else:
                     result['entities'] += entities
+
             except Exception as e:  # pragma: no cover
                 result['is_valid'] = False
                 result[ENTITY_EXTRACTION_ERRORS].append(str(e))
-                return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        if result['is_valid']:
-            return Response(result)
-        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        _status = status.HTTP_200_OK if result['is_valid'] else status.HTTP_400_BAD_REQUEST
+        return Response(result, status=_status)
 
     @action(detail=True, methods=['patch'])
     def extract(self, request, pk, *args, **kwargs):
@@ -823,9 +821,10 @@ def validate_mappings_view(request, *args, **kwargs):
 
     def run_mapping_validation(submission_payload, mapping_definition, schemas):
         submission_data, entities = extract_create_entities(
-            submission_payload,
-            mapping_definition,
-            schemas,
+            submission_payload=submission_payload,
+            mapping_definition=mapping_definition,
+            schemas=schemas,
+            mapping_id='validation',
         )
         validation_result = validate_mappings(
             submission_payload=submission_payload,

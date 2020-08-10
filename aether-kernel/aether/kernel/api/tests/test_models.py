@@ -142,7 +142,7 @@ class ModelsTests(TransactionTestCase):
 
         submission = models.Submission.objects.create(
             revision='a sample revision',
-            payload=EXAMPLE_SOURCE_DATA,
+            payload=dict(EXAMPLE_SOURCE_DATA),
             mappingset=mappingset,
         )
         self.assertNotEqual(models.Submission.objects.count(), 0)
@@ -187,7 +187,7 @@ class ModelsTests(TransactionTestCase):
         with self.assertRaises(IntegrityError) as err4:
             models.Entity.objects.create(
                 revision='a sample revision',
-                payload=EXAMPLE_SOURCE_DATA,  # this is the submission payload without ID
+                payload=dict(EXAMPLE_SOURCE_DATA),  # this is the submission payload without ID
                 status='Publishable',
                 schemadecorator=schemadecorator,
             )
