@@ -26,9 +26,9 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
-
 from rest_framework import status
+
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 
 from aether.kernel.api import models
 from aether.kernel.api.entity_extractor import run_entity_extraction
@@ -99,7 +99,7 @@ class ViewsTest(TestCase):
         )
 
         self.submission = models.Submission.objects.create(
-            payload=EXAMPLE_SOURCE_DATA,
+            payload=dict(EXAMPLE_SOURCE_DATA),
             mappingset=self.mappingset,
             project=self.project,
         )
@@ -159,7 +159,7 @@ class ViewsTest(TestCase):
                 # this will also trigger the entities extraction
                 # (4 entities per submission -> 3 for self.schemadecorator + 1 for schemadecorator_2)
                 self.helper_create_object('submission-list', {
-                    'payload': EXAMPLE_SOURCE_DATA,
+                    'payload': dict(EXAMPLE_SOURCE_DATA),
                     'mappingset': str(self.mappingset.pk),
                 })
 
@@ -772,7 +772,7 @@ class ViewsTest(TestCase):
         models.Entity.objects.all().delete()  # remove all entities
         self.assertEqual(self.submission.entities.count(), 0)
         self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload['aether_errors'], [])
+        self.assertEqual(self.submission.payload[ENTITY_EXTRACTION_ERRORS], [])
 
         response = self.client.post(url)
         self.assertEqual(response.status_code, 405, 'only PATCH')
@@ -783,11 +783,29 @@ class ViewsTest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.submission.entities.count(), 0)
         self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload['aether_errors'], ['oops'])
+        self.assertEqual(self.submission.payload[ENTITY_EXTRACTION_ERRORS], ['oops'])
 
         response = self.client.patch(url)
         self.assertEqual(response.status_code, 200)
-        self.assertNotEqual(self.submission.entities.count(), 0)
+        entities_count = self.submission.entities.count()
+        self.assertNotEqual(entities_count, 0)
+        entity_ids = [e.id for e in self.submission.entities.all()]
+
+        # re-extract (same number of entities with the same IDs)
+        models.Entity.objects.all().delete()  # remove all entities
+        self.client.patch(url)
+        self.assertEqual(entities_count, self.submission.entities.count())
+        self.assertEqual(entity_ids, [e.id for e in self.submission.entities.all()])
+
+        # re-extract (no new Entities just updated)
+        for e in self.submission.entities.all():
+            e.status = 'Pending Approval'
+            e.save()
+        self.client.patch(url)
+        self.assertEqual(entities_count, self.submission.entities.count())
+        self.assertEqual(entity_ids, [e.id for e in self.submission.entities.all()])
+        for e in self.submission.entities.all():
+            self.assertEqual(e.status, 'Publishable')
 
     def test_schema_unique_usage(self):
         url = reverse('schema-unique-usage')
@@ -919,7 +937,7 @@ class ViewsTest(TestCase):
         url = reverse('submission-validate')
         data = {
             'mappingset': str(test_mappingset.id),
-            'payload': PAYLOAD
+            'payload': dict(PAYLOAD),
         }
         response = self.client.post(
             url,
@@ -947,7 +965,7 @@ class ViewsTest(TestCase):
         self.assertEqual('Not accessible by this realm', response_data['detail'])
 
         del PAYLOAD['facility_name']
-        data['payload'] = PAYLOAD
+        data['payload'] = dict(PAYLOAD)
         response = self.client.post(
             url,
             data=data,
@@ -971,7 +989,7 @@ class ViewsTest(TestCase):
 
         data = {
             'mappingset': 'wrong-uuid',
-            'payload': PAYLOAD
+            'payload': dict(PAYLOAD)
         }
         response = self.client.post(
             url,
