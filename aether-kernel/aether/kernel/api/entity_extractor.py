@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
 from aether.python.entity.extractor import (
