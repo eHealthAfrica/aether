@@ -22,6 +22,8 @@ import uuid
 from django.test import RequestFactory, TestCase
 from rest_framework.serializers import ValidationError
 
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ENRICHMENT
+
 from aether.kernel.api import models, serializers
 
 from . import EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_MAPPING
@@ -174,7 +176,7 @@ class SerializersTests(TestCase):
         submission = serializers.SubmissionSerializer(
             data={
                 'project': project.data['id'],
-                'payload': EXAMPLE_SOURCE_DATA,
+                'payload': dict(EXAMPLE_SOURCE_DATA),
             },
             context={'request': self.request},
         )
@@ -197,18 +199,17 @@ class SerializersTests(TestCase):
         self.assertTrue(submission.is_valid(), submission.errors)
 
         # save the submission and check that no entities were created
-        # and we have aether errors
         self.assertEqual(models.Entity.objects.count(), 0)
         submission.save()
         self.assertEqual(models.Entity.objects.count(), 0)
-        self.assertIn('aether_errors', submission.data['payload'])
+        self.assertFalse(submission.data['is_extracted'])
 
         # check the submission without entity extraction errors
         submission = serializers.SubmissionSerializer(
             data={
                 'mappingset': mappingset.data['id'],
                 'project': project.data['id'],
-                'payload': EXAMPLE_SOURCE_DATA,
+                'payload': dict(EXAMPLE_SOURCE_DATA),
             },
             context={'request': self.request},
         )
@@ -218,7 +219,7 @@ class SerializersTests(TestCase):
         self.assertEqual(models.Entity.objects.count(), 0)
         submission.save()
         self.assertNotEqual(models.Entity.objects.count(), 0)
-        self.assertIn('aether_extractor_enrichment', submission.data['payload'])
+        self.assertIn(ENTITY_EXTRACTION_ENRICHMENT, submission.data['payload'])
 
         # check entity
         entity = serializers.EntitySerializer(
@@ -227,7 +228,7 @@ class SerializersTests(TestCase):
                 'submission': submission.data['id'],
                 'schemadecorator': schemadecorator.data['id'],
                 'status': 'Pending Approval',
-                'payload': EXAMPLE_SOURCE_DATA,  # has no id
+                'payload': dict(EXAMPLE_SOURCE_DATA),  # has no id
             },
             context={'request': self.request},
         )
@@ -306,7 +307,7 @@ class SerializersTests(TestCase):
 
         create_count = 6
         # make objects
-        payloads = [EXAMPLE_SOURCE_DATA_ENTITY for i in range(create_count)]
+        payloads = [dict(EXAMPLE_SOURCE_DATA_ENTITY) for i in range(create_count)]
         for pl in payloads:
             pl.update({'id': str(uuid.uuid4())})
         data = [

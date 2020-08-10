@@ -16,9 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
-from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS, extract_create_entities
+from aether.python.entity.extractor import (
+    ENTITY_EXTRACTION_ERRORS as KEY,
+    extract_create_entities,
+)
 from . import models
 
 
@@ -30,7 +34,7 @@ def run_entity_extraction(submission, overwrite=False):
         # replace their payloads with the new ones
         submission.entities.all().delete()
         payload = submission.payload
-        del payload[ENTITY_EXTRACTION_ERRORS]
+        payload.pop(KEY, None)
         submission.payload = payload
         submission.is_extracted = False
         submission.save(update_fields=['payload', 'is_extracted'])
@@ -43,35 +47,36 @@ def run_entity_extraction(submission, overwrite=False):
                          .exclude(definition__entities__isnull=True) \
                          .exclude(definition__entities={})
 
+    payload = dict(submission.payload)
     for mapping in mappings:
         # Get the primary key of the schemadecorator
         entity_sd_ids = mapping.definition.get('entities')
         # Get the schema of the schemadecorator
-        schema_decorator = {
+        schema_decorators = {
             name: models.SchemaDecorator.objects.get(pk=_id)
             for name, _id in entity_sd_ids.items()
         }
         schemas = {
-            name: ps.schema.definition
-            for name, ps in schema_decorator.items()
+            name: sd.schema.definition
+            for name, sd in schema_decorators.items()
         }
-        _, entities = extract_create_entities(
-            submission_payload=submission.payload,
+        payload, entities = extract_create_entities(
+            submission_payload=payload,
             mapping_definition=mapping.definition,
             schemas=schemas,
+            mapping_id=mapping.id,
         )
         for entity in entities:
-            schemadecorator_name = entity.schemadecorator_name
-            schemadecorator = schema_decorator[schemadecorator_name]
-            entity_instance = models.Entity(
+            models.Entity(
+                id=entity.id,
                 payload=entity.payload,
                 status=entity.status,
-                schemadecorator=schemadecorator,
+                schemadecorator=schema_decorators[entity.schemadecorator_name],
                 submission=submission,
                 mapping=mapping,
-                mapping_revision=mapping.revision
-            )
-            entity_instance.save()
+                mapping_revision=mapping.revision,
+                project=submission.project,
+            ).save()
 
     # this should include in the submission payload the following properties
     # generated during the extraction:
@@ -79,5 +84,6 @@ def run_entity_extraction(submission, overwrite=False):
     #   to create the entities.
     # - ``aether_extractor_enrichment``, with the generated values that allow us
     #   to re-execute this process again with the same result.
+    submission.payload = payload
     submission.is_extracted = submission.entities.count() > 0
     submission.save(update_fields=['payload', 'is_extracted'])

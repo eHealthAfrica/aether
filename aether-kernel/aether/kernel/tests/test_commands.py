@@ -23,7 +23,7 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from aether.kernel.api.tests.utils.generators import generate_project
-from aether.kernel.api.models import Submission, Entity
+from aether.kernel.api.models import Entity
 
 
 class ExtractEntitiesCommandTest(TestCase):
@@ -56,16 +56,16 @@ class ExtractEntitiesCommandTest(TestCase):
     def test__extract_entities__error(self):
         generate_project()
         self.assertNotEqual(Entity.objects.count(), 0)
-        entities = Entity.objects.count()
+        entities_count = Entity.objects.count()
 
-        for submission in Submission.objects.all():
-            submission.payload = {}  # make extraction fail
-            submission.save()
+        with mock.patch('aether.kernel.api.entity_extractor.extract_create_entities',
+                        side_effect=Exception('oops')) as mock_extractor:
+            try:
+                call_command('extract_entities', stdout=self.out, stderr=self.out)
+                self.assertTrue(True)
+            except Exception:
+                self.assertTrue(False)
 
-        try:
-            call_command('extract_entities', stdout=self.out, stderr=self.out)
-            self.assertTrue(True)
-        except Exception:
-            self.assertTrue(False)
-        self.assertEqual(Entity.objects.count(), entities,
+        self.assertEqual(Entity.objects.count(), entities_count,
                          'transaction atomic reverts the deletion')
+        mock_extractor.assert_called()
