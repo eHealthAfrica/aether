@@ -21,9 +21,9 @@
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 from aether.kernel.api.models import Submission, Entity
 from aether.kernel.api.entity_extractor import run_entity_extraction
-from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 
 
 class Command(BaseCommand):

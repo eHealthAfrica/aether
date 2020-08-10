@@ -35,8 +35,8 @@ from aether.sdk.multitenancy.serializers import (
 from aether.python import utils
 from aether.python.constants import MergeOptions as MERGE_OPTIONS
 from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
-from .entity_extractor import run_entity_extraction
 
+from .entity_extractor import run_entity_extraction
 from . import models, validators
 
 
@@ -204,7 +204,7 @@ class SubmissionSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         instance = super(SubmissionSerializer, self).create(validated_data)
         try:
             run_entity_extraction(instance)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             instance.payload[ENTITY_EXTRACTION_ERRORS] = instance.payload.get(ENTITY_EXTRACTION_ERRORS, [])
             instance.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]
             instance.save()
