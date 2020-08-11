@@ -37,7 +37,7 @@ from aether.sdk.multitenancy.views import MtViewSetMixin
 from aether.sdk.drf.views import FilteredMixin
 from aether.python.avro.tools import random_avro, extract_jsonpaths_and_docs
 from aether.python.entity.extractor import (
-    ENTITY_EXTRACTION_ERRORS as KEY,
+    ENTITY_EXTRACTION_ERRORS,
     extract_create_entities,
 )
 
@@ -446,7 +446,7 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
         result = {
             'is_valid': True,
             'entities': [],
-            KEY: []
+            ENTITY_EXTRACTION_ERRORS: []
         }
         for mapping in mappings:
             schemas = {
@@ -460,15 +460,15 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
                     schemas=schemas,
                     mapping_id=mapping.id,
                 )
-                if submission_data.get(KEY):
+                if submission_data.get(ENTITY_EXTRACTION_ERRORS):
                     result['is_valid'] = False
-                    result[KEY] += submission_data[KEY]
+                    result[ENTITY_EXTRACTION_ERRORS] += submission_data[ENTITY_EXTRACTION_ERRORS]
                 else:
                     result['entities'] += entities
 
             except Exception as e:  # pragma: no cover
                 result['is_valid'] = False
-                result[KEY].append(str(e))
+                result[ENTITY_EXTRACTION_ERRORS].append(str(e))
 
         _status = status.HTTP_200_OK if result['is_valid'] else status.HTTP_400_BAD_REQUEST
         return Response(result, status=_status)
@@ -834,7 +834,7 @@ def validate_mappings_view(request, *args, **kwargs):
         )
 
         jsonpath_errors = [error._asdict() for error in validation_result]
-        type_errors = submission_data[KEY]
+        type_errors = submission_data[ENTITY_EXTRACTION_ERRORS]
 
         return jsonpath_errors + type_errors, entities
 
