@@ -149,7 +149,7 @@ Also check the aether sdk section about [environment variables](https://github.c
 - `LOGGING_FORMATTER`: `json`. The app messages format.
   Possible values: `verbose` or `json`.
 - `LOGGING_LEVEL`: `info` Logging level for app messages.
-  https://docs.python.org/3.7/library/logging.html#levels
+  https://docs.python.org/3.8/library/logging.html#levels
 
 - `DEBUG` Enables debug mode. Is `false` if unset or set to empty string,
   anything else is considered `true`.

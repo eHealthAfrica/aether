@@ -166,35 +166,45 @@ def run_entity_extraction(submission, overwrite=False):
                          .exclude(definition__entities__isnull=True) \
                          .exclude(definition__entities={})
 
+    payload = dict(submission.payload)
     for mapping in mappings:
         # Get the primary key of the schemadecorator
         entity_sd_ids = mapping.definition.get('entities')
         # Get the schema of the schemadecorator
-        schema_decorator = {
+        schema_decorators = {
             name: SchemaDecorator.objects.get(pk=_id)
             for name, _id in entity_sd_ids.items()
         }
         schemas = {
             name: sd.schema.definition
-            for name, sd in schema_decorator.items()
+            for name, sd in schema_decorators.items()
         }
-        _, entities = extract_create_entities(
-            submission_payload=submission.payload,
+        payload, entities = extract_create_entities(
+            submission_payload=payload,
             mapping_definition=mapping.definition,
             schemas=schemas,
+            mapping_id=mapping.id,
         )
 
         for entity in entities:
             Entity(
+                id=entity.id,
                 payload=entity.payload,
                 status=entity.status,
-                schemadecorator=schema_decorator[entity.schemadecorator_name],
+                schemadecorator=schema_decorators[entity.schemadecorator_name],
                 submission=submission,
                 mapping=mapping,
                 mapping_revision=mapping.revision,
                 project=submission.project,
             ).save()
 
+    # this should include in the submission payload the following properties
+    # generated during the extraction:
+    # - ``aether_errors``, with all the errors that made not possible
+    #   to create the entities.
+    # - ``aether_extractor_enrichment``, with the generated values that allow us
+    #   to re-execute this process again with the same result.
+    submission.payload = payload
     submission.is_extracted = submission.entities.count() > 0
     submission.save(update_fields=['payload', 'is_extracted'])
 

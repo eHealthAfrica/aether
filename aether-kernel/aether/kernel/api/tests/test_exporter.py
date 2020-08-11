@@ -382,7 +382,7 @@ class ExporterViewsTest(TransactionTestCase):
             EXAMPLE_SCHEMA = json.load(infile)
 
         with open(os.path.join(here, 'files/export.json'), 'rb') as infile:
-            EXAMPLE_PAYLOAD = json.load(infile)
+            self.EXAMPLE_PAYLOAD = json.load(infile)
 
         project = models.Project.objects.create(
             name='project1',
@@ -399,7 +399,7 @@ class ExporterViewsTest(TransactionTestCase):
             }],
         )
         submission = models.Submission.objects.create(
-            payload=EXAMPLE_PAYLOAD,
+            payload=dict(self.EXAMPLE_PAYLOAD),
             mappingset=models.MappingSet.objects.get(pk=artefacts_id),
         )
         # extract entities
@@ -713,11 +713,11 @@ class ExporterViewsTest(TransactionTestCase):
 
         submission_1 = models.Submission.objects.first()
         submission_2 = models.Submission.objects.create(
-            payload=submission_1.payload,
+            payload=dict(self.EXAMPLE_PAYLOAD),
             mappingset=submission_1.mappingset,
         )
         submission_3 = models.Submission.objects.create(
-            payload=submission_1.payload,
+            payload=dict(self.EXAMPLE_PAYLOAD),
             mappingset=submission_1.mappingset,
         )
 
@@ -818,7 +818,7 @@ class ExporterViewsTest(TransactionTestCase):
     def test_submissions_export__csv__error(self, *args):
         for i in range(13):
             models.Submission.objects.create(
-                payload={'name': f'Person-{i}'},
+                payload=dict({'name': f'Person-{i}'}),
                 mappingset=models.MappingSet.objects.first(),
             )
 
@@ -1172,6 +1172,7 @@ class ExporterViewsTest(TransactionTestCase):
 
         # new submission with 2 attachments
         submission.pk = None
+        submission.payload = dict(self.EXAMPLE_PAYLOAD)
         submission.save()
         self.assertEqual(models.Submission.objects.count(), 2)
 
@@ -1191,6 +1192,7 @@ class ExporterViewsTest(TransactionTestCase):
 
         # new submission without attachments
         submission.pk = None
+        submission.payload = dict(self.EXAMPLE_PAYLOAD)
         submission.save()
         self.assertEqual(models.Submission.objects.count(), 3)
         run_extraction(submission)

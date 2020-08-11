@@ -26,9 +26,9 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
-
 from rest_framework import status
+
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 
 from aether.kernel.api import models
 from aether.kernel.api.entity_extractor import run_extraction
@@ -99,7 +99,7 @@ class ViewsTest(TestCase):
         )
 
         self.submission = models.Submission.objects.create(
-            payload=EXAMPLE_SOURCE_DATA,
+            payload=dict(EXAMPLE_SOURCE_DATA),
             mappingset=self.mappingset,
             project=self.project,
         )
@@ -158,7 +158,7 @@ class ViewsTest(TestCase):
             for __ in range(5):
                 # this will not trigger the entities extraction
                 self.helper_create_object('submission-list', {
-                    'payload': EXAMPLE_SOURCE_DATA,
+                    'payload': dict(EXAMPLE_SOURCE_DATA),
                     'mappingset': str(self.mappingset.pk),
                 })
 
@@ -866,7 +866,7 @@ class ViewsTest(TestCase):
         url = reverse('submission-validate')
         data = {
             'mappingset': str(test_mappingset.id),
-            'payload': PAYLOAD
+            'payload': dict(PAYLOAD),
         }
         response = self.client.post(
             url,
@@ -894,7 +894,7 @@ class ViewsTest(TestCase):
         self.assertEqual('Not accessible by this realm', response_data['detail'])
 
         del PAYLOAD['facility_name']
-        data['payload'] = PAYLOAD
+        data['payload'] = dict(PAYLOAD)
         response = self.client.post(
             url,
             data=data,
@@ -918,7 +918,7 @@ class ViewsTest(TestCase):
 
         data = {
             'mappingset': 'wrong-uuid',
-            'payload': PAYLOAD
+            'payload': dict(PAYLOAD)
         }
         response = self.client.post(
             url,

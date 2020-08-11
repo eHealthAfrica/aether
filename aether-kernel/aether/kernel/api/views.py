@@ -37,8 +37,8 @@ from aether.sdk.multitenancy.views import MtViewSetMixin
 from aether.sdk.drf.views import FilteredMixin
 from aether.python.avro.tools import random_avro, extract_jsonpaths_and_docs
 from aether.python.entity.extractor import (
+    ENTITY_EXTRACTION_ERRORS as KEY,
     extract_create_entities,
-    ENTITY_EXTRACTION_ERRORS,
 )
 
 from .constants import LINKED_DATA_MAX_DEPTH
@@ -415,10 +415,10 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
         expected response:
 
         {
-            #   Bool indicating if the submission is valid or not
+            # flag indicating if the submission is valid or not
             'is_valid': True|False,
 
-            #   list of entities successfully generated from the submitted payload
+            # list of entities successfully generated from the submitted payload
             'entities': [],
 
             # list of encountered errors
@@ -437,18 +437,16 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
         try:
             mappingset = get_object_or_404(models.MappingSet.objects.all(), pk=mappingset_id)
         except Exception as e:
-            return Response(
-                str(e),
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         if not self.check_realm_permission(request, mappingset):
             raise PermissionDenied(_('Not accessible by this realm'))
+
         mappings = mappingset.mappings.all()
         result = {
             'is_valid': True,
             'entities': [],
-            ENTITY_EXTRACTION_ERRORS: []
+            KEY: []
         }
         for mapping in mappings:
             schemas = {
@@ -460,20 +458,20 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
                     submission_payload=payload,
                     mapping_definition=mapping.definition,
                     schemas=schemas,
+                    mapping_id=mapping.id,
                 )
-                if submission_data.get(ENTITY_EXTRACTION_ERRORS):
+                if submission_data.get(KEY):
                     result['is_valid'] = False
-                    result[ENTITY_EXTRACTION_ERRORS] += submission_data[ENTITY_EXTRACTION_ERRORS]
+                    result[KEY] += submission_data[KEY]
                 else:
                     result['entities'] += entities
+
             except Exception as e:  # pragma: no cover
                 result['is_valid'] = False
-                result[ENTITY_EXTRACTION_ERRORS].append(str(e))
-                return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                result[KEY].append(str(e))
 
-        if result['is_valid']:
-            return Response(result)
-        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        _status = status.HTTP_200_OK if result['is_valid'] else status.HTTP_400_BAD_REQUEST
+        return Response(result, status=_status)
 
     def destroy(self, request, pk=None, *args, **kwargs):
         '''
@@ -824,9 +822,10 @@ def validate_mappings_view(request, *args, **kwargs):
 
     def run_mapping_validation(submission_payload, mapping_definition, schemas):
         submission_data, entities = extract_create_entities(
-            submission_payload,
-            mapping_definition,
-            schemas,
+            submission_payload=submission_payload,
+            mapping_definition=mapping_definition,
+            schemas=schemas,
+            mapping_id='validation',
         )
         validation_result = validate_mappings(
             submission_payload=submission_payload,
@@ -835,7 +834,7 @@ def validate_mappings_view(request, *args, **kwargs):
         )
 
         jsonpath_errors = [error._asdict() for error in validation_result]
-        type_errors = submission_data['aether_errors']
+        type_errors = submission_data[KEY]
 
         return jsonpath_errors + type_errors, entities
 
