@@ -31,7 +31,7 @@ from requests.exceptions import HTTPError
 from redis.exceptions import ConnectionError as RedisConnectionError
 
 from aether.python.entity.extractor import (
-    ENTITY_EXTRACTION_ERRORS,
+    ENTITY_EXTRACTION_ERRORS as KEY,
     extract_create_entities,
 )
 
@@ -245,6 +245,7 @@ def entity_extraction(task, submission_queue, redis=None):
                 submission_payload=payload,
                 mapping_definition=mapping['definition'],
                 schemas=schemas,
+                mapping_id=mapping_id,
             )
 
             for entity in extracted_entities:
@@ -258,8 +259,8 @@ def entity_extraction(task, submission_queue, redis=None):
                     'mapping_revision': mapping['revision'],
                 })
 
-        if not payload.get(ENTITY_EXTRACTION_ERRORS):
-            payload.pop(ENTITY_EXTRACTION_ERRORS, None)
+        if not payload.get(KEY):
+            payload.pop(KEY, None)
             is_extracted = True
         else:
             submission_entities.clear()
@@ -279,16 +280,13 @@ def entity_extraction(task, submission_queue, redis=None):
         _logger.info(f'extraction error on task {task.id}: {err}')
         processed_submission = {
             'id': task.id,
-            SUBMISSION_PAYLOAD_FIELD: {
-                **payload,
-                ENTITY_EXTRACTION_ERRORS: [str(err)],
-            },
+            SUBMISSION_PAYLOAD_FIELD: {**payload, KEY: [str(err)]},
             SUBMISSION_EXTRACTION_FLAG: False,
         }
         return 0
 
     finally:
-        # Let's assume it's going to fail so we don't reextract if kernel
+        # Let's assume it's going to fail so we don't re-extract if kernel
         # can't accept the results.
         utils.cache_objects(
             objects=[processed_submission],

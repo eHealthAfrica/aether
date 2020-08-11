@@ -23,12 +23,19 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS, ENTITY_EXTRACTION_ENRICHMENT
+
 from aether.kernel.api import models
 from aether.kernel.api.filters import EntityFilter, SubmissionFilter
 from aether.kernel.api.tests.utils.generators import (
     generate_project,
     generate_random_string,
 )
+
+ENTITY_EXTRACTION_FIELDS = [
+    ENTITY_EXTRACTION_ERRORS,
+    ENTITY_EXTRACTION_ENRICHMENT,
+]
 
 
 @override_settings(MULTITENANCY=False)
@@ -570,12 +577,12 @@ class TestFilters(TestCase):
                 submission_payload = {
                     k: v
                     for k, v in submission['payload'].items()
-                    if k not in ('aether_errors', 'aether_extractor_enrichment')
+                    if k not in ENTITY_EXTRACTION_FIELDS
                 }
                 original_payload = {
                     k: v
                     for k, v in payload.items()
-                    if k not in ('aether_errors', 'aether_extractor_enrichment')
+                    if k not in ENTITY_EXTRACTION_FIELDS
                 }
                 self.assertEqual(submission_payload, original_payload)
         self.assertEqual(submissions_count, filtered_submissions_count)
@@ -606,12 +613,12 @@ class TestFilters(TestCase):
                 submission_payload = {
                     k: v
                     for k, v in submission['payload'].items()
-                    if k not in ('aether_errors', 'aether_extractor_enrichment')
+                    if k not in ENTITY_EXTRACTION_FIELDS
                 }
                 original_payload = {
                     k: v
                     for k, v in payload.items()
-                    if k not in ('aether_errors', 'aether_extractor_enrichment')
+                    if k not in ENTITY_EXTRACTION_FIELDS
                 }
                 self.assertEqual(submission_payload, original_payload)
         self.assertEqual(submissions_count, filtered_submissions_count)

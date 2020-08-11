@@ -24,6 +24,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.timezone import now
 
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
+
 from aether.kernel.api import models
 from aether.kernel.api.entity_extractor import parse_delta, run_entity_extraction
 
@@ -76,7 +78,7 @@ class EntityExtractorTest(TestCase):
         )
 
         self.submission = models.Submission.objects.create(
-            payload=EXAMPLE_SOURCE_DATA,
+            payload=dict(EXAMPLE_SOURCE_DATA),
             mappingset=self.mappingset,
             project=self.project,
         )
@@ -127,7 +129,7 @@ class EntityExtractorTest(TestCase):
 
         # create a second submission
         submission_2 = models.Submission.objects.create(
-            payload=EXAMPLE_SOURCE_DATA,
+            payload=dict(EXAMPLE_SOURCE_DATA),
             mappingset=self.mappingset,
             project=self.project,
         )
@@ -152,7 +154,7 @@ class EntityExtractorTest(TestCase):
         self.assertNotEqual(submission_2.entities.count(), 0)
         self.assertEqual(self.submission.entities.count(), 0)
         self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload['aether_errors'], ['oops'])
+        self.assertEqual(self.submission.payload[ENTITY_EXTRACTION_ERRORS], ['oops'])
 
     def test_mappingset__extract__endpoint(self):
         def my_side_effect(submission, overwrite):
@@ -172,7 +174,7 @@ class EntityExtractorTest(TestCase):
         # create several submissions
         for _ in range(100):
             models.Submission.objects.create(
-                payload=EXAMPLE_SOURCE_DATA,
+                payload=dict(EXAMPLE_SOURCE_DATA),
                 mappingset=self.mappingset,
                 project=self.project,
             )
@@ -198,7 +200,7 @@ class EntityExtractorTest(TestCase):
         url = reverse('submission-extract', kwargs={'pk': self.submission.pk})
 
         self.assertEqual(self.submission.entities.count(), 0)
-        self.assertNotIn('aether_errors', self.submission.payload)
+        self.assertNotIn(ENTITY_EXTRACTION_ERRORS, self.submission.payload)
 
         response = self.client.post(url)
         self.assertEqual(response.status_code, 405, 'only PATCH')
@@ -211,11 +213,31 @@ class EntityExtractorTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.submission.entities.count(), 0)
         self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload['aether_errors'], ['oops'])
+        self.assertEqual(self.submission.payload[ENTITY_EXTRACTION_ERRORS], ['oops'])
 
         response = self.client.patch(url)
         self.assertEqual(response.status_code, 200)
-        self.assertNotEqual(self.submission.entities.count(), 0)
+
+        entities_count = self.submission.entities.count()
+        entity_ids = [e.id for e in self.submission.entities.all()]
+
+        self.assertNotEqual(entities_count, 0)
+
+        # re-extract (same number of entities with the same IDs)
+        models.Entity.objects.all().delete()  # remove all entities
+        self.client.patch(url)
+        self.assertEqual(entities_count, self.submission.entities.count())
+        self.assertEqual(entity_ids, [e.id for e in self.submission.entities.all()])
+
+        # re-extract (no new Entities just updated)
+        for e in self.submission.entities.all():
+            e.status = 'Pending Approval'
+            e.save()
+        self.client.patch(url)
+        self.assertEqual(entities_count, self.submission.entities.count())
+        self.assertEqual(entity_ids, [e.id for e in self.submission.entities.all()])
+        for e in self.submission.entities.all():
+            self.assertEqual(e.status, 'Publishable')
 
     def test_admin_extract__endpoint(self):
         url = reverse('admin-extract')
@@ -233,7 +255,7 @@ class EntityExtractorTest(TestCase):
         # create several submissions
         for _ in range(100):
             models.Submission.objects.create(
-                payload=EXAMPLE_SOURCE_DATA,
+                payload=dict(EXAMPLE_SOURCE_DATA),
                 mappingset=self.mappingset,
                 project=self.project,
             )

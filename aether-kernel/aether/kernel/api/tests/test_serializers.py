@@ -218,7 +218,7 @@ class SerializersTests(TestCase):
         submission = serializers.SubmissionSerializer(
             data={
                 'project': project.data['id'],
-                'payload': EXAMPLE_SOURCE_DATA,
+                'payload': dict(EXAMPLE_SOURCE_DATA),
             },
             context={'request': self.request},
         )
@@ -276,7 +276,7 @@ class SerializersTests(TestCase):
             data={
                 'mappingset': mappingset.data['id'],
                 'project': project.data['id'],
-                'payload': EXAMPLE_SOURCE_DATA,
+                'payload': dict(EXAMPLE_SOURCE_DATA),
             },
             context={'request': self.request},
         )
@@ -293,7 +293,7 @@ class SerializersTests(TestCase):
                 'submission': submission.data['id'],
                 'schemadecorator': schemadecorator.data['id'],
                 'status': 'Pending Approval',
-                'payload': EXAMPLE_SOURCE_DATA,  # has no id
+                'payload': dict(EXAMPLE_SOURCE_DATA),  # has no id
             },
             context={'request': self.request},
         )
