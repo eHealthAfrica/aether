@@ -217,7 +217,27 @@ class EntityExtractorTest(TestCase):
 
         response = self.client.patch(url)
         self.assertEqual(response.status_code, 200)
-        self.assertNotEqual(self.submission.entities.count(), 0)
+
+        entities_count = self.submission.entities.count()
+        entity_ids = [e.id for e in self.submission.entities.all()]
+
+        self.assertNotEqual(entities_count, 0)
+
+        # re-extract (same number of entities with the same IDs)
+        models.Entity.objects.all().delete()  # remove all entities
+        self.client.patch(url)
+        self.assertEqual(entities_count, self.submission.entities.count())
+        self.assertEqual(entity_ids, [e.id for e in self.submission.entities.all()])
+
+        # re-extract (no new Entities just updated)
+        for e in self.submission.entities.all():
+            e.status = 'Pending Approval'
+            e.save()
+        self.client.patch(url)
+        self.assertEqual(entities_count, self.submission.entities.count())
+        self.assertEqual(entity_ids, [e.id for e in self.submission.entities.all()])
+        for e in self.submission.entities.all():
+            self.assertEqual(e.status, 'Publishable')
 
     def test_admin_extract__endpoint(self):
         url = reverse('admin-extract')
