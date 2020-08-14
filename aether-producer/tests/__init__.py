@@ -37,6 +37,9 @@ class MockKernelClient(object):
     def mode(self):
         return 'dummy'
 
+    def check_kernel(self):
+        return False
+
     def get_schemas(self):
         return []
 

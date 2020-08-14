@@ -22,6 +22,8 @@ import uuid
 from django.test import RequestFactory, TestCase
 from rest_framework.serializers import ValidationError
 
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ENRICHMENT
+
 from aether.kernel.api import models, serializers
 
 from . import EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_MAPPING
