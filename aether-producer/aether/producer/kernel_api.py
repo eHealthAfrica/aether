@@ -123,7 +123,7 @@ class KernelAPIClient(KernelClient):
             response = self._fetch(url=url, realm=realm)
             return response['count'] > 1
         except Exception:
-            logger.warning('Could not access kernel API to look for updates')
+            logger.warning('Could not access kernel API to check for updates')
             return False
 
     def count_updates(self, realm, schema_id=None, schema_name=None, modified=''):
@@ -144,7 +144,7 @@ class KernelAPIClient(KernelClient):
                 f'Reporting requested size for {schema_name or "all entities"} of {_count}')
             return {'count': _count}
         except Exception:
-            logger.warning('Could not access kernel API to look for updates')
+            logger.warning('Could not access kernel API to count updates')
             return -1
 
     def get_updates(self, realm, schema_id=None, schema_name=None, modified=''):
@@ -160,13 +160,18 @@ class KernelAPIClient(KernelClient):
                 modified=modified or '',
             )
 
+        query_time = datetime.now()
         try:
-            query_time = datetime.now()
-            window_filter = self.get_time_window_filter(query_time)
-
             response = self._fetch(url=url, realm=realm)
+        except Exception:
+            logger.warning('Could not access kernel API to fetch updates')
+            return []
+
+        try:
             res = []
             size = 0
+
+            window_filter = self.get_time_window_filter(query_time)
             for entry in response['results']:
                 if window_filter(entry):
                     new_size = size + utf8size(entry)
@@ -177,11 +182,10 @@ class KernelAPIClient(KernelClient):
                         # is 10, we still emit one message
                         return res
                     size = new_size
-
             return res
 
-        except Exception:
-            logger.warning('Could not access kernel API to look for updates')
+        except Exception as e:
+            logger.warning(f'Could not handle kernel API updates: {str(e)}')
             return []
 
     def _fetch(self, url, realm=None):
