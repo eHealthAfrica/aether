@@ -68,9 +68,18 @@ class KernelAPIClient(KernelClient):
     def mode(self):
         return 'api'
 
+    def check_kernel(self):
+        # check that Kernel connection is possible
+        try:
+            self._fetch(url=_REALMS_URL)
+        except Exception as e:
+            logger.exception(e)
+            return False
+
     def get_realms(self):
         return [
-            r for r in self._fetch(url=_REALMS_URL)['realms']
+            r
+            for r in self._fetch(url=_REALMS_URL)['realms']
             if r  # realm "" can exist, so we must filter for it.
         ]
 
@@ -195,6 +204,7 @@ class KernelAPIClient(KernelClient):
             count += 1
             try:
                 response = requests.get(url, headers=headers)
+                response.raise_for_status()
                 return response.json()
             except Exception as e:
                 if count >= _REQUEST_ERROR_RETRIES:
