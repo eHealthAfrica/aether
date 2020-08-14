@@ -187,6 +187,7 @@ class ProducerManager(object):
     def add_endpoints(self):
         # URLS configured here
         self.register('healthcheck', self.request_healthcheck)
+        self.register('kernelcheck', self.request_kernelcheck)
         self.register('status', self.request_status)
         self.register('topics', self.request_topics)
         self.register('pause', self.request_pause)
@@ -236,6 +237,14 @@ class ProducerManager(object):
     def request_healthcheck(self):
         with self.app.app_context():
             return Response({'healthy': True})
+
+    def request_kernelcheck(self):
+        with self.app.app_context():
+            healthy = self.kernel_client.check_kernel()
+            return Response(
+                {'healthy': healthy},
+                status=200 if healthy else 424  # Failed dependency
+            )
 
     @requires_auth
     def request_status(self):

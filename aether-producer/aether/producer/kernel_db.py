@@ -121,6 +121,11 @@ class KernelDBClient(KernelClient):
     def mode(self):
         return 'db'
 
+    def check_kernel(self):
+        # check that Kernel connection is possible
+        query = sql.SQL(_REALMS_SQL)
+        return query is not None
+
     def get_realms(self):
         query = sql.SQL(_REALMS_SQL)
         cursor = self._exec_sql('get_realms', 1, query)
