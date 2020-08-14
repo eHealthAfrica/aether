@@ -121,6 +121,11 @@ class KernelDBClient(KernelClient):
     def mode(self):
         return 'db'
 
+    def check_kernel(self):
+        # check that Kernel connection is possible
+        query = sql.SQL(_REALMS_SQL)
+        return query is not None
+
     def get_realms(self):
         query = sql.SQL(_REALMS_SQL)
         cursor = self._exec_sql('get_realms', 1, query)
@@ -159,7 +164,7 @@ class KernelDBClient(KernelClient):
         if cursor:
             return sum([1 for i in cursor]) > 0
         else:
-            logger.warning('Could not access kernel database to look for updates')
+            logger.warning('Could not access kernel database to check for updates')
             return False
 
     def count_updates(self, realm, schema_id=None, schema_name=None, modified=''):
@@ -192,7 +197,7 @@ class KernelDBClient(KernelClient):
             logger.debug(f'Reporting requested size for {schema_name or "All"} of {_count}')
             return {'count': _count}
         else:
-            logger.warning('Could not access kernel database to look for updates')
+            logger.warning('Could not access kernel database to count updates')
             return -1
 
     def get_updates(self, realm, schema_id=None, schema_name=None, modified=''):
@@ -211,12 +216,17 @@ class KernelDBClient(KernelClient):
             )
 
         query_time = datetime.now()
-        cursor = self._exec_sql(schema_name or 'All', 2, query)
-        if cursor:
-            window_filter = self.get_time_window_filter(query_time)
 
+        cursor = self._exec_sql(schema_name or 'All', 2, query)
+        if not cursor:
+            logger.warning('Could not access kernel database to fetch updates')
+            return []
+
+        try:
             res = []
             size = 0
+
+            window_filter = self.get_time_window_filter(query_time)
             for row in cursor:
                 if window_filter(row):
                     entry = {key: row[key] for key in row.keys()}
@@ -231,8 +241,8 @@ class KernelDBClient(KernelClient):
 
             return res
 
-        else:
-            logger.warning('Could not access kernel database to look for updates')
+        except Exception as e:
+            logger.warning(f'Could not handle kernel database updates: {str(e)}')
             return []
 
     def _exec_sql(self, name, priority, query):

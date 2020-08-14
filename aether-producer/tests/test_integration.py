@@ -41,6 +41,9 @@ def test_manager_http_endpoint_service():
         r = requests.head(f'{url}/healthcheck')
         assert(r.status_code == 200)
 
+        r = requests.head(f'{url}/kernelcheck')
+        assert(r.status_code == 424)
+
         protected_endpoints = ['status', 'topics']
         for e in protected_endpoints:
             r = requests.head(f'{url}/{e}')
