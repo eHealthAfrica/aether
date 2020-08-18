@@ -32,6 +32,8 @@ from . import MockProducerManager
 def test_manager_http_endpoint_service():
     man = MockProducerManager()
     try:
+        SETTINGS.override('MAX_JOB_IDLE_SEC', 1)
+        _realm = 'fake_realm'
         auth = requests.auth.HTTPBasicAuth(man.admin_name, man.admin_password)
         man.serve()
         man.add_endpoints()
@@ -39,21 +41,29 @@ def test_manager_http_endpoint_service():
 
         url = 'http://localhost:%s' % SETTINGS.get('server_port', 9005)
         r = requests.head(f'{url}/healthcheck')
-        assert(r.status_code == 200)
+        assert(r.status_code == 200), r.text
 
         r = requests.head(f'{url}/kernelcheck')
-        assert(r.status_code == 424)
+        assert(r.status_code == 424), r.text
 
         protected_endpoints = ['status', 'topics']
         for e in protected_endpoints:
             r = requests.head(f'{url}/{e}')
-            assert(r.status_code == 401)
+            assert(r.status_code == 401), r.text
 
         for e in protected_endpoints:
             r = requests.head(f'{url}/{e}', auth=auth)
-            assert(r.status_code == 200)
+            assert(r.status_code == 200), r.text
+
+        man.realm_managers[_realm] = {}
+        man.thread_checkin(_realm)
+        sleep(2)
+        r = requests.get(f'{url}/healthcheck')
+        assert(r.status_code == 500)
+        assert(_realm in r.json().keys())
 
     finally:
+        SETTINGS.clear_overrides()
         man.http.stop()
         man.http.close()
         man.worker_pool.kill()
