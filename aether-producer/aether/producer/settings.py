@@ -25,6 +25,7 @@ class Settings(dict):
     # A container for our settings
 
     def __init__(self, file_path=None):
+        self.overrides = {}
         self.load(file_path)
 
     def get(self, key, default=None):
@@ -37,11 +38,20 @@ class Settings(dict):
         return self.__getitem__(key)
 
     def __getitem__(self, key):
+        if key in self.overrides:
+            return self.overrides[key]
         result = os.environ.get(key.upper())
         if result is None:
             result = super().__getitem__(key.lower())
 
         return result
+
+    def override(self, key, value):
+        # case sensitive override of a setting (for testing purposes)
+        self.overrides[key] = value
+
+    def clear_overrides(self):
+        self.overrides = {}
 
     def load(self, path):
         with open(path) as f:
