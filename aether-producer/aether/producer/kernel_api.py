@@ -121,7 +121,7 @@ class KernelAPIClient(KernelClient):
             )
         try:
             response = self._fetch(url=url, realm=realm)
-            return response['count'] > 1
+            return response['count'] > 0
         except Exception:
             logger.warning('Could not access kernel API to check for updates')
             return False

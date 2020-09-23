@@ -16,12 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime
+from functools import wraps
+import json
 import signal
 import socket
-from functools import wraps
 
 from confluent_kafka.admin import AdminClient
-from flask import Flask, Response, request, jsonify
+from flask import (
+    Flask, jsonify, request, Response
+)
 
 import gevent
 from gevent.pool import Pool
@@ -30,6 +34,7 @@ from gevent.pywsgi import WSGIServer
 from aether.producer.db import init as init_offset_db
 from aether.producer.settings import KAFKA_SETTINGS, SETTINGS, LOG_LEVEL, get_logger
 from aether.producer.topic import KafkaStatus, TopicStatus, RealmManager
+
 
 # How to access Kernel: API (default) | DB
 if SETTINGS.get('kernel_access_type', 'api').lower() != 'db':
@@ -67,6 +72,7 @@ class ProducerManager(object):
         # Clear objects and start
         self.kafka_status = KafkaStatus.SUBMISSION_PENDING
         self.realm_managers = {}
+        self.thread_idle = {}
         self.run()
 
     def keep_alive_loop(self):
@@ -153,6 +159,13 @@ class ProducerManager(object):
         except Exception as err:
             return {'error': f'{err}'}
 
+    def thread_checkin(self, _id):
+        self.thread_idle[_id] = datetime.now()
+
+    def thread_set_inactive(self, _id):
+        if _id in self.thread_idle:
+            del self.thread_idle[_id]
+
     # Connect to offset
     def init_db(self):
         init_offset_db()
@@ -181,6 +194,26 @@ class ProducerManager(object):
                 gevent.sleep(1)
                 continue
         self.logger.debug('No longer checking for new Realms')
+
+    def check_thread_health(self):
+        max_idle = SETTINGS.get('MAX_JOB_IDLE_SEC', 600)
+        idle_times = self.get_thread_idle()
+        if not idle_times:
+            return {}
+        self.logger.debug(f'idle times (s) {idle_times}')
+        expired = {k: v for k, v in idle_times.items() if v > max_idle}
+        if expired:
+            self.logger.error(f'Expired threads (s) {expired}')
+        return expired
+
+    def get_thread_idle(self):
+        _now = datetime.now()
+        # if a job is inactive (stopped / paused intentionally or died naturally)
+        # or if a job is still starting up
+        # then it's removed from the check and given a default value of _now
+        idle_times = {_id: int((_now - self.thread_idle.get(_id, _now)).total_seconds())
+                      for _id in self.realm_managers.keys()}
+        return idle_times
 
     # Flask Functions
 
@@ -236,7 +269,15 @@ class ProducerManager(object):
 
     def request_healthcheck(self):
         with self.app.app_context():
-            return Response({'healthy': True})
+            try:
+                expired = self.check_thread_health()
+                if not expired:
+                    return Response({'healthy': True})
+                else:
+                    return Response(json.dumps(expired), 500, mimetype='application/json')
+            except Exception as err:
+                self.app.logger.error(f'Unexpected HC error: {err}')
+                return Response(f'Unexpected error: {err}', 500)
 
     def request_kernelcheck(self):
         with self.app.app_context():

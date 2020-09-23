@@ -22,7 +22,8 @@ import gevent
 import io
 import json
 import traceback
-from typing import (Any, Dict)
+from typing import (Any, Dict, TYPE_CHECKING)
+
 from datetime import datetime
 
 from confluent_kafka import Producer
@@ -35,6 +36,9 @@ from spavro.io import validate
 
 from aether.producer.db import Offset
 from aether.producer.settings import SETTINGS, KAFKA_SETTINGS, get_logger
+
+if TYPE_CHECKING:
+    from aether.producer import ProducerManager
 
 logger = get_logger('topic')
 
@@ -105,7 +109,7 @@ class RealmManager(object):
 
     # Creates a long running job on RealmManager.update_kafka
 
-    def __init__(self, context, realm):
+    def __init__(self, context: 'ProducerManager', realm: str):
         self.context = context
         self.realm = realm
         self.sleep_time = int(SETTINGS.get('sleep_time', 10))
@@ -239,6 +243,7 @@ class RealmManager(object):
 
     def update_loop(self):
         while not self.context.killed:
+            self.context.thread_checkin(self.realm)
             logger.info(f'Looking for updates on: {self.realm}')
             self.producer.poll(0)
             self.update_schemas()
