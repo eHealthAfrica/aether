@@ -270,10 +270,25 @@ class XFormUtilsParsersTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as fp:
             xml_content = parse_xform_file('xform.xml', fp)
 
+        # From pyxform 1.2.0 this is no longer true ("itexts" ids diverge)
+        # self.assertEqual(
+        #     parse_xml_to_dict(xls_content),
+        #     parse_xml_to_dict(xml_content),
+        #     'The XLS form and the XML form should define both the same form'
+        # )
+
+        xls_dict = parse_xml_to_dict(xls_content)
+        xml_dict = parse_xml_to_dict(xml_content)
+
         self.assertEqual(
-            parse_xml_to_dict(xls_content),
-            parse_xml_to_dict(xml_content),
-            'The XLS form and the XML form should define both the same form'
+            xls_dict['h:html']['h:head']['model']['instance'][0],
+            xml_dict['h:html']['h:head']['model']['instance'][0],
+            'The XLS form and the XML form should define both the same instance'
+        )
+        self.assertEqual(
+            xls_dict['h:html']['h:body'],
+            xml_dict['h:html']['h:body'],
+            'The XLS form and the XML form should define both the same body'
         )
 
     def test__parse_submission(self):

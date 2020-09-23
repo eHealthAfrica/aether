@@ -25,6 +25,7 @@ logger = get_logger('producer-kernel')
 
 _WINDOW_SIZE_SEC = int(SETTINGS.get('window_size_sec', 3))
 _TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+_FAILBACK_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 
 class KernelClient(object):
@@ -46,7 +47,10 @@ class KernelClient(object):
         # based on the insert time and now() to provide a buffer.
 
         def fn(row):
-            committed = datetime.strptime(row.get('modified')[:26], _TIME_FORMAT)
+            try:
+                committed = datetime.strptime(row.get('modified')[:26], _TIME_FORMAT)
+            except ValueError:
+                committed = datetime.strptime(row.get('modified')[:19], _FAILBACK_TIME_FORMAT)
             lag_time = (query_time - committed).total_seconds()
             if lag_time > _WINDOW_SIZE_SEC:
                 return True

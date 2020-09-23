@@ -32,8 +32,6 @@ case "$1" in
 
         $DC kernel-test
         echo "${LINE}"
-        $DC client-test
-        echo "${LINE}"
     ;;
 
     modules)
@@ -62,6 +60,8 @@ case "$1" in
         $DC kernel-test
         echo "${LINE}"
         $DC producer-test
+        echo "${LINE}"
+        $DC client-test
         echo "${LINE}"
         $DC integration-test
         echo "${LINE}"

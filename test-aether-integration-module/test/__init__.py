@@ -114,12 +114,17 @@ def generate_entities(realm_client, mappingset):  # noqa: F811
     def fn(realm):
         _client = realm_client(realm)
         payloads = iter(fixtures.get_submission_payloads())
-        entities = []
+
+        instances = []
         for i in range(FORMS_TO_SUBMIT):
             Submission = _client.get_model('Submission')
             submission = Submission(payload=next(payloads), mappingset=mappingset.id)
-            instance = _client.submissions.create(data=submission)
-            sleep(2)
+            instances.append(_client.submissions.create(data=submission))
+
+        sleep(2)  # give time to extractor
+
+        entities = []
+        for instance in instances:
             for entity in _client.entities.paginated('list', submission=instance.id):
                 entities.append(entity)
         return entities
