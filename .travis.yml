@@ -19,7 +19,7 @@ branches:
 jobs:
   fast_finish: true
   include:
-    - name: "Aether CORE tests (Extractor, Kernel, Client)"
+    - name: "Aether CORE tests (Extractor, Kernel, Producer)"
       stage: test
       env: 'TEST_MODE=core'
 
@@ -31,7 +31,7 @@ jobs:
       stage: test
       env: 'TEST_MODE=ui'
 
-    - name: "Integration tests (Kernel with Kafka/Zookeeper and Producer)"
+    - name: "Integration tests (Kernel with Kafka/Zookeeper and Client)"
       stage: test
       env: 'TEST_MODE=integration'
 
