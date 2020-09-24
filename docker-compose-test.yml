@@ -52,6 +52,7 @@ services:
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
       DEFAULT_REALM: ${CLIENT_REALM}
       DJANGO_USE_CACHE: null
+      ENABLE_CONNECTION_POOL: null
       MULTITENANCY: "true"
       PGHOST: db-test
       PROFILING_ENABLED: null
@@ -95,6 +96,7 @@ services:
       DB_NAME: test-odk
       DEFAULT_REALM: ${CLIENT_REALM}
       DJANGO_USE_CACHE: null
+      ENABLE_CONNECTION_POOL: null
       MULTITENANCY: "true"
       ODK_COLLECT_ENDPOINT: collect-test/
       PGHOST: db-test
@@ -120,6 +122,7 @@ services:
       DB_NAME: test-ui
       DJANGO_USE_CACHE: null
       DEFAULT_REALM: ${CLIENT_REALM}
+      ENABLE_CONNECTION_POOL: null
       MULTITENANCY: "true"
       PGHOST: db-test
       PROFILING_ENABLED: null
