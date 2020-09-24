@@ -75,7 +75,7 @@ services:
     command: minio server --quiet --address minio:9090 /data
 
   keycloak-base:
-    image: jboss/keycloak:9.0.3
+    image: jboss/keycloak:latest
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: db
@@ -138,6 +138,9 @@ services:
       PGPASSWORD: ${KERNEL_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
+
+      ENABLE_CONNECTION_POOL: "true"
+      DB_POOL_INTERNAL: "true"
 
       DJANGO_USE_CACHE: "true"
       REDIS_DJANGO_CACHE: "true"
@@ -254,6 +257,9 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
+      ENABLE_CONNECTION_POOL: "true"
+      DB_POOL_INTERNAL: "true"
+
       DJANGO_USE_CACHE: "true"
       REDIS_DJANGO_CACHE: "true"
       REDIS_SESSION_CACHE: "true"
@@ -315,6 +321,9 @@ services:
       PGPASSWORD: ${UI_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
+
+      ENABLE_CONNECTION_POOL: "true"
+      DB_POOL_INTERNAL: "true"
 
       DJANGO_USE_CACHE: "true"
       REDIS_DJANGO_CACHE: "true"
