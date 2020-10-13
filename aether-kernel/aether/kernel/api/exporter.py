@@ -25,7 +25,6 @@ import os
 import re
 import shutil
 import tempfile
-import time
 import zipfile
 
 from multiprocessing import Process, Value
@@ -44,6 +43,7 @@ from aether.python.avro.tools import ARRAY_PATH, MAP_PATH, UNION_PATH, extract_j
 from aether.python.entity.extractor import ENTITY_EXTRACTION_ENRICHMENT, ENTITY_EXTRACTION_ERRORS
 
 from .models import Attachment, ExportTask, ExportTaskFile
+from .utils import safe_sleep
 
 RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
 RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
@@ -500,8 +500,8 @@ class ExporterMixin():
         if settings.TESTING:  # pragma: no cover
             # In tests wait for the processes to finish
             for p in processes:
-                p.join()
-                p.close()
+                p.join()   # join to main thread
+                p.close()  # release resources
 
         return Response(data={'task': str(task_id)})
 
@@ -565,17 +565,24 @@ def execute_records_task(task_id):
             p.start()
 
             while p.is_alive():
-                if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
-                    # the task was removed, stop the execution
+                if (
+                    not ExportTask.objects.filter(pk=task_id).exists()
+                    or
+                    task.status_records == 'ERROR'
+                ):  # pragma: no cover
+                    # the task was removed or failed, stop the execution
                     p.kill()
                 else:
                     value = counter.value / total
                     task.set_status_records(f'{value:.0%}')
 
-                time.sleep(.1)  # wait
+                safe_sleep()  # wait
 
             failure = (p.exitcode != 0)
             p.close()
+
+            if failure and ExportTask.objects.filter(pk=task_id).exists():
+                task.set_status_records('ERROR')
 
             if failure or not ExportTask.objects.filter(pk=task_id).exists():
                 return
@@ -719,6 +726,8 @@ def execute_attachments_task(task_id):
                     or
                     # the task was deleted
                     not ExportTask.objects.filter(pk=task_id).exists()
+                    or
+                    task.status_attachments == 'ERROR'
                 ):  # pragma: no cover
                     # terminate all processes, one failed
                     for p in processes:
@@ -726,11 +735,14 @@ def execute_attachments_task(task_id):
                 else:
                     value = counter.value / total
                     task.set_status_attachments(f'{value:.0%}')
-                time.sleep(.1)  # wait
+                safe_sleep()  # wait
 
             failure = any(map(lambda x: x.exitcode != 0, processes))
             for p in processes:  # release resources
                 p.close()
+
+            if failure and ExportTask.objects.filter(pk=task_id).exists():
+                task.set_status_attachments('ERROR')
 
             if failure or not ExportTask.objects.filter(pk=task_id).exists():
                 return

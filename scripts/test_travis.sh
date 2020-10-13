@@ -31,8 +31,8 @@ case "$1" in
     ;;
 
     core)
-        ./scripts/test_container.sh exm
         ./scripts/test_container.sh kernel
+        ./scripts/test_container.sh exm
         ./scripts/test_container.sh producer
     ;;
 
