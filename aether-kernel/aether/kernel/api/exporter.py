@@ -25,7 +25,6 @@ import os
 import re
 import shutil
 import tempfile
-import time
 import zipfile
 
 from multiprocessing import Process, Value
@@ -44,6 +43,7 @@ from aether.python.avro.tools import ARRAY_PATH, MAP_PATH, UNION_PATH, extract_j
 from aether.python.entity.extractor import ENTITY_EXTRACTION_ENRICHMENT, ENTITY_EXTRACTION_ERRORS
 
 from .models import Attachment, ExportTask, ExportTaskFile
+from .utils import safe_sleep
 
 RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
 RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
@@ -128,6 +128,7 @@ class ExporterMixin():
                 return value
 
         json_filter = f'{self.json_field}__'
+        data = self.request.data if isinstance(self.request.data, dict) else {}
         filters = [
             # GET method: query params
             (k, v)
@@ -136,7 +137,7 @@ class ExporterMixin():
         ] + [
             # POST method: data content
             (k, v)
-            for k, v in self.request.data.items()
+            for k, v in data.items()
             if k.startswith(json_filter)
         ]
         queryset = self.queryset
@@ -192,11 +193,6 @@ class ExporterMixin():
             - ``generate_records``, indicates if the file(s) with all the linked
               records should be generated. If the attachments are not included
               this option is true.
-
-            - ``background``, indicates if instead of returning the file returns
-              the task id linked to this export and continue the export process
-              in background.
-              Will be removed in release 2.0.
 
         - Data filtering:
 
@@ -501,36 +497,13 @@ class ExporterMixin():
         for p in processes:
             p.start()
 
-        # ----------------------------------------------------------------------
-        # Backward compatibility
-        # In release 2.0 all the export requests will be executed in background
-        # ----------------------------------------------------------------------
+        if settings.TESTING:  # pragma: no cover
+            # In tests wait for the processes to finish
+            for p in processes:
+                p.join()   # join to main thread
+                p.close()  # release resources
 
-        # always execute export in background if it generates the attachment files
-        if export_settings['attachments'] or self.__get_bool(request, 'background'):
-            if settings.TESTING:  # pragma: no cover
-                # In tests wait for the processes to finish
-                for p in processes:
-                    p.join()
-                    p.close()
-
-            return Response(data={'task': str(task_id)})
-
-        # from this point only records download expected
-        err_msg = _('Got an error while creating the file')
-
-        for p in processes:
-            p.join()   # join to main thread
-            p.close()  # release resources
-
-        if ExportTask.objects.filter(pk=task_id).exists():
-            task = ExportTask.objects.get(pk=task_id)
-            if task.status_records == 'DONE':
-                return task.files.first().get_content(as_attachment=True)
-            if task.error_records:
-                return Response(data={'detail': err_msg + ': ' + task.error_records}, status=500)
-
-        return Response(data={'detail': err_msg}, status=500)  # pragma: no cover
+        return Response(data={'task': str(task_id)})
 
 
 def execute_records_task(task_id):
@@ -592,17 +565,24 @@ def execute_records_task(task_id):
             p.start()
 
             while p.is_alive():
-                if not ExportTask.objects.filter(pk=task_id).exists():  # pragma: no cover
-                    # the task was removed, stop the execution
+                if (
+                    not ExportTask.objects.filter(pk=task_id).exists()
+                    or
+                    task.status_records == 'ERROR'
+                ):  # pragma: no cover
+                    # the task was removed or failed, stop the execution
                     p.kill()
                 else:
                     value = counter.value / total
                     task.set_status_records(f'{value:.0%}')
 
-                time.sleep(.1)  # wait
+                safe_sleep()  # wait
 
             failure = (p.exitcode != 0)
             p.close()
+
+            if failure and ExportTask.objects.filter(pk=task_id).exists():
+                task.set_status_records('ERROR')
 
             if failure or not ExportTask.objects.filter(pk=task_id).exists():
                 return
@@ -746,6 +726,8 @@ def execute_attachments_task(task_id):
                     or
                     # the task was deleted
                     not ExportTask.objects.filter(pk=task_id).exists()
+                    or
+                    task.status_attachments == 'ERROR'
                 ):  # pragma: no cover
                     # terminate all processes, one failed
                     for p in processes:
@@ -753,11 +735,14 @@ def execute_attachments_task(task_id):
                 else:
                     value = counter.value / total
                     task.set_status_attachments(f'{value:.0%}')
-                time.sleep(.1)  # wait
+                safe_sleep()  # wait
 
             failure = any(map(lambda x: x.exitcode != 0, processes))
             for p in processes:  # release resources
                 p.close()
+
+            if failure and ExportTask.objects.filter(pk=task_id).exists():
+                task.set_status_attachments('ERROR')
 
             if failure or not ExportTask.objects.filter(pk=task_id).exists():
                 return

@@ -110,6 +110,7 @@ KERNEL_ADMIN_PASSWORD=$(gen_random_string)
 KERNEL_ADMIN_TOKEN=$(gen_random_string)
 KERNEL_DJANGO_SECRET_KEY=$(gen_random_string)
 KERNEL_DB_PASSWORD=$(gen_random_string)
+WRITE_ENTITIES_TO_REDIS=
 # ------------------------------------------------------------------
 
 

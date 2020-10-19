@@ -3,6 +3,7 @@
 #
 #  * Databases + Minio + Keycloak + NGINX containers (use same settings in all files)
 #  * Aether Kernel
+#  * Entity Extractor
 #  * ODK Module
 #  * Aether UI & UI Assets
 #  * Zookeeper & Kafka
@@ -34,7 +35,13 @@ services:
 
   redis-base:
     image: redis:alpine
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --notify-keyspace-events KEA
+      --appendonly yes
+      --auto-aof-rewrite-percentage 100
+      --auto-aof-rewrite-min-size 64mb
 
   nginx-base:
     image: nginx:alpine
@@ -155,6 +162,8 @@ services:
       EXPORT_HEADER_SEPARATOR: /
       EXPORT_HEADER_SHORTEN: "no"
 
+      WRITE_ENTITIES_TO_REDIS: ${WRITE_ENTITIES_TO_REDIS}
+
       WEB_SERVER_PORT: 8100
     volumes:
       - ./aether-kernel:/code
@@ -164,6 +173,36 @@ services:
       # to speed up Aether Python Library development changes
       # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.8/site-packages/aether/python
     command: start_dev
+
+
+  # ---------------------------------
+  # Entity Extractor
+  # ---------------------------------
+
+  exm-base:
+    image: aether-exm
+    build: ./aether-entity-extraction-module
+    stdin_open: true
+    tty: true
+    environment:
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
+
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
+
+      # use internal url, this happens behind the curtains
+      AETHER_KERNEL_URL: http://kernel:8100/kernel
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
+
+      REDIS_DB: 0
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+    volumes:
+      - ./aether-entity-extraction-module:/code
+      # to speed up Aether Python Library development changes
+      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.7/site-packages/aether/python
+    command: start
 
 
   # ---------------------------------

@@ -21,9 +21,10 @@
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
 
-from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
+from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS as KEY
+
 from aether.kernel.api.models import Submission, Entity
-from aether.kernel.api.entity_extractor import run_entity_extraction
+from aether.kernel.api.entity_extractor import run_extraction
 
 
 class Command(BaseCommand):
@@ -45,20 +46,15 @@ class Command(BaseCommand):
                 self.stderr.write(str(error))
             self.stderr.write('----------------------------------------')
 
+        submissions = Submission.objects.all()
         self.stdout.write(
-            _('Number of submissions to handle: {count}').format(count=Submission.objects.count())
+            _('Number of submissions to handle: {count}').format(count=submissions.count())
         )
 
-        for submission in Submission.objects.all():
-            try:
-                run_entity_extraction(submission, overwrite=True)
-            except Exception as e:
-                submission.payload[ENTITY_EXTRACTION_ERRORS] = submission.payload.get(ENTITY_EXTRACTION_ERRORS, [])
-                submission.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]
-                submission.save()
-
-            if submission.payload.get(ENTITY_EXTRACTION_ERRORS, []):
-                print_errors(id=submission.pk, errors=submission.payload[ENTITY_EXTRACTION_ERRORS])
+        for submission in submissions:
+            run_extraction(submission, overwrite=True)
+            if submission.payload.get(KEY):
+                print_errors(id=submission.pk, errors=submission.payload[KEY])
 
         self.stdout.write(
             _('Number of entities created: {count}').format(

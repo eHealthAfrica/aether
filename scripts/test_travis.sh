@@ -32,7 +32,8 @@ case "$1" in
 
     core)
         ./scripts/test_container.sh kernel
-        ./scripts/test_container.sh client
+        ./scripts/test_container.sh exm
+        ./scripts/test_container.sh producer
     ;;
 
     modules)
@@ -40,7 +41,7 @@ case "$1" in
     ;;
 
     integration)
-        ./scripts/test_container.sh producer
+        ./scripts/test_container.sh client
 
         build_client
 

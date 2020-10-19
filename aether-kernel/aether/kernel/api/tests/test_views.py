@@ -31,7 +31,7 @@ from rest_framework import status
 from aether.python.entity.extractor import ENTITY_EXTRACTION_ERRORS
 
 from aether.kernel.api import models
-from aether.kernel.api.entity_extractor import run_entity_extraction
+from aether.kernel.api.entity_extractor import run_extraction
 from aether.kernel.api.tests.utils.generators import generate_project
 
 from . import (
@@ -60,7 +60,7 @@ class ViewsTest(TestCase):
         username = 'test'
         email = 'test@example.com'
         password = 'testtest'
-        self.user = get_user_model().objects.create_user(username, email, password)
+        get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
         # Set up test model instances:
@@ -105,7 +105,7 @@ class ViewsTest(TestCase):
         )
 
         # extract entities
-        run_entity_extraction(self.submission)
+        run_extraction(self.submission)
         self.entity = models.Entity.objects.first()
 
     def tearDown(self):
@@ -144,7 +144,7 @@ class ViewsTest(TestCase):
                 revision='a sample revision',
             ),
         )
-        mapping_2 = models.Mapping.objects.create(
+        models.Mapping.objects.create(
             name='a read only mapping with stats',
             definition={
                 'entities': {'Person': str(schemadecorator_2.pk)},
@@ -156,8 +156,7 @@ class ViewsTest(TestCase):
 
         for _ in range(4):
             for __ in range(5):
-                # this will also trigger the entities extraction
-                # (4 entities per submission -> 3 for self.schemadecorator + 1 for schemadecorator_2)
+                # this will not trigger the entities extraction
                 self.helper_create_object('submission-list', {
                     'payload': dict(EXAMPLE_SOURCE_DATA),
                     'mappingset': str(self.mappingset.pk),
@@ -169,31 +168,12 @@ class ViewsTest(TestCase):
                                   .count()
         self.assertEqual(submissions_count, 20)
 
-        entities_count = models.Entity \
-                               .objects \
-                               .filter(submission__mappingset__project=self.project) \
-                               .count()
-        self.assertEqual(entities_count, 80)
-
-        family_person_entities_count = models.Entity \
-                                             .objects \
-                                             .filter(mapping=self.mapping) \
-                                             .count()
-        self.assertEqual(family_person_entities_count, 60)
-
-        passthrough_entities_count = models.Entity \
-                                           .objects \
-                                           .filter(mapping=mapping_2) \
-                                           .count()
-        self.assertEqual(passthrough_entities_count, 20)
-
         url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertEqual(data['id'], str(self.project.pk))
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertEqual(data['entities_count'], entities_count)
         self.assertLessEqual(
             dateutil.parser.parse(data['first_submission']),
             dateutil.parser.parse(data['last_submission']),
@@ -203,28 +183,21 @@ class ViewsTest(TestCase):
         response = self.client.get(f'{url}?family=Person')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertNotEqual(data['entities_count'], entities_count)
-        self.assertEqual(data['entities_count'], family_person_entities_count)
 
         # let's try again but with an unexistent family
         response = self.client.get(f'{url}?family=unknown')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertEqual(data['entities_count'], 0, 'No entities in this family')
 
         # let's try with using the project id
         response = self.client.get(f'{url}?family={str(self.project.pk)}')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertNotEqual(data['entities_count'], entities_count)
-        self.assertEqual(data['entities_count'], passthrough_entities_count)
 
         # let's try with the passthrough filter
         response = self.client.get(f'{url}?passthrough=true')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
-        self.assertNotEqual(data['entities_count'], entities_count)
-        self.assertEqual(data['entities_count'], passthrough_entities_count)
 
         # delete the submissions and check the entities
         models.Submission.objects.all().delete()
@@ -232,7 +205,6 @@ class ViewsTest(TestCase):
         response = self.client.get(url)
         data = response.json()
         self.assertEqual(data['submissions_count'], 0)
-        self.assertEqual(data['entities_count'], entities_count)
 
     def test_project_stats_view_fields(self):
         url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
@@ -764,49 +736,6 @@ class ViewsTest(TestCase):
             'name': 'a project name-Person',
         })
 
-    def test_submission__extract__endpoint(self):
-        self.assertEqual(reverse('submission-extract', kwargs={'pk': 1}),
-                         '/submissions/1/extract/')
-        url = reverse('submission-extract', kwargs={'pk': self.submission.pk})
-
-        models.Entity.objects.all().delete()  # remove all entities
-        self.assertEqual(self.submission.entities.count(), 0)
-        self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload[ENTITY_EXTRACTION_ERRORS], [])
-
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 405, 'only PATCH')
-
-        with mock.patch('aether.kernel.api.views.run_entity_extraction',
-                        side_effect=Exception('oops')):
-            response = self.client.patch(url)
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(self.submission.entities.count(), 0)
-        self.submission.refresh_from_db()
-        self.assertEqual(self.submission.payload[ENTITY_EXTRACTION_ERRORS], ['oops'])
-
-        response = self.client.patch(url)
-        self.assertEqual(response.status_code, 200)
-        entities_count = self.submission.entities.count()
-        self.assertNotEqual(entities_count, 0)
-        entity_ids = [e.id for e in self.submission.entities.all()]
-
-        # re-extract (same number of entities with the same IDs)
-        models.Entity.objects.all().delete()  # remove all entities
-        self.client.patch(url)
-        self.assertEqual(entities_count, self.submission.entities.count())
-        self.assertEqual(entity_ids, [e.id for e in self.submission.entities.all()])
-
-        # re-extract (no new Entities just updated)
-        for e in self.submission.entities.all():
-            e.status = 'Pending Approval'
-            e.save()
-        self.client.patch(url)
-        self.assertEqual(entities_count, self.submission.entities.count())
-        self.assertEqual(entity_ids, [e.id for e in self.submission.entities.all()])
-        for e in self.submission.entities.all():
-            self.assertEqual(e.status, 'Publishable')
-
     def test_schema_unique_usage(self):
         url = reverse('schema-unique-usage')
         data = [str(self.mapping.id)]
@@ -1057,7 +986,6 @@ class ViewsTest(TestCase):
         )
         response_data = response.json()
         filtered_list = models.Entity.objects.filter(mapping=mapping.pk)
-
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('is not a valid choice', response_data)
 
@@ -1067,6 +995,117 @@ class ViewsTest(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual('No values to update', response.json())
+
+    def test_entity_update(self):
+        entity = self.submission.entities.first()
+        url = reverse('entity-detail', kwargs={'pk': entity.pk})
+        response = self.client.patch(
+            url,
+            content_type='application/json',
+            data={
+                'payload': {'villageID': 'test-name'}
+            },
+        )
+        # Overwriting payload breaks record schema conformation
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response_data = response.json()
+        self.assertIn('record did not conform to registered schema', str(response_data))
+        response = self.client.patch(
+            url,
+            content_type='application/json',
+            data={
+                'merge': 'last_write_wins',
+                'payload': {'villageID': 'test-name'}
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(data.get('payload', {}).get('villageID'), 'test-name')
+        response = self.client.patch(
+            url,
+            content_type='application/json',
+            data={},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_submission_without_extraction(self):
+        url = reverse('submission-list')
+        res = self.client.post(
+            url,
+            data={
+                'payload': EXAMPLE_SOURCE_DATA,
+                'mappingset': str(self.mappingset.pk),
+                'is_extracted': True,
+            },
+            content_type='application/json',
+        )
+
+        self.assertTrue(res.json()['is_extracted'])
+
+    def test_submission_bulk_update(self):
+        url = reverse('submission-list')
+
+        new_submissions = [
+            {
+                'payload': EXAMPLE_SOURCE_DATA,
+                'mappingset': str(self.mappingset.pk),
+            }
+            for _ in range(5)
+        ]
+
+        # bulk creation
+        res = self.client.post(
+            url,
+            data=new_submissions,
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.json())
+
+        # bulk update
+        to_update_submissions = res.json()
+        for s in to_update_submissions:
+            s['is_extracted'] = False
+
+        res = self.client.put(
+            url,
+            data=to_update_submissions,
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK, res.json())
+        self.assertEqual(len(res.json()), len(to_update_submissions))
+        entities = models.Entity.objects.filter(submission=to_update_submissions[0]['id'])
+        self.assertEqual(entities.count(), 0)
+
+        # include entities
+        with_entities_submissions = res.json()
+        for s in with_entities_submissions:
+            s['is_extracted'] = True
+            s['extracted_entities'] = [{
+                'schemadecorator': str(self.entity.schemadecorator.pk),
+                'payload': self.entity.payload,
+                'status': self.entity.status,
+            }]
+
+        # bulk partial update
+        res = self.client.patch(
+            url,
+            data=with_entities_submissions,
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK, res.json())
+        self.assertEqual(len(res.json()), len(with_entities_submissions))
+        entities = models.Entity.objects.filter(submission=with_entities_submissions[0]['id'])
+        self.assertEqual(entities.count(), 1)
+
+        # cannot update without id
+        wrong_submissions = res.json()
+        wrong_submissions[0]['id'] = None
+        res = self.client.put(
+            url,
+            data=wrong_submissions,
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST, res.json())
 
     def test__generate_avro_input(self):
         url = reverse('generate-avro-input')

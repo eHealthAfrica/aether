@@ -1,0 +1,16 @@
+.dockerignore
+Dockerfile
+
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+
+**/.coverage
+**/.coverage.*
+**/.cache
+**/coverage.xml
+**/*,cover
+
+**/*.log

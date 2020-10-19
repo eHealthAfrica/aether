@@ -1,0 +1,23 @@
+################################################################################
+#
+#                             Primary requirements
+#
+#                                 CHANGE ME !!!
+#
+# To check the outdated dependencies run
+#     docker-compose run --rm --no-deps exm eval pip list --outdated
+#
+# Update me and then run
+#     docker-compose run --rm --no-deps exm pip_freeze
+#
+################################################################################
+
+aether.python
+gevent
+
+# Test libraries
+coverage
+fakeredis
+flake8-quotes
+pytest
+tblib

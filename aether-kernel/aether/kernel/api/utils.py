@@ -16,10 +16,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import time
+
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count
+from django.forms.models import model_to_dict
 
-from . import models
+from aether.python.redis.task import TaskHelper
+
+from . import models, redis
+
+REDIS_TASK = TaskHelper(settings)
+
+
+def safe_sleep():
+    # wait for 100ms in 10 intervals of 10ms
+    for x in range(10):
+        time.sleep(.01)
 
 
 def get_unique_schemas_used(mappings_ids):
@@ -141,3 +155,57 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset_id=None, mapping_ids=[]):
         result['submissions'] = submission_count
 
     return result
+
+
+def send_model_item_to_redis(model_item):
+    '''
+    Registers a model item on redis
+
+    Note: Redis host parameters must be provided as environment variables
+
+    Arguments:
+        model_item: Model item to be registered on redis.
+    '''
+
+    try:
+        obj = model_to_dict(model_item)
+        model_name = model_item._meta.default_related_name
+        realm = model_item.get_realm() \
+            if model_name is not models.Schema._meta.default_related_name \
+            and model_item.get_realm() else settings.DEFAULT_REALM
+
+        if model_name not in (
+            models.Entity._meta.default_related_name,
+            models.Schema._meta.default_related_name,
+        ):
+            cache_model_name = 'schema_decorators' \
+                if model_name is models.SchemaDecorator._meta.default_related_name else model_name
+
+            if model_name is models.Project._meta.default_related_name:
+                redis.cache_project_artefacts(model_item)
+            else:
+                redis.cache_project_artefacts(model_item.project, cache_model_name, str(model_item.pk))
+
+        if model_name is models.Entity._meta.default_related_name:
+            if settings.WRITE_ENTITIES_TO_REDIS:  # pragma: no cover : .env settings
+                REDIS_TASK.add(obj, model_name, realm)
+
+        elif model_name is models.Submission._meta.default_related_name:
+            if not model_item.is_extracted:
+                # used to fast track entity extraction
+                linked_mappings = model_item.mappingset.mappings.all() \
+                    .filter(is_active=True).values_list('id', flat=True)
+                obj['mappings'] = list(linked_mappings)
+
+                REDIS_TASK.add(obj, model_name, realm)
+                REDIS_TASK.publish(obj, model_name, realm)
+
+        elif model_name is models.Mapping._meta.default_related_name:
+            obj['schemadecorators'] = list(model_item.schemadecorators.all().values_list('id', flat=True))
+            REDIS_TASK.add(obj, model_name, realm)
+
+        else:
+            REDIS_TASK.add(obj, model_name, realm)
+
+    except Exception:  # pragma: no cover : happens only when redis is offline
+        pass

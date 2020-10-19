@@ -21,7 +21,6 @@ from unittest import mock
 import os
 import requests
 import tempfile
-import time
 import zipfile
 
 from copy import deepcopy
@@ -33,14 +32,14 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.db.models import F
-from django.http import FileResponse
 from django.test import TransactionTestCase, TestCase, override_settings, tag
 from django.urls import reverse
 
 from aether.kernel.api import models
 
-from aether.kernel.api.entity_extractor import run_entity_extraction
+from aether.kernel.api.entity_extractor import run_extraction
 from aether.kernel.api.project_artefacts import upsert_project_with_avro_schemas
+from aether.kernel.api.utils import safe_sleep
 
 from aether.kernel.api.exporter import (
     __filter_paths as filter_paths,
@@ -365,6 +364,13 @@ class ExporterTest(TestCase):
         self.assertEqual(get_label('x.y.z', labels), 'X / Y / Union')
         self.assertEqual(get_label('x.y.a.z', labels), 'X / Y / A / Z')
 
+    def test__endpoints(self):
+        self.assertEqual(reverse('submission-xlsx'), '/submissions/xlsx/')
+        self.assertEqual(reverse('submission-csv'), '/submissions/csv/')
+
+        self.assertEqual(reverse('entity-xlsx'), '/entities/xlsx/')
+        self.assertEqual(reverse('entity-csv'), '/entities/csv/')
+
 
 @tag('nonparallel')
 @override_settings(MULTITENANCY=False)
@@ -379,32 +385,16 @@ class ExporterViewsTest(TransactionTestCase):
         self.user = get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
-        with open(os.path.join(here, 'files/export.avsc'), 'rb') as infile:
-            EXAMPLE_SCHEMA = json.load(infile)
+        with open(os.path.join(here, 'files/export.avsc'), 'rb') as in_file:
+            self.EXAMPLE_SCHEMA = json.load(in_file)
 
-        with open(os.path.join(here, 'files/export.json'), 'rb') as infile:
-            self.EXAMPLE_PAYLOAD = json.load(infile)
+        with open(os.path.join(here, 'files/export.json'), 'rb') as in_file:
+            self.EXAMPLE_PAYLOAD = json.load(in_file)
 
-        project = models.Project.objects.create(
-            name='project1',
-        )
+        self.helper__create_project(1)
 
-        # create artefacts for the AVRO schema
-        artefacts_id = str(project.pk)
-        upsert_project_with_avro_schemas(
-            project_id=artefacts_id,
-            avro_schemas=[{
-                'id': artefacts_id,
-                'name': 'export',
-                'definition': EXAMPLE_SCHEMA,
-            }],
-        )
-        submission = models.Submission.objects.create(
-            payload=dict(self.EXAMPLE_PAYLOAD),
-            mappingset=models.MappingSet.objects.get(pk=artefacts_id),
-        )
-        # extract entities
-        run_entity_extraction(submission)
+        self.assertEqual(models.Project.objects.count(), 1)
+        self.assertEqual(models.Submission.objects.count(), 1)
         self.assertEqual(models.Entity.objects.count(), 1)
 
         self.assertEqual(models.ExportTask.objects.count(), 0)
@@ -412,6 +402,28 @@ class ExporterViewsTest(TransactionTestCase):
     def tearDown(self):
         self.client.logout()
         super(ExporterViewsTest, self).tearDown()
+
+    def helper__create_project(self, index):
+        project = models.Project.objects.create(
+            name=f'project_{index}',
+        )
+
+        # create artifacts for the AVRO schema
+        artifacts_id = str(project.pk)
+        upsert_project_with_avro_schemas(
+            project_id=artifacts_id,
+            avro_schemas=[{
+                'id': artifacts_id,
+                'name': f'export_{index}',
+                'definition': self.EXAMPLE_SCHEMA,
+            }],
+        )
+        submission = models.Submission.objects.create(
+            payload=dict(self.EXAMPLE_PAYLOAD),
+            mappingset=models.MappingSet.objects.get(pk=artifacts_id),
+        )
+        # extract entities
+        run_extraction(submission)
 
     # -----------------------------
     # GENERATE FILES
@@ -758,43 +770,92 @@ class ExporterViewsTest(TransactionTestCase):
         self.assertIsNone(ws['A4'].value)  # limit is 2
 
     # -----------------------------
-    # SUBMISSIONS
+    # VIEWS
     # -----------------------------
 
-    def test_submissions_export__endpoints(self):
-        self.assertEqual(reverse('submission-xlsx'), '/submissions/xlsx/')
-        self.assertEqual(reverse('submission-csv'), '/submissions/csv/')
+    def test__exporttask_view(self):
+        task = models.ExportTask.objects.create(
+            name='test',
+            project=models.Project.objects.first(),
+        )
+        task_file = models.ExportTaskFile.objects.create(
+            task=task,
+            file=SimpleUploadedFile('a.txt', b'123')
+        )
+        task_url = reverse('exporttask-detail', kwargs={'pk': task.pk})
 
-    @mock.patch(
-        'aether.kernel.api.exporter.__generate_csv_files',
-        side_effect=OSError('[Errno 2] No such file or directory'),
-    )
-    def test_submissions_export__error(self, *args):
-        response = self.client.get(reverse('submission-xlsx'))
-        self.assertEqual(response.status_code, 500)
-        data = response.json()['detail']
-        self.assertIn('Got an error while creating the file:', data)
-        self.assertIn('[Errno 2] No such file or directory', data)
-        self.assertEqual(models.ExportTask.objects.count(), 1)
+        response = self.client.get(task_url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
 
-    @mock.patch(
-        'aether.kernel.api.exporter.__prepare_zip',
-        side_effect=OSError('[Errno 2] No such file or directory'),
-    )
-    def test_submission_export___error__background(self, *args):
-        response = self.client.get(reverse('submission-csv') + '?background=t')
+        self.assertEqual(data['name'], 'test')
+        self.assertEqual(len(data['files']), 1)
+
+        self.assertEqual(data['files'][0]['md5sum'], task_file.md5sum)
+        self.assertEqual(
+            data['files'][0]['file_url'],
+            f'http://testserver/export-tasks/{task.pk}/file-content/{task_file.pk}/')
+        task_file_content = self.client.get(data['files'][0]['file_url'])
+        self.assertEqual(task_file_content.getvalue(), b'123')
+
+        task.delete()
+
+        response = self.client.get(task_url)
+        self.assertEqual(response.status_code, 404)
+
+    def test__view(self):
+        response = self.client.post(reverse('submission-csv'))
         self.assertEqual(response.status_code, 200)
 
         task_id = response.json()['task']
         task = models.ExportTask.objects.get(pk=task_id)
-        self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status_records, 'ERROR')
-        self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
-        self.assertEqual(task.files.count(), 0)
-        self.assertEqual(models.ExportTask.objects.count(), 1)
 
-    def test_submissions_export__error__deleted_task(self):
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.project.name, 'project_1')
+        self.assertEqual(task.status_records, 'DONE')
+        self.assertIsNone(task.error_records)
+        self.assertIsNone(task.status_attachments)
+
+    def test__empty(self):
+        url = reverse('submission-xlsx')
+        response = self.client.get(f'{url}?start_at=1')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get(f'{url}?start_at=2')
+        self.assertEqual(response.status_code, 204)
+
+        response = self.client.get(f'{url}?page=1')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get(f'{url}?page=2')
+        self.assertEqual(response.status_code, 204)
+
+        response = self.client.post(f'{url}?project=unknown')
+        self.assertEqual(response.status_code, 204)
+
+    def test__more_than_one_project(self):
+        # create at least 2 more projects
+        for i in range(2):
+            self.helper__create_project(i + 2)
+
+        self.assertEqual(models.Project.objects.count(), 3)
+        self.assertEqual(models.Submission.objects.count(), 3)
+        self.assertEqual(models.Entity.objects.count(), 3)
+
+        url = reverse('submission-xlsx')
+
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.post(f'{url}?project=project_1')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(f'{url}?project=project_2')
+        self.assertEqual(response.status_code, 200)
+
+    # -----------------------------
+    # ERROR HANDLING
+    # -----------------------------
+
+    def test__error__deleted_task(self):
         def my_side_effect(task_id):
             # let's remove the task and execute the real method
             models.ExportTask.objects.filter(pk=task_id).delete()
@@ -806,27 +867,34 @@ class ExporterViewsTest(TransactionTestCase):
         ):
             response = self.client.get(reverse('submission-xlsx'))
 
-        self.assertEqual(response.status_code, 500)
-        data = response.json()['detail']
-        self.assertIn('Got an error while creating the file', data)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(models.ExportTask.objects.count(), 0)
+
+        task_id = response.json()['task']
+        self.assertFalse(models.ExportTask.objects.filter(pk=task_id).exists())
 
     @mock.patch(
         'aether.kernel.api.exporter.__prepare_xlsx',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    def test_submissions_export__xlsx__error(self, *args):
+    def test__xlsx__error(self, *args):
         response = self.client.get(reverse('submission-xlsx'))
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        settings = models.ExportTask.objects.first().settings
-        self.assertEqual(settings['offset'], 0)
-        self.assertEqual(settings['limit'], 1)
-        self.assertEqual(settings['records']['file_format'], 'xlsx')
-        self.assertEqual(settings['records']['filename'], 'project1-export')
+        task_id = response.json()['task']
+        task = models.ExportTask.objects.get(pk=task_id)
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.project.name, 'project_1')
+        self.assertEqual(task.status_records, 'ERROR')
+        self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
+        self.assertEqual(task.files.count(), 0)
+
+        self.assertEqual(task.settings['offset'], 0)
+        self.assertEqual(task.settings['limit'], 1)
+        self.assertEqual(task.settings['records']['file_format'], 'xlsx')
+        self.assertEqual(task.settings['records']['filename'], 'project_1-export')
         self.assertEqual(
-            settings['records']['export_options'],
+            task.settings['records']['export_options'],
             {
                 'header_content': 'labels',
                 'header_separator': '/',
@@ -838,36 +906,40 @@ class ExporterViewsTest(TransactionTestCase):
         'aether.kernel.api.exporter.__generate_csv_files',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
-    def test_submissions_export__csv__error(self, *args):
+    def test__csv__error(self, *args):
         for i in range(13):
             models.Submission.objects.create(
                 payload=dict({'name': f'Person-{i}'}),
                 mappingset=models.MappingSet.objects.first(),
             )
 
-        response = self.client.post(reverse('submission-csv'), data=json.dumps({
-            'paths': ['_id', '_rev'],
-            'labels': {'_id': 'id', '_rev': 'rev'},
-            'filename': 'submissions',
-            'page': 3,
-            'page_size': 5,
-            'header_content': 'labels and paths',  # not valid, switch to "labels"
-            'header_separator': '',  # not valid, switch to "/"
-            'header_shorten': 'maybe yes',  # not valid, switch to "no"
-            'data_format': 'flattening',  # not valid, switch to "split"
-        }), content_type='application/json')
-        self.assertEqual(response.status_code, 500)
+        response = self.client.post(
+            reverse('submission-csv'),
+            data=json.dumps({
+                'paths': ['_id', '_rev'],
+                'labels': {'_id': 'id', '_rev': 'rev'},
+                'filename': 'submissions',
+                'page': 3,
+                'page_size': 5,
+                'header_content': 'labels and paths',  # not valid, switch to "labels"
+                'header_separator': '',  # not valid, switch to "/"
+                'header_shorten': 'maybe yes',  # not valid, switch to "no"
+                'data_format': 'flattening',  # not valid, switch to "split"
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        task_id = response.json()['task']
+        task = models.ExportTask.objects.get(pk=task_id)
 
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        settings = models.ExportTask.objects.first().settings
-        self.assertEqual(settings['offset'], 10)
-        self.assertEqual(settings['limit'], 14)  # there was already one submission
-        self.assertEqual(settings['records']['file_format'], 'csv')
-        self.assertEqual(settings['records']['filename'], 'submissions')
-        self.assertEqual(settings['records']['paths'], ['_id', '_rev'])
-        self.assertEqual(settings['records']['labels'], {'_id': 'id', '_rev': 'rev'})
+        self.assertEqual(task.settings['offset'], 10)
+        self.assertEqual(task.settings['limit'], 14)  # there was already one submission
+        self.assertEqual(task.settings['records']['file_format'], 'csv')
+        self.assertEqual(task.settings['records']['filename'], 'submissions')
+        self.assertEqual(task.settings['records']['paths'], ['_id', '_rev'])
+        self.assertEqual(task.settings['records']['labels'], {'_id': 'id', '_rev': 'rev'})
         self.assertEqual(
-            settings['records']['export_options'],
+            task.settings['records']['export_options'],
             {
                 'header_content': 'labels',
                 'header_separator': '/',
@@ -875,7 +947,52 @@ class ExporterViewsTest(TransactionTestCase):
                 'data_format': 'split',
             })
 
-    def test_submissions_export__attachments__exclude(self):
+    @mock.patch(
+        'aether.kernel.api.exporter.__generate_csv_files',
+        side_effect=OSError('[Errno 2] No such file or directory'),
+    )
+    def test__csv__error_2(self, *args):
+        response = self.client.post(
+            reverse('submission-csv'),
+            data=json.dumps({
+                'header_content': 'paths',
+                'header_separator': ':',
+                'header_shorten': 'yes',
+                'data_format': 'flatten',
+                'csv_separator': 'TAB',  # will be replaced with `\t`
+            }),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        task_id = response.json()['task']
+        task = models.ExportTask.objects.get(pk=task_id)
+
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.project.name, 'project_1')
+        self.assertEqual(task.status_records, 'ERROR')
+        self.assertEqual(task.files.count(), 0)
+
+        settings = task.settings
+        self.assertEqual(settings['offset'], 0)
+        self.assertEqual(settings['limit'], 1)
+        self.assertEqual(settings['records']['file_format'], 'csv')
+        self.assertEqual(settings['records']['filename'], 'project_1-export')
+        self.assertEqual(
+            settings['records']['export_options'],
+            {
+                'header_content': 'paths',
+                'header_separator': ':',
+                'header_shorten': 'yes',
+                'data_format': 'flatten',
+            })
+
+    # -----------------------------
+    # ATTACHMENTS
+    # -----------------------------
+
+    def test__attachments__exclude(self):
         submission = models.Submission.objects.first()
         models.Attachment.objects.create(
             submission=submission,
@@ -915,7 +1032,7 @@ class ExporterViewsTest(TransactionTestCase):
             self.assertIn(f'{submission.pk}/', _attach_files)
             self.assertIn(f'{submission.pk}/c.txt', _attach_files)
 
-    def test_submissions_export__attachments__exclude__all(self):
+    def test__attachments__exclude__all(self):
         submission = models.Submission.objects.first()
         models.Attachment.objects.create(
             submission=submission,
@@ -928,7 +1045,7 @@ class ExporterViewsTest(TransactionTestCase):
         self.assertEqual(models.Attachment.objects.count(), 2)
 
         response = self.client.post(
-            reverse('submission-csv') +
+            reverse('submission-xlsx') +
             '?generate_attachments=t&exclude_files=(audit\\.csv$|\\.xml$)'
         )
         self.assertEqual(response.status_code, 200)
@@ -940,282 +1057,14 @@ class ExporterViewsTest(TransactionTestCase):
         self.assertEqual(task.error_attachments, 'No attachments found!')
         self.assertEqual(task.files.count(), 0)
 
-    # -----------------------------
-    # ENTITIES
-    # -----------------------------
-
-    def test_entities_export__endpoints(self):
-        self.assertEqual(reverse('entity-xlsx'), '/entities/xlsx/')
-        self.assertEqual(reverse('entity-csv'), '/entities/csv/')
-
-    @mock.patch(
-        'aether.kernel.api.exporter.__generate_csv_files',
-        side_effect=OSError('[Errno 2] No such file or directory'),
-    )
-    def test_entities_export___error(self, *args):
-        response = self.client.get(reverse('entity-csv'))
-        self.assertEqual(response.status_code, 500)
-        data = response.json()['detail']
-        self.assertIn('Got an error while creating the file:', data)
-        self.assertIn('[Errno 2] No such file or directory', data)
-
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        task = models.ExportTask.objects.first()
-        self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
-
-    @mock.patch(
-        'aether.kernel.api.exporter.__prepare_zip',
-        side_effect=OSError('[Errno 2] No such file or directory'),
-    )
-    def test_entities_export___error__background(self, *args):
-        response = self.client.get(reverse('entity-csv') + '?background=t')
-        self.assertEqual(response.status_code, 200)
-
-        task_id = response.json()['task']
-        task = models.ExportTask.objects.get(pk=task_id)
-        self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status_records, 'ERROR')
-        self.assertEqual(task.error_records, '[Errno 2] No such file or directory')
-        self.assertEqual(task.files.count(), 0)
-
-    @mock.patch(
-        'aether.kernel.api.exporter.__prepare_xlsx',
-        side_effect=OSError('[Errno 2] No such file or directory'),
-    )
-    def test_entities_export__xlsx__error(self, *args):
-        response = self.client.get(reverse('entity-xlsx'))
-        self.assertEqual(response.status_code, 500)
-
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        settings = models.ExportTask.objects.first().settings
-        self.assertEqual(settings['offset'], 0)
-        self.assertEqual(settings['limit'], 1)
-        self.assertEqual(settings['records']['file_format'], 'xlsx')
-        self.assertEqual(settings['records']['filename'], 'project1-export')
-
-    def test_entities_export__xlsx__empty(self):
-        response = self.client.get(reverse('entity-xlsx') + '?start_at=1')
-        self.assertEqual(response.status_code, 200)
-        response = self.client.get(reverse('entity-xlsx') + '?start_at=2')
-        self.assertEqual(response.status_code, 204)
-
-        response = self.client.get(reverse('entity-xlsx') + '?page=1')
-        self.assertEqual(response.status_code, 200)
-        response = self.client.get(reverse('entity-xlsx') + '?page=2')
-        self.assertEqual(response.status_code, 204)
-
-        response = self.client.post(reverse('entity-xlsx') + '?project=unknown')
-        self.assertEqual(response.status_code, 204)
-
-    def test_entities_export__xlsx__more_than_one_project(self):
-        models.Entity.objects.create(
-            project=models.Project.objects.create(name='project2'),
-            payload={'a': 'A'},
-            status='Pending Approval',
-        )
-        response = self.client.post(reverse('entity-xlsx'))
-        self.assertEqual(response.status_code, 400)
-
-        response = self.client.post(reverse('entity-xlsx') + '?project=project1')
-        self.assertEqual(response.status_code, 200)
-
-        response = self.client.post(reverse('entity-xlsx') + '?project=project2')
-        self.assertEqual(response.status_code, 200)
-
-    def test_entities_export__xlsx(self):
-        response = self.client.get(reverse('entity-xlsx'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(isinstance(response, FileResponse))
-        self.assertEqual(response['Content-Type'], 'application/octet-stream')
-
-    @mock.patch(
-        'aether.kernel.api.exporter.__generate_csv_files',
-        side_effect=OSError('[Errno 2] No such file or directory'),
-    )
-    def test_entities_export__csv__error(self, *args):
-        response = self.client.post(reverse('entity-csv'), data=json.dumps({
-            'header_content': 'paths',
-            'header_separator': ':',
-            'header_shorten': 'yes',
-            'data_format': 'flatten',
-            'csv_separator': 'TAB',  # will be replaced with `\t`
-        }), content_type='application/json')
-
-        self.assertEqual(response.status_code, 500)
-
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        task = models.ExportTask.objects.first()
-
-        self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status_records, 'ERROR')
-        self.assertEqual(task.files.count(), 0)
-
-        settings = task.settings
-        self.assertEqual(settings['offset'], 0)
-        self.assertEqual(settings['limit'], 1)
-        self.assertEqual(settings['records']['file_format'], 'csv')
-        self.assertEqual(settings['records']['filename'], 'project1-export')
-        self.assertEqual(
-            settings['records']['export_options'],
-            {
-                'header_content': 'paths',
-                'header_separator': ':',
-                'header_shorten': 'yes',
-                'data_format': 'flatten',
-            })
-
-    def test_entities_export__csv__empty(self):
-        response = self.client.post(reverse('entity-csv') + '?project=unknown')
-        self.assertEqual(response.status_code, 204)
-
-    def test_entities_export__csv__more_than_one_project(self):
-        models.Entity.objects.create(
-            project=models.Project.objects.create(name='project2'),
-            payload={'a': 'A'},
-            status='Pending Approval',
-        )
-        response = self.client.post(reverse('entity-csv'))
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(models.ExportTask.objects.count(), 0)
-
-        response = self.client.post(reverse('entity-csv') + '?project=project1')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-
-        response = self.client.post(reverse('entity-csv') + '?project=project2')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(models.ExportTask.objects.count(), 2)
-
-    def test_entities_export__csv(self):
-        response = self.client.post(reverse('entity-csv'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(isinstance(response, FileResponse))
-        self.assertEqual(response['Content-Type'], 'application/zip')
-
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        task = models.ExportTask.objects.first()
-
-        self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status_records, 'DONE')
-        self.assertIsNone(task.error_records)
-        self.assertEqual(task.files.count(), 1)
-
-    def test_entities_export__offline(self):
-        response = self.client.post(reverse('entity-csv') + '?background=t')
-        self.assertEqual(response.status_code, 200)
-
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        task = models.ExportTask.objects.first()
-
-        self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.project.name, 'project1')
-        self.assertEqual(task.status_records, 'DONE')
-        self.assertIsNone(task.error_records)
-        self.assertIsNone(task.status_attachments)
-        self.assertEqual(task.files.count(), 1)
-
-        data = response.json()
-        self.assertEqual(data, {'task': str(task.pk)})
-
-    def test_entities_export__attachments__empty(self):
+    def test__attachments__empty(self):
         models.Attachment.objects.all().delete()
-        response = self.client.post(reverse('entity-csv') + '?generate_attachments=t')
+        response = self.client.post(reverse('submission-csv') + '?generate_attachments=t')
         self.assertEqual(response.status_code, 204)
 
         self.assertEqual(models.ExportTask.objects.count(), 0)
 
-    @override_settings(EXPORT_NUM_CHUNKS=1)  # creates 3 processes
-    def test_entities_export__attachments__error(self, *args):
-        def my_side_effect(*args, **kwargs):
-            if not kwargs['url'].endswith('/b.txt'):
-                time.sleep(.01)  # wait a little bit
-                return requests.request(*args, **kwargs)  # real method
-            else:
-                # there is going to be an unexpected error while fetch file "b.txt"
-                raise RuntimeError('Being evil')
-
-        models.Attachment.objects.create(
-            submission=models.Submission.objects.first(),
-            attachment_file=SimpleUploadedFile('a.txt', b'123'),
-        )
-        models.Attachment.objects.create(
-            submission=models.Submission.objects.first(),
-            attachment_file=SimpleUploadedFile('b.txt', b'123'),
-        )
-        models.Attachment.objects.create(
-            submission=models.Submission.objects.first(),
-            attachment_file=SimpleUploadedFile('c.txt', b'123'),
-        )
-
-        with mock.patch('aether.sdk.utils.request',
-                        side_effect=my_side_effect):
-            response = self.client.post(reverse('entity-csv') + '?background=t&generate_attachments=t')
-
-        self.assertEqual(response.status_code, 200)
-
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        task = models.ExportTask.objects.first()
-
-        self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.name, 'project1-export')
-        self.assertEqual(task.project.name, 'project1')
-        self.assertIsNone(task.status_records)
-        self.assertIsNone(task.error_records)
-        self.assertEqual(task.status_attachments, 'ERROR')
-        self.assertEqual(task.error_attachments, 'Being evil')
-        self.assertEqual(task.files.count(), 0)
-        self.assertIsNone(task.revision)
-
-    @mock.patch(
-        'shutil.make_archive',
-        side_effect=RuntimeError('Zip too big!!!'),
-    )
-    def test_entities_export__attachments__error_2(self, mock_req):
-        models.Attachment.objects.create(
-            submission=models.Submission.objects.first(),
-            attachment_file=SimpleUploadedFile('a.txt', b'123'),
-        )
-
-        response = self.client.post(reverse('entity-csv') + '?background=t&generate_attachments=t')
-        self.assertEqual(response.status_code, 200)
-
-        self.assertEqual(models.ExportTask.objects.count(), 1)
-        task = models.ExportTask.objects.first()
-
-        self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.name, 'project1-export')
-        self.assertEqual(task.project.name, 'project1')
-        self.assertIsNone(task.status_records)
-        self.assertIsNone(task.error_records)
-        self.assertEqual(task.status_attachments, 'ERROR')
-        self.assertEqual(task.error_attachments, 'Zip too big!!!')
-        self.assertEqual(task.files.count(), 0)
-        self.assertIsNone(task.revision)
-
-    def test_entities_export__attachments__deleted_task(self):
-        def my_side_effect(task_id):
-            # let's remove the task and execute the real method
-            models.ExportTask.objects.filter(pk=task_id).delete()
-            execute_attachments_task(task_id)
-
-        models.Attachment.objects.create(
-            submission=models.Submission.objects.first(),
-            attachment_file=SimpleUploadedFile('a.txt', b'123'),
-        )
-
-        with mock.patch(
-            'aether.kernel.api.exporter.execute_attachments_task',
-            side_effect=my_side_effect,
-        ):
-            response = self.client.post(reverse('entity-csv') + '?generate_attachments=t')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(models.ExportTask.objects.count(), 0)
-
-    def test_entities_export__attachments(self):
+    def test__attachments__ok(self):
         submission = models.Submission.objects.first()
         models.Attachment.objects.create(
             submission=submission,
@@ -1239,7 +1088,7 @@ class ExporterViewsTest(TransactionTestCase):
         )
         self.assertEqual(models.Attachment.objects.count(), 3)
 
-        run_entity_extraction(submission)
+        run_extraction(submission)
         self.assertEqual(models.Entity.objects.count(), 2)
         entity_2 = submission.entities.first()
 
@@ -1248,11 +1097,11 @@ class ExporterViewsTest(TransactionTestCase):
         submission.payload = dict(self.EXAMPLE_PAYLOAD)
         submission.save()
         self.assertEqual(models.Submission.objects.count(), 3)
-        run_entity_extraction(submission)
+        run_extraction(submission)
         self.assertEqual(models.Entity.objects.count(), 3)
 
         response = self.client.post(
-            reverse('entity-csv') + '?background=t&generate_records=t&generate_attachments=t'
+            reverse('entity-csv') + '?generate_records=t&generate_attachments=t'
         )
         self.assertEqual(response.status_code, 200)
 
@@ -1260,8 +1109,8 @@ class ExporterViewsTest(TransactionTestCase):
         task = models.ExportTask.objects.first()
 
         self.assertEqual(task.created_by.username, 'test')
-        self.assertEqual(task.name, 'project1-export')
-        self.assertEqual(task.project.name, 'project1')
+        self.assertEqual(task.name, 'project_1-export')
+        self.assertEqual(task.project.name, 'project_1')
         self.assertEqual(task.status_records, 'DONE', task.error_records)
         self.assertIsNone(task.error_records)
         self.assertEqual(task.status_attachments, 'DONE', task.error_attachments)
@@ -1271,7 +1120,7 @@ class ExporterViewsTest(TransactionTestCase):
 
         # export file
         export_file = task.files.first()
-        self.assertIn('project1-export-', export_file.name)
+        self.assertIn('project_1-export-', export_file.name)
         self.assertIsNone(export_file.revision)
 
         with tempfile.NamedTemporaryFile() as fe:
@@ -1281,14 +1130,14 @@ class ExporterViewsTest(TransactionTestCase):
             _csv_files = zipfile.ZipFile(fe).namelist()
 
             self.assertEqual(len(_csv_files), 4, _csv_files)
-            self.assertIn('project1-export.csv', _csv_files)
-            self.assertIn('project1-export.1.csv', _csv_files)
-            self.assertIn('project1-export.2.csv', _csv_files)
-            self.assertIn('project1-export.3.csv', _csv_files)
+            self.assertIn('project_1-export.csv', _csv_files)
+            self.assertIn('project_1-export.1.csv', _csv_files)
+            self.assertIn('project_1-export.2.csv', _csv_files)
+            self.assertIn('project_1-export.3.csv', _csv_files)
 
         # attachments
         attachments_file = task.files.last()
-        self.assertIn('project1-export-attachments-', attachments_file.name)
+        self.assertIn('project_1-export-attachments-', attachments_file.name)
         self.assertIsNone(attachments_file.revision)
 
         with tempfile.NamedTemporaryFile() as fa:
@@ -1305,36 +1154,90 @@ class ExporterViewsTest(TransactionTestCase):
             self.assertIn(f'{entity_2.pk}/b.txt', _attach_files)
             self.assertIn(f'{entity_2.pk}/c.txt', _attach_files)
 
-    # -----------------------------
-    # Export Task view
-    # -----------------------------
+    def test__attachments__deleted_task(self):
+        def my_side_effect(task_id):
+            # let's remove the task and execute the real method
+            models.ExportTask.objects.filter(pk=task_id).delete()
+            execute_attachments_task(task_id)
 
-    def test_exporttask_view(self):
-        task = models.ExportTask.objects.create(
-            name='test',
-            project=models.Project.objects.first(),
+        models.Attachment.objects.create(
+            submission=models.Submission.objects.first(),
+            attachment_file=SimpleUploadedFile('a.txt', b'123'),
         )
-        task_file = models.ExportTaskFile.objects.create(
-            task=task,
-            file=SimpleUploadedFile('a.txt', b'123')
-        )
-        task_url = reverse('exporttask-detail', kwargs={'pk': task.pk})
 
-        response = self.client.get(task_url)
+        with mock.patch(
+            'aether.kernel.api.exporter.execute_attachments_task',
+            side_effect=my_side_effect,
+        ):
+            response = self.client.post(reverse('submission-csv') + '?generate_attachments=t')
+
         self.assertEqual(response.status_code, 200)
-        data = response.json()
+        self.assertEqual(models.ExportTask.objects.count(), 0)
 
-        self.assertEqual(data['name'], 'test')
-        self.assertEqual(len(data['files']), 1)
+    @override_settings(EXPORT_NUM_CHUNKS=1)  # creates 3 processes
+    def test__attachments__error(self, *args):
+        def my_side_effect(*args, **kwargs):
+            if not kwargs['url'].endswith('/b.txt'):
+                safe_sleep()  # wait a little bit
+                return requests.request(*args, **kwargs)  # real method
+            else:
+                # there is going to be an unexpected error while fetching file "b.txt"
+                raise RuntimeError('Being evil')
 
-        self.assertEqual(data['files'][0]['md5sum'], task_file.md5sum)
-        self.assertEqual(
-            data['files'][0]['file_url'],
-            f'http://testserver/export-tasks/{task.pk}/file-content/{task_file.pk}/')
-        task_file_content = self.client.get(data['files'][0]['file_url'])
-        self.assertEqual(task_file_content.getvalue(), b'123')
+        models.Attachment.objects.create(
+            submission=models.Submission.objects.first(),
+            attachment_file=SimpleUploadedFile('a.txt', b'123'),
+        )
+        models.Attachment.objects.create(
+            submission=models.Submission.objects.first(),
+            attachment_file=SimpleUploadedFile('b.txt', b'123'),
+        )
+        models.Attachment.objects.create(
+            submission=models.Submission.objects.first(),
+            attachment_file=SimpleUploadedFile('c.txt', b'123'),
+        )
 
-        task.delete()
+        with mock.patch('aether.sdk.utils.request',
+                        side_effect=my_side_effect):
+            response = self.client.post(reverse('submission-csv') + '?generate_attachments=t')
 
-        response = self.client.get(task_url)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+
+        task_id = response.json()['task']
+        task = models.ExportTask.objects.get(pk=task_id)
+
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.name, 'project_1-export')
+        self.assertEqual(task.project.name, 'project_1')
+        self.assertIsNone(task.status_records)
+        self.assertIsNone(task.error_records)
+        self.assertEqual(task.status_attachments, 'ERROR')
+        self.assertEqual(task.error_attachments, 'Being evil')
+        self.assertEqual(task.files.count(), 0)
+        self.assertIsNone(task.revision)
+
+    @mock.patch(
+        'shutil.make_archive',
+        side_effect=RuntimeError('Zip too big!!!'),
+    )
+    def test__attachments__error__zipping(self, mock_req):
+        models.Attachment.objects.create(
+            submission=models.Submission.objects.first(),
+            attachment_file=SimpleUploadedFile('a.txt', b'123'),
+        )
+
+        response = self.client.post(reverse('submission-csv') + '?generate_attachments=t')
+        self.assertEqual(response.status_code, 200)
+
+        task_id = response.json()['task']
+        task = models.ExportTask.objects.get(pk=task_id)
+
+        self.assertEqual(task.created_by.username, 'test')
+        self.assertEqual(task.name, 'project_1-export')
+        self.assertEqual(task.project.name, 'project_1')
+        self.assertIsNone(task.status_records)
+        self.assertIsNone(task.error_records)
+        self.assertEqual(task.status_attachments, 'ERROR')
+        self.assertEqual(task.error_attachments, 'Zip too big!!!')
+        self.assertEqual(task.files.count(), 0)
+        self.assertIsNone(task.revision)

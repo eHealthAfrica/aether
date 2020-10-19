@@ -159,6 +159,7 @@ class UtilsTests(TestCase):
 
     def test_bulk_delete_by_mappings_with_submissions(self):
         submission = {
+            'id': str(uuid.uuid4()),
             'payload': dict(EXAMPLE_SOURCE_DATA_WITH_LOCATION),
             'project': str(self.project.id),
             'mappingset': self.mappingset_id,
@@ -168,6 +169,9 @@ class UtilsTests(TestCase):
             data=submission,
             content_type='application/json',
         )
+        # extract
+        url = reverse('submission-extract', kwargs={'pk': submission['id']})
+        self.client.patch(url)
         entity_count = models.Entity.objects.filter(
             mapping__id__in=[self.mapping_1, self.mapping_2]
         ).count()
@@ -179,9 +183,4 @@ class UtilsTests(TestCase):
         }
         result = utils.bulk_delete_by_mappings(opts, self.mappingset_id)
         self.assertEqual(result['entities']['total'], entity_count)
-        self.assertTrue(result['entities']['schemas'])
-        self.assertEqual(result['entities']['schemas'][0]['name'], 'Person')
-        self.assertEqual(result['entities']['schemas'][0]['count'], 6)
-        self.assertEqual(result['entities']['schemas'][1]['name'], 'Location')
-        self.assertEqual(result['entities']['schemas'][1]['count'], 1)
         self.assertEqual(result['submissions'], 1)
