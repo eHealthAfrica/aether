@@ -67,6 +67,11 @@ class ExtractionManager():
         if not self.stopped:
             raise RuntimeError('Manager already started!')
 
+        _logger.info('--------------------------------------------------------')
+        _logger.info(f'Version:   {settings.VERSION}')
+        _logger.info(f'Revision:  {settings.REVISION}')
+        _logger.info('--------------------------------------------------------')
+
         _logger.info('starting')
 
         signal.signal(signal.SIGINT, self.stop)
@@ -241,7 +246,7 @@ def entity_extraction(task, submission_queue, redis=None):
                     schemas[sd['name']] = schema_definition
 
             # perform entity extraction
-            _, extracted_entities = extract_create_entities(
+            payload, extracted_entities = extract_create_entities(
                 submission_payload=payload,
                 mapping_definition=mapping['definition'],
                 schemas=schemas,

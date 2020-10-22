@@ -32,7 +32,14 @@ from gevent.pool import Pool
 from gevent.pywsgi import WSGIServer
 
 from aether.producer.db import init as init_offset_db
-from aether.producer.settings import KAFKA_SETTINGS, SETTINGS, LOG_LEVEL, get_logger
+from aether.producer.settings import (
+    KAFKA_SETTINGS,
+    LOG_LEVEL,
+    REVISION,
+    SETTINGS,
+    VERSION,
+    get_logger,
+)
 from aether.producer.topic import KafkaStatus, TopicStatus, RealmManager
 
 
@@ -218,9 +225,13 @@ class ProducerManager(object):
     # Flask Functions
 
     def add_endpoints(self):
-        # URLS configured here
+        # public
+        self.register('health', self.request_health)
         self.register('healthcheck', self.request_healthcheck)
         self.register('kernelcheck', self.request_kernelcheck)
+        self.register('check-app', self.request_check_app)
+        self.register('check-app/aether-kernel', self.request_kernelcheck)
+        # protected
         self.register('status', self.request_status)
         self.register('topics', self.request_topics)
         self.register('pause', self.request_pause)
@@ -267,6 +278,10 @@ class ProducerManager(object):
 
     # Exposed Request Endpoints
 
+    def request_health(self):
+        with self.app.app_context():
+            return Response({'healthy': True})
+
     def request_healthcheck(self):
         with self.app.app_context():
             try:
@@ -286,6 +301,14 @@ class ProducerManager(object):
                 {'healthy': healthy},
                 status=200 if healthy else 424  # Failed dependency
             )
+
+    def request_check_app(self):
+        with self.app.app_context():
+            return Response({
+                'app_name': 'aether-producer',
+                'app_version': VERSION,
+                'app_revision': REVISION,
+            })
 
     @requires_auth
     def request_status(self):
