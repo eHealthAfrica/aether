@@ -143,8 +143,10 @@ def get_from_redis_or_kernel(id, model_type, tenant=None, redis=None):
     finally:
         try:
             redis_instance.add(task=value, type=model_type, tenant=tenant)
-        except Exception:
-            pass  # problems with redis or `value` is None
+        except Exception as uer:
+            # problems with redis or `value` is None
+            if value:
+                _logger.warning(f'Could not update {tenant}:{model_type}:{id} in Redis: {uer}')
     return value
 
 

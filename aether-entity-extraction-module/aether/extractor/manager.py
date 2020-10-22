@@ -241,7 +241,7 @@ def entity_extraction(task, submission_queue, redis=None):
                     schemas[sd['name']] = schema_definition
 
             # perform entity extraction
-            _, extracted_entities = extract_create_entities(
+            payload, extracted_entities = extract_create_entities(
                 submission_payload=payload,
                 mapping_definition=mapping['definition'],
                 schemas=schemas,
