@@ -40,10 +40,19 @@ def test_manager_http_endpoint_service():
         sleep(1)
 
         url = 'http://localhost:%s' % SETTINGS.get('server_port', 9005)
+
+        r = requests.head(f'{url}/health')
+        assert(r.status_code == 200), r.text
+
         r = requests.head(f'{url}/healthcheck')
         assert(r.status_code == 200), r.text
 
+        r = requests.head(f'{url}/check-app')
+        assert(r.status_code == 200), r.text
+
         r = requests.head(f'{url}/kernelcheck')
+        assert(r.status_code == 424), r.text
+        r = requests.head(f'{url}/check-app/aether-kernel')
         assert(r.status_code == 424), r.text
 
         protected_endpoints = ['status', 'topics']
@@ -58,6 +67,8 @@ def test_manager_http_endpoint_service():
         man.realm_managers[_realm] = {}
         man.thread_checkin(_realm)
         sleep(2)
+        r = requests.get(f'{url}/health')
+        assert(r.status_code == 200)
         r = requests.get(f'{url}/healthcheck')
         assert(r.status_code == 500)
         assert(_realm in r.json().keys())
