@@ -76,4 +76,4 @@ def _get_file_content(path, on_error):  # pragma: no cover
 # ------------------------------------------------------------------------------
 
 VERSION = _get_file_content('/var/tmp/VERSION', '#.#.#')
-REVISION = _get_file_content('/var/tmp/REVISION', '---)
+REVISION = _get_file_content('/var/tmp/REVISION', '---')
