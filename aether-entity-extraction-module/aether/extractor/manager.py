@@ -67,6 +67,11 @@ class ExtractionManager():
         if not self.stopped:
             raise RuntimeError('Manager already started!')
 
+        _logger.info('--------------------------------------------------------')
+        _logger.info(f'Version:   {settings.VERSION}')
+        _logger.info(f'Revision:  {settings.REVISION}')
+        _logger.info('--------------------------------------------------------')
+
         _logger.info('starting')
 
         signal.signal(signal.SIGINT, self.stop)

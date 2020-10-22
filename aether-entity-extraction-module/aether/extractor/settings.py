@@ -61,3 +61,19 @@ def get_logger(name):
     logger.addHandler(handler)
     logger.setLevel(logging.getLevelName(LOG_LEVEL))
     return logger
+
+
+def _get_file_content(path, on_error):  # pragma: no cover
+    try:
+        with open(path) as fp:
+            value = fp.read().strip()
+    except Exception:
+        value = on_error
+    return value
+
+
+# Version and revision
+# ------------------------------------------------------------------------------
+
+VERSION = _get_file_content('/var/tmp/VERSION', '#.#.#')
+REVISION = _get_file_content('/var/tmp/REVISION', '---')
