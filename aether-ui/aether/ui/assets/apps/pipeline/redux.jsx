@@ -323,8 +323,10 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentSection = action.payload.section
         ? action.payload.section
         : !state.currentSection || state.currentSection === PIPELINE_SECTION_INPUT
-          ? currentContract.is_identity ? CONTRACT_SECTION_MAPPING : CONTRACT_SECTION_ENTITY_TYPES
-          : state.currentSection
+            ? currentContract.is_identity
+                ? CONTRACT_SECTION_MAPPING
+                : CONTRACT_SECTION_ENTITY_TYPES
+            : state.currentSection
 
       return {
         ...nextState,
