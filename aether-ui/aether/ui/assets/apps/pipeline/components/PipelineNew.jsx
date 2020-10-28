@@ -69,8 +69,7 @@ const PipelineNew = ({ pipeline, addPipeline }) => {
                   defaultMessage='New pipeline'
                 />
               </span>
-            </button>
-          )
+            </button>)
           : (
             <form className='pipeline-form' onSubmit={onSubmit}>
               <div className='form-group'>
@@ -112,8 +111,7 @@ const PipelineNew = ({ pipeline, addPipeline }) => {
                   />
                 </span>
               </button>
-            </form>
-          )
+            </form>)
       }
     </div>
   )

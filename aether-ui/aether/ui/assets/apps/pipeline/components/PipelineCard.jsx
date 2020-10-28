@@ -43,7 +43,7 @@ const PipelineCard = ({ pipeline, selectPipeline }) => {
   return (
     <div className='pipeline-preview'>
       <div className='preview-heading'>
-        <span className='pipeline-name'>// {name}</span>
+        <span className='pipeline-name'>&#47;&#47; {name}</span>
 
         <PipelineActions pipeline={pipeline} />
       </div>

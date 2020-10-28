@@ -147,7 +147,7 @@ const Pipeline = ({
             />
           </a>
           <span className='breadcrumb-pipeline-name'>
-            <span>// </span>
+            <span>&#47;&#47; </span>
             {pipeline.name}
             {
               pipeline.isInputReadOnly &&

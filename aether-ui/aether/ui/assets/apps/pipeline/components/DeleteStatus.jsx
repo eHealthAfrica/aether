@@ -43,8 +43,9 @@ const DeleteStatus = ({
   }
 
   const close = () => { toggle() }
-  const buttons = deleteStatus
-    ? (
+  const buttons = !deleteStatus
+    ? ''
+    : (
       <div className='modal-actions'>
         <button className='btn btn-primary btn-w' onClick={close}>
           <FormattedMessage
@@ -52,9 +53,7 @@ const DeleteStatus = ({
             defaultMessage='Close'
           />
         </button>
-      </div>
-    )
-    : ''
+      </div>)
 
   return (
     <Modal
@@ -131,14 +130,12 @@ const DeleteStatus = ({
                             <FormattedMessage
                               id='delete.modal.entity.types.status.deleted'
                               defaultMessage='Deleted'
-                            />
-                          )
+                            />)
                           : (
                             <FormattedMessage
                               id='delete.modal.entity.types.status.not.deleted'
                               defaultMessage='Not deleted, used by other mappings'
-                            />
-                          )
+                            />)
                       }
                     </label>
                   </div>

@@ -112,14 +112,12 @@ const ContractPublishButton = ({
                 <FormattedMessage
                   id='contract.publish.button.close'
                   defaultMessage='Close'
-                />
-              )
+                />)
               : (
                 <FormattedMessage
                   id='contract.publish.button.cancel'
                   defaultMessage='Cancel'
-                />
-              )
+                />)
           }
         </button>
 
