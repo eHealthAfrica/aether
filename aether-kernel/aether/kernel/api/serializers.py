@@ -68,10 +68,11 @@ class KernelBaseSerializer(DynamicFieldsSerializer):
         '''
         exclude = getattr(self.Meta, 'exclude_bulk_update', None)
         for name, field in self.fields.items():
-            if (self.context['request'].method not in permissions.SAFE_METHODS
-                    and self.parent and name in exclude):
-
-                # if name in exclude:
+            if (
+                self.context['request'].method not in permissions.SAFE_METHODS and
+                self.parent and 
+                name in exclude
+            ):
                 continue
             if not field.write_only:
                 yield field
