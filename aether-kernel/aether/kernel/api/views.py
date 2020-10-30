@@ -375,10 +375,13 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
     def create(self, request, *args, **kwargs):
         if (mappingset_id := request.GET.get('mappingset')):
             if isinstance(request.data, list):
-                  request._full_data = [
-                      {'mappingset': mappingset_id, 'payload': i}
-                      for i in request.data
-                  ]
+                request._full_data = [
+                    {
+                        'mappingset': mappingset_id,
+                        'payload': i
+                    }
+                    for i in request.data
+                ]
             elif not request.data.get('mappingset'):
                 request._full_data = {
                     'mappingset': mappingset_id,
