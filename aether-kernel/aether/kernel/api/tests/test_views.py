@@ -19,6 +19,7 @@
 import dateutil.parser
 import json
 from unittest import mock
+import urllib
 import uuid
 import random
 
@@ -1041,6 +1042,50 @@ class ViewsTest(TestCase):
         )
 
         self.assertTrue(res.json()['is_extracted'])
+
+    def test_submission_single_double_mappingset(self):
+        url = reverse('submission-list')
+        new_submission = {
+            'mappingset': str(self.mappingset.pk),
+            'payload': EXAMPLE_SOURCE_DATA
+
+        }
+        # single creation
+        url_params = '?' + urllib.parse.urlencode({'mappingset': str(self.mappingset.pk)})
+        res = self.client.post(
+            url + url_params,
+            data=new_submission,
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.json())
+
+    def test_submission_bulk_webhook(self):
+        url = reverse('submission-list')
+
+        new_submissions = [
+            EXAMPLE_SOURCE_DATA
+            for _ in range(5)
+        ]
+        url_params = '?' + urllib.parse.urlencode({'mappingset': str(self.mappingset.pk)})
+        # bulk webhook creation
+        res = self.client.post(
+            url + url_params,
+            data=new_submissions,
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.json())
+
+    def test_submission_single_webhook(self):
+        url = reverse('submission-list')
+        new_submission = EXAMPLE_SOURCE_DATA
+        url_params = '?' + urllib.parse.urlencode({'mappingset': str(self.mappingset.pk)})
+        # single creation via webhook
+        res = self.client.post(
+            url + url_params,
+            data=new_submission,
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.json())
 
     def test_submission_bulk_update(self):
         url = reverse('submission-list')

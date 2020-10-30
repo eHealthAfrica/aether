@@ -372,6 +372,23 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
             kwargs['many'] = isinstance(kwargs.get('data'), list)
         return super(SubmissionViewSet, self).get_serializer(*args, **kwargs)
 
+    def create(self, request, *args, **kwargs):
+        if (mappingset_id := request.GET.get('mappingset')):
+            if isinstance(request.data, list):
+                request._full_data = [
+                    {
+                        'mappingset': mappingset_id,
+                        'payload': i
+                    }
+                    for i in request.data
+                ]
+            elif not request.data.get('mappingset'):
+                request._full_data = {
+                    'mappingset': mappingset_id,
+                    'payload': request.data,
+                }
+        return super(SubmissionViewSet, self).create(request, *args, **kwargs)
+
     def patch(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.bulk_update(request, *args, **kwargs)
