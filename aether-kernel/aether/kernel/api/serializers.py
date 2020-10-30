@@ -244,6 +244,10 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
 class EntityListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
+        if (bulk_size := len(validated_data)) > settings.MAX_BULK_RECORDS:
+            raise(serializers.ValidationError(
+                f'{bulk_size} exceeds max: {settings.MAX_BULK_RECORDS} for a single request.'))
+
         entities = []
         # remove helper field and validate entity
         for entity_data in validated_data:
@@ -368,6 +372,10 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
 class SubmissionListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
+        if (bulk_size := len(validated_data)) > settings.MAX_BULK_RECORDS:
+            raise(serializers.ValidationError(
+                f'{bulk_size} exceeds max: {settings.MAX_BULK_RECORDS} for a single request.'))
+
         for s in validated_data:
             if not s.get('mappingset'):
                 raise serializers.ValidationError(
