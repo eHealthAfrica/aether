@@ -1043,6 +1043,22 @@ class ViewsTest(TestCase):
 
         self.assertTrue(res.json()['is_extracted'])
 
+    def test_submission_single_double_mappingset(self):
+        url = reverse('submission-list')
+        new_submission = {
+            'mappingset': str(self.mappingset.pk),
+            'payload': EXAMPLE_SOURCE_DATA
+
+        }
+        # single creation
+        url_params = '?' + urllib.parse.urlencode({'mappingset': str(self.mappingset.pk)})
+        res = self.client.post(
+            url + url_params,
+            data=new_submission,
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.json())
+
     def test_submission_bulk_webhook(self):
         url = reverse('submission-list')
 
@@ -1063,7 +1079,7 @@ class ViewsTest(TestCase):
         url = reverse('submission-list')
         new_submission = EXAMPLE_SOURCE_DATA
         url_params = '?' + urllib.parse.urlencode({'mappingset': str(self.mappingset.pk)})
-        # single creation
+        # single creation via webhook
         res = self.client.post(
             url + url_params,
             data=new_submission,
