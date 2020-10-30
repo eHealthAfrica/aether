@@ -384,7 +384,11 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
         try:
             # get instances in single SQL call
             instance = get_list_or_404(
-                models.Submission.objects.all(),
+                filter_by_realm(
+                    request,
+                    models.Submission.objects.all(),
+                    self.mt_field,
+                ),
                 pk__in=[entry['id'] for entry in request.data]
             )
 

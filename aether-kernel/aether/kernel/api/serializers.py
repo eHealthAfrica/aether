@@ -70,7 +70,7 @@ class KernelBaseSerializer(DynamicFieldsSerializer):
         for name, field in self.fields.items():
             if (
                 self.context['request'].method not in permissions.SAFE_METHODS and
-                self.parent and 
+                self.parent and
                 name in exclude
             ):
                 continue
