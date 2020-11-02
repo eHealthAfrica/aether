@@ -19,7 +19,7 @@
 from django.db import models as db_models
 from django.db.models.functions import Cast, Coalesce
 from django.utils.translation import gettext as _
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from aether.sdk.multitenancy.utils import filter_by_realm, is_accessible_by_realm
 from rest_framework.exceptions import PermissionDenied
 
@@ -355,7 +355,7 @@ class MappingViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
 
 
 class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMixin, viewsets.ModelViewSet):
-    queryset = models.Submission.objects.all()
+    queryset = models.Submission.objects.all().prefetch_related('attachments')
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
     search_fields = ('project__name', 'mappingset__name',)
@@ -372,6 +372,23 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
             kwargs['many'] = isinstance(kwargs.get('data'), list)
         return super(SubmissionViewSet, self).get_serializer(*args, **kwargs)
 
+    def create(self, request, *args, **kwargs):
+        if (mappingset_id := request.GET.get('mappingset')):
+            if isinstance(request.data, list):
+                request._full_data = [
+                    {
+                        'mappingset': mappingset_id,
+                        'payload': i
+                    }
+                    for i in request.data
+                ]
+            elif not request.data.get('mappingset'):
+                request._full_data = {
+                    'mappingset': mappingset_id,
+                    'payload': request.data,
+                }
+        return super(SubmissionViewSet, self).create(request, *args, **kwargs)
+
     def patch(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.bulk_update(request, *args, **kwargs)
@@ -382,11 +399,16 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
     def bulk_update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         try:
-            # get instances
-            instance = [
-                get_object_or_404(models.Submission.objects.all(), pk=entry['id'])
-                for entry in request.data
-            ]
+            # get instances in single SQL call
+            instance = get_list_or_404(
+                filter_by_realm(
+                    request,
+                    models.Submission.objects.all(),
+                    self.mt_field,
+                ),
+                pk__in=[entry['id'] for entry in request.data]
+            )
+
             serializer = self.get_serializer(instance, data=request.data, partial=partial)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -488,7 +510,7 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
 
 
 class AttachmentViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
-    queryset = models.Attachment.objects.all()
+    queryset = models.Attachment.objects.all().prefetch_related('submission')
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
     search_fields = ('name',)
@@ -605,7 +627,7 @@ class SchemaDecoratorViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSe
 
 
 class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.ModelViewSet):
-    queryset = models.Entity.objects.all()
+    queryset = models.Entity.objects.all().prefetch_related('submission__attachments')
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
     search_fields = ('project__name', 'schema__name',)

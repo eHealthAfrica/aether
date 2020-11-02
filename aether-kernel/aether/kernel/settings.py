@@ -57,6 +57,9 @@ _max_size = 20 * 1000 * 1000  # 20MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', _max_size))
 FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', _max_size))
 
+# max bulk_create size for submissions or entities
+MAX_BULK_RECORDS = int(os.environ.get('MAX_BULK_RECORDS') or 50)
+
 
 # Export Configuration
 # ------------------------------------------------------------------------------

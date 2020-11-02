@@ -134,8 +134,7 @@ const Mapping = ({ contract, updateContract }) => {
               />
             </span>
           </button>
-        </div>
-      )
+        </div>)
   )
 
   const renderRulesList = () => {

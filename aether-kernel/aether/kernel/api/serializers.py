@@ -19,7 +19,7 @@
 import uuid
 from django.utils.translation import gettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
-from rest_framework import serializers
+from rest_framework import permissions, serializers
 from django.conf import settings
 
 from aether.sdk.drf.serializers import (
@@ -58,6 +58,24 @@ class KernelBaseSerializer(DynamicFieldsSerializer):
     id = serializers.UUIDField(required=False, default=uuid.uuid4)
     revision = serializers.CharField(required=False, default='1')
     modified = serializers.CharField(read_only=True)
+
+    @property
+    def _readable_fields(self):
+        '''
+        Override method to remove fields specified in ``exclude_bulk_update``
+        with `many=True` (if ``parent`` field is not null)
+        while executing a bulk action.
+        '''
+        exclude = getattr(self.Meta, 'exclude_bulk_update', None)
+        for name, field in self.fields.items():
+            if (
+                self.context['request'].method not in permissions.SAFE_METHODS and
+                self.parent and
+                name in exclude
+            ):
+                continue
+            if not field.write_only:
+                yield field
 
 
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
@@ -226,6 +244,10 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
 class EntityListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
+        if (bulk_size := len(validated_data)) > settings.MAX_BULK_RECORDS:
+            raise(serializers.ValidationError(
+                f'{bulk_size} exceeds max: {settings.MAX_BULK_RECORDS} for a single request.'))
+
         entities = []
         # remove helper field and validate entity
         for entity_data in validated_data:
@@ -344,11 +366,16 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
 
     class Meta:
         list_serializer_class = EntityListSerializer
+        exclude_bulk_update = ('attachments', )
 
 
 class SubmissionListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
+        if (bulk_size := len(validated_data)) > settings.MAX_BULK_RECORDS:
+            raise(serializers.ValidationError(
+                f'{bulk_size} exceeds max: {settings.MAX_BULK_RECORDS} for a single request.'))
+
         for s in validated_data:
             if not s.get('mappingset'):
                 raise serializers.ValidationError(
@@ -473,6 +500,7 @@ class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
 
     class Meta:
         list_serializer_class = SubmissionListSerializer
+        exclude_bulk_update = ('attachments', )
 
 
 class ProjectStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):

@@ -440,6 +440,24 @@ class SerializersTests(TestCase):
         self.assertIn('Mapping set must be provided on initial submission',
                       str(ve_bs.exception))
 
+        # bulk too large
+        big_submissions = [
+            {
+                'mappingset': mappingset.data['id'],
+                'project': project.data['id'],
+                'payload': EXAMPLE_SOURCE_DATA,
+            }
+            for __ in range(51)
+        ]
+        big_submissions = serializers.SubmissionSerializer(
+            data=big_submissions,
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertTrue(big_submissions.is_valid(), big_submissions.errors)
+        with self.assertRaises(ValidationError) as ve_bs:
+            big_submissions.save()
+
         # good bulk
         submissions = [
             {
@@ -504,6 +522,27 @@ class SerializersTests(TestCase):
             bad_bulk.save()
         self.assertIn('Extracted record did not conform to registered schema',
                       str(ve_be.exception))
+
+        # bulk to large
+        payloads = [EXAMPLE_SOURCE_DATA_ENTITY for __ in range(51)]
+        for pl in payloads:
+            pl.update({'id': str(uuid.uuid4())})
+        data = [
+            {
+                'schemadecorator': schemadecorator.data['id'],
+                'status': 'Pending Approval',
+                'payload': pl
+            } for pl in payloads
+        ]
+        # submit at once
+        bad_bulk = serializers.EntitySerializer(
+            data=data,
+            many=True,
+            context={'request': self.request},
+        )
+        self.assertTrue(bad_bulk.is_valid(), bad_bulk.errors)
+        with self.assertRaises(ValidationError) as ve_be:
+            bad_bulk.save()
 
         # good bulk
         # make objects
