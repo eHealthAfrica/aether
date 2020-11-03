@@ -124,9 +124,11 @@ def extract_view(request, *args, **kwargs):
         Submission.objects
         .filter(modified__lte=modified)
         .filter(is_extracted=False)
+        .order_by('-modified')
         .iterator())
     count = 0
-    for count, submission in enumerate(submissions):
+    for submission in submissions:
+        count = count + 1
         send_model_item_to_redis(submission)
 
     return Response(data={
