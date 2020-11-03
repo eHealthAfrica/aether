@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
 import time
 
 from django.conf import settings
@@ -28,6 +29,8 @@ from aether.python.redis.task import TaskHelper
 from . import models, redis
 
 REDIS_TASK = TaskHelper(settings)
+logger = logging.getLogger(__name__)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 
 def safe_sleep():
@@ -207,5 +210,5 @@ def send_model_item_to_redis(model_item):
         else:
             REDIS_TASK.add(obj, model_name, realm)
 
-    except Exception:  # pragma: no cover : happens only when redis is offline
-        pass
+    except Exception as err:  # pragma: no cover : happens only when redis is offline
+        logger.debug(f'Failed to submit to Redis: {err}')
