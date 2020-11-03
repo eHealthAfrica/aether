@@ -134,3 +134,7 @@ if DJANGO_USE_CACHE:
 
     for k in _CACHED_MODULES:
         CACHEOPS[k] = {'ops': ('fetch', 'get', 'exists')}
+
+# Disabling server side cursors harms the use of queryset.iterator() for incrementally
+# loading large datasets from postgres
+DISABLE_SERVER_SIDE_CURSORS = bool(os.environ.get('DISABLE_SERVER_SIDE_CURSORS', False))
