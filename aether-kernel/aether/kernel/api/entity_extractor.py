@@ -120,7 +120,11 @@ def extract_view(request, *args, **kwargs):
 
     delta = request.query_params.get('delta', '1d')
     modified = parse_delta(delta)
-    submissions = Submission.objects.filter(modified__lte=modified).filter(is_extracted=False)
+    submissions = (
+        Submission.objects
+        .filter(modified__lte=modified)
+        .filter(is_extracted=False)
+        .iterator())
     count = 0
     for count, submission in enumerate(submissions):
         send_model_item_to_redis(submission)
