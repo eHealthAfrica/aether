@@ -92,7 +92,7 @@ describe('AVRO utils', () => {
 
       const result = utils.deriveMappingRules(schema)
 
-      expected.map((mappingRule, i) => {
+      expected.forEach((mappingRule, i) => {
         expect(mappingRule.source).toEqual(result[i].source)
         expect(mappingRule.destination).toEqual(result[i].destination)
       })
@@ -170,7 +170,7 @@ describe('AVRO utils', () => {
           { type: 'int' }
         ]
       ]
-      schemas.map(([input, output]) => {
+      schemas.forEach(([input, output]) => {
         generator(input)
         expect(input).toEqual(output)
       })
@@ -253,7 +253,7 @@ describe('AVRO utils', () => {
         ]
       ]
 
-      tests.map(([args, result]) => {
+      tests.forEach(([args, result]) => {
         expect(utils.makeOptionalField(args)).toEqual(result)
       })
     })
