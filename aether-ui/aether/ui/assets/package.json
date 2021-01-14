@@ -48,7 +48,7 @@
     "@hot-loader/react-dom": "~16.14.0",
     "babel-loader": "~8.2.0",
     "css-loader": "~5.0.0",
-    "eslint": "~7.15.0",
+    "eslint": "~7.17.0",
     "enzyme": "~3.11.0",
     "enzyme-adapter-react-16": "~1.15.0",
     "express": "~4.17.0",
@@ -79,6 +79,12 @@
       "react-hot-loader/babel",
       "@babel/plugin-proposal-class-properties"
     ]
+  },
+  "eslintConfig": {
+    "react": {
+      "pragma": "React",
+      "version": "detect"
+    }
   },
   "standard": {
     "verbose": true
