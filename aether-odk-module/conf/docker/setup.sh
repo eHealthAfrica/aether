@@ -56,6 +56,28 @@ apt-get -qq \
     install $POSTGRES_PACKAGE
 
 
+# install Java JDK8
+
+JAVA_FOLDER=java-se-8u41-ri
+
+JVM_ROOT=/usr/lib/jvm
+
+JAVA_PKG_NAME=openjdk-8u41-b04-linux-x64-14_jan_2020.tar.gz
+JAVA_TAR_GZ_URL=https://download.java.net/openjdk/jdk8u41/ri/$JAVA_PKG_NAME
+
+apt-get update && rm -rf /var/lib/apt/lists/*    && \
+    apt-get clean                                                               && \
+    apt-get autoremove                                                          && \
+    echo Downloading $JAVA_TAR_GZ_URL                                           && \
+    wget -q $JAVA_TAR_GZ_URL                                                    && \
+    tar -xf $JAVA_PKG_NAME                                                     && \
+    rm $JAVA_PKG_NAME                                                           && \
+    mkdir -p /usr/lib/jvm                                                       && \
+    mv ./$JAVA_FOLDER $JVM_ROOT                                                 && \
+    update-alternatives --install /usr/bin/java java $JVM_ROOT/$JAVA_FOLDER/bin/java 1        && \
+    update-alternatives --install /usr/bin/javac javac $JVM_ROOT/$JAVA_FOLDER/bin/javac 1     && \
+    java -version
+
 ################################################################################
 # Create user and folders
 ################################################################################
