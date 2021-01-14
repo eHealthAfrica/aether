@@ -21,7 +21,6 @@ import json
 import re
 import tempfile
 
-
 from collections import defaultdict
 from dateutil import parser
 from lxml import html
@@ -516,7 +515,7 @@ def validate_xform(xml_definition):
             check_xform(fp.name)
         except ODKValidateError as v_err:
             errors = format_odk_exceptions(v_err)
-            raise XFormParseError(f'Your XForm is invalid: {errors}') from v_err
+            raise XFormParseError(_('Your XForm is invalid: {}').format(errors)) from v_err
 
 
 # ------------------------------------------------------------------------------
