@@ -219,6 +219,35 @@ class XFormUtilsValidatorsTests(CustomTestCase):
             self.assertIsNone(ve)
             self.assertTrue(False)
 
+    def test__validate_xform__bad_calculate_formula(self):
+        with self.assertRaises(XFormParseError) as ve:
+            validate_xform(
+                '''
+                    <h:html
+                        xmlns="http://www.w3.org/2002/xforms"
+                        xmlns:h="http://www.w3.org/1999/xhtml"
+                        xmlns:odk="http://www.opendatakit.org/xforms">
+                        <h:head>
+                            <h:title>1 Health care worker registration</h:title>
+                            <model odk:xforms-version="1.0.0">
+                                <instance>
+                                    <None id="1_hcw_registration" version="11">
+                                        <sms_body/>
+                                    </None>
+                                </instance>
+                                <bind
+                                    calculate="concat(&quot; &quot;,  /None/healthcareworker/identifier_hcw_numbers ,)"
+                                    nodeset="/None/sms_body"
+                                    type="string"/>
+                            </model>
+                        </h:head>
+                        <h:body>
+                        </h:body>
+                    </h:html>
+                '''
+            )
+        self.assertIn('Invalid calculate', str(ve.exception), ve)
+
 
 class XFormUtilsParsersTests(CustomTestCase):
 

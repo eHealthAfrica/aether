@@ -19,13 +19,17 @@
 from ast import literal_eval
 import json
 import re
+import tempfile
+
 
 from collections import defaultdict
 from dateutil import parser
 from lxml import html
+from typing import List
 from xml.etree import ElementTree
 
 from pyxform import builder, xls2json
+from pyxform.validators.odk_validate import check_xform, ODKValidateError
 from pyxform.xls2json_backends import xls_to_dict
 from pyxform.xform_instance_parser import XFormInstanceParser
 from spavro.schema import parse as parse_avro_schema, SchemaParseException
@@ -432,6 +436,15 @@ class XFormParseError(Exception):
     pass
 
 
+def format_odk_exceptions(ver: ODKValidateError) -> List[str]:
+    '''
+    ODKValidateError only returns the first error it finds, but is padded with
+    extra information we don't need since we use a single form from a tempfile
+    '''
+    parts = str(ver).split('\n')
+    return (', ').join(parts[2:len(parts) - 5])
+
+
 def validate_xform(xml_definition):
     '''
     Validates xForm definition.
@@ -493,6 +506,17 @@ def validate_xform(xml_definition):
 
     if not form_id:
         raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_INSTANCE_ID_ERR)
+
+    # run through the ODKValidate program to catch any other errors
+    # I.E. in misformed calculate nodes
+    with tempfile.NamedTemporaryFile() as fp:
+        fp.write(xml_definition.encode('utf-8'))
+        fp.flush()
+        try:
+            check_xform(fp.name)
+        except ODKValidateError as v_err:
+            errors = format_odk_exceptions(v_err)
+            raise XFormParseError(f'Your XForm is invalid: {errors}') from v_err
 
 
 # ------------------------------------------------------------------------------
