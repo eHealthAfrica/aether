@@ -35,25 +35,25 @@ POSTGRES_PACKAGE=postgresql-client-11
 # install missing packages of slim distribution and required ones
 PACKAGE_LIST=/tmp/apt-packages.txt
 if [ -f "$PACKAGE_LIST" ]; then
-    apt-get update -qq
+    apt-get update -qq > /dev/null
     apt-get -qq \
         --yes \
         --allow-downgrades \
         --allow-remove-essential \
         --allow-change-held-packages \
-        install `cat $PACKAGE_LIST`
+        install `cat $PACKAGE_LIST` > /dev/null
 fi
 
 # add postgres apt repo to get more recent postgres versions
 echo 'deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main' > /etc/apt/sources.list.d/pgdg.list
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-apt-get update -qq
+apt-get update -qq > /dev/null
 apt-get -qq \
     --yes \
     --allow-downgrades \
     --allow-remove-essential \
     --allow-change-held-packages \
-    install $POSTGRES_PACKAGE
+    install $POSTGRES_PACKAGE > /dev/null
 
 
 ################################################################################
@@ -65,12 +65,14 @@ useradd -ms /bin/false aether
 mkdir -p /var/run/aether/log/
 touch /var/run/aether/uwsgi.pid
 
-chown aether: /var/run/aether/* -Rf
-chmod -R 755 /var/run/aether/* -R
+chown -Rf aether: /var/run/aether/*
+chmod -R 755 /var/run/aether/*
 
 
 ################################################################################
 # last steps and cleaning
 ################################################################################
 
-apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+apt-get clean
+apt-get autoremove
