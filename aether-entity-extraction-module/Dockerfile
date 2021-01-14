@@ -8,13 +8,13 @@ LABEL description="Aether Entity Extraction Module" \
 ## set up container
 ################################################################################
 
-RUN apt-get update -qq && \
+RUN apt-get update -qq > /dev/null && \
     apt-get -qq \
         --yes \
         --allow-downgrades \
         --allow-remove-essential \
         --allow-change-held-packages \
-        install gcc redis-server curl && \
+        install gcc redis-server curl > /dev/null && \
     useradd -ms /bin/false aether
 
 WORKDIR /code

@@ -27,6 +27,11 @@ set -Eeuo pipefail
 
 POSTGRES_PACKAGE=postgresql-client-11
 
+JVM_ROOT=/usr/lib/jvm
+JAVA_FOLDER=java-se-8u41-ri
+JAVA_PKG_NAME=openjdk-8u41-b04-linux-x64-14_jan_2020.tar.gz
+JAVA_TAR_GZ_URL=https://download.java.net/openjdk/jdk8u41/ri/$JAVA_PKG_NAME
+
 
 ################################################################################
 # install packages
@@ -35,48 +40,40 @@ POSTGRES_PACKAGE=postgresql-client-11
 # install missing packages of slim distribution and required ones
 PACKAGE_LIST=/tmp/apt-packages.txt
 if [ -f "$PACKAGE_LIST" ]; then
-    apt-get update -qq
+    apt-get update -qq > /dev/null
     apt-get -qq \
         --yes \
         --allow-downgrades \
         --allow-remove-essential \
         --allow-change-held-packages \
-        install `cat $PACKAGE_LIST`
+        install `cat $PACKAGE_LIST` > /dev/null
 fi
 
 # add postgres apt repo to get more recent postgres versions
 echo 'deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main' > /etc/apt/sources.list.d/pgdg.list
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-apt-get update -qq
+apt-get update -qq > /dev/null
 apt-get -qq \
     --yes \
     --allow-downgrades \
     --allow-remove-essential \
     --allow-change-held-packages \
-    install $POSTGRES_PACKAGE
+    install $POSTGRES_PACKAGE > /dev/null
 
 
 # install Java JDK8
+echo "Downloading $JAVA_TAR_GZ_URL"
+wget -q $JAVA_TAR_GZ_URL
+tar -xf $JAVA_PKG_NAME
+rm $JAVA_PKG_NAME
 
-JAVA_FOLDER=java-se-8u41-ri
+mkdir -p /usr/lib/jvm
+mv ./$JAVA_FOLDER $JVM_ROOT
 
-JVM_ROOT=/usr/lib/jvm
+update-alternatives --install /usr/bin/java  java  $JVM_ROOT/$JAVA_FOLDER/bin/java  1
+update-alternatives --install /usr/bin/javac javac $JVM_ROOT/$JAVA_FOLDER/bin/javac 1
+java -version
 
-JAVA_PKG_NAME=openjdk-8u41-b04-linux-x64-14_jan_2020.tar.gz
-JAVA_TAR_GZ_URL=https://download.java.net/openjdk/jdk8u41/ri/$JAVA_PKG_NAME
-
-apt-get update && rm -rf /var/lib/apt/lists/*    && \
-    apt-get clean                                                               && \
-    apt-get autoremove                                                          && \
-    echo Downloading $JAVA_TAR_GZ_URL                                           && \
-    wget -q $JAVA_TAR_GZ_URL                                                    && \
-    tar -xf $JAVA_PKG_NAME                                                     && \
-    rm $JAVA_PKG_NAME                                                           && \
-    mkdir -p /usr/lib/jvm                                                       && \
-    mv ./$JAVA_FOLDER $JVM_ROOT                                                 && \
-    update-alternatives --install /usr/bin/java java $JVM_ROOT/$JAVA_FOLDER/bin/java 1        && \
-    update-alternatives --install /usr/bin/javac javac $JVM_ROOT/$JAVA_FOLDER/bin/javac 1     && \
-    java -version
 
 ################################################################################
 # Create user and folders
@@ -87,12 +84,14 @@ useradd -ms /bin/false aether
 mkdir -p /var/run/aether/log/
 touch /var/run/aether/uwsgi.pid
 
-chown aether: /var/run/aether/* -Rf
-chmod -R 755 /var/run/aether/* -R
+chown -Rf aether: /var/run/aether/*
+chmod -R 755 /var/run/aether/*
 
 
 ################################################################################
 # last steps and cleaning
 ################################################################################
 
-apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+apt-get clean
+apt-get autoremove
