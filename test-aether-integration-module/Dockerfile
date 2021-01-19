@@ -8,13 +8,13 @@ LABEL description="Aether Integration Tests" \
 ## set up container
 ################################################################################
 
-RUN apt-get update -qq && \
+RUN apt-get update -qq > /dev/null && \
     apt-get -qq \
         --yes \
         --allow-downgrades \
         --allow-remove-essential \
         --allow-change-held-packages \
-        install gcc && \
+        install gcc > /dev/null && \
     useradd -ms /bin/false aether
 
 WORKDIR /code

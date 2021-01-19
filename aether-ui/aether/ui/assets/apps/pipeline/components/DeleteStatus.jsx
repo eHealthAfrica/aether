@@ -53,7 +53,8 @@ const DeleteStatus = ({
             defaultMessage='Close'
           />
         </button>
-      </div>)
+      </div>
+      )
 
   return (
     <Modal
