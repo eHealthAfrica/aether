@@ -100,7 +100,7 @@ kill_test
 if [[ $1 == "ui" ]]; then
     build_container ui-assets
     $DC_RUN ui-assets-test test
-    $DC_RUN ui-assets-test build
+    $DC_RUN -u root ui-assets-test build
     echo_message "Tested and built ui assets"
 fi
 
