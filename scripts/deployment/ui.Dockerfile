@@ -14,7 +14,7 @@ RUN /tmp/setup_revision.sh
 ## using node image to build react app
 ################################################################################
 
-FROM node:lts-slim AS app_node
+FROM node:lts-alpine AS app_node
 
 ## set up container
 WORKDIR /assets/

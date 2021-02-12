@@ -18,24 +18,30 @@
 
 import json
 from time import sleep
+from uuid import uuid4
 
-from aet.consumer import KafkaConsumer
+from aet.kafka import KafkaConsumer
 from kafka.consumer.fetcher import NoOffsetForPartitionError
 
 
-def get_consumer(kafka_url, topic=None, strategy='latest'):
-    consumer = KafkaConsumer(
-        aether_emit_flag_required=False,
-        group_id='demo-reader',
-        bootstrap_servers=[kafka_url],
-        auto_offset_reset=strategy,
-    )
+def get_consumer(kafka_url, topic=None):
+    kwargs = {
+        'aether_masking_schema_annotation': 'aetherMaskingLevel',
+        'aether_emit_flag_field_path': '$.publish',
+        'aether_emit_flag_values': [True, False],
+        'aether_masking_schema_levels': [0, 1, 2, 3, 4, 5],
+        'aether_masking_schema_emit_level': 0,
+        'group.id': str(uuid4()),
+        'bootstrap.servers': kafka_url,
+        'auto.offset.reset': 'earliest',
+    }
+    consumer = KafkaConsumer(**kwargs)
     if topic:
-        consumer.subscribe(topic)
+        consumer.subscribe([topic])
     return consumer
 
 
-def read(consumer, start='LATEST', verbose=False, timeout_ms=5000, max_records=200):
+def read(consumer, start='LATEST', verbose=False, timeout=5, num_messages=200):
     messages = []
     if start not in ['FIRST', 'LATEST']:
         raise ValueError(f'{start} it not a valid argument for "start="')
@@ -46,8 +52,8 @@ def read(consumer, start='LATEST', verbose=False, timeout_ms=5000, max_records=2
     while True:
         try:
             poll_result = consumer.poll_and_deserialize(
-                timeout_ms=timeout_ms,
-                max_records=max_records,
+                num_messages=num_messages,
+                timeout=timeout,
             )
         except NoOffsetForPartitionError as nofpe:
             print(nofpe)
@@ -68,13 +74,10 @@ def read(consumer, start='LATEST', verbose=False, timeout_ms=5000, max_records=2
 
 def _read_poll_result(new_records, verbose=False):
     flattened = []
-    for packages in new_records.values():
-        for package in packages:
-            messages = package.get('messages')
-            for msg in messages:
-                flattened.append(msg)
-                if verbose:
-                    _pprint(msg)
+    for msg in new_records:
+        flattened.append(msg.value)
+        if verbose:
+            _pprint(msg)
     return flattened
 
 
