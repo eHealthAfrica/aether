@@ -29,7 +29,7 @@ class Config(AppConfig):
     def ready(self):
         super(Config, self).ready()
 
-        # https://docs.djangoproject.com/en/2.2/ref/signals/#management-signals
+        # https://docs.djangoproject.com/en/3.1/ref/signals/#management-signals
         # enables the migration signals that will recreate the views
         pre_migrate.connect(pre_migrate_signal, sender=self)
         post_migrate.connect(post_migrate_signal, sender=self)

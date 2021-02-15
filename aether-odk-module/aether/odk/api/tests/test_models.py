@@ -111,8 +111,8 @@ class ModelsTests(CustomTestCase):
 
         response = media.get_content()
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn('Content-Disposition', response)
         self.assertEqual(response.getvalue(), b'abc')
+        self.assertEqual(response['Content-Disposition'], 'inline; filename="sample.txt"')
 
         media.media_file = SimpleUploadedFile('sample2.txt', b'abcd')
         media.save()

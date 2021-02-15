@@ -16,10 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
-from django.contrib.postgres.forms.jsonb import JSONField
 from django.utils.translation import gettext as _
 
 from .api import models, utils
@@ -32,18 +30,6 @@ else:  # pragma: no cover
     PROJECT_LIST_FILTER = []
     PIPELINE_LIST_FILTER = []
     CONTRACT_LIST_FILTER = []
-
-
-class PipelineForm(forms.ModelForm):
-
-    schema = JSONField()
-    input = JSONField()
-
-
-class ContractForm(forms.ModelForm):
-
-    entity_types = JSONField()
-    mapping_rules = JSONField()
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -97,8 +83,6 @@ class PipelineAdmin(BaseAdmin):
 
     actions = ['publish']
 
-    form = PipelineForm
-
     list_display = ('name', 'project', 'mappingset',)
     list_filter = PIPELINE_LIST_FILTER
     search_fields = list_display
@@ -122,8 +106,6 @@ class ContractAdmin(BaseAdmin):
     publish.short_description = _('Publish selected contracts to Aether Kernel')
 
     actions = ['publish']
-
-    form = ContractForm
 
     list_display = (
         'name', 'pipeline', 'published_on', 'mapping',

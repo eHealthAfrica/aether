@@ -20,5 +20,4 @@ aether.sdk[cache,server,webpack,storage,test]
 
 
 # Django specific
-django<3
 django-model-utils

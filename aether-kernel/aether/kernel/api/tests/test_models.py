@@ -170,7 +170,7 @@ class ModelsTests(TransactionTestCase):
         response = attachment.get_content()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.getvalue(), b'abc')
-        self.assertNotIn('Content-Disposition', response)
+        self.assertEqual(response['Content-Disposition'], 'inline; filename="sample.txt"')
 
         attachment_2 = models.Attachment.objects.create(
             submission=submission,
