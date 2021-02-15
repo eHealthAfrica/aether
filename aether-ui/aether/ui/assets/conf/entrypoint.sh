@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 #
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuo pipefail
+set -euo pipefail
 
 function show_help {
     echo """
@@ -57,7 +57,6 @@ case "$1" in
     test )
         test_lint
         test_js
-        npm run build
     ;;
 
     test_lint )

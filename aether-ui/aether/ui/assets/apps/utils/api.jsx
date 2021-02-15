@@ -54,7 +54,7 @@ export default class ApiClient {
           'X-CSRFToken': csrfToken,
           // The default behaviour of Kong is to redirect to the login page
           // if the user is not authorized, with this header we try to receive
-          // the real status code "403" and redirect us to the logout page
+          // the real status code "401" and redirect us to the logout page
           'X-Oauth-Unauthorized': 'status_code'
         }
         const options = {
@@ -83,7 +83,8 @@ export default class ApiClient {
               } else {
                 const defaultError = new HTTPError(response.statusText, response, response.status)
 
-                if (response.status === 403) { // Forbidden
+                if (response.status === 401 || response.status === 403) {
+                  // 401 - Unauthorized / 403 - Forbidden
                   // redirect to logout
                   return window.location.assign(host + LOGOUT_URL)
                 }
