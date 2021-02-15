@@ -135,7 +135,7 @@ def generate_entities(realm_client, mappingset):  # noqa: F811
 @pytest.fixture(scope='function')
 def read_people():
     consumer = get_consumer(KAFKA_URL, KAFKA_SEED_TYPE)
-    messages = read(consumer, start='FIRST', verbose=False, timeout_ms=500)
+    messages = read(consumer, start='FIRST', verbose=False, timeout=5)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
 
