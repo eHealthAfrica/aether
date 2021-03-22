@@ -23,7 +23,7 @@ COPY --from=app_resource /tmp/resources/. /var/tmp/
 ## copy source code
 COPY ./aether-ui/aether/ui/assets/ /assets/
 ## build react app
-RUN npm install -q && npm run build
+RUN npm install -s && npm run build
 
 
 ################################################################################
