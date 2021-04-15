@@ -69,6 +69,7 @@ case "$1" in
 
     build )
         rm -rf ./bundles/*
+        npm rebuild node-sass
         npm run build
         rm -rf ./node_modules || true
     ;;
