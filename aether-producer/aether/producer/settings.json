@@ -9,7 +9,7 @@
   "kafka_failure_wait_time": 10,
   "kafka_settings": {
     "default.topic.config": {
-      "retention.ms": -1
+      "retention.ms": 604800000
     }
   },
   "kernel_access_type": "api",
