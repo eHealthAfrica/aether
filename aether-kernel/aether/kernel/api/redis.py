@@ -39,7 +39,7 @@ def cache_project_artefacts(project, model_name=None, id=None):
     if _artefacts and model_name and id:
         _artefacts['data'][model_name].append(id)
     else:
-        _linked_artefacts = get_project_artefacts(project, include_submissions=False)
+        _linked_artefacts = get_project_artefacts(project, include_submissions=True)
         for i in _linked_artefacts:
             if isinstance(_linked_artefacts[i], set):
                 _linked_artefacts[i] = list(_linked_artefacts[i])
