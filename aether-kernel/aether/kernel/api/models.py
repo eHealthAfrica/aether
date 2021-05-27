@@ -19,6 +19,7 @@
 # under the License.
 
 import uuid
+
 from datetime import datetime
 from hashlib import md5
 
@@ -62,12 +63,12 @@ Data model schema:
 +==================+       +==================+       +==================+       +=====================+
 | Base fields      |<---+  | Base fields      |<---+  | Base fields      |<---+  | Base fields         |
 | active           |    |  | input            |    |  | payload          |    |  | attachment_file     |
-| salad_schema     |    |  | schema           |    |  | is_extracted     |    |  | md5sum              |
-| jsonld_context   |    |  +::::::::::::::::::+    |  +::::::::::::::::::+    |  +:::::::::::::::::::::+
-| rdf_definition   |    +-<| project          |    +-<| mappingset       |    +-<| submission          |
-+::::::::::::::::::+    |  +------------------+    |  | project(**)      |    |  | submission_revision |
-| organizations(*) |    |                          |  +------------------+    |  +---------------------+
-+------------------+    |                          |                          |
++::::::::::::::::::+    |  | schema           |    |  | is_extracted     |    |  | md5sum              |
+| organizations(*) |    |  +::::::::::::::::::+    |  +::::::::::::::::::+    |  +:::::::::::::::::::::+
++------------------+    +-<| project          |    +-<| mappingset       |    +-<| submission          |
+                        |  +------------------+    |  | project(**)      |    |  | submission_revision |
+                        |                          |  +------------------+    |  +---------------------+
+                        |                          |                          |
                         |                          |                          |
 +------------------+    |  +------------------+    |  +------------------+    |  +------------------+
 | Schema           |    |  | SchemaDecorator  |    |  | Mapping          |    |  | Entity           |
@@ -121,46 +122,10 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
     .. note:: Extends from :class:`aether.sdk.multitenancy.models.MultitenancyBaseAbstract`
 
     :ivar bool      active:          Active. Defaults to ``True``.
-    :ivar text      salad_schema:    Salad schema (optional).
-        Semantic Annotations for Linked Avro Data (SALAD)
-        https://www.commonwl.org/draft-3/SchemaSalad.html
-    :ivar text      jsonld_context:  JSON LS context (optional).
-        JSON for Linking Data
-        https://json-ld.org/
-    :ivar text      rdf_definition:  RDF definition (optional).
-        Resource Description Framework
-        https://www.w3.org/TR/rdf-schema/
 
     '''
 
     active = models.BooleanField(default=True, verbose_name=_('active'))
-    salad_schema = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_('salad schema'),
-        help_text=_(
-            'Semantic Annotations for Linked Avro Data (SALAD)  '
-            'https://www.commonwl.org/draft-3/SchemaSalad.html'
-        ),
-    )
-    jsonld_context = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_('JSON LD context'),
-        help_text=_(
-            'JSON for Linking Data  '
-            'https://json-ld.org/'
-        ),
-    )
-    rdf_definition = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_('RDF definition'),
-        help_text=_(
-            'Resource Description Framework  '
-            'https://www.w3.org/TR/rdf-schema/'
-        ),
-    )
 
     def save(self, *args, **kwargs):
         super(Project, self).save(*args, **kwargs)

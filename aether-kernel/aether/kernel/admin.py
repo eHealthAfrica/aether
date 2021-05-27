@@ -23,12 +23,12 @@ from .api import models
 
 if settings.MULTITENANCY:  # pragma: no cover
     PROJECT_LIST_FILTER = ('mt__realm',)
-    CHILD_LIST_FILTER = ('project__mt__realm',)
-    ATTACH_LIST_FILTER = ('submission__project__mt__realm',)
+    CHILD_LIST_FILTER = ('project__mt__realm', 'project__active',)
+    ATTACH_LIST_FILTER = ('submission__project__mt__realm', 'submission__project__active',)
 else:  # pragma: no cover
     PROJECT_LIST_FILTER = []
-    CHILD_LIST_FILTER = []
-    ATTACH_LIST_FILTER = []
+    CHILD_LIST_FILTER = ('project__active',)
+    ATTACH_LIST_FILTER = ('submission__project__active',)
 
 
 class BaseAdmin(admin.ModelAdmin):

@@ -17,10 +17,12 @@
 # under the License.
 
 import uuid
-from django.utils.translation import gettext as _
-from drf_dynamic_fields import DynamicFieldsMixin
-from rest_framework import permissions, serializers
+
 from django.conf import settings
+from django.utils.translation import gettext as _
+
+from rest_framework import permissions, serializers
+from drf_dynamic_fields import DynamicFieldsMixin
 
 from aether.sdk.drf.serializers import (
     DynamicFieldsSerializer,
