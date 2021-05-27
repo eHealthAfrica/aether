@@ -64,8 +64,11 @@ _CREATE_SCHEMA_VIEW = '''
         FROM kernel_schemadecorator           AS sd
         INNER JOIN kernel_schema              AS s
                 ON sd.schema_id = s.id
+        INNER JOIN kernel_project             AS p
+                ON sd.project_id = p.id
+               AND p.active IS TRUE
         INNER JOIN multitenancy_mtinstance_vw AS mt
-                ON sd.project_id = mt.instance_id
+                ON p.id = mt.instance_id
         ORDER BY 1 ASC
     ;
 '''
