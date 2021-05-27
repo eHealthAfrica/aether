@@ -104,11 +104,11 @@ case "$1" in
         fi
     ;;
 
-    help)
+    help )
         show_help
     ;;
 
-    *)
+    * )
         show_help
     ;;
 esac
