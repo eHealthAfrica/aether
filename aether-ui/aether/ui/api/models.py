@@ -21,9 +21,11 @@ import uuid
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
+
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
+from aether.sdk.drf.fields import AetherJSONField
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.sdk.utils import json_prettified
 
@@ -109,10 +111,10 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel, MtMo
     name = models.TextField(verbose_name=_('name'))
 
     # this is the avro schema
-    schema = models.JSONField(null=True, blank=True, default=dict, verbose_name=_('AVRO schema'))
+    schema = AetherJSONField(null=True, blank=True, default=dict, verbose_name=_('AVRO schema'))
 
     # this is an example of the data using the avro schema
-    input = models.JSONField(null=True, blank=True, default=dict, verbose_name=_('input JSON'))
+    input = AetherJSONField(null=True, blank=True, default=dict, verbose_name=_('input JSON'))
 
     # this is a reference to the linked kernel mappingset
     mappingset = models.UUIDField(
@@ -220,7 +222,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
     pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE, verbose_name=_('pipeline'))
 
     # the list of available entity types (avro schemas)
-    entity_types = models.JSONField(null=True, blank=True, default=list, verbose_name=_('entity types'))
+    entity_types = AetherJSONField(null=True, blank=True, default=list, verbose_name=_('entity types'))
 
     # this represents the list of mapping rules
     # {
@@ -231,7 +233,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
     #      {"id": ###, "source": "jsonpath-input-n", "destination": "jsonpath-entity-type-n"},
     #    ]
     # }
-    mapping_rules = models.JSONField(null=True, blank=True, default=list, verbose_name=_('mapping rules'))
+    mapping_rules = AetherJSONField(null=True, blank=True, default=list, verbose_name=_('mapping rules'))
 
     # these represent the list of entities and errors returned by the
     # `validate-mapping` endpoint in kernel.
@@ -251,8 +253,8 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
     #      }
     #    ]
     # }
-    mapping_errors = models.JSONField(null=True, blank=True, editable=False, verbose_name=_('mapping errors'))
-    output = models.JSONField(null=True, blank=True, editable=False, verbose_name=_('output'))
+    mapping_errors = AetherJSONField(null=True, blank=True, editable=False, verbose_name=_('mapping errors'))
+    output = AetherJSONField(null=True, blank=True, editable=False, verbose_name=_('output'))
 
     # this is a reference to the linked kernel mapping
     mapping = models.UUIDField(
@@ -274,7 +276,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
     #         ...
     #     },
     # }
-    kernel_refs = models.JSONField(
+    kernel_refs = AetherJSONField(
         null=True,
         blank=True,
         editable=False,

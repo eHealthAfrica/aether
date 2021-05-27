@@ -22,7 +22,7 @@ coverage==5.5
 cryptography==3.4.7
 decorator==5.0.9
 eha-jsonpath==0.6.0
-fakeredis==1.5.0
+fakeredis==1.5.1
 flake8==3.9.2
 flake8-quotes==3.2.0
 gevent==21.1.2

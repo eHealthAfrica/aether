@@ -27,8 +27,10 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
+
 from django_prometheus.models import ExportModelOperationsMixin
 
+from aether.sdk.drf.fields import AetherJSONField
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.sdk.utils import json_prettified, get_file_content
 
@@ -179,7 +181,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
     form_id = models.TextField(default='', editable=False, verbose_name=_('xForm ID'))
     version = models.TextField(default='0', blank=True, verbose_name=_('xForm version'))
     md5sum = models.CharField(default='', editable=False, max_length=36, verbose_name=_('xForm md5sum'))
-    avro_schema = models.JSONField(null=True, blank=True, editable=False, verbose_name=_('AVRO schema'))
+    avro_schema = AetherJSONField(null=True, blank=True, editable=False, verbose_name=_('AVRO schema'))
 
     # This is needed to submit data to kernel
     kernel_id = models.UUIDField(
