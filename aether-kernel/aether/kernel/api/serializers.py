@@ -369,6 +369,7 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
     class Meta:
         list_serializer_class = EntityListSerializer
         exclude_bulk_update = ('attachments', )
+        fields = '__all__'
 
 
 class SubmissionListSerializer(serializers.ListSerializer):
@@ -503,15 +504,16 @@ class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
     class Meta:
         list_serializer_class = SubmissionListSerializer
         exclude_bulk_update = ('attachments', )
+        fields = '__all__'
 
 
 class ProjectStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
-    first_submission = serializers.DateTimeField()
-    last_submission = serializers.DateTimeField()
-    submissions_count = serializers.IntegerField()
-    attachments_count = serializers.IntegerField()
-    entities_count = serializers.IntegerField()
+    first_submission = serializers.DateTimeField(read_only=True)
+    last_submission = serializers.DateTimeField(read_only=True)
+    submissions_count = serializers.IntegerField(read_only=True)
+    attachments_count = serializers.IntegerField(read_only=True)
+    entities_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = models.Project
@@ -524,11 +526,11 @@ class ProjectStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
 class MappingSetStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
-    first_submission = serializers.DateTimeField()
-    last_submission = serializers.DateTimeField()
-    submissions_count = serializers.IntegerField()
-    attachments_count = serializers.IntegerField()
-    entities_count = serializers.IntegerField()
+    first_submission = serializers.DateTimeField(read_only=True)
+    last_submission = serializers.DateTimeField(read_only=True)
+    submissions_count = serializers.IntegerField(read_only=True)
+    attachments_count = serializers.IntegerField(read_only=True)
+    entities_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = models.MappingSet
