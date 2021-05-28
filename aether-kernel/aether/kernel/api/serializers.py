@@ -367,6 +367,7 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
     class Meta:
         list_serializer_class = EntityListSerializer
         exclude_bulk_update = ('attachments', )
+        fields = '__all__'
 
 
 class SubmissionListSerializer(serializers.ListSerializer):
@@ -501,6 +502,7 @@ class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
     class Meta:
         list_serializer_class = SubmissionListSerializer
         exclude_bulk_update = ('attachments', )
+        fields = '__all__'
 
 
 class ProjectStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
