@@ -181,7 +181,9 @@ for container in "${PRE_CONTAINERS[@]}"; do
 done
 
 for container in "${SETUP_CONTAINERS[@]}"; do
-    docker-compose run --rm $container setup
+    if [[ $container != "exm" ]]; then
+        docker-compose run --rm $container setup
+    fi
     start_container $container
 done
 

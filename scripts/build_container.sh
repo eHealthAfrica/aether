@@ -21,10 +21,11 @@
 
 set -Eeuo pipefail
 
-source .env
 source ./scripts/_lib.sh
 
 create_credentials
+source .env
+
 create_docker_assets
 
 if [[ $1 == "ui" ]]; then

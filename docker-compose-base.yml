@@ -102,11 +102,7 @@ services:
       LOGGING_FORMATTER: verbose
       LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
-      PROFILING_ENABLED: "true"
-      SILKY_PYTHON_PROFILER: "true"
-      SILKY_MAX_REQUEST_BODY_SIZE: 128
-      SILKY_MAX_RESPONSE_BODY_SIZE: 128
-      SILKY_INTERCEPT_PERCENT: 1
+      PROFILING_ENABLED: null
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -169,9 +165,9 @@ services:
       - ./aether-kernel:/code
       # -------------------------------------------------------------
       # to speed up SDK development changes
-      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.8/site-packages/aether/sdk
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/var/run/aether/venv/lib/python3.8/site-packages/aether/sdk
       # to speed up Aether Python Library development changes
-      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.8/site-packages/aether/python
+      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/var/run/aether/venv/lib/python3.8/site-packages/aether/python
     command: start_dev
 
 
@@ -201,7 +197,7 @@ services:
     volumes:
       - ./aether-entity-extraction-module:/code
       # to speed up Aether Python Library development changes
-      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/usr/local/lib/python3.7/site-packages/aether/python
+      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/var/run/aether/venv/lib/python3.7/site-packages/aether/python
     command: start
 
 
@@ -277,7 +273,7 @@ services:
       - ./aether-odk-module:/code
       # -------------------------------------------------------------
       # to speed up SDK development changes
-      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.8/site-packages/aether/sdk
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/var/run/aether/venv/lib/python3.8/site-packages/aether/sdk
     command: start_dev
 
 
@@ -345,7 +341,7 @@ services:
       - ./aether-ui:/code
       # -------------------------------------------------------------
       # to speed up SDK development changes
-      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/usr/local/lib/python3.8/site-packages/aether/sdk
+      # - ${SDK_PATH:-../aether-django-sdk-library}/aether/sdk:/var/run/aether/venv/lib/python3.8/site-packages/aether/sdk
     command: start_dev
 
   ui-assets-base:
