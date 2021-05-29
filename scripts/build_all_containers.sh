@@ -21,12 +21,13 @@
 
 set -Eeuo pipefail
 
-source .env
 source ./scripts/_lib.sh
+
+create_credentials
+source .env
 
 containers=( kernel exm odk ui producer integration-test )
 
-create_credentials
 create_docker_assets
 build_client
 build_ui_assets

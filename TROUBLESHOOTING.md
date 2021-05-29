@@ -5,11 +5,11 @@ This is the list of most common problems and how to solve them.
 ## Docker issues
 
 Visit:
+
 - [docker command line reference](https://docs.docker.com/engine/reference/commandline/cli/)
 - [docker-compose command line reference](https://docs.docker.com/compose/reference/overview/)
 
 Sometimes helps.
-
 
 ### Run out of space
 
@@ -43,7 +43,6 @@ docker system prune --all --volumes --force
 docker-compose down --rmi all -v
 ```
 
-
 ### [UBUNTU] `ERROR: Couldn't connect to Docker daemon at http+docker://localunixsocket - is it running?`
 
 This happens because you don't have enough permissions to access the container
@@ -72,6 +71,7 @@ To set you as directories owner:
 ```bash
 sudo chown $USER: * -R
 ```
+
 Check again
 
 ```text
