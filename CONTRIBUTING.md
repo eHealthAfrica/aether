@@ -1,6 +1,6 @@
 # Introduction
 
-### You want to help out with Aether? Yay!
+## You want to help out with Aether? Yay!
 
 First off, thank you for considering contributing to Aether. It's people like you that make Aether *the* platform for data-driven humanitarian projects.
 
@@ -21,6 +21,7 @@ If you find a bug that you want to report, or a feature that you think Aether ne
 If you find a security vulnerability, do NOT open an issue. Email aether@ehealthafrica.org instead.
 
 In order to determine whether you are dealing with a security issue, ask yourself these two questions:
+
 - Can I access something that's not mine, or something I shouldn't have access to?
 - Can I disable something for other people?
 
@@ -31,9 +32,11 @@ When you file an issue, please ensure that you have answered every question in t
 ## Getting started with Aether development
 
 ### Fork and clone the repository
+
 You will need to fork the main Aether repository and clone it to your local machine. See [github help page](https://help.github.com/articles/fork-a-repo) for help.
 
 ### Submitting your changes
+
 Once your changes and tests are ready to submit for review:
 
 1. Test your changes
@@ -69,7 +72,3 @@ Examples of consumers that are in our roadmap are:
 - a DHIS2 consumer
 
 Consumers don’t live in the core Aether repo; the best thing you can do is to put your custom consumer into its own repo in your organisation. If however you think that your consumer would be useful for the wider Aether community, we’d love to discuss possibilities for how we can bring it into the Aether ecosystem.
-
-## This is step 1
-
-To get started, <a href="https://www.clahub.com/agreements/eHealthAfrica/aether">sign the Contributor License Agreement</a>.
