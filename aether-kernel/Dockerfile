@@ -20,8 +20,15 @@ ENTRYPOINT ["/code/entrypoint.sh"]
 ################################################################################
 
 COPY --chown=aether:aether ./conf/pip /code/conf/pip
-RUN pip install -q --upgrade pip && \
+
+ENV VIRTUAL_ENV=/var/run/aether/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN mkdir -p $VIRTUAL_ENV && \
+    python3 -m venv $VIRTUAL_ENV && \
+    pip install -q --upgrade pip && \
     pip install -q -r /code/conf/pip/requirements.txt
+
 COPY --chown=aether:aether ./ /code
 
 ################################################################################
