@@ -47,7 +47,6 @@
 
 - [Troubleshooting](/TROUBLESHOOTING.md)
 
-
 ## Setup
 
 ### Dependencies
@@ -60,7 +59,7 @@
 
 ### Installation
 
-##### Clone the repository
+#### Clone the repository
 
 ```bash
 git clone git@github.com:eHealthAfrica/aether.git && cd aether
@@ -88,6 +87,7 @@ Creates the keycloak database and the default realm+client along with the first 
 ```bash
 ./scripts/build_all_containers.sh && ./scripts/docker_start.sh
 ```
+
 or
 
 ```bash
@@ -109,7 +109,7 @@ for local development. Never deploy these to publicly accessible servers.
 
 If you want to use ODK Collect, you will need to configure Nginx to accept your IP address. To do this, add your IP address to `local-setup/nginx/sites-enabled/aether.conf`:
 
-```
+```text
 server {
   listen                    80;
   charset                   utf-8;
@@ -139,7 +139,7 @@ Also check the aether sdk section about [environment variables](https://github.c
 
 #### Generic
 
-> https://github.com/eHealthAfrica/aether-django-sdk-library#generic
+> <https://github.com/eHealthAfrica/aether-django-sdk-library#generic>
 
 - `DB_NAME` Database name (**mandatory**).
 - `DJANGO_SECRET_KEY`: Django secret key for this installation (**mandatory**).
@@ -149,7 +149,7 @@ Also check the aether sdk section about [environment variables](https://github.c
 - `LOGGING_FORMATTER`: `json`. The app messages format.
   Possible values: `verbose` or `json`.
 - `LOGGING_LEVEL`: `info` Logging level for app messages.
-  https://docs.python.org/3.8/library/logging.html#levels
+  <https://docs.python.org/3.8/library/logging.html#levels>
 
 - `DEBUG` Enables debug mode. Is `false` if unset or set to empty string,
   anything else is considered `true`.
@@ -158,7 +158,7 @@ Also check the aether sdk section about [environment variables](https://github.c
 
 #### Application specific
 
-> https://github.com/eHealthAfrica/aether-django-sdk-library#app-specific
+> <https://github.com/eHealthAfrica/aether-django-sdk-library#app-specific>
 
 - `APP_LINK`: `http://aether.ehealthafrica.org`. The link that appears in the DRF web pages.
 - `APP_NAME`: `aether`. The app name displayed in the web pages.
@@ -190,7 +190,7 @@ variables that set up the different authentication options.
 
 #### File Storage System
 
-> https://github.com/eHealthAfrica/aether-django-sdk-library#file-storage-system
+> <https://github.com/eHealthAfrica/aether-django-sdk-library#file-storage-system>
 
 Used on Kernel and ODK Module for media files and on the rest to upload static files
 to a CDN.
@@ -218,7 +218,7 @@ to a CDN.
 - `MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET`: Whether to create the bucket if it does not already exist.
 - `MINIO_STORAGE_MEDIA_USE_PRESIGNED`: Determines if the media file URLs should be pre-signed.
 
-See more in https://django-minio-storage.readthedocs.io/en/latest/usage
+See more in <https://django-minio-storage.readthedocs.io/en/latest/usage>
 
 ##### S3 (`DJANGO_STORAGE_BACKEND=s3`)
 
@@ -247,7 +247,7 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 
 #### Multi-tenancy
 
-> https://github.com/eHealthAfrica/aether-django-sdk-library#multi-tenancy
+> <https://github.com/eHealthAfrica/aether-django-sdk-library#multi-tenancy>
 
 The technical implementation is explained in
 [Multi-tenancy README](https://github.com/eHealthAfrica/aether-django-sdk-library/aether/common/multitenancy/README.md).
@@ -315,9 +315,8 @@ We have a couple of environment variables to tune it up:
     with UWSGI_, and dashes are substituted with underscores.*
   ](https://uwsgi-docs.readthedocs.io/en/latest/Configuration.html#environment-variables)
 
-https://uwsgi-docs.readthedocs.io/
-https://uwsgi-docs.readthedocs.io/en/latest/ThingsToKnow.html
-
+<https://uwsgi-docs.readthedocs.io/>
+<https://uwsgi-docs.readthedocs.io/en/latest/ThingsToKnow.html>
 
 *[Return to TOC](#table-of-contents)*
 
@@ -359,7 +358,7 @@ The default values for the export feature:
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 - `ODK_COLLECT_ENDPOINT`: the endpoint for all ODK collect urls.
   If it's `collect/` the submission url would be `http://my-server/collect/submission`
-  If it's blank ` ` the forms list url would be `http://my-server/formList`
+  If it's blank `` the forms list url would be `http://my-server/formList`
 
 *[Return to TOC](#table-of-contents)*
 
@@ -385,12 +384,12 @@ Start the indicated app/module with the necessary dependencies:
 
 Options:
 
-  - `--build` | `-b`   kill and build all containers before start
-  - `--clean` | `-c`   stop and remove all running containers and volumes before start
-  - `--force` | `-f`   ensure that the container will be restarted if needed
-  - `--kill`  | `-k`   kill all running containers before start
-  - `name` expected values: `kernel`, `odk`, `ui`.
-    Any other value will start all containers.
+- `--build` | `-b`   kill and build all containers before start
+- `--clean` | `-c`   stop and remove all running containers and volumes before start
+- `--force` | `-f`   ensure that the container will be restarted if needed
+- `--kill`  | `-k`   kill all running containers before start
+- `name` expected values: `kernel`, `odk`, `ui`.
+  Any other value will start all containers.
 
 This will start:
 
@@ -419,7 +418,7 @@ To start any container separately:
 
 ### Users & Authentication
 
-> https://github.com/eHealthAfrica/aether-django-sdk-library#users--authentication
+> <https://github.com/eHealthAfrica/aether-django-sdk-library#users--authentication>
 
 Set the `KEYCLOAK_SERVER_URL` and `KEYCLOAK_CLIENT_ID` environment variables if
 you want to use Keycloak as authentication server.
@@ -433,6 +432,7 @@ There are two ways of setting up keycloak:
 
 a) In this case the authentication process happens in the server side without
 any further user interaction.
+
 ```ini
 # .env file
 KEYCLOAK_SERVER_URL=http://aether.local/auth/realms
@@ -441,6 +441,7 @@ KEYCLOAK_BEHIND_SCENES=true
 
 b) In this case the user is redirected to the keycloak server to finish the
 sign in step.
+
 ```ini
 # .env file
 KEYCLOAK_SERVER_URL=http://aether.local/auth/realms
@@ -485,7 +486,7 @@ but not necessarily to an admin user.
 
 #### Gateway Authentication
 
-> https://github.com/eHealthAfrica/aether-django-sdk-library#gateway-authentication
+> <https://github.com/eHealthAfrica/aether-django-sdk-library#gateway-authentication>
 
 Set `GATEWAY_SERVICE_ID` to enable gateway authentication with keycloak.
 This means that the authentication is handled by a third party system
@@ -498,8 +499,8 @@ In this case the app urls can be reached in several ways:
 
 Trying to access the health endpoint `/health`:
 
-- http://kernel:8100/health using the internal url
-- http://aether.local/my-realm/kernel/health using the gateway url
+- <http://kernel:8100/health> using the internal url
+- <http://aether.local/my-realm/kernel/health> using the gateway url
 
 For those endpoints that don't depend on the realm and must also be available
 "unprotected" we need one more environment variable:
@@ -511,8 +512,8 @@ For those endpoints that don't depend on the realm and must also be available
 The authorization and admin endpoints don't depend on any realm so the final urls
 use the public realm.
 
-- http://aether.local/-/odk/accounts/
-- http://aether.local/-/kernel/admin/
+- <http://aether.local/-/odk/accounts/>
+- <http://aether.local/-/kernel/admin/>
 
 *[Return to TOC](#table-of-contents)*
 
@@ -606,7 +607,8 @@ The header has a special format that includes a type, a scope, and a subject:
 <footer>
 ```
 
-#### Types of commit messages:
+#### Types of commit messages
+
 - *build*: Changes that affect the build system or external dependencies
 - *ci*: Changes to CI configuration files and scripts
 - *docs*: Documentation only changes
@@ -618,15 +620,19 @@ The header has a special format that includes a type, a scope, and a subject:
 - *test*: Adding missing tests or correcting existing tests
 
 #### Scope
+
 The candidates for scope depends on the project and the technologies being used. It is fairly up to the developer to select a scope.
 
 #### Subject
+
 The subject contains a succinct description of the change:
+
 - use the imperative, present tense: “change” not “changed” nor “changes”
 - don’t capitalize the first letter
 - no dot/period (.) at the end
 
 #### Footer (Optional)
+
 Footer is used for citing issues that this commit closes (if any).
 
 *[Return to TOC](#table-of-contents)*
@@ -686,7 +692,6 @@ This also applies for `aether-ui`.
 
 The list of the main containers:
 
-
 | Container         | Description                                                             |
 | ----------------- | ----------------------------------------------------------------------- |
 | db                | [PostgreSQL](https://www.postgresql.org/) database                      |
@@ -697,7 +702,6 @@ The list of the main containers:
 | **odk**           | Aether ODK module (imports data from ODK Collect)                       |
 | **ui**            | Aether Kernel UI (advanced mapping functionality)                       |
 | **ui-assets**     | Auxiliary service to develop Aether Kernel UI assets                    |
-
 
 All of the containers definition for development can be found in the
 [docker-compose-base.yml](docker-compose-base.yml) file.
@@ -730,12 +734,13 @@ or making sure that all the requirements are up to date:
 ```
 
 To execute tests in just one container:
-  - `kernel`
-  - `client`
-  - `ui`
-  - `odk`
-  - `producer`
-  - `integration`
+
+- `kernel`
+- `client`
+- `ui`
+- `odk`
+- `producer`
+- `integration`
 
 ```bash
 ./scripts/test_container.sh <container-name>
@@ -769,7 +774,7 @@ Before running `odk` or `ui` you should start the needed test containers.
 docker-compose -f docker-compose-test.yml up -d <container-name>-test
 ```
 
-**WARNING**
+> **WARNING**
 
 Never run `odk` or `ui` tests against any PRODUCTION server.
 The tests clean up would **DELETE ALL PROJECTS!!!**
