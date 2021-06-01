@@ -46,7 +46,7 @@ six==1.15.0
 spavro==1.1.23
 SQLAlchemy==1.4.7
 toml==0.10.2
-urllib3==1.26.4
+urllib3==1.26.5
 Werkzeug==1.0.1
 zope.event==4.5.0
 zope.interface==5.4.0
