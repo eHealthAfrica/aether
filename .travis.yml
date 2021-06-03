@@ -1,8 +1,6 @@
 os: linux
 dist: bionic
-language: python
-python:
-  - '3.7'
+language: shell
 services:
   - docker
 
@@ -14,6 +12,13 @@ branches:
     - /^release\-[0-9]+\.[0-9]+$/
     - /^[0-9]+(\.[0-9]+){2}$/
 
+# https://www.docker.com/increase-rate-limits
+# https://docs.docker.com/docker-hub/download-rate-limit/#how-do-i-authenticate-pull-requests
+before_script: docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+
+script: ./scripts/test_travis.sh $TEST_MODE
+
+after_failure: ./scripts/test_travis_failure.sh ${TEST_MODE:-}
 
 # use matrix to parallelize tests
 jobs:
@@ -48,11 +53,3 @@ jobs:
         ((branch = develop) OR \
         (branch =~ ^release\-[0-9]+\.[0-9]+$) OR \
         (tag =~ ^[0-9]+(\.[0-9]+){2}$))
-
-install: true
-
-script:
-  - ./scripts/test_travis.sh $TEST_MODE
-
-after_failure:
-  - ./scripts/test_travis_failure.sh ${TEST_MODE:-}
