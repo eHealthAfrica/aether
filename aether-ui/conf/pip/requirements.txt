@@ -83,5 +83,5 @@ SQLAlchemy==1.4.7
 sqlparse==0.4.1
 tblib==1.7.0
 toml==0.10.2
-urllib3==1.26.4
+urllib3==1.26.5
 uWSGI==2.0.19.1
