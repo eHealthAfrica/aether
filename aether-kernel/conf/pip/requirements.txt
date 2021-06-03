@@ -105,5 +105,5 @@ sqlparse==0.4.1
 tblib==1.7.0
 toml==0.10.2
 uritemplate==3.0.1
-urllib3==1.26.4
+urllib3==1.26.5
 uWSGI==2.0.19.1
