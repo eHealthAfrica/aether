@@ -70,6 +70,54 @@ class TestFilters(TestCase):
         response = json.loads(self.client.get(url, kwargs).content)
         self.assertEqual(response['count'], inactive_count)
 
+    def test_schemadecorator_filter__active(self):
+        url = reverse(viewname='schemadecorator-list')
+        # Generate projects.
+        for _ in range(random.randint(2, 4)):
+            generate_project(project_field_values={'active': True})
+        for _ in range(random.randint(2, 4)):
+            generate_project(project_field_values={'active': False})
+
+        sd_count = models.SchemaDecorator.objects.count()
+
+        # active
+        active_count = models.SchemaDecorator.objects.filter(project__active=True).count()
+        self.assertTrue(active_count > 0)
+        kwargs = {'active': True, 'fields': 'id', 'page_size': sd_count}
+        response = json.loads(self.client.get(url, kwargs).content)
+        self.assertEqual(response['count'], active_count)
+
+        # inactive
+        inactive_count = models.SchemaDecorator.objects.filter(project__active=False).count()
+        self.assertTrue(inactive_count > 0)
+        kwargs = {'active': False, 'fields': 'id', 'page_size': sd_count}
+        response = json.loads(self.client.get(url, kwargs).content)
+        self.assertEqual(response['count'], inactive_count)
+
+    def test_entity_filter__active(self):
+        url = reverse(viewname='entity-list')
+        # Generate projects.
+        for _ in range(random.randint(2, 4)):
+            generate_project(project_field_values={'active': True})
+        for _ in range(random.randint(2, 4)):
+            generate_project(project_field_values={'active': False})
+
+        entities_count = models.Entity.objects.count()
+
+        # active
+        active_count = models.Entity.objects.filter(project__active=True).count()
+        self.assertTrue(active_count > 0)
+        kwargs = {'active': True, 'fields': 'id', 'page_size': entities_count}
+        response = json.loads(self.client.get(url, kwargs).content)
+        self.assertEqual(response['count'], active_count)
+
+        # inactive
+        inactive_count = models.Entity.objects.filter(project__active=False).count()
+        self.assertTrue(inactive_count > 0)
+        kwargs = {'active': False, 'fields': 'id', 'page_size': entities_count}
+        response = json.loads(self.client.get(url, kwargs).content)
+        self.assertEqual(response['count'], inactive_count)
+
     def test_project_filter__by_schema(self):
         url = reverse(viewname='project-list')
         # Generate projects.
