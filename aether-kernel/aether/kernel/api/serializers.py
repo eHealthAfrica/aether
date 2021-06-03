@@ -59,7 +59,8 @@ class KernelBaseSerializer(DynamicFieldsSerializer):
     '''
     id = serializers.UUIDField(required=False, default=uuid.uuid4)
     revision = serializers.CharField(required=False, default='1')
-    modified = serializers.CharField(read_only=True)
+    created = serializers.DateTimeField(read_only=True)
+    modified = serializers.DateTimeField(read_only=True)
 
     @property
     def _readable_fields(self):
@@ -272,6 +273,8 @@ class EntityListSerializer(serializers.ListSerializer):
 
 
 class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
+
+    modified = serializers.CharField(read_only=True)
     payload = serializers.JSONField()
     status = serializers.ChoiceField(choices=models.ENTITY_STATUS_CHOICES)
     mapping_revision = serializers.CharField(read_only=True)
