@@ -11,7 +11,9 @@ RUN mkdir -p /var/tmp && \
     echo $GIT_REVISION > /var/tmp/REVISION
 
 COPY ./package.json /code/package.json
-RUN npm install -q -g npm && npm install -q
+RUN apk add -q --no-cache --update bash && \
+    npm install -s --no-audit --no-fund --no-package-lock && \
+    npm cache clean --force
 ENV PATH /code/node_modules/.bin:$PATH
 
 WORKDIR /code/assets

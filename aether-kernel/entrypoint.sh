@@ -51,14 +51,17 @@ function show_help {
 }
 
 function pip_freeze {
-    pip install -q virtualenv
-    rm -rf /tmp/env
+    local VENV=/tmp/env
+    rm -rf ${VENV}
+    mkdir -p ${VENV}
+    python3 -m venv ${VENV}
 
-    virtualenv -p python3 /tmp/env/
-    /tmp/env/bin/pip install -q -r ./conf/pip/primary-requirements.txt --upgrade
+    ${VENV}/bin/pip install -q \
+        -r ./conf/pip/primary-requirements.txt \
+        --upgrade
 
-    cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-    /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+    cat conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
+    ${VENV}/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
 function backup_db {
@@ -141,7 +144,7 @@ function test_lint {
 }
 
 function test_coverage {
-    rm -R /code/.coverage* 2>/dev/null || true
+    coverage erase || true
 
     coverage run \
         manage.py test \
