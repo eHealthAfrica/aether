@@ -42,4 +42,4 @@ export STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
 # set default values
 export UWSGI_INI=${UWSGI_INI:-/code/conf/uwsgi/config.ini}
 
-/usr/local/bin/uwsgi --stats :1717 --stats-http
+uwsgi --stats :1717 --stats-http

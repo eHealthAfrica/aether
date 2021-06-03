@@ -23,7 +23,8 @@ COPY --from=app_resource /tmp/resources/. /var/tmp/
 ## copy source code
 COPY ./aether-ui/aether/ui/assets/ /assets/
 ## build react app
-RUN npm install -q && npm run build
+RUN npm install -s --no-audit --no-fund --no-package-lock && \
+    npm run build
 
 
 ################################################################################
@@ -47,7 +48,12 @@ RUN /tmp/setup.sh
 COPY --chown=aether:aether ./aether-ui/ /code
 
 ## install dependencies
-RUN pip install -q --upgrade pip && \
+ENV VIRTUAL_ENV=/var/run/aether/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN mkdir -p $VIRTUAL_ENV && \
+    python3 -m venv $VIRTUAL_ENV && \
+    pip install -q --upgrade pip && \
     pip install -q -r /code/conf/pip/requirements.txt
 
 ## copy react app

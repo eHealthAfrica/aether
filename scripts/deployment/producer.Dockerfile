@@ -37,7 +37,12 @@ RUN apt-get update -qq && \
 COPY --chown=aether:aether ./aether-producer/ /code
 
 ## install dependencies
-RUN pip install -q --upgrade pip && \
+ENV VIRTUAL_ENV=/var/run/aether/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN mkdir -p $VIRTUAL_ENV && \
+    python3 -m venv $VIRTUAL_ENV && \
+    pip install -q --upgrade pip && \
     pip install -q -r /code/conf/pip/requirements.txt
 
 ## copy application version and revision

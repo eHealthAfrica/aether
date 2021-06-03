@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #

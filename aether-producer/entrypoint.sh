@@ -39,6 +39,20 @@ function show_help {
     """
 }
 
+function pip_freeze {
+    local VENV=/tmp/env
+    rm -rf ${VENV}
+    mkdir -p ${VENV}
+    python3 -m venv ${VENV}
+
+    ${VENV}/bin/pip install -q \
+        -r ./conf/pip/primary-requirements.txt \
+        --upgrade
+
+    cat conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
+    ${VENV}/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+}
+
 function test_flake8 {
     flake8
 }
@@ -78,14 +92,7 @@ case "$1" in
     ;;
 
     pip_freeze )
-        pip install -q virtualenv
-        rm -rf /tmp/env
-
-        virtualenv -p python3 /tmp/env/
-        /tmp/env/bin/pip install -q -r ./conf/pip/primary-requirements.txt --upgrade
-
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+        pip_freeze
     ;;
 
     start )
