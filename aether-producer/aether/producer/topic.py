@@ -129,13 +129,13 @@ class RealmManager(object):
         topic_objects = []
         if not topics:
             topics = [topic]
+
+        topic_config = SETTINGS.get('kafka_settings', {}).get('default.topic.config')
+        partitions = int(SETTINGS.get('kafka_default_topic_partitions', 1))
+        replicas = int(SETTINGS.get('kafka_default_topic_replicas', 1))
+
         for t in topics:
             logger.debug(f'Trying to create topic {t}')
-
-            kadmin = self.context.kafka_admin_client
-            topic_config = SETTINGS.get('kafka_settings', {}).get('default.topic.config')
-            partitions = int(SETTINGS.get('kafka_default_topic_partitions', 1))
-            replicas = int(SETTINGS.get('kafka_default_topic_replicas', 1))
             topic_objects.append(
                 NewTopic(
                     t,
@@ -144,6 +144,8 @@ class RealmManager(object):
                     config=topic_config,
                 )
             )
+
+        kadmin = self.context.kafka_admin_client
         kadmin.create_topics(topic_objects)
 
     def get_producer(self):
@@ -184,7 +186,7 @@ class RealmManager(object):
 
     def rebuild(self, sw: SchemaWrapper):
         # API Call
-        logger.warn(f'Topic {sw.name} is being REBUIT!')
+        logger.warn(f'Topic {sw.name} is being REBUILT!')
         # kick off rebuild process
         _fn = self._make_rebuild_process(sw)
         self.context.threads.append(gevent.spawn(_fn))

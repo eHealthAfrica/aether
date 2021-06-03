@@ -161,6 +161,9 @@ class SchemaFilter(filters.FilterSet):
 
 
 class SchemaDecoratorFilter(filters.FilterSet):
+    active = filters.BooleanFilter(
+        field_name='project__active',
+    )
     mapping = filters.CharFilter(
         method='mapping_filter',
     )
@@ -177,6 +180,9 @@ class SchemaDecoratorFilter(filters.FilterSet):
 
 
 class EntityFilter(filters.FilterSet):
+    active = filters.BooleanFilter(
+        field_name='project__active',
+    )
     schema = filters.CharFilter(
         method='schema_filter',
     )
