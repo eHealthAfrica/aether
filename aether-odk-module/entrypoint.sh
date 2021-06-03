@@ -145,7 +145,7 @@ function test_lint {
 }
 
 function test_coverage {
-    rm -R /code/.coverage* 2>/dev/null || true
+    coverage erase || true
 
     coverage run \
         manage.py test \

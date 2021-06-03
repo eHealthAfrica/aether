@@ -43,6 +43,7 @@ _SCHEMAS_URL = (
     'schemadecorators.json?'
     '&page_size={page_size}'
     '&fields=id,schema,schema_name,schema_definition'
+    '&active=true'
 )
 _ENTITIES_SINGLE_URL = (
     f'{_KERNEL_URL}/'
@@ -50,6 +51,7 @@ _ENTITIES_SINGLE_URL = (
     '&page_size={page_size}'
     '&fields=id,modified,payload,schema'
     '&ordering=modified'
+    '&active=true'
     '&modified__gt={modified}'
     '&schema={schema}'
 )
@@ -59,6 +61,7 @@ _ENTITIES_ALL_URL = (
     '&page_size={page_size}'
     '&fields=id,modified,payload,schema'
     '&ordering=modified'
+    '&active=true'
     '&modified__gt={modified}'
 )
 

@@ -5,6 +5,7 @@ ENTRYPOINT ["/code/assets/conf/entrypoint.sh"]
 
 ARG VERSION=0.0.0
 ARG GIT_REVISION
+ENV PATH /code/node_modules/.bin:$PATH
 
 RUN mkdir -p /var/tmp && \
     echo $VERSION > /var/tmp/VERSION && \
@@ -14,7 +15,6 @@ COPY ./package.json /code/package.json
 RUN apk add -q --no-cache --update bash && \
     npm install -s --no-audit --no-fund --no-package-lock && \
     npm cache clean --force
-ENV PATH /code/node_modules/.bin:$PATH
 
 WORKDIR /code/assets
 COPY ./ /code/assets

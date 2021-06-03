@@ -23,7 +23,7 @@ services:
   # ---------------------------------
 
   postgres-base:
-    image: postgres:10-alpine
+    image: postgres:13-alpine
     environment:
       PGUSER: postgres
       POSTGRES_HOST_AUTH_METHOD: trust
@@ -161,6 +161,8 @@ services:
       WRITE_ENTITIES_TO_REDIS: ${WRITE_ENTITIES_TO_REDIS}
 
       WEB_SERVER_PORT: 8100
+
+      PYTHONPYCACHEPREFIX: "/var/tmp/cache/cpython/"
     volumes:
       - ./aether-kernel:/code
       # -------------------------------------------------------------
@@ -194,6 +196,8 @@ services:
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
+
+      PYTHONPYCACHEPREFIX: "/var/tmp/cache/cpython/"
     volumes:
       - ./aether-entity-extraction-module:/code
       # to speed up Aether Python Library development changes
@@ -269,6 +273,8 @@ services:
       REDIS_DB_SESSION: 7
 
       WEB_SERVER_PORT: 8102
+
+      PYTHONPYCACHEPREFIX: "/var/tmp/cache/cpython/"
     volumes:
       - ./aether-odk-module:/code
       # -------------------------------------------------------------
@@ -337,6 +343,8 @@ services:
       WEBPACK_STATS_FILE: /code/aether/ui/assets/bundles/webpack-stats.json
 
       WEB_SERVER_PORT: 8104
+
+      PYTHONPYCACHEPREFIX: "/var/tmp/cache/cpython/"
     volumes:
       - ./aether-ui:/code
       # -------------------------------------------------------------
@@ -359,13 +367,13 @@ services:
   # ---------------------------------
 
   zookeeper-base:
-    image: confluentinc/cp-zookeeper:5.5.3
+    image: confluentinc/cp-zookeeper:6.1.1
     environment:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka-base:
-    image: confluentinc/cp-kafka:5.5.3
+    image: confluentinc/cp-kafka:6.1.1
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
@@ -406,6 +414,8 @@ services:
       OFFSET_DB_PORT: 5432
       OFFSET_DB_PASSWORD: ${PRODUCER_DB_PASSWORD}
       OFFSET_DB_NAME: producer_offset_db
+
+      PYTHONPYCACHEPREFIX: "/var/tmp/cache/cpython/"
     volumes:
       - ./aether-producer:/code
     command: start

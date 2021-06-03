@@ -50,7 +50,8 @@ def get_project_artefacts(project, include_submissions=False):
 
     if include_submissions:
         results['submissions'] = set()
-        for submission in Submission.objects.filter(project=project):
+        # send only the first 50 submissions
+        for submission in Submission.objects.filter(project=project)[:50]:
             results['submissions'].add(str(submission.pk))
 
     return results

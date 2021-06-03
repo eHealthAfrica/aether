@@ -19,6 +19,7 @@
 # under the License.
 
 import uuid
+
 from datetime import datetime
 from hashlib import md5
 
@@ -31,6 +32,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
+from aether.sdk.drf.fields import AetherJSONField
 from aether.sdk.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.sdk.utils import json_prettified, get_file_content
 
@@ -62,12 +64,12 @@ Data model schema:
 +==================+       +==================+       +==================+       +=====================+
 | Base fields      |<---+  | Base fields      |<---+  | Base fields      |<---+  | Base fields         |
 | active           |    |  | input            |    |  | payload          |    |  | attachment_file     |
-| salad_schema     |    |  | schema           |    |  | is_extracted     |    |  | md5sum              |
-| jsonld_context   |    |  +::::::::::::::::::+    |  +::::::::::::::::::+    |  +:::::::::::::::::::::+
-| rdf_definition   |    +-<| project          |    +-<| mappingset       |    +-<| submission          |
-+::::::::::::::::::+    |  +------------------+    |  | project(**)      |    |  | submission_revision |
-| organizations(*) |    |                          |  +------------------+    |  +---------------------+
-+------------------+    |                          |                          |
++::::::::::::::::::+    |  | schema           |    |  | is_extracted     |    |  | md5sum              |
+| organizations(*) |    |  +::::::::::::::::::+    |  +::::::::::::::::::+    |  +:::::::::::::::::::::+
++------------------+    +-<| project          |    +-<| mappingset       |    +-<| submission          |
+                        |  +------------------+    |  | project(**)      |    |  | submission_revision |
+                        |                          |  +------------------+    |  +---------------------+
+                        |                          |                          |
                         |                          |                          |
 +------------------+    |  +------------------+    |  +------------------+    |  +------------------+
 | Schema           |    |  | SchemaDecorator  |    |  | Mapping          |    |  | Entity           |
@@ -121,46 +123,10 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
     .. note:: Extends from :class:`aether.sdk.multitenancy.models.MultitenancyBaseAbstract`
 
     :ivar bool      active:          Active. Defaults to ``True``.
-    :ivar text      salad_schema:    Salad schema (optional).
-        Semantic Annotations for Linked Avro Data (SALAD)
-        https://www.commonwl.org/draft-3/SchemaSalad.html
-    :ivar text      jsonld_context:  JSON LS context (optional).
-        JSON for Linking Data
-        https://json-ld.org/
-    :ivar text      rdf_definition:  RDF definition (optional).
-        Resource Description Framework
-        https://www.w3.org/TR/rdf-schema/
 
     '''
 
     active = models.BooleanField(default=True, verbose_name=_('active'))
-    salad_schema = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_('salad schema'),
-        help_text=_(
-            'Semantic Annotations for Linked Avro Data (SALAD)  '
-            'https://www.commonwl.org/draft-3/SchemaSalad.html'
-        ),
-    )
-    jsonld_context = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_('JSON LD context'),
-        help_text=_(
-            'JSON for Linking Data  '
-            'https://json-ld.org/'
-        ),
-    )
-    rdf_definition = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name=_('RDF definition'),
-        help_text=_(
-            'Resource Description Framework  '
-            'https://www.w3.org/TR/rdf-schema/'
-        ),
-    )
 
     def save(self, *args, **kwargs):
         super(Project, self).save(*args, **kwargs)
@@ -214,13 +180,13 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
 
     '''
 
-    schema = models.JSONField(
+    schema = AetherJSONField(
         null=True,
         blank=True,
         validators=[wrapper_validate_schema_input_definition],
         verbose_name=_('AVRO schema'),
     )
-    input = models.JSONField(null=True, blank=True, verbose_name=_('input sample'))
+    input = AetherJSONField(null=True, blank=True, verbose_name=_('input sample'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
 
@@ -284,7 +250,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     '''
 
-    payload = models.JSONField(verbose_name=_('payload'))
+    payload = AetherJSONField(verbose_name=_('payload'))
 
     mappingset = models.ForeignKey(
         to=MappingSet,
@@ -434,7 +400,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
 
     name = models.TextField(unique=True, verbose_name=_('name'))
     type = models.TextField(default=NAMESPACE, verbose_name=_('schema type'))
-    definition = models.JSONField(validators=[wrapper_validate_schema_definition], verbose_name=_('AVRO schema'))
+    definition = AetherJSONField(validators=[wrapper_validate_schema_definition], verbose_name=_('AVRO schema'))
 
     # this field is used to group different schemas created automatically
     # from different sources but that share a common structure
@@ -489,7 +455,7 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
     transport_rule = models.TextField(null=True, blank=True, verbose_name=_('transport rule'))
     masked_fields = models.TextField(null=True, blank=True, verbose_name=_('masked fields'))
     is_encrypted = models.BooleanField(default=False, verbose_name=_('encrypted?'))
-    topic = models.JSONField(null=True, blank=True, verbose_name=_('topic'))
+    topic = AetherJSONField(null=True, blank=True, verbose_name=_('topic'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
@@ -541,7 +507,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
     '''
 
-    definition = models.JSONField(
+    definition = AetherJSONField(
         validators=[wrapper_validate_mapping_definition],
         verbose_name=_('mapping rules'),
     )
@@ -633,7 +599,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     modified = models.CharField(max_length=100, editable=False, verbose_name=_('modified'))
 
-    payload = models.JSONField(verbose_name=_('payload'))
+    payload = AetherJSONField(verbose_name=_('payload'))
     status = models.CharField(max_length=20, choices=ENTITY_STATUS_CHOICES, verbose_name=_('status'))
 
     submission = models.ForeignKey(
@@ -803,7 +769,7 @@ class ExportTask(ExportModelOperationsMixin('kernel_exporttask'), ProjectChildAb
         to=get_user_model(),
         verbose_name=_('Requested by'),
     )
-    settings = models.JSONField(
+    settings = AetherJSONField(
         default=dict,
         editable=False,
         verbose_name=_('settings'),
