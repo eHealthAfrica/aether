@@ -165,7 +165,7 @@ Also check the aether sdk section about [environment variables](https://github.c
 - `APP_URL`, `/`. The app url in the server.
 
 If host is `http://my-server.org` and the app url is `/my-module`,
-the app enpoints will be accessible at `http://my-server.org/my-module/...`.
+the app endpoints will be accessible at `http://my-server.org/my-module/...`.
 
 ```nginx
 # one NGINX ini file for all modules
@@ -323,7 +323,7 @@ We have a couple of environment variables to tune it up:
 #### Aether generic
 
 - `ADMIN_USERNAME`: `admin` The setup scripts create an initial admin user for the app.
-- `ADMIN_PASSWORD`: `secresecret`.
+- `ADMIN_PASSWORD`: `secretsecret`.
 - `ADMIN_TOKEN`: `admin_user_auth_token` Used to connect from other modules.
 - `WEB_SERVER_PORT` Web server port for the app.
 
