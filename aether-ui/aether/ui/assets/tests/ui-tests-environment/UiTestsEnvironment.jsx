@@ -25,8 +25,6 @@
 
 const JSDOMEnvironment = require('jest-environment-jsdom')
 const fetch = require('node-fetch')
-const $ = require('jquery')
-const popper = require('popper.js')
 
 const testURL = 'http://localhost'
 
@@ -52,11 +50,6 @@ class UiTestsEnvironment extends JSDOMEnvironment {
     this.global.window.fetch = (url, opts) => (
       fetch(url.indexOf('/') === 0 ? testURL + url : url, opts)
     )
-
-    // include global variables
-    this.global.window.$ = $(this.global.window)
-    this.global.window.jQuery = this.global.window.$
-    this.global.window.Popper = popper
   }
 
   async teardown () {

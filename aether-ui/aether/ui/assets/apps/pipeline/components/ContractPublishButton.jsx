@@ -153,7 +153,7 @@ const ContractPublishButton = ({
           {/* Executing a request */}
           {
             !publishSuccess && !publishError && !publishState &&
-              <i className='ml-5 fa fa-cog fa-spin' />
+              <i className='ms-5 fas fa-cog fa-spin' />
           }
         </label>
 

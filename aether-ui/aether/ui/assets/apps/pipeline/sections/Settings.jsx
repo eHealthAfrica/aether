@@ -139,7 +139,7 @@ const Settings = ({
               <button
                 data-test='settings.save.button'
                 type='button'
-                className='btn btn-d btn-primary btn-big ml-4'
+                className='btn btn-d btn-primary btn-big ms-4'
                 onClick={() => { handlePreSave() }}
               >
                 <span className='details-title'>

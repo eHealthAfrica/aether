@@ -70,7 +70,7 @@ const DeleteStatus = ({
               id='delete.modal.status.head-1'
               defaultMessage='Deleting kernel artefacts...'
             />
-            <i className='ml-5 fa fa-cog fa-spin' />
+            <i className='ms-5 fas fa-cog fa-spin' />
           </label>
         )
       }
@@ -89,11 +89,11 @@ const DeleteStatus = ({
                 defaultMessage='Entities deleted'
               />
             </label>
-            <div className='ml-5'>
+            <div className='ms-5'>
               {
                 deleteStatus.entities.schemas.map(schema => (
                   <div key={schema.name}>
-                    <i className='fa fa-check mr-2' />
+                    <i className='fas fa-check me-2' />
                     <label>
                       {schema.name} : {schema.count}
                     </label>
@@ -118,11 +118,11 @@ const DeleteStatus = ({
                 defaultMessage='Entity types deleted'
               />
             </label>
-            <div className='ml-5'>
+            <div className='ms-5'>
               {
                 Object.keys(deleteStatus.schemas).map(schema => (
                   <div key={schema}>
-                    <i className='fa fa-check mr-2' />
+                    <i className='fas fa-check me-2' />
                     <label>
                       {schema} :
                       {

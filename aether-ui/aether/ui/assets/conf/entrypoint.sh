@@ -28,7 +28,7 @@ function show_help {
     eval          : eval shell command
 
     test          : run ALL tests
-    test_lint     : run standardjs and sass lint tests
+    test_lint     : run js and sass lint tests
     test_js       : run js tests with enzyme and jest
 
     build         : create distributed assets

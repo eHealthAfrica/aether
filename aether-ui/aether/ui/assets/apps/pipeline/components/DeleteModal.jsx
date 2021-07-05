@@ -92,7 +92,7 @@ const DeleteModal = ({ onClose, onDelete, obj, objectType }) => {
       </label>
       {
         objectType === 'pipeline' &&
-          <div className='check-default ml-4'>
+          <div className='check-default ms-4'>
             <input
               type='checkbox'
               id='check1'
@@ -110,7 +110,7 @@ const DeleteModal = ({ onClose, onDelete, obj, objectType }) => {
             </label>
           </div>
       }
-      <div className='check-default ml-4'>
+      <div className='check-default ms-4'>
         <input
           type='checkbox'
           id='check2'
@@ -127,7 +127,7 @@ const DeleteModal = ({ onClose, onDelete, obj, objectType }) => {
           />
         </label>
       </div>
-      <div className='check-default ml-4 check-indent'>
+      <div className='check-default ms-4 check-indent'>
         <input
           type='checkbox'
           id='check3'

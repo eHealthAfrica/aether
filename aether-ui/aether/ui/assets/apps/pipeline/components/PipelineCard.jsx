@@ -69,7 +69,7 @@ const PipelineCard = ({ pipeline, selectPipeline }) => {
           <span className='input-name'>
             {name} {mappingset && (
               <i
-                className='ml-1 fas fa-info-circle published-info-icon'
+                className='ms-1 fas fa-info-circle published-info-icon'
                 onClick={(event) => {
                   event.stopPropagation()
                   setShowInfo(true)

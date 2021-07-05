@@ -33,7 +33,7 @@ const PipelineOptions = ({ pipeline }) => {
       <>
         <button
           type='button'
-          className='btn btn-c btn-square mr-2'
+          className='btn btn-c btn-square me-2'
           onClick={() => { setShowOptions(!showOptions) }}
         >
           <span className='details-title'>
