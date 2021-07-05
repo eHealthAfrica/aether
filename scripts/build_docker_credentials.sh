@@ -69,9 +69,10 @@ cat << EOF
 # ------------------------------------------------------------------
 # Authentication
 # ==================================================================
+KEYCLOAK_VERSION=12.0.4
 KEYCLOAK_BEHIND_SCENES=
 KEYCLOAK_SERVER_URL=http://aether.local/auth/realms
-KEYCLOAK_ADMIN_USERNAME=admin
+KEYCLOAK_ADMIN_USERNAME=keycloak
 KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
 KEYCLOAK_DB_PASSWORD=$(gen_random_string)
 KEYCLOAK_AETHER_CLIENT=aether-client
@@ -141,6 +142,7 @@ UI_DB_PASSWORD=$(gen_random_string)
 PRODUCER_ADMIN_USER=admin
 PRODUCER_ADMIN_PW=$(gen_random_string)
 PRODUCER_DB_PASSWORD=$(gen_random_string)
+CONFLUENTINC_VERSION=latest
 # ------------------------------------------------------------------
 
 
@@ -156,6 +158,9 @@ CLIENT_REALM=test
 # ------------------------------------------------------------------
 # Other
 # ==================================================================
+ENABLE_CACHE=true
+ENABLE_DB_POOL=
+ENABLE_PROFILING=
 LOGGING_LEVEL=INFO
 
 # set to 1 to disable parallel execution
