@@ -75,7 +75,7 @@ services:
     command: minio server --quiet --address minio:9090 /data
 
   keycloak-base:
-    image: jboss/keycloak:latest
+    image: jboss/keycloak:${KEYCLOAK_VERSION:-latest}
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: db
@@ -102,7 +102,7 @@ services:
       LOGGING_FORMATTER: verbose
       LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
-      PROFILING_ENABLED: null
+      PROFILING_ENABLED: ${ENABLE_PROFILING}
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -135,12 +135,12 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
-      ENABLE_CONNECTION_POOL: "true"
-      DB_POOL_INTERNAL: "true"
+      ENABLE_CONNECTION_POOL: ${ENABLE_DB_POOL}
+      DB_POOL_INTERNAL: ${ENABLE_DB_POOL}
 
-      DJANGO_USE_CACHE: "true"
-      REDIS_DJANGO_CACHE: "true"
-      REDIS_SESSION_CACHE: "true"
+      DJANGO_USE_CACHE: ${ENABLE_CACHE}
+      REDIS_DJANGO_CACHE: ${ENABLE_CACHE}
+      REDIS_SESSION_CACHE: ${ENABLE_CACHE}
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
@@ -220,7 +220,7 @@ services:
       LOGGING_FORMATTER: verbose
       LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
-      PROFILING_ENABLED: null
+      PROFILING_ENABLED: ${ENABLE_PROFILING}
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -257,12 +257,12 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
-      ENABLE_CONNECTION_POOL: "true"
-      DB_POOL_INTERNAL: "true"
+      ENABLE_CONNECTION_POOL: ${ENABLE_DB_POOL}
+      DB_POOL_INTERNAL: ${ENABLE_DB_POOL}
 
-      DJANGO_USE_CACHE: "true"
-      REDIS_DJANGO_CACHE: "true"
-      REDIS_SESSION_CACHE: "true"
+      DJANGO_USE_CACHE: ${ENABLE_CACHE}
+      REDIS_DJANGO_CACHE: ${ENABLE_CACHE}
+      REDIS_SESSION_CACHE: ${ENABLE_CACHE}
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
@@ -298,7 +298,7 @@ services:
       LOGGING_FORMATTER: verbose
       LOGGING_LEVEL: ${LOGGING_LEVEL:-ERROR}
       HTML_SELECT_CUTOFF: 10
-      PROFILING_ENABLED: null
+      PROFILING_ENABLED: ${ENABLE_PROFILING}
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
@@ -324,12 +324,12 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
-      ENABLE_CONNECTION_POOL: "true"
-      DB_POOL_INTERNAL: "true"
+      ENABLE_CONNECTION_POOL: ${ENABLE_DB_POOL}
+      DB_POOL_INTERNAL: ${ENABLE_DB_POOL}
 
-      DJANGO_USE_CACHE: "true"
-      REDIS_DJANGO_CACHE: "true"
-      REDIS_SESSION_CACHE: "true"
+      DJANGO_USE_CACHE: ${ENABLE_CACHE}
+      REDIS_DJANGO_CACHE: ${ENABLE_CACHE}
+      REDIS_SESSION_CACHE: ${ENABLE_CACHE}
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
@@ -367,13 +367,13 @@ services:
   # ---------------------------------
 
   zookeeper-base:
-    image: confluentinc/cp-zookeeper:6.1.1
+    image: confluentinc/cp-zookeeper:${CONFLUENTINC_VERSION:-latest}
     environment:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka-base:
-    image: confluentinc/cp-kafka:6.1.1
+    image: confluentinc/cp-kafka:${CONFLUENTINC_VERSION:-latest}
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
