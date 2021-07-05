@@ -18,8 +18,8 @@
  * under the License.
  */
 
-var fs = require('fs')
-var buildConfig = require('./webpack.common')
+const fs = require('fs')
+const buildConfig = require('./webpack.common')
 
 function readFile (filename) {
   try {
@@ -31,10 +31,10 @@ function readFile (filename) {
 
 // read VERSION and REVISION files
 // to identify files with current branch and commit hash
-var version = readFile('/var/tmp/VERSION')
-var revision = readFile('/var/tmp/REVISION')
+const version = readFile('/var/tmp/VERSION')
+const revision = readFile('/var/tmp/REVISION')
 
-var prefix = `[name]-${version || '0.0.0'}`
+const prefix = `[name]-${version || '0.0.0'}`
 
 module.exports = buildConfig({
   production: true,

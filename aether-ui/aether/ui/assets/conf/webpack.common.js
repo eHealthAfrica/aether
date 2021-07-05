@@ -75,13 +75,6 @@ module.exports = (custom) => ({
   },
 
   plugins: [
-    // use to provide the global constants
-    new webpack.ProvidePlugin({
-      $: 'jquery',
-      jQuery: 'jquery',
-      Popper: 'popper.js'
-    }),
-
     // needed by `django-webpack-loader`
     new BundleTracker({
       filename: 'webpack-stats.json',

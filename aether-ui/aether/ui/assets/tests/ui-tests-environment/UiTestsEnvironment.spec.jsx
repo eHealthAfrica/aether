@@ -29,12 +29,6 @@ describe('test environment', () => {
     expect(global.window.fetch).toBeTruthy()
   })
 
-  it('should set the third party global variables', () => {
-    expect(global.window.$).toBeTruthy()
-    expect(global.window.jQuery).toBeTruthy()
-    expect(global.window.Popper).toBeTruthy()
-  })
-
   it('should set the default URL to http://localhost', () => {
     expect(window.location.href).toEqual('http://localhost/')
   })

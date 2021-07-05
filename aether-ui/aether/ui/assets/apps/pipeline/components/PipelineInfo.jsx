@@ -34,16 +34,16 @@ const PipelineInfo = ({ close, pipeline: { name, mappingset, input } }) => {
   )
 
   return (
-    <OutsideClickHandler onOutsideClick={close}>
-      <Modal
-        onEnter={close}
-        onEscape={close}
-        header={name}
-        buttons={button}
-      >
+    <Modal
+      onEnter={close}
+      onEscape={close}
+      header={name}
+      buttons={button}
+    >
+      <OutsideClickHandler onOutsideClick={close}>
         <SubmissionCard mappingset={mappingset} inputData={input} />
-      </Modal>
-    </OutsideClickHandler>
+      </OutsideClickHandler>
+    </Modal>
   )
 }
 

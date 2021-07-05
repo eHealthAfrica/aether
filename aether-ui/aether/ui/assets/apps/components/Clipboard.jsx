@@ -22,21 +22,23 @@ import React, { useState } from 'react'
 import Clipboard from 'react-clipboard.js'
 
 export default ({ content }) => {
-  const [icon, setIcon] = useState(null)
+  const [icon, setIcon] = useState('')
 
-  const onCopy = () => {
+  const onCopy = (event) => {
+    console.log('click clipboard')
+    event && event.stopPropagation()
     setIcon('-check')
-    setTimeout(() => { setIcon(null) }, 2000)
+    setTimeout(() => { setIcon('') }, 2000)
   }
 
   return (
-    <span className='ml-2 clipboard'>
+    <span className='ms-2 clipboard'>
       <Clipboard
         component='i'
         onClick={onCopy}
         data-clipboard-text={content}
       >
-        <i className={`fa fa-clipboard${icon || ''}`} />
+        <i className={`fas fa-clipboard${icon}`} />
       </Clipboard>
     </span>
   )

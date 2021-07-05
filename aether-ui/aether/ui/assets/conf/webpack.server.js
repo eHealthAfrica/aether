@@ -95,7 +95,7 @@ const serverOptions = {
 const app = express()
 
 // Step 1: Create & configure a webpack compiler
-var compiler = webpack(webpackOptions)
+const compiler = webpack(webpackOptions)
 
 // Step 2: Attach the dev middleware to the compiler & the server
 app.use(require('webpack-dev-middleware')(compiler, serverOptions))
@@ -112,7 +112,7 @@ app.get('/', function (req, res) {
 })
 
 // Step 4: Start the server
-var server = http.createServer(app)
+const server = http.createServer(app)
 server.listen(WEBPACK_PORT, '0.0.0.0', () => {
   console.log('Listening on %j', server.address())
 })
