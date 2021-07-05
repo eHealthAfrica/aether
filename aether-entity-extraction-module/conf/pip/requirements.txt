@@ -22,7 +22,7 @@ coverage==5.5
 cryptography==3.4.7
 decorator==5.0.9
 eha-jsonpath==0.6.0
-fakeredis==1.5.1
+fakeredis==1.5.2
 flake8==3.9.2
 flake8-quotes==3.2.0
 gevent==21.1.2
@@ -32,7 +32,7 @@ iniconfig==1.1.1
 jsonpath-ng==1.5.2
 jsonschema==3.2.0
 mccabe==0.6.1
-packaging==20.9
+packaging==21.0
 pluggy==0.13.1
 ply==3.11
 py==1.10.0
@@ -41,7 +41,7 @@ pycparser==2.20
 pyflakes==2.3.1
 pyOpenSSL==20.0.1
 pyparsing==2.4.7
-pyrsistent==0.17.3
+pyrsistent==0.18.0
 pytest==6.2.4
 redis==3.5.3
 requests==2.25.1
@@ -50,6 +50,6 @@ sortedcontainers==2.4.0
 spavro==1.1.23
 tblib==1.7.0
 toml==0.10.2
-urllib3==1.26.5
+urllib3==1.26.6
 zope.event==4.5.0
 zope.interface==5.4.0
