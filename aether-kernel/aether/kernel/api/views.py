@@ -55,6 +55,19 @@ class ProjectViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, viewsets.Model
     filter_class = filters.ProjectFilter
     search_fields = ('name',)
 
+    @action(detail=True, methods=['patch'], url_name='erase_data', url_path='delete-data')
+    def delete_data(self, request, pk=None, *args, **kwargs):
+        instance = self.get_object_or_404(pk=pk)
+        try:
+            instance.submissions.all().delete()
+            instance.entities.all().delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:  # pragma: no cover
+            return Response(
+                str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
     @action(detail=True, methods=['get'], url_name='skeleton', url_path='schemas-skeleton')
     def schemas_skeleton(self, request, pk=None, *args, **kwargs):
         '''
