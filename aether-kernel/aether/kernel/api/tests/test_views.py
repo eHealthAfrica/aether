@@ -601,6 +601,23 @@ class ViewsTest(TestCase):
             )
             self.assertEqual(response.status_code, 400)
 
+    def test_project_delete_data(self):
+        self.assertEqual(reverse('project-erase_data', kwargs={'pk': 1}),
+                         '/projects/1/delete-data/')
+        url = reverse('project-erase_data', kwargs={'pk': self.project.pk})
+
+        submissions = models.Submission.objects.filter(mappingset__project=self.project)
+        entities = models.Entity.objects.filter(project=self.project)
+
+        self.assertGreater(submissions.count(), 0)
+        self.assertGreater(entities.count(), 0)
+
+        response = self.client.patch(url)
+        self.assertEqual(response.status_code, 204)
+
+        self.assertEqual(submissions.count(), 0)
+        self.assertEqual(entities.count(), 0)
+
     def test_project__schemas_skeleton(self):
         self.assertEqual(reverse('project-skeleton', kwargs={'pk': 1}),
                          '/projects/1/schemas-skeleton/')
