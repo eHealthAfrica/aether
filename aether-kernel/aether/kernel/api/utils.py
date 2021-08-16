@@ -74,7 +74,7 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset_id=None, mapping_ids=[]):
     # No need to provide mappings if mappingset exists.
     mappingset_id: 'uuid',
 
-    mapping_ids:  [
+    mapping_ids: [
         # a list of mapping uuids to delete related artefacts,
 
         'uuid-1',
@@ -117,7 +117,6 @@ def bulk_delete_by_mappings(delete_opts={}, mappingset_id=None, mapping_ids=[]):
             },
             ...
         }
-
     }
     '''
 
