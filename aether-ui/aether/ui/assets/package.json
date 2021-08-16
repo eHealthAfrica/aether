@@ -22,7 +22,7 @@
   "dependencies": {
     "@popperjs/core": "~2.9.0",
     "avsc": "~5.7.0",
-    "bootstrap": "~5.0.0",
+    "bootstrap": "~5.1.0",
     "moment": "~2.29.0",
     "react": "~16.14.0",
     "react-clipboard.js": "~2.0.16",
@@ -39,14 +39,14 @@
     "whatwg-fetch": "~3.6.0"
   },
   "devDependencies": {
-    "@babel/core": "~7.14.0",
+    "@babel/core": "~7.15.0",
     "@babel/plugin-proposal-class-properties": "~7.14.0",
-    "@babel/preset-env": "~7.14.0",
+    "@babel/preset-env": "~7.15.0",
     "@babel/preset-react": "~7.14.0",
     "@hot-loader/react-dom": "~16.14.0",
     "babel-loader": "~8.2.0",
     "css-loader": "~5.2.0",
-    "eslint": "~7.30.0",
+    "eslint": "~7.32.0",
     "enzyme": "~3.11.0",
     "enzyme-adapter-react-16": "~1.15.0",
     "express": "~4.17.0",
