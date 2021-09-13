@@ -1,6 +1,6 @@
 # Introduction
 
-## You want to help out with Aether? Yay!
+## You want to help out with Aether? Yay! :D
 
 First off, thank you for considering contributing to Aether. It's people like you that make Aether *the* platform for data-driven humanitarian projects.
 
