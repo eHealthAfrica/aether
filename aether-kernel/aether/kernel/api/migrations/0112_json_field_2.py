@@ -2,7 +2,7 @@
 
 import aether.kernel.api.validators
 import aether.sdk.drf.fields
-from django.db import migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
@@ -15,41 +15,41 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='entity',
             name='payload',
-            field=aether.sdk.drf.fields.AetherJSONField(verbose_name='payload'),
+            field=models.JSONField(verbose_name='payload'),
         ),
         migrations.AlterField(
             model_name='exporttask',
             name='settings',
-            field=aether.sdk.drf.fields.AetherJSONField(default=dict, editable=False, verbose_name='settings'),
+            field=models.JSONField(default=dict, editable=False, verbose_name='settings'),
         ),
         migrations.AlterField(
             model_name='mapping',
             name='definition',
-            field=aether.sdk.drf.fields.AetherJSONField(validators=[aether.kernel.api.validators.wrapper_validate_mapping_definition], verbose_name='mapping rules'),
+            field=models.JSONField(validators=[aether.kernel.api.validators.wrapper_validate_mapping_definition], verbose_name='mapping rules'),
         ),
         migrations.AlterField(
             model_name='mappingset',
             name='input',
-            field=aether.sdk.drf.fields.AetherJSONField(blank=True, null=True, verbose_name='input sample'),
+            field=models.JSONField(blank=True, null=True, verbose_name='input sample'),
         ),
         migrations.AlterField(
             model_name='mappingset',
             name='schema',
-            field=aether.sdk.drf.fields.AetherJSONField(blank=True, null=True, validators=[aether.kernel.api.validators.wrapper_validate_schema_input_definition], verbose_name='AVRO schema'),
+            field=models.JSONField(blank=True, null=True, validators=[aether.kernel.api.validators.wrapper_validate_schema_input_definition], verbose_name='AVRO schema'),
         ),
         migrations.AlterField(
             model_name='schema',
             name='definition',
-            field=aether.sdk.drf.fields.AetherJSONField(validators=[aether.kernel.api.validators.wrapper_validate_schema_definition], verbose_name='AVRO schema'),
+            field=models.JSONField(validators=[aether.kernel.api.validators.wrapper_validate_schema_definition], verbose_name='AVRO schema'),
         ),
         migrations.AlterField(
             model_name='schemadecorator',
             name='topic',
-            field=aether.sdk.drf.fields.AetherJSONField(blank=True, null=True, verbose_name='topic'),
+            field=models.JSONField(blank=True, null=True, verbose_name='topic'),
         ),
         migrations.AlterField(
             model_name='submission',
             name='payload',
-            field=aether.sdk.drf.fields.AetherJSONField(verbose_name='payload'),
+            field=models.JSONField(verbose_name='payload'),
         ),
     ]
