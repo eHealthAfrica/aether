@@ -201,7 +201,7 @@ services:
     volumes:
       - ./aether-entity-extraction-module:/code
       # to speed up Aether Python Library development changes
-      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/var/run/aether/venv/lib/python3.7/site-packages/aether/python
+      # - ${AETHER_PYTHON_PATH:-../aether-python-library}/aether/python:/var/run/aether/venv/lib/python3.8/site-packages/aether/python
     command: start
 
 
