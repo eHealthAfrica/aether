@@ -145,20 +145,20 @@ class ProducerManager(object):
             for t in iter(md.topics.values()):
                 topics = []
 
-                msg_t = (
-                    f'{t} with {len(t.partitions)} partition(s)'
-                    (f', error: {t.error}' if t.error is not None else '')
-                )
+                msg_t = ', '.join([
+                    f'{str(t)} with {len(t.partitions)} partition(s)',
+                    (f'error: {t.error}' if t.error is not None else ''),
+                ])
                 topics.append(msg_t)
 
                 for p in iter(t.partitions.values()):
-                    msg_p = (
-                        f'partition {p.id}'
-                        f', leader: {p.leader}'
-                        f', replicas: {p.replicas}'
-                        f', isrs: {p.isrs}'
-                        (f', error: {p.error}' if p.error is not None else '')
-                    )
+                    msg_p = ', '.join([
+                        f'partition: {p.id}',
+                        f'leader: {p.leader}',
+                        f'replicas: {p.replicas}',
+                        f'isrs: {p.isrs}',
+                        (f'error: {p.error}' if p.error is not None else ''),
+                    ])
                     topics.append(msg_p)
 
                 res['topics'].append(topics)
