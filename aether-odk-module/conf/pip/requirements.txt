@@ -12,7 +12,7 @@
 #
 ################################################################################
 
-aether.sdk==1.3.8
+aether.sdk==1.4.0
 asgiref==3.4.1
 autopep8==1.5.7
 boto3==1.18.40
@@ -23,7 +23,7 @@ cffi==1.14.6
 charset-normalizer==2.0.4
 configparser==5.0.2
 coverage==5.5
-Django==3.1.13
+Django==3.2.7
 django-cacheops==6.0
 django-cleanup==5.2.0
 django-cors-headers==3.8.0

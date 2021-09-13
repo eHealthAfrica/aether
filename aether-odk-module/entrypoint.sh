@@ -71,8 +71,12 @@ function backup_db {
     if psql -c "" $DB_NAME; then
         echo "$DB_NAME database exists!"
 
-        pg_dump $DB_NAME > ${BACKUPS_FOLDER}/${DB_NAME}-backup-$(date "+%Y%m%d%H%M%S").sql
-        echo "$DB_NAME database backup created."
+        mkdir -p $BACKUPS_FOLDER
+        local BACKUP_FILE=$BACKUPS_FOLDER/$DB_NAME-backup-$(date "+%Y%m%d%H%M%S").sql
+
+        pg_dump $DB_NAME > $BACKUP_FILE
+        chown -f aether:aether $BACKUP_FILE
+        echo "$DB_NAME database backup created in [$BACKUP_FILE]."
     fi
 }
 
@@ -137,6 +141,7 @@ function setup {
     cp /var/tmp/REVISION ${STATIC_DIR}/REVISION 2>/dev/null || true
 
     ./manage.py collectstatic --noinput --verbosity 0
+    chown -Rf aether:aether ${STATIC_ROOT}
     chmod -R 755 ${STATIC_ROOT}
 }
 
@@ -178,6 +183,8 @@ case "$1" in
 
     manage )
         ./manage.py "${@:2}"
+        # required to change migration files owner
+        chown -Rf aether:aether *
     ;;
 
     pip_freeze )

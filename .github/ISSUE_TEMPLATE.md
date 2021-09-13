@@ -1,9 +1,11 @@
-### What version of Aether are you using?
+# Pull request description
 
-### What operating system and processor architecture are you using?
+## What version of Aether are you using?
 
-### What did you do?
+## What operating system and processor architecture are you using?
 
-### What did you expect to see?
+## What did you do?
 
-### What did you see instead?
+## What did you expect to see?
+
+## What did you see instead?

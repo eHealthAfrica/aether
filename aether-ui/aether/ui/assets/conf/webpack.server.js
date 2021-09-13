@@ -74,17 +74,7 @@ const serverOptions = {
   // It suppress everything except error, so it has to be set to false as well
   // to see success build.
   noInfo: false,
-  stats: {
-    // Config for minimal console.log mess.
-    builtAt: true,
-    assets: false,
-    colors: true,
-    version: false,
-    hash: false,
-    timings: false,
-    chunks: false,
-    chunkModules: false
-  },
+  stats: 'minimal',
 
   watchOptions: {
     aggregateTimeout: 300,

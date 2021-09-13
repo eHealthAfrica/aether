@@ -77,7 +77,7 @@ module.exports = (custom) => ({
   plugins: [
     // needed by `django-webpack-loader`
     new BundleTracker({
-      filename: 'webpack-stats.json',
+      filename: './bundles/webpack-stats.json',
       indent: (custom.production ? 0 : 2),
       logTime: true,
       path: BUNDLES_DIR

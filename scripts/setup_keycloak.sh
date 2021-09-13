@@ -103,5 +103,5 @@ $KCADM \
 
 echo_message "Done!"
 
-docker-compose kill keycloak
-docker-compose rm -f keycloak
+# docker-compose kill keycloak
+# docker-compose rm -f keycloak
