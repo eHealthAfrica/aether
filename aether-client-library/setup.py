@@ -40,6 +40,7 @@ setup(
 
     install_requires=[
         'bravado',
+        'jsonschema[format]<4',
         'requests[security]',
         'requests_oauthlib'
     ],
