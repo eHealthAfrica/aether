@@ -262,11 +262,31 @@ class EntityExtractorTest(TestCase):
         self.assertEqual(self.mappingset.submissions.count(), 101)
         self.assertEqual(self.mappingset.submissions.filter(is_extracted=False).count(), 101)
 
-        # request extraction
+        # check extraction with GET
+        response = self.client.get(url + '?delta=1w')
+        data = response.json()
+        self.assertEqual(data['delta'], '1w')
+        self.assertFalse(data['submitted'])
+        self.assertEqual(data['count'], 101)
+
+        # request extraction with POST
         with mock.patch('aether.kernel.api.entity_extractor.send_model_item_to_redis') as mock_fn_1:
-            response = self.client.post(url + '?delta=0microseconds')
+            response = self.client.post(url + '?delta=1w')
 
         mock_fn_1.assert_called()
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(data['delta'], '0microseconds')
+        self.assertEqual(data['delta'], '1w')
+        self.assertTrue(data['submitted'])
+        self.assertEqual(data['count'], 101)
+
+        # force extraction with GET
+        with mock.patch('aether.kernel.api.entity_extractor.send_model_item_to_redis') as mock_fn_1:
+            response = self.client.get(url + '?delta=1w&submit')
+
+        mock_fn_1.assert_called()
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['delta'], '1w')
+        self.assertTrue(data['submitted'])
+        self.assertEqual(data['total'], 101)
