@@ -185,27 +185,31 @@ class ViewsTest(TestCase):
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
 
-        # let's try again but with an unexistent family
+        # let's try again but with an inexistent family
         response = self.client.get(f'{url}?family=unknown')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertEqual(data['pending_submissions_count'], submissions_count)
 
         # let's try with using the project id
         response = self.client.get(f'{url}?family={str(self.project.pk)}')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertEqual(data['pending_submissions_count'], submissions_count)
 
         # let's try with the passthrough filter
         response = self.client.get(f'{url}?passthrough=true')
         data = response.json()
         self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertEqual(data['pending_submissions_count'], submissions_count)
 
-        # delete the submissions and check the entities
+        # delete the submissions and check the count
         models.Submission.objects.all().delete()
         self.assertEqual(models.Submission.objects.count(), 0)
         response = self.client.get(url)
         data = response.json()
         self.assertEqual(data['submissions_count'], 0)
+        self.assertEqual(data['pending_submissions_count'], 0)
 
     def test_project_stats_view_fields(self):
         url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
@@ -219,7 +223,16 @@ class ViewsTest(TestCase):
 
         response = self.client.get(
             url,
-            {'omit': 'created,first_submission,last_submission,submissions_count,entities_count'}
+            {
+                'omit': ','.join([
+                    'created',
+                    'first_submission',
+                    'last_submission',
+                    'submissions_count',
+                    'pending_submissions_count',
+                    'entities_count',
+                ])
+            }
         )
         data = response.json()
         self.assertIn('id', data)
@@ -229,6 +242,7 @@ class ViewsTest(TestCase):
         self.assertNotIn('first_submission', data)
         self.assertNotIn('last_submission', data)
         self.assertNotIn('submissions_count', data)
+        self.assertNotIn('pending_submissions_count', data)
         self.assertNotIn('entities_count', data)
 
         response = self.client.get(url, {'fields': 'entities_count'})
@@ -240,6 +254,7 @@ class ViewsTest(TestCase):
         self.assertNotIn('first_submission', data)
         self.assertNotIn('last_submission', data)
         self.assertNotIn('submissions_count', data)
+        self.assertNotIn('pending_submissions_count', data)
         self.assertIn('entities_count', data)
 
         response = self.client.get(
@@ -256,6 +271,7 @@ class ViewsTest(TestCase):
         self.assertNotIn('first_submission', data)
         self.assertNotIn('last_submission', data)
         self.assertNotIn('submissions_count', data)
+        self.assertNotIn('pending_submissions_count', data)
         self.assertIn('entities_count', data)
 
     def test_mapping_set_stats_view(self):
@@ -266,6 +282,7 @@ class ViewsTest(TestCase):
         self.assertEqual(data['id'], str(self.mappingset.pk))
         submissions_count = models.Submission.objects.filter(mappingset=self.mappingset.pk).count()
         self.assertEqual(data['submissions_count'], submissions_count)
+        self.assertEqual(data['pending_submissions_count'], 0, 'All extracted')
         entities_count = models.Entity.objects.filter(submission__mappingset=self.mappingset.pk).count()
         self.assertEqual(data['entities_count'], entities_count)
         self.assertLessEqual(
@@ -279,6 +296,7 @@ class ViewsTest(TestCase):
         response = self.client.get(url)
         data = response.json()
         self.assertEqual(data['submissions_count'], 0)
+        self.assertEqual(data['pending_submissions_count'], 0)
         self.assertEqual(data['entities_count'], 0)
 
     def test_validate_mappings__success(self):

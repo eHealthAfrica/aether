@@ -107,34 +107,38 @@ class ExtractMixin(object):
         )
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAdminUser])
 @renderer_classes([JSONRenderer])
 def extract_view(request, *args, **kwargs):
     '''
-    Send to redis the submissions that are not yet extracted and
-    whose last modification time was not before the indicated delta (1 day).
+    Submit to redis the submissions that are not yet extracted and
+    whose last modification time was before the indicated delta (1 day).
 
-    Reachable at ``POST /admin/~extract?delta=1d``
+    Reachable at ``GET|POST /admin/~extract?delta=1d&[submit]``
     '''
 
     delta = request.query_params.get('delta', '1d')
     modified = parse_delta(delta)
-    submissions = (
-        Submission.objects
-        .filter(modified__lte=modified)
-        .filter(is_extracted=False)
+    submissions = Submission \
+        .objects \
+        .filter(modified__gte=modified) \
+        .filter(project__active=True) \
         .order_by('-modified')
-        .iterator())
-    count = 0
-    for submission in submissions:
-        count = count + 1
-        send_model_item_to_redis(submission)
+    pending = submissions.filter(is_extracted=False)
+
+    submitted = False
+    if request.method == 'POST' or 'submit' in request.query_params:
+        submitted = True
+        for submission in pending.iterator():
+            send_model_item_to_redis(submission)
 
     return Response(data={
-        'count': count,
+        'count': pending.count(),
+        'total': submissions.count(),
         'delta': delta,
         'modified': modified,
+        'submitted': submitted,
         'timestamp': now(),
     })
 
