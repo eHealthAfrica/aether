@@ -112,10 +112,10 @@ class ExtractMixin(object):
 @renderer_classes([JSONRenderer])
 def extract_view(request, *args, **kwargs):
     '''
-    Send to redis the submissions that are not yet extracted and
-    whose last modification time was not before the indicated delta (1 day).
+    Submit to redis the submissions that are not yet extracted and
+    whose last modification time was before the indicated delta (1 day).
 
-    Reachable at ``GET|POST /admin/~extract?delta=1d&[send]``
+    Reachable at ``GET|POST /admin/~extract?delta=1d&[submit]``
     '''
 
     delta = request.query_params.get('delta', '1d')
