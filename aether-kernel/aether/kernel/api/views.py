@@ -795,6 +795,14 @@ class SubmissionStatsMixin(MtViewSetMixin):
             qs = qs.annotate(
                 submissions_count=db_models.Count(f'{self.submissions_field}__id', distinct=True)
             )
+        if _is_included('pending_submissions_count'):
+            qs = qs.annotate(
+                pending_submissions_count=db_models.Count(
+                    f'{self.submissions_field}__id',
+                    filter=db_models.Q(**{f'{self.submissions_field}__is_extracted': False}),
+                    distinct=True,
+                )
+            )
         if _is_included('attachments_count'):
             qs = qs.annotate(
                 attachments_count=db_models.Count(f'{self.submissions_field}__attachments__id', distinct=True)

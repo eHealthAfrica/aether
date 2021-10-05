@@ -515,6 +515,7 @@ class ProjectStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     first_submission = serializers.DateTimeField(read_only=True)
     last_submission = serializers.DateTimeField(read_only=True)
     submissions_count = serializers.IntegerField(read_only=True)
+    pending_submissions_count = serializers.IntegerField(read_only=True)
     attachments_count = serializers.IntegerField(read_only=True)
     entities_count = serializers.IntegerField(read_only=True)
 
@@ -523,7 +524,8 @@ class ProjectStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
         fields = (
             'id', 'name', 'created', 'active',
             'first_submission', 'last_submission',
-            'submissions_count', 'attachments_count', 'entities_count',
+            'submissions_count', 'pending_submissions_count',
+            'attachments_count', 'entities_count',
         )
 
 
@@ -532,6 +534,7 @@ class MappingSetStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
     first_submission = serializers.DateTimeField(read_only=True)
     last_submission = serializers.DateTimeField(read_only=True)
     submissions_count = serializers.IntegerField(read_only=True)
+    pending_submissions_count = serializers.IntegerField(read_only=True)
     attachments_count = serializers.IntegerField(read_only=True)
     entities_count = serializers.IntegerField(read_only=True)
 
@@ -540,7 +543,8 @@ class MappingSetStatsSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
         fields = (
             'id', 'name', 'created',
             'first_submission', 'last_submission',
-            'submissions_count', 'attachments_count', 'entities_count',
+            'submissions_count', 'pending_submissions_count',
+            'attachments_count', 'entities_count',
         )
 
 
