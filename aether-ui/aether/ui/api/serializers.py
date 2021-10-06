@@ -63,8 +63,9 @@ class PipelineSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     is_read_only = serializers.BooleanField(read_only=True)
 
     project = MtPrimaryKeyRelatedField(
-        required=False,
         queryset=models.Project.objects.all(),
+        required=False,
+        style={'base_template': 'input.html'},
     )
 
     def create(self, validated_data):

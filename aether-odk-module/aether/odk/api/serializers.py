@@ -50,6 +50,7 @@ class MediaFileSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     xform = MtPrimaryKeyRelatedField(
         queryset=XForm.objects.all(),
         mt_field='project',
+        style={'base_template': 'input.html'},
     )
 
     class Meta:
@@ -92,6 +93,7 @@ class XFormSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     project = MtPrimaryKeyRelatedField(
         queryset=Project.objects.all(),
+        style={'base_template': 'input.html'},
     )
 
     def validate(self, value):
