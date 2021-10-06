@@ -125,6 +125,7 @@ class MappingSetSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
 
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
+        style={'base_template': 'input.html'},
     )
 
     class Meta:
@@ -150,10 +151,12 @@ class MappingSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
         required=False,
+        style={'base_template': 'input.html'},
     )
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
         mt_field='project',
+        style={'base_template': 'input.html'},
     )
 
     class Meta:
@@ -177,6 +180,7 @@ class AttachmentSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer):
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
         mt_field='project',
+        style={'base_template': 'input.html'},
     )
 
     class Meta:
@@ -237,6 +241,11 @@ class SchemaDecoratorSerializer(DynamicFieldsMixin, DynamicFieldsModelSerializer
 
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
+        style={'base_template': 'input.html'},
+    )
+    schema = serializers.PrimaryKeyRelatedField(
+        queryset=models.Schema.objects.all(),
+        style={'base_template': 'input.html'}
     )
 
     class Meta:
@@ -323,21 +332,25 @@ class EntitySerializer(DynamicFieldsMixin, KernelBaseSerializer):
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
         required=False,
+        style={'base_template': 'input.html'},
     )
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
         mt_field='mappingset__project',
         required=False,
+        style={'base_template': 'input.html'},
     )
     mapping = MtPrimaryKeyRelatedField(
         queryset=models.Mapping.objects.all(),
         mt_field='mappingset__project',
         required=False,
+        style={'base_template': 'input.html'},
     )
     schemadecorator = MtPrimaryKeyRelatedField(
         queryset=models.SchemaDecorator.objects.all(),
         mt_field='project',
         required=False,
+        style={'base_template': 'input.html'},
     )
 
     def create(self, validated_data):
@@ -474,6 +487,7 @@ class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
         required=False,
+        style={'base_template': 'input.html'},
     )
 
     is_extracted = serializers.BooleanField(default=False)
@@ -482,6 +496,7 @@ class SubmissionSerializer(DynamicFieldsMixin, KernelBaseSerializer):
         queryset=models.MappingSet.objects.all(),
         mt_field='project',
         required=False,
+        style={'base_template': 'input.html'},
     )
 
     def create(self, validated_data):
