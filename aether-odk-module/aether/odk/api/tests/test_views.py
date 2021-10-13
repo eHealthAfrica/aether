@@ -16,8 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.http import FileResponse
 from django.test import override_settings
 from django.urls import reverse
+
 from rest_framework import status
 
 from . import CustomTestCase
@@ -152,3 +154,26 @@ class ViewsTests(CustomTestCase):
 
         response = self.client.get('/projects.json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test__project__download(self):
+        xform = self.helper_create_xform()
+
+        content_url = reverse('project-download', kwargs={'pk': xform.project_id})
+        self.assertEqual(content_url, f'/projects/{xform.project_id}/download/')
+        response = self.client.get(content_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(isinstance(response, FileResponse))
+        self.assertEqual(
+            response['Content-Disposition'],
+            f'attachment; filename="{xform.project.name}.zip"'
+        )
+
+    def test__xform__download(self):
+        xform = self.helper_create_xform()
+
+        content_url = reverse('xform-download', kwargs={'pk': xform.pk})
+        self.assertEqual(content_url, f'/xforms/{xform.pk}/download/')
+        response = self.client.get(content_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(isinstance(response, FileResponse))
+        self.assertEqual(xform.xml_data, response.getvalue().decode())
