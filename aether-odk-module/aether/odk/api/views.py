@@ -16,12 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import tempfile
+import zipfile
+
+from django.http import FileResponse
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from aether.sdk.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
+from aether.sdk.utils import get_file_content
 
 from .models import Project, XForm, MediaFile
 from .serializers import (
@@ -82,6 +88,27 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
         return self.retrieve(request, pk, *args, **kwargs)
 
+    @action(detail=True, methods=['get'])
+    def download(self, request, pk=None, *args, **kwargs):
+        '''
+        Downloads the linked XForm XML definitions.
+
+        Reachable at ``.../project/{pk}/download/``
+        '''
+
+        project = self.get_object_or_404(pk=pk)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            zip_name = f'{project.name or project.project_id}.zip'
+            zip_path = f'{temp_dir}/{zip_name}'
+
+            with zipfile.ZipFile(zip_path, 'w') as file_zip:
+                for xform in project.xforms.all():
+                    xml_name = f'{xform.title}.xml'
+                    file_zip.writestr(xml_name, xform.xml_data)
+
+            return get_file_content(zip_name, zip_path, as_attachment=True)
+
 
 class XFormViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
@@ -129,6 +156,25 @@ class XFormViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             )
 
         return self.retrieve(request, pk, *args, **kwargs)
+
+    @action(detail=True, methods=['get'])
+    def download(self, request, pk=None, *args, **kwargs):
+        '''
+        Downloads the linked XML definition.
+
+        Reachable at ``.../xforms/{pk}/download/``
+        '''
+
+        xform = self.get_object_or_404(pk=pk)
+
+        response = FileResponse(
+            streaming_content=xform.xml_data,
+            as_attachment=True,
+            filename=f'{xform.title}.xml',
+            content_type='text/xml',
+        )
+        response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+        return response
 
 
 class MediaFileViewSet(MtViewSetMixin, viewsets.ModelViewSet):
