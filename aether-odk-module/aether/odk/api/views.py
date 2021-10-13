@@ -42,6 +42,7 @@ from .kernel_utils import (
     KernelPropagationError,
 )
 from .surveyors_utils import get_surveyors, is_surveyor
+from .utils import sanitize_filename
 
 
 class IsAuthenticatedAndNotSurveyor(IsAuthenticated):
@@ -99,12 +100,12 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         project = self.get_object_or_404(pk=pk)
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            zip_name = f'{project.name or project.project_id}.zip'
+            zip_name = sanitize_filename(f'{project.name or project.project_id}.zip')
             zip_path = f'{temp_dir}/{zip_name}'
 
             with zipfile.ZipFile(zip_path, 'w') as file_zip:
                 for xform in project.xforms.all():
-                    xml_name = f'{xform.title}.xml'
+                    xml_name = sanitize_filename(f'{xform.title}.xml')
                     file_zip.writestr(xml_name, xform.xml_data)
 
             return get_file_content(zip_name, zip_path, as_attachment=True)
@@ -170,7 +171,7 @@ class XFormViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         response = FileResponse(
             streaming_content=xform.xml_data,
             as_attachment=True,
-            filename=f'{xform.title}.xml',
+            filename=sanitize_filename(f'{xform.title}.xml'),
             content_type='text/xml',
         )
         response['Access-Control-Expose-Headers'] = 'Content-Disposition'
