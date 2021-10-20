@@ -55,6 +55,11 @@ def test_manager_http_endpoint_service():
         r = requests.head(f'{url}/check-app/aether-kernel')
         assert(r.status_code == 424), r.text
 
+        r = requests.head(f'{url}/kafkacheck')
+        assert(r.status_code == 424), r.text
+        r = requests.head(f'{url}/check-app/kafka')
+        assert(r.status_code == 424), r.text
+
         protected_endpoints = ['status', 'topics']
         for e in protected_endpoints:
             r = requests.head(f'{url}/{e}')

@@ -23,9 +23,7 @@ import signal
 import socket
 
 from confluent_kafka.admin import AdminClient
-from flask import (
-    Flask, jsonify, request, Response
-)
+from flask import Flask, request, Response
 
 import gevent
 from gevent.pool import Pool
@@ -57,6 +55,18 @@ class ProducerManager(object):
     # Spawns a RealmManager for each schema type in Kernel
     # RealmManager registers own eventloop greenlet (update_kafka) with ProducerManager
 
+    killed = False
+
+    admin_name = None
+    admin_password = None
+
+    kernel_client = None
+    kafka_admin_client = None
+
+    kafka_status = KafkaStatus.SUBMISSION_PENDING
+    realm_managers = {}
+    thread_idle = {}
+
     def __init__(self):
         # Start Signal Handlers
         self.killed = False
@@ -82,17 +92,18 @@ class ProducerManager(object):
         self.thread_idle = {}
         self.run()
 
+        self.logger.info('Started producer service')
+        self.logger.info(f'== Version      :  {VERSION}')
+        self.logger.info(f'== Revision     :  {REVISION}')
+        self.logger.info(f'== Client mode  :  {self.kernel_client.mode()}')
+        self.logger.info(f'== Kafka status :  {self.kafka_status}')
+
     def keep_alive_loop(self):
         # Keeps the server up in case all other threads join at the same time.
         while not self.killed:
             gevent.sleep(1)
 
     def run(self):
-        self.logger.info('Starting service...')
-        self.logger.info(f'== name     :  aether-producer')
-        self.logger.info(f'== version  :  {VERSION}')
-        self.logger.info(f'== revision :  {REVISION}')
-
         self.threads = []
         self.threads.append(gevent.spawn(self.keep_alive_loop))
         self.threads.append(gevent.spawn(self.check_realms))
@@ -118,7 +129,7 @@ class ProducerManager(object):
             dur = (dur - res) / 5
             unit = 5
             gevent.sleep(res)
-        for x in range(int(dur)):
+        for _x in range(int(dur)):
             if not self.killed:
                 gevent.sleep(unit)
 
@@ -234,8 +245,10 @@ class ProducerManager(object):
         self.register('health', self.request_health)
         self.register('healthcheck', self.request_healthcheck)
         self.register('kernelcheck', self.request_kernelcheck)
+        self.register('kafkacheck', self.request_kafkacheck)
         self.register('check-app', self.request_check_app)
         self.register('check-app/aether-kernel', self.request_kernelcheck)
+        self.register('check-app/kafka', self.request_kafkacheck)
         # protected
         self.register('status', self.request_status)
         self.register('topics', self.request_topics)
@@ -269,8 +282,9 @@ class ProducerManager(object):
         return username == self.admin_name and password == self.admin_password
 
     def request_authentication(self):
-        return Response('Bad Credentials', 401,
-                        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+        with self.app.app_context():
+            return Response('Bad Credentials', 401,
+                            {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
     def requires_auth(f):
         @wraps(f)
@@ -285,16 +299,20 @@ class ProducerManager(object):
 
     def request_health(self):
         with self.app.app_context():
-            return jsonify({'healthy': True})
+            return Response({'healthy': True}, content_type='application/json')
 
     def request_healthcheck(self):
         with self.app.app_context():
             try:
                 expired = self.check_thread_health()
                 if not expired:
-                    return jsonify({'healthy': True})
+                    return Response({'healthy': True}, content_type='application/json')
                 else:
-                    return jsonify(json.dumps(expired), 500, mimetype='application/json')
+                    return Response(
+                        json.dumps(expired),
+                        500,
+                        content_type='application/json'
+                    )
             except Exception as err:
                 self.app.logger.error(f'Unexpected HC error: {err}')
                 return Response(f'Unexpected error: {err}', 500)
@@ -302,45 +320,56 @@ class ProducerManager(object):
     def request_kernelcheck(self):
         with self.app.app_context():
             healthy = self.kernel_client.check_kernel()
-            return jsonify(
+            return Response(
                 {'healthy': healthy},
-                status=200 if healthy else 424  # Failed dependency
+                status=200 if healthy else 424,  # Failed dependency
+                content_type='application/json',
+            )
+
+    def request_kafkacheck(self):
+        with self.app.app_context():
+            healthy = self.kafka_available()
+            return Response(
+                {'healthy': healthy},
+                status=200 if healthy else 424,  # Failed dependency
+                content_type='application/json',
             )
 
     def request_check_app(self):
         with self.app.app_context():
-            return jsonify({
-                'app_name': 'aether-producer',
-                'app_version': VERSION,
-                'app_revision': REVISION,
-            })
+            return Response(
+                {
+                    'app_name': 'aether-producer',
+                    'app_version': VERSION,
+                    'app_revision': REVISION,
+                },
+                content_type='application/json',
+            )
 
     @requires_auth
     def request_status(self):
-        status = {
-            'kernel_mode': self.kernel_client.mode(),
-            'kernel_last_check': self.kernel_client.last_check,
-            'kernel_last_check_error': self.kernel_client.last_check_error,
-            'kafka_container_accessible': self.kafka_available(),
-            'kafka_broker_information': self.broker_info(),
-            'kafka_submission_status': str(self.kafka_status),  # This is just a status flag
-            'topics': {k: v.get_status() for k, v in self.realm_managers.items()},
-        }
         with self.app.app_context():
-            return jsonify(**status)
+            status = {
+                'kernel_mode': self.kernel_client.mode(),
+                'kernel_last_check': self.kernel_client.last_check,
+                'kernel_last_check_error': self.kernel_client.last_check_error,
+                'kafka_container_accessible': self.kafka_available(),
+                'kafka_broker_information': self.broker_info(),
+                'kafka_submission_status': str(self.kafka_status),  # This is just a status flag
+                'topics': {k: v.get_status() for k, v in self.realm_managers.items()},
+            }
+            return Response(status, content_type='application/json')
 
     @requires_auth
     def request_topics(self):
         with self.app.app_context():
-            if not self.realm_managers:
-                return jsonify({})
-
             status = {}
             for topic, manager in self.realm_managers.items():
                 status[topic] = {}
                 for name, sw in manager.schemas.items():
                     status[topic][name] = manager.get_topic_size(sw)
-            return jsonify(**status)
+
+            return Response(status, content_type='application/json')
 
     # Topic Command API
 
@@ -358,34 +387,35 @@ class ProducerManager(object):
 
     @requires_auth
     def handle_topic_command(self, request, status):
-        topic = request.args.get('topic')
-        realm = request.args.get('realm')
-        if not realm:
-            return Response('A realm must be specified', 422)
-        if not topic:
-            return Response('A topic must be specified', 422)
-        if not self.realm_managers.get(realm):
-            return Response(f'Bad realm name: {realm}', 422)
+        with self.app.app_context():
+            topic = request.args.get('topic')
+            realm = request.args.get('realm')
+            if not realm:
+                return Response('A realm must be specified', 422)
+            if not topic:
+                return Response('A topic must be specified', 422)
+            if not self.realm_managers.get(realm):
+                return Response(f'Bad realm name: {realm}', 422)
 
-        manager = self.realm_managers[realm]
-        schema_wrapper = manager.schemas.get(topic)
-        if not schema_wrapper:
-            return Response(f'realm {realm} has no topic {topic}', 422)
-        if status is TopicStatus.PAUSED:
-            fn = manager.pause
-        if status is TopicStatus.NORMAL:
-            fn = manager.resume
-        if status is TopicStatus.REBUILDING:
-            fn = manager.rebuild
+            manager = self.realm_managers[realm]
+            schema_wrapper = manager.schemas.get(topic)
+            if not schema_wrapper:
+                return Response(f'realm {realm} has no topic {topic}', 422)
+            if status is TopicStatus.PAUSED:
+                fn = manager.pause
+            if status is TopicStatus.NORMAL:
+                fn = manager.resume
+            if status is TopicStatus.REBUILDING:
+                fn = manager.rebuild
 
-        try:
-            res = fn(schema_wrapper)
-            if not res:
-                return Response(f'Operation failed on {topic}', 500)
+            try:
+                res = fn(schema_wrapper)
+                if not res:
+                    return Response(f'Operation failed on {topic}', 500)
 
-            return Response(f'Success for status {status} on {topic}', 200)
-        except Exception as err:
-            return Response(f'Operation failed on {topic} with: {err}', 500)
+                return Response(f'Success for status {status} on {topic}', 200)
+            except Exception as err:
+                return Response(f'Operation failed on {topic} with: {err}', 500)
 
 
 def main():
