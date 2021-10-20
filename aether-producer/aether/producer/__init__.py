@@ -331,15 +331,15 @@ class ProducerManager(object):
 
     @requires_auth
     def request_topics(self):
-        if not self.realm_managers:
-            return jsonify({})
-
-        status = {}
-        for topic, manager in self.realm_managers.items():
-            status[topic] = {}
-            for name, sw in manager.schemas.items():
-                status[topic][name] = manager.get_topic_size(sw)
         with self.app.app_context():
+            if not self.realm_managers:
+                return jsonify({})
+
+            status = {}
+            for topic, manager in self.realm_managers.items():
+                status[topic] = {}
+                for name, sw in manager.schemas.items():
+                    status[topic][name] = manager.get_topic_size(sw)
             return jsonify(**status)
 
     # Topic Command API
