@@ -75,7 +75,7 @@ def test_manager_http_endpoint_service():
         r = requests.get(f'{url}/health')
         assert(r.status_code == 200)
         r = requests.get(f'{url}/healthcheck')
-        assert(r.status_code == 500)
+        assert(r.status_code == 500), r.text
         assert(_realm in r.json().keys())
 
     finally:

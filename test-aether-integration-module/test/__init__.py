@@ -59,32 +59,20 @@ PRODUCER_MODE = os.environ['PRODUCER_MODE']
 
 @pytest.fixture(scope='function')
 def producer_topics():
-    max_retry = 10
-    for x in range(max_retry):
-        try:
-            status = producer_request('status')
-            kafka = status.get('kafka_container_accessible')
-            if not kafka:
-                raise ValueError('Kafka not connected yet')
-            topics = producer_request('topics')
-            return topics
-        except Exception:
-            sleep(1)
+    wait_for_kafka()
+    topics = producer_request('topics')
+    return topics
 
 
 @pytest.fixture(scope='function')
 def wait_for_producer_status():
+    wait_for_kafka()
+
     max_retry = 30
     failure_mode = None
-    for x in range(max_retry):
+    for _x in range(max_retry):
         try:
             status = producer_request('status')
-            if not status:
-                raise ValueError('No status response from producer')
-            kafka = status.get('kafka_container_accessible')
-            if not kafka:
-                raise ValueError('Kafka not connected yet')
-
             person = status.get('topics', {}).get(REALM, {}).get(SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
@@ -154,6 +142,25 @@ def producer_request(endpoint, expect_json=True):
     except Exception as err:
         print(err)
         sleep(1)
+
+
+def wait_for_kafka():
+    max_retry = 30
+    failure_mode = None
+    for _x in range(max_retry):
+        try:
+            status = producer_request('kafkacheck')
+            if not status:
+                raise ValueError('No status response from producer')
+            kafka = status.get('healthy')
+            if not kafka:
+                raise ValueError('Kafka not connected yet')
+            return
+        except Exception as err:
+            failure_mode = str(err)
+            sleep(1)
+
+    raise TimeoutError(f'Producer not ready before {max_retry}s timeout. Reason: {failure_mode}')
 
 
 def topic_status(realm, topic):

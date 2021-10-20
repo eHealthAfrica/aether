@@ -295,24 +295,28 @@ class ProducerManager(object):
             return f(self, *args, **kwargs)
         return decorated
 
+    def return_json(self, data, status=None):
+        return Response(
+            response=json.dumps(data),
+            status=status,
+            mimetype='application/json',
+            content_type='application/json',
+        )
+
     # Exposed Request Endpoints
 
     def request_health(self):
         with self.app.app_context():
-            return Response({'healthy': True}, content_type='application/json')
+            return self.return_json({'healthy': True})
 
     def request_healthcheck(self):
         with self.app.app_context():
             try:
                 expired = self.check_thread_health()
                 if not expired:
-                    return Response({'healthy': True}, content_type='application/json')
+                    return self.return_json({'healthy': True})
                 else:
-                    return Response(
-                        json.dumps(expired),
-                        500,
-                        content_type='application/json'
-                    )
+                    return self.return_json(expired, 500)
             except Exception as err:
                 self.app.logger.error(f'Unexpected HC error: {err}')
                 return Response(f'Unexpected error: {err}', 500)
@@ -320,31 +324,26 @@ class ProducerManager(object):
     def request_kernelcheck(self):
         with self.app.app_context():
             healthy = self.kernel_client.check_kernel()
-            return Response(
+            return self.return_json(
                 {'healthy': healthy},
                 status=200 if healthy else 424,  # Failed dependency
-                content_type='application/json',
             )
 
     def request_kafkacheck(self):
         with self.app.app_context():
             healthy = self.kafka_available()
-            return Response(
+            return self.return_json(
                 {'healthy': healthy},
                 status=200 if healthy else 424,  # Failed dependency
-                content_type='application/json',
             )
 
     def request_check_app(self):
         with self.app.app_context():
-            return Response(
-                {
-                    'app_name': 'aether-producer',
-                    'app_version': VERSION,
-                    'app_revision': REVISION,
-                },
-                content_type='application/json',
-            )
+            return self.return_json({
+                'app_name': 'aether-producer',
+                'app_version': VERSION,
+                'app_revision': REVISION,
+            })
 
     @requires_auth
     def request_status(self):
@@ -358,7 +357,7 @@ class ProducerManager(object):
                 'kafka_submission_status': str(self.kafka_status),  # This is just a status flag
                 'topics': {k: v.get_status() for k, v in self.realm_managers.items()},
             }
-            return Response(status, content_type='application/json')
+            return self.return_json(status)
 
     @requires_auth
     def request_topics(self):
@@ -368,8 +367,7 @@ class ProducerManager(object):
                 status[topic] = {}
                 for name, sw in manager.schemas.items():
                     status[topic][name] = manager.get_topic_size(sw)
-
-            return Response(status, content_type='application/json')
+            return self.return_json(status)
 
     # Topic Command API
 
