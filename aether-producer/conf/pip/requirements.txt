@@ -18,7 +18,7 @@ charset-normalizer==2.0.7
 click==8.0.3
 confluent-kafka==1.7.0
 flake8==4.0.1
-flake8-quotes==3.3.0
+flake8-quotes==3.3.1
 Flask==2.0.2
 gevent==21.8.0
 greenlet==1.1.2
@@ -40,7 +40,7 @@ pytest==6.2.5
 requests==2.26.0
 six==1.16.0
 spavro==1.1.24
-SQLAlchemy==1.4.25
+SQLAlchemy==1.4.26
 toml==0.10.2
 urllib3==1.26.7
 Werkzeug==2.0.2

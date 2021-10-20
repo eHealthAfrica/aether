@@ -75,8 +75,10 @@ class KernelAPIClient(KernelClient):
         # check that Kernel connection is possible
         try:
             self._fetch(url=_REALMS_URL)
+            return True
         except Exception as e:
             logger.exception(e)
+            logger.critical(f'Cannot connect to Kernel: {_KERNEL_URL}')
             return False
 
     def get_realms(self):
