@@ -88,6 +88,11 @@ class ProducerManager(object):
             gevent.sleep(1)
 
     def run(self):
+        self.logger.info('Starting service...')
+        self.logger.info(f'== name     :  aether-producer')
+        self.logger.info(f'== version  :  {VERSION}')
+        self.logger.info(f'== revision :  {REVISION}')
+
         self.threads = []
         self.threads.append(gevent.spawn(self.keep_alive_loop))
         self.threads.append(gevent.spawn(self.check_realms))
@@ -127,8 +132,8 @@ class ProducerManager(object):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((kafka_ip, kafka_port))
         except (InterruptedError, ConnectionRefusedError, socket.gaierror) as rce:
-            self.logger.debug(f'Could not connect to Kafka on url: {kafka_ip}:{kafka_port}')
-            self.logger.debug(f'Connection problem: {rce}')
+            self.logger.error(f'Could not connect to Kafka on url: {kafka_ip}:{kafka_port}')
+            self.logger.error(f'Connection problem: {rce}')
             return False
         return True
 
@@ -197,7 +202,7 @@ class ProducerManager(object):
                 else:
                     gevent.sleep(30)
             except Exception as err:
-                self.logger.warning(f'No Kernel connection: {err}')
+                self.logger.critical(f'No Kernel connection: {err}')
                 gevent.sleep(1)
                 continue
         self.logger.debug('No longer checking for new Realms')
@@ -280,16 +285,16 @@ class ProducerManager(object):
 
     def request_health(self):
         with self.app.app_context():
-            return Response({'healthy': True})
+            return jsonify({'healthy': True})
 
     def request_healthcheck(self):
         with self.app.app_context():
             try:
                 expired = self.check_thread_health()
                 if not expired:
-                    return Response({'healthy': True})
+                    return jsonify({'healthy': True})
                 else:
-                    return Response(json.dumps(expired), 500, mimetype='application/json')
+                    return jsonify(json.dumps(expired), 500, mimetype='application/json')
             except Exception as err:
                 self.app.logger.error(f'Unexpected HC error: {err}')
                 return Response(f'Unexpected error: {err}', 500)
@@ -297,14 +302,14 @@ class ProducerManager(object):
     def request_kernelcheck(self):
         with self.app.app_context():
             healthy = self.kernel_client.check_kernel()
-            return Response(
+            return jsonify(
                 {'healthy': healthy},
                 status=200 if healthy else 424  # Failed dependency
             )
 
     def request_check_app(self):
         with self.app.app_context():
-            return Response({
+            return jsonify({
                 'app_name': 'aether-producer',
                 'app_version': VERSION,
                 'app_revision': REVISION,
@@ -327,7 +332,7 @@ class ProducerManager(object):
     @requires_auth
     def request_topics(self):
         if not self.realm_managers:
-            return Response({})
+            return jsonify({})
 
         status = {}
         for topic, manager in self.realm_managers.items():
