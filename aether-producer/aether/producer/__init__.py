@@ -143,8 +143,8 @@ class ProducerManager(object):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((kafka_ip, kafka_port))
         except (InterruptedError, ConnectionRefusedError, socket.gaierror) as rce:
-            self.logger.error(f'Could not connect to Kafka on url: {kafka_ip}:{kafka_port}')
-            self.logger.error(f'Connection problem: {rce}')
+            self.logger.critical(f'Could not connect to Kafka on url: {kafka_ip}:{kafka_port}')
+            self.logger.critical(f'Connection problem: {rce}')
             return False
         return True
 
