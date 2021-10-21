@@ -118,7 +118,8 @@ class KernelDBClient(KernelClient):
         kernel_db_pool_size = int(SETTINGS.get('kernel_db_pool_size', 6))
         self.pool = PriorityDatabasePool(pg_creds, 'KernelDBClient', kernel_db_pool_size)
 
-    def mode(self):
+    @classmethod
+    def mode(cls):
         return 'db'
 
     def check_kernel(self):

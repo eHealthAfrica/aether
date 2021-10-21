@@ -68,7 +68,8 @@ _ENTITIES_ALL_URL = (
 
 class KernelAPIClient(KernelClient):
 
-    def mode(self):
+    @classmethod
+    def mode(cls):
         return 'api'
 
     def check_kernel(self):
