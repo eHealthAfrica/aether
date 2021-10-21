@@ -90,12 +90,6 @@ class SchemaWrapper(object):
         self.topic = f'{self.realm}.{topic_base}'
 
 
-class KafkaStatus(enum.Enum):
-    SUBMISSION_PENDING = 1
-    SUBMISSION_FAILURE = 2
-    SUBMISSION_SUCCESS = 3
-
-
 class TopicStatus(enum.Enum):
     INITIALIZING = 0  # Started by not yet operational
     PAUSED = 1        # Paused
@@ -215,7 +209,7 @@ class RealmManager(object):
             sw.operating_status = TopicStatus.PAUSED
         return fn
 
-    def delete_this_topic(self, sw):
+    def delete_this_topic(self, sw: SchemaWrapper):
         kadmin = self.context.kafka_admin_client
         fs = kadmin.delete_topics([sw.topic], operation_timeout=60)
         future = fs.get(sw.topic)
@@ -223,7 +217,7 @@ class RealmManager(object):
             if not future.done():
                 if (x % 5 == 0):
                     logger.debug(f'REBUILDING {sw.topic}: Waiting for future to complete')
-                gevent.sleep(1)
+                self.context.safe_sleep(1)
             else:
                 return True
         return False
@@ -401,7 +395,7 @@ class RealmManager(object):
             'timestamp': datetime.now().isoformat(),
         }
         self.status[sw.name]['last_errors_set'] = last_error_set
-        self.context.kafka_status = KafkaStatus.SUBMISSION_FAILURE
+        self.context.kafka_last_submission_error = last_error_set['timestamp']
 
     def get_offset(self, sw: SchemaWrapper):
         # Get current offset from Database
