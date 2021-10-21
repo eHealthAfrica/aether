@@ -220,4 +220,7 @@ class KernelAPIClient(KernelClient):
                     logger.warning(f'Error while fetching data from {url}')
                     logger.debug(e)
                     raise e
-            sleep(count)  # sleep longer in each iteration
+
+            # sleep longer in each iteration
+            for _x in range(count):
+                sleep(1)
