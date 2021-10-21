@@ -209,7 +209,7 @@ class RealmManager(object):
             sw.operating_status = TopicStatus.PAUSED
         return fn
 
-    def delete_this_topic(self, sw):
+    def delete_this_topic(self, sw: SchemaWrapper):
         kadmin = self.context.kafka_admin_client
         fs = kadmin.delete_topics([sw.topic], operation_timeout=60)
         future = fs.get(sw.topic)

@@ -69,6 +69,7 @@ class ServerMixin():
             log=None,  # disable request logging
         )
         self.http.start()
+        self.logger.info(f'Listening on port {server_port}')
 
         self.add_endpoints()
 
@@ -221,6 +222,9 @@ class ServerMixin():
                 return Response(f'Success for status {status} on {topic}', 200)
             except Exception as err:
                 return Response(f'Operation failed on {topic} with: {err}', 500)
+
+    def check_topics(self):
+        raise NotImplementedError
 
     def check_thread_health(self):
         raise NotImplementedError

@@ -63,6 +63,10 @@ class ProducerManager(ServerMixin):
         # Turn on Flask
         self.serve()
 
+        self.logger.info(f'== Version      :  {VERSION}')
+        self.logger.info(f'== Revision     :  {REVISION}')
+        self.logger.info(f'== Client mode  :  {KernelClient.mode()}')
+
         # Start Signal Handlers
         self.killed = False
         signal.signal(signal.SIGTERM, self.kill)
@@ -81,10 +85,6 @@ class ProducerManager(ServerMixin):
         self.run()
 
         self.logger.info('Started producer service')
-        self.logger.info(f'== Version      :  {VERSION}')
-        self.logger.info(f'== Revision     :  {REVISION}')
-        self.logger.info(f'== Client mode  :  {self.kernel_client.mode()}')
-        self.logger.info(f'== Kafka status :  {self.kafka_status}')
 
     def run(self):
         self.threads = []
