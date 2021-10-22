@@ -23,9 +23,19 @@ from django.utils.translation import gettext as _
 from .api import models, utils
 
 if settings.MULTITENANCY:  # pragma: no cover
-    PROJECT_LIST_FILTER = ('mt__realm',)
-    PIPELINE_LIST_FILTER = ('project__mt__realm',)
-    CONTRACT_LIST_FILTER = ('pipeline__project__mt__realm',)
+    PROJECT_LIST_FILTER = (
+        ('mt__realm', admin.EmptyFieldListFilter),
+        'mt__realm',
+    )
+    PIPELINE_LIST_FILTER = (
+        ('project__mt__realm', admin.EmptyFieldListFilter),
+        'project__mt__realm',
+    )
+    CONTRACT_LIST_FILTER = (
+        ('pipeline__project__mt__realm', admin.EmptyFieldListFilter),
+        'pipeline__project__mt__realm',
+    )
+
 else:  # pragma: no cover
     PROJECT_LIST_FILTER = []
     PIPELINE_LIST_FILTER = []

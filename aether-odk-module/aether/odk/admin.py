@@ -29,9 +29,19 @@ from .api.kernel_utils import (
 )
 
 if settings.MULTITENANCY:  # pragma: no cover
-    PROJECT_LIST_FILTER = ('mt__realm',)
-    XFORM_LIST_FILTER = ('project__mt__realm',)
-    MEDIAFILE_LIST_FILTER = ('xform__project__mt__realm',)
+    PROJECT_LIST_FILTER = (
+        ('mt__realm', admin.EmptyFieldListFilter),
+        'mt__realm',
+    )
+    XFORM_LIST_FILTER = (
+        ('project__mt__realm', admin.EmptyFieldListFilter),
+        'project__mt__realm',
+    )
+    MEDIAFILE_LIST_FILTER = (
+        ('xform__project__mt__realm', admin.EmptyFieldListFilter),
+        'xform__project__mt__realm',
+    )
+
 else:  # pragma: no cover
     PROJECT_LIST_FILTER = []
     XFORM_LIST_FILTER = []
@@ -111,7 +121,7 @@ class XFormAdmin(BaseAdmin):
         'version',
         'active',
     )
-    list_filter = ('active',) + XFORM_LIST_FILTER
+    list_filter = ('active', 'project__active',) + XFORM_LIST_FILTER
     date_hierarchy = 'modified_at'
     readonly_fields = (
         'title', 'form_id', 'version', 'md5sum',
@@ -143,7 +153,7 @@ class XFormAdmin(BaseAdmin):
 class MediaFileAdmin(BaseAdmin):
 
     list_display = ('xform', 'name', 'md5sum', 'media_file',)
-    list_filter = MEDIAFILE_LIST_FILTER
+    list_filter = ('xform__active', 'xform__project__active',) + MEDIAFILE_LIST_FILTER
     readonly_fields = ('md5sum',)
     search_fields = ('xform', 'name',)
     ordering = list_display

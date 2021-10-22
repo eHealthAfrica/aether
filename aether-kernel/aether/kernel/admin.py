@@ -22,9 +22,21 @@ from django.contrib import admin
 from .api import models
 
 if settings.MULTITENANCY:  # pragma: no cover
-    PROJECT_LIST_FILTER = ('mt__realm',)
-    CHILD_LIST_FILTER = ('project__mt__realm', 'project__active',)
-    ATTACH_LIST_FILTER = ('submission__project__mt__realm', 'submission__project__active',)
+    PROJECT_LIST_FILTER = (
+        ('mt__realm', admin.EmptyFieldListFilter),
+        'mt__realm',
+    )
+    CHILD_LIST_FILTER = (
+        'project__active',
+        ('project__mt__realm', admin.EmptyFieldListFilter),
+        'project__mt__realm',
+    )
+    ATTACH_LIST_FILTER = (
+        'submission__project__active',
+        ('submission__project__mt__realm', admin.EmptyFieldListFilter),
+        'submission__project__mt__realm',
+    )
+
 else:  # pragma: no cover
     PROJECT_LIST_FILTER = []
     CHILD_LIST_FILTER = ('project__active',)
@@ -50,12 +62,12 @@ class MappingSetAdmin(BaseAdmin):
 
 
 class MappingAdmin(BaseAdmin):
-    list_display = ('id', 'name', 'revision', 'mappingset',)
+    list_display = ('id', 'name', 'revision', 'mappingset', 'project',)
     list_filter = ('is_active', 'is_read_only',) + CHILD_LIST_FILTER
 
 
 class SubmissionAdmin(BaseAdmin):
-    list_display = ('id', 'mappingset', 'is_extracted',)
+    list_display = ('id', 'mappingset', 'is_extracted', 'project',)
     list_filter = ('is_extracted',) + CHILD_LIST_FILTER
 
 
@@ -67,6 +79,7 @@ class AttachmentAdmin(BaseAdmin):
 
 class SchemaAdmin(BaseAdmin):
     list_display = ('id', 'name', 'family',)
+    list_filter = ('schemadecorators', admin.EmptyFieldListFilter),
 
 
 class SchemaDecoratorAdmin(BaseAdmin):
@@ -76,8 +89,16 @@ class SchemaDecoratorAdmin(BaseAdmin):
 
 class EntityAdmin(BaseAdmin):
     date_hierarchy = 'created'
-    list_display = ('id', 'status', 'submission', 'mapping',)
-    list_filter = ('status',) + CHILD_LIST_FILTER
+    list_display = (
+        'id', 'status',
+        'submission', 'mapping',
+        'project', 'schema',
+    )
+    list_filter = (
+        'status',
+        ('project', admin.EmptyFieldListFilter),
+        ('schema', admin.EmptyFieldListFilter),
+    ) + CHILD_LIST_FILTER
 
 
 class ExportTaskAdmin(BaseAdmin):
