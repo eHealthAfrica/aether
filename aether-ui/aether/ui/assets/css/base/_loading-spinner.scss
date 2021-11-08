@@ -35,10 +35,10 @@ $duration: 1.8s;
     declaration-block-single-line-max-declarations
 */
 @keyframes dot {
-  0%   { opacity: 0; top: 20px; background: $purple; }
-  10%  { opacity: 1; }
-  30%  { opacity: 1; top: 5px; background: $action-color; }
-  100% { opacity: 0; top: 5px; background: $action-color; }
+  0%   { opacity: 0%; top: 20px; background: $purple; }
+  10%  { opacity: 100%; }
+  30%  { opacity: 100%; top: 5px; background: $action-color; }
+  100% { opacity: 0%; top: 5px; background: $action-color; }
 }
 /* stylelint-enable
     block-opening-brace-space-before,
@@ -58,7 +58,7 @@ $duration: 1.8s;
   left: calc(50vw - 50px);
 
   &::before {
-    content: '';
+    content: "";
     display: block;
     position: absolute;
     border-radius: 100%;
@@ -67,7 +67,7 @@ $duration: 1.8s;
     height: 16px;
     left: 22px;
     top: 22px;
-    opacity: 0;
+    opacity: 0%;
     animation: dot $duration infinite;
   }
 }

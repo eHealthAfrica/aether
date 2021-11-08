@@ -121,8 +121,8 @@ small {
   font-size: $font-size-l;
 }
 
-input[type='password'],
-input[type='text'],
+input[type="password"],
+input[type="text"],
 textarea {
   @include shadow-cutout-white;
 
@@ -178,12 +178,16 @@ textarea:active {
   outline: 0;
 }
 
+/* stylelint-disable property-no-vendor-prefix */
+
 input:-webkit-autofill,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
   -webkit-animation-name: autofill-transparent;
   -webkit-animation-fill-mode: both;
 }
+
+/* stylelint-enable property-no-vendor-prefix */
 
 .textarea-header {
   @include shadow-cutout-white;
@@ -212,7 +216,7 @@ select:-webkit-autofill {
   top: 120%;
 
   &::before {
-    content: '';
+    content: "";
     display: block;
     width: 12px;
     height: 12px;
@@ -289,7 +293,7 @@ select:-webkit-autofill {
   border-radius: 50%;
   width: 0.5em;
   height: 0.5em;
-  content: '';
+  content: "";
   display: inline-block;
   margin-left: 0.5em;
 }
@@ -339,7 +343,7 @@ code {
     padding-left: 2.4rem;
 
     &::before {
-      content: '';
+      content: "";
       display: block;
       position: absolute;
       left: 0;
@@ -352,7 +356,7 @@ code {
     }
 
     &::after {
-      content: '';
+      content: "";
       display: block;
       position: absolute;
       top: 4px;
@@ -397,7 +401,7 @@ code {
     line-height: 1.3em;
 
     &::before {
-      content: '\f00c';
+      content: "\f00c";
       font-family: $icon-font;
       font-weight: 900;
       font-size: 10px;
@@ -444,7 +448,7 @@ code {
   padding-left: 1.6rem;
 
   &::before {
-    content: '';
+    content: "";
     display: block;
     width: 0.8rem;
     height: 1rem;

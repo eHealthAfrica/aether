@@ -101,13 +101,13 @@
     0 0 4px rgba($text-color, 0.1);
 }
 
-// STATES
+/* STATES */
 
 @mixin selected {
   .badge {
     @include bg-gradient;
 
-    opacity: 1;
+    opacity: 100%;
 
     .fa-caret-right {
       transform: rotate(90deg);
