@@ -18,9 +18,11 @@
  * under the License.
  */
 
-// ************************************
-// Colors
-// ************************************
+/*
+ ************************************
+ * Color Codes
+ ************************************
+ */
 
 $white:              #fff;
 $black:              #000;
@@ -45,13 +47,15 @@ $action-color:       #0093ff;
 $action-color-b:     #50aef3;
 $hover-color:        $purple;
 
-// ************************************
-// Fonts
-// ************************************
+/*
+ ************************************
+ * Fonts
+ ************************************
+ */
 
-$body-font-family:   'Open Sans', arial, sans-serif;
-$code-font-family:   'Fira Mono', sfmono-regular, menlo, monaco, monospace;
-$icon-font:          'Font Awesome 5 Free';
+$body-font-family:   "Open Sans", arial, sans-serif;
+$code-font-family:   "Fira Mono", sfmono-regular, menlo, monaco, monospace;
+$icon-font:          "Font Awesome 5 Free";
 
 $font-size-xxs:      0.7rem;
 $font-size-xs:       0.86rem;
@@ -62,9 +66,11 @@ $font-size-l:        1.6rem;
 $font-size-xl:       2rem;
 $font-size-xxl:      3.2rem;
 
-// ************************************
-// Sizes
-// ************************************
+/*
+ ************************************
+ * Sizes
+ ************************************
+ */
 
 $unit:               1.2rem;
 $unit-xl:            2rem;

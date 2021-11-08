@@ -58,7 +58,7 @@
   }
 
   &::after {
-    content: '';
+    content: "";
     display: block;
     width: 100%;
     height: 3rem;
@@ -114,7 +114,7 @@
       position: relative;
 
       &::before {
-        content: '';
+        content: "";
         display: inline-block;
         width: 0;
         height: 0;
@@ -140,7 +140,7 @@
       padding-bottom: 0.1rem;
     }
 
-    div[class^='input-schema-mapped'] {
+    div[class^="input-schema-mapped"] {
       border-bottom: 1px solid $white;
     }
 

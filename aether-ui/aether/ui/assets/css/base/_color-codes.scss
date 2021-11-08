@@ -18,9 +18,11 @@
  * under the License.
  */
 
-// ************************************
-// Color Codes
-// ************************************
+/*
+ ************************************
+ * Color Codes
+ ************************************
+ */
 
 $colors-list: (
   #6ed7c2
@@ -44,13 +46,13 @@ $colors-list: (
     }
   }
 
-  .entity-type-mapped-#{$i} {
+  .entity-type-mapped-#{$i} { /* eslint-disable-line */
     background-color: rgba($current-color, 0.2);
     position: relative;
 
     &::after {
       border-right: 0.6rem solid rgba($current-color, 0.2);
-      content: '';
+      content: "";
       display: block;
       position: absolute;
       top: 0;
@@ -96,7 +98,7 @@ $colors-list: (
 
     &::before {
       background-color: rgba($current-color, 0.2);
-      content: '';
+      content: "";
       display: block;
       position: absolute;
       top: 0;
@@ -108,7 +110,7 @@ $colors-list: (
 
     &::after {
       border-left: 0.6rem solid rgba($current-color, 0.2);
-      content: '';
+      content: "";
       display: block;
       position: absolute;
       top: 0;

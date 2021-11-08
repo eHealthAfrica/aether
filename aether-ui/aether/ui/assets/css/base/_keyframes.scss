@@ -18,32 +18,34 @@
  * under the License.
  */
 
-// stylelint-disable block-opening-brace-space-before
+/* stylelint-disable block-opening-brace-space-before */
 
 @keyframes fade-in {
-  0%   { opacity: 0; }
-  100% { opacity: 1; }
+  0%   { opacity: 0%; }
+  100% { opacity: 100%; }
 }
 
 @keyframes show {
-  0%   { opacity: 0; }
-  50%  { opacity: 0; }
-  100% { opacity: 1; }
+  0%   { opacity: 0%; }
+  50%  { opacity: 0%; }
+  100% { opacity: 100%; }
 }
 
 @keyframes show-form {
   0% {
     max-height: 0;
     padding: 0;
-    opacity: 0;
+    opacity: 0%;
   }
 
   100% {
     max-height: 200px;
     padding: 2rem 0 3rem;
-    opacity: 1;
+    opacity: 100%;
   }
 }
+
+/* stylelint-disable at-rule-no-vendor-prefix */
 
 @keyframes slide-up {
   0%   { top: 100vh; }
@@ -64,4 +66,6 @@
   }
 }
 
-// stylelint-enable block-opening-brace-space-before
+/* stylelint-enable at-rule-no-vendor-prefix */
+
+/* stylelint-enable block-opening-brace-space-before */

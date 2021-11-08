@@ -102,7 +102,7 @@ $colors: (
   }
 
   @each $name, $size in $font-sizes {
-    .font-sample-#{$name} {
+    .font-sample-#{$name} { /* eslint-disable-line */
       font-size: $size;
       line-height: $size;
       margin-bottom: 2rem;
@@ -128,7 +128,7 @@ $colors: (
       }
 
       &::after {
-        content: '#{$current-color}';
+        content: "#{$current-color}";
       }
     }
   }
