@@ -51,7 +51,7 @@ greenlet==1.1.2
 idna==3.3
 Jinja2==3.0.2
 jmespath==0.10.0
-lxml==4.6.4
+lxml==4.6.5
 Markdown==3.3.4
 MarkupSafe==2.0.1
 mccabe==0.6.1
