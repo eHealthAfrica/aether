@@ -20,6 +20,10 @@ script: ./scripts/test_travis.sh $TEST_MODE
 
 after_failure: ./scripts/test_travis_failure.sh ${TEST_MODE:-}
 
+env:
+  global:
+    - CONFLUENTINC_VERSION=6.1.4
+
 # use matrix to parallelize tests
 jobs:
   fast_finish: true
