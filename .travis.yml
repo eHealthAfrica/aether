@@ -22,7 +22,7 @@ after_failure: ./scripts/test_travis_failure.sh ${TEST_MODE:-}
 
 env:
   global:
-    - CONFLUENTINC_VERSION=6.1.4
+    - CONFLUENTINC_VERSION=6.1.1
 
 # use matrix to parallelize tests
 jobs:
