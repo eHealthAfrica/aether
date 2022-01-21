@@ -139,18 +139,18 @@ $output-nav-width:      10rem;
   }
 
   &::before {
-    content: '\f31e'; // fa-expand-arrows-alt
+    content: "\f31e"; /* fa-expand-arrows-alt */
     display: block;
   }
 
   &::after {
-    content: '\f78c'; // fa-compress-arrows-alt
+    content: "\f78c"; /* fa-compress-arrows-alt */
     display: none;
   }
 
   span {
     padding: 0 2.3rem;
-    opacity: 0;
+    opacity: 0%;
     transition: opacity 0.2s;
   }
 
@@ -162,7 +162,7 @@ $output-nav-width:      10rem;
     }
 
     span {
-      opacity: 1;
+      opacity: 100%;
     }
   }
 }
@@ -170,7 +170,7 @@ $output-nav-width:      10rem;
 .fullscreen.pipeline {
   top: 0;
 
-  div[class^='pipeline-section--'],
+  div[class^="pipeline-section--"],
   .pipeline-output {
     height: 100vh;
   }
@@ -200,7 +200,7 @@ $output-nav-width:      10rem;
   transition: width $transition-speed;
 }
 
-div[class^='pipeline-nav-item--'] {
+div[class^="pipeline-nav-item--"] {
   @include label;
 
   color: $action-color-b;
@@ -223,7 +223,7 @@ div[class^='pipeline-nav-item--'] {
     min-width: 1.8rem;
     height: 1.8rem;
     padding: 0.4rem 0;
-    opacity: 0.4;
+    opacity: 40%;
     margin: 0 0.8rem;
   }
 
@@ -231,7 +231,7 @@ div[class^='pipeline-nav-item--'] {
     .badge {
       @include bg-gradient;
 
-      opacity: 1;
+      opacity: 100%;
     }
   }
 }
@@ -272,7 +272,7 @@ div.pipeline-nav-item--output {
   overflow-y: auto;
 }
 
-div[class^='pipeline-section--'],
+div[class^="pipeline-section--"],
 .pipeline-output {
   width: 0;
   height: calc(100vh - #{$navbar-height-xs});
@@ -293,7 +293,7 @@ div[class^='pipeline-section--'],
   }
 }
 
-// INPUT
+/* INPUT */
 
 .pipeline--input {
   .pipeline-tabs {
@@ -326,7 +326,7 @@ div[class^='pipeline-section--'],
   }
 }
 
-// ENTITY TYPES
+/* ENTITY TYPES */
 
 .pipeline--entities {
   div.pipeline-nav-item--input {
@@ -372,7 +372,7 @@ div[class^='pipeline-section--'],
   }
 }
 
-// MAPPING
+/* MAPPING */
 
 .pipeline--mapping {
   div.pipeline-nav-item--input {
@@ -427,7 +427,7 @@ div[class^='pipeline-section--'],
   }
 }
 
-// OUTPUT
+/* OUTPUT */
 
 .show-output {
   .pipeline-nav-items {

@@ -49,7 +49,7 @@
   }
 }
 
-// button on colored background
+/* button on colored background */
 
 .btn-c {
   @include shadow-emboss-color;
@@ -75,7 +75,7 @@
   @include shadow-flat-white;
 }
 
-// button on dark background
+/* button on dark background */
 
 .btn-d {
   @include shadow-emboss-dark;
@@ -100,7 +100,7 @@
   @include shadow-flat-dark;
 }
 
-// button on white background
+/* button on white background */
 
 .btn-w {
   @include shadow-emboss-white;

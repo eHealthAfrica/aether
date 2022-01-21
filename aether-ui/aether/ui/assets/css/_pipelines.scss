@@ -25,7 +25,7 @@
   min-height: 100vh;
 
   &::before {
-    content: '';
+    content: "";
     display: block;
     position: fixed;
     bottom: -80vw;
@@ -39,7 +39,7 @@
   }
 
   &::after {
-    content: '';
+    content: "";
     display: block;
     position: fixed;
     bottom: -20vw;
@@ -140,8 +140,7 @@
 
   .input-name {
     word-wrap: break-word;
-    // 100% - padding - logo size - logo padding
-    max-width: calc(100% - 1rem - 1rem - 1.8rem);
+    max-width: calc(100% - 1rem - 1rem - 1.8rem); /* 100% - padding - logo size - logo padding */
     line-height: 1.3em;
   }
 
@@ -283,7 +282,7 @@
   .form-label {
     position: absolute;
     top: -2rem;
-    opacity: 0;
+    opacity: 0%;
     transition: opacity 0.3s;
   }
 
@@ -295,10 +294,14 @@
     width: 100%;
   }
 
+  /* stylelint-disable property-no-vendor-prefix */
+
   .text-input:-webkit-autofill {
     -webkit-animation-name: autofill-dark;
     -webkit-animation-fill-mode: both;
   }
+
+  /* stylelint-enable property-no-vendor-prefix */
 
   .text-input::placeholder {
     color: rgba($white, 0.4);
@@ -306,7 +309,7 @@
   }
 
   .text-input:valid + .form-label {
-    opacity: 1;
+    opacity: 100%;
   }
 
   .btn {
@@ -332,7 +335,7 @@
     .form-label {
       position: absolute;
       top: -2rem;
-      opacity: 0;
+      opacity: 0%;
       transition: opacity 0.3s;
     }
 
@@ -348,7 +351,7 @@
     }
 
     .text-input:valid + .form-label {
-      opacity: 1;
+      opacity: 100%;
     }
 
     .btn {

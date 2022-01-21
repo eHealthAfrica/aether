@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM node:14-alpine
 
 WORKDIR /code/
 ENTRYPOINT ["/code/assets/conf/entrypoint.sh"]
