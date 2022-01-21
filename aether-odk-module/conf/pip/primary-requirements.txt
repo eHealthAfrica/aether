@@ -17,7 +17,7 @@
 
 # Aether Django SDK library with extras
 aether.sdk[cache,server,storage,test]
-
+django<4
 
 # xForm and data manipulation
 lxml
