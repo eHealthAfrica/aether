@@ -14,7 +14,7 @@
 
 attrs==21.4.0
 certifi==2021.10.8
-charset-normalizer==2.0.10
+charset-normalizer==2.0.11
 click==8.0.3
 confluent-kafka==1.8.2
 flake8==4.0.1
@@ -36,13 +36,13 @@ py==1.11.0
 pycodestyle==2.8.0
 pyflakes==2.4.0
 pyparsing==3.0.7
-pytest==6.2.5
+pytest==7.0.0
 requests==2.27.1
 six==1.16.0
 spavro==1.1.24
 SQLAlchemy==1.4.31
-toml==0.10.2
+tomli==2.0.1
 urllib3==1.26.8
-Werkzeug==2.0.2
+Werkzeug==2.0.3
 zope.event==4.5.0
 zope.interface==5.4.0
