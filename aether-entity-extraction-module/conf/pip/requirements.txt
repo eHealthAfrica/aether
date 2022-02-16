@@ -16,12 +16,12 @@ aether.python==1.3.0
 attrs==21.4.0
 avro-python3==1.10.2
 certifi==2021.10.8
-charset-normalizer==2.0.11
+charset-normalizer==2.0.12
 coverage==6.3.1
 decorator==5.1.1
 Deprecated==1.2.13
 eha-jsonpath==0.6.0
-fakeredis==1.7.0
+fakeredis==1.7.1
 flake8==4.0.1
 flake8-quotes==3.3.1
 gevent==21.12.0
@@ -40,8 +40,8 @@ pycodestyle==2.8.0
 pyflakes==2.4.0
 pyparsing==3.0.7
 pyrsistent==0.18.1
-pytest==7.0.0
-redis==4.0.2
+pytest==7.0.1
+redis==4.1.4
 requests==2.27.1
 six==1.16.0
 sortedcontainers==2.4.0
