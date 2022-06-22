@@ -1,4 +1,4 @@
-FROM python:3.8-slim-bullseye
+FROM python:3.8-slim
 
 LABEL description="Aether Kafka Producer" \
       name="aether-producer" \
