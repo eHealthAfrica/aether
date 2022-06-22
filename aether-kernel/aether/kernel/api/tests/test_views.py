@@ -310,7 +310,7 @@ class ViewsTest(TestCase):
             'schemas': {'Person': EXAMPLE_SCHEMA},
         })
         response = self.client.post(url, data=data, content_type='application/json')
-        response_data = json.loads(response.content)
+        response_data = response.json()
         self.assertEqual(
             len(response_data['entities']),
             len(EXAMPLE_SOURCE_DATA['data']['people']),
@@ -341,7 +341,7 @@ class ViewsTest(TestCase):
             },
         })
         response = self.client.post(url, data=data, content_type='application/json')
-        response_data = json.loads(response.content)
+        response_data = response.json()
         self.assertEqual(len(response_data['entities']), 0, response_data)
         expected = [
             'Could not find schema "person"',
@@ -372,7 +372,7 @@ class ViewsTest(TestCase):
             },
         })
         response = self.client.post(url, data=data, content_type='application/json')
-        response_data = json.loads(response.content)
+        response_data = response.json()
         self.assertEqual(response.status_code, 400)
         self.assertIn('This field is required', response_data['schemas'][0])
         self.assertIn('This field is required', response_data['submission_payload'][0])
@@ -385,7 +385,7 @@ class ViewsTest(TestCase):
             'schemas': [],
         })
         response = self.client.post(url, data=data, content_type='application/json')
-        response_data = json.loads(response.content)
+        response_data = response.json()
         self.assertEqual(response.status_code, 400)
         self.assertEqual('Value [] is not an Object', response_data['schemas'][0])
 
@@ -409,7 +409,7 @@ class ViewsTest(TestCase):
         url = reverse('entity-detail', kwargs={'pk': obj.pk}) + '?depth=' + str(depth)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
-        return json.loads(response.content)
+        return response.json()
 
     def test_read_linked_data(self):
         location_schema = models.Schema.objects.create(
@@ -612,7 +612,7 @@ class ViewsTest(TestCase):
 
         for schema in bad_schemas:
             response = self.client.post(url, json.dumps(schema), content_type='application/json')
-            response_content = json.loads(response.content)
+            response_content = response.json()
             self.assertIn(
                 'A schema is required to have a field "id" of type "string"',
                 response_content['definition'][0],
@@ -1193,7 +1193,7 @@ class ViewsTest(TestCase):
         # no data
         response = self.client.post(url)
         self.assertEqual(response.status_code, 400)
-        data = json.loads(response.content)
+        data = response.json()
         self.assertEqual(data['message'], 'Missing "schema" data')
 
         # from schema to input
@@ -1217,7 +1217,7 @@ class ViewsTest(TestCase):
             content_type='application/json',
         )
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
+        data = response.json()
 
         self.assertEqual(data['schema'], schema)
         # input conforms the schema

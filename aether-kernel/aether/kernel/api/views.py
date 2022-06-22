@@ -52,7 +52,7 @@ from . import filters, models, project_artefacts, serializers, utils
 class ProjectViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
-    filter_class = filters.ProjectFilter
+    filterset_class = filters.ProjectFilter
     search_fields = ('name',)
 
     @action(detail=True, methods=['patch'], url_name='erase_data', url_path='delete-data')
@@ -320,7 +320,7 @@ class ProjectViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, viewsets.Model
 class MappingSetViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, viewsets.ModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetSerializer
-    filter_class = filters.MappingSetFilter
+    filterset_class = filters.MappingSetFilter
     search_fields = ('name',)
     mt_field = 'project'
 
@@ -342,7 +342,7 @@ class MappingSetViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, viewsets.Mo
 class MappingViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
-    filter_class = filters.MappingFilter
+    filterset_class = filters.MappingFilter
     search_fields = ('name',)
     mt_field = 'mappingset__project'
 
@@ -370,7 +370,7 @@ class MappingViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
 class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMixin, viewsets.ModelViewSet):
     queryset = models.Submission.objects.all().prefetch_related('attachments')
     serializer_class = serializers.SubmissionSerializer
-    filter_class = filters.SubmissionFilter
+    filterset_class = filters.SubmissionFilter
     search_fields = ('project__name', 'mappingset__name',)
     mt_field = 'project'
 
@@ -525,7 +525,7 @@ class SubmissionViewSet(MtViewSetMixin, FilteredMixin, ExtractMixin, ExporterMix
 class AttachmentViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all().prefetch_related('submission')
     serializer_class = serializers.AttachmentSerializer
-    filter_class = filters.AttachmentFilter
+    filterset_class = filters.AttachmentFilter
     search_fields = ('name',)
     mt_field = 'submission__project'
 
@@ -538,7 +538,7 @@ class AttachmentViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
 class SchemaViewSet(FilteredMixin, viewsets.ModelViewSet):
     queryset = models.Schema.objects.all()
     serializer_class = serializers.SchemaSerializer
-    filter_class = filters.SchemaFilter
+    filterset_class = filters.SchemaFilter
     search_fields = ('name',)
 
     @action(detail=True, methods=['get'])
@@ -608,7 +608,7 @@ class SchemaViewSet(FilteredMixin, viewsets.ModelViewSet):
 class SchemaDecoratorViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSet):
     queryset = models.SchemaDecorator.objects.all()
     serializer_class = serializers.SchemaDecoratorSerializer
-    filter_class = filters.SchemaDecoratorFilter
+    filterset_class = filters.SchemaDecoratorFilter
     search_fields = ('name',)
     mt_field = 'project'
 
@@ -642,7 +642,7 @@ class SchemaDecoratorViewSet(MtViewSetMixin, FilteredMixin, viewsets.ModelViewSe
 class EntityViewSet(MtViewSetMixin, FilteredMixin, ExporterMixin, viewsets.ModelViewSet):
     queryset = models.Entity.objects.all().prefetch_related('submission__attachments')
     serializer_class = serializers.EntitySerializer
-    filter_class = filters.EntityFilter
+    filterset_class = filters.EntityFilter
     search_fields = ('project__name', 'schema__name',)
     mt_field = 'project'
 
@@ -814,7 +814,7 @@ class SubmissionStatsMixin(MtViewSetMixin):
 class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectStatsSerializer
-    filter_class = filters.ProjectFilter
+    filterset_class = filters.ProjectFilter
     search_fields = ('name',)
     entities_fk = 'project'
     fields_list = ('id', 'name', 'created', 'active',)
@@ -823,7 +823,7 @@ class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
-    filter_class = filters.MappingSetFilter
+    filterset_class = filters.MappingSetFilter
     search_fields = ('name',)
     mt_field = 'project'
 
@@ -831,7 +831,7 @@ class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet
 class ExportTaskViewSet(MtViewSetMixin, viewsets.ReadOnlyModelViewSet, mixins.DestroyModelMixin):
     queryset = models.ExportTask.objects.all()
     serializer_class = serializers.ExportTaskSerializer
-    filter_class = filters.ExportTaskFilter
+    filterset_class = filters.ExportTaskFilter
     mt_field = 'project'
 
     @action(
