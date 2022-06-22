@@ -1,4 +1,5 @@
 gcc
 gettext-base
 gnupg
+lsb-release
 wget

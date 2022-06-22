@@ -664,7 +664,7 @@ def kernel_data_request(url='', method='get', data=None, headers=None):
 
     if res.status_code == status.HTTP_204_NO_CONTENT:
         return None
-    return json.loads(res.content.decode('utf-8'))
+    return res.json()
 
 
 def wrap_kernel_headers(instance):

@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 from unittest import mock
 import requests
 
@@ -152,14 +151,14 @@ class KernelUtilsTest(CustomTestCase):
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_project = json.loads(response.content.decode('utf-8'))
+        kernel_project = response.json()
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
         self.assertIn(self.project.name, kernel_project['name'])
 
         # creates the artefacts for the xForm 1
         response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_mapping_1 = json.loads(response.content.decode('utf-8'))
+        kernel_mapping_1 = response.json()
         self.assertEqual(kernel_mapping_1['id'], self.KERNEL_ID_1)
         self.assertTrue(kernel_mapping_1['is_read_only'])
         self.assertTrue(kernel_mapping_1['is_active'])
@@ -168,13 +167,13 @@ class KernelUtilsTest(CustomTestCase):
 
         response = requests.get(self.SCHEMA_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_schema_1 = json.loads(response.content.decode('utf-8'))
+        kernel_schema_1 = response.json()
         self.assertEqual(kernel_schema_1['id'], self.KERNEL_ID_1)
 
         # creates the artefacts for the xForm 2
         response = requests.get(self.MAPPING_URL_2, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_mapping_2 = json.loads(response.content.decode('utf-8'))
+        kernel_mapping_2 = response.json()
         self.assertEqual(kernel_mapping_2['id'], self.KERNEL_ID_2)
         self.assertTrue(kernel_mapping_2['is_read_only'])
         self.assertTrue(kernel_mapping_2['is_active'])
@@ -182,7 +181,7 @@ class KernelUtilsTest(CustomTestCase):
 
         response = requests.get(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_schema_2 = json.loads(response.content.decode('utf-8'))
+        kernel_schema_2 = response.json()
         self.assertEqual(kernel_schema_2['id'], self.KERNEL_ID_2)
 
     def test__propagate_kernel_artefacts(self):
@@ -190,19 +189,19 @@ class KernelUtilsTest(CustomTestCase):
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_project = json.loads(response.content.decode('utf-8'))
+        kernel_project = response.json()
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
         self.assertIn(self.project.name, kernel_project['name'])
 
         # creates the artefacts for the xForm 1
         response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_mapping_1 = json.loads(response.content.decode('utf-8'))
+        kernel_mapping_1 = response.json()
         self.assertEqual(kernel_mapping_1['id'], self.KERNEL_ID_1)
 
         response = requests.get(self.SCHEMA_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_schema_1 = json.loads(response.content.decode('utf-8'))
+        kernel_schema_1 = response.json()
         self.assertEqual(kernel_schema_1['id'], self.KERNEL_ID_1)
 
         # does not create the artefacts for the xForm 2
