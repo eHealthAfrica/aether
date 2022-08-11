@@ -24,7 +24,7 @@ charset-normalizer==2.1.0
 configparser==5.2.0
 coverage==6.4.1
 Deprecated==1.2.13
-Django==3.2.14
+Django==3.2.15
 django-cacheops==6.1
 django-cleanup==6.0.0
 django-cors-headers==3.13.0
