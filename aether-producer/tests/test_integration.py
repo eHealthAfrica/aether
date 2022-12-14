@@ -42,41 +42,41 @@ def test_manager_http_endpoint_service():
         url = 'http://localhost:%s' % SETTINGS.get('server_port', 9005)
 
         r = requests.head(f'{url}/health')
-        assert(r.status_code == 200), r.text
+        assert (r.status_code == 200), r.text
 
         r = requests.head(f'{url}/healthcheck')
-        assert(r.status_code == 200), r.text
+        assert (r.status_code == 200), r.text
 
         r = requests.head(f'{url}/check-app')
-        assert(r.status_code == 200), r.text
+        assert (r.status_code == 200), r.text
 
         r = requests.head(f'{url}/kernelcheck')
-        assert(r.status_code == 424), r.text
+        assert (r.status_code == 424), r.text
         r = requests.head(f'{url}/check-app/aether-kernel')
-        assert(r.status_code == 424), r.text
+        assert (r.status_code == 424), r.text
 
         r = requests.head(f'{url}/kafkacheck')
-        assert(r.status_code == 424), r.text
+        assert (r.status_code == 424), r.text
         r = requests.head(f'{url}/check-app/kafka')
-        assert(r.status_code == 424), r.text
+        assert (r.status_code == 424), r.text
 
         protected_endpoints = ['status', 'topics']
         for e in protected_endpoints:
             r = requests.head(f'{url}/{e}')
-            assert(r.status_code == 401), r.text
+            assert (r.status_code == 401), r.text
 
         for e in protected_endpoints:
             r = requests.head(f'{url}/{e}', auth=auth)
-            assert(r.status_code == 200), r.text
+            assert (r.status_code == 200), r.text
 
         man.realm_managers[_realm] = {}
         man.thread_checkin(_realm)
         sleep(2)
         r = requests.get(f'{url}/health')
-        assert(r.status_code == 200)
+        assert (r.status_code == 200)
         r = requests.get(f'{url}/healthcheck')
-        assert(r.status_code == 500), r.text
-        assert(_realm in r.json().keys())
+        assert (r.status_code == 500), r.text
+        assert (_realm in r.json().keys())
 
     finally:
         SETTINGS.clear_overrides()
@@ -89,10 +89,10 @@ def test_initialize_database_get_set():
     try:
         MockProducerManager().init_db()
 
-        assert(Offset.get_offset('some_missing') is None)
+        assert (Offset.get_offset('some_missing') is None)
         value = str(uuid.uuid4())
         Offset.update('fake_entry', value)
-        assert(Offset.get_offset('fake_entry') == value)
+        assert (Offset.get_offset('fake_entry') == value)
     finally:
         Offset.close_pool()
 
@@ -104,23 +104,23 @@ def test_offset_pooling():
 
         osn, osv = 'pool_offset_test', '10001'
         Offset.update(osn, osv)
-        assert(osv == Offset.get_offset(osn))
-        assert(OffsetQueue.max_connections == len(OffsetQueue.connection_pool))
+        assert (osv == Offset.get_offset(osn))
+        assert (OffsetQueue.max_connections == len(OffsetQueue.connection_pool))
 
         conns = []
         while not OffsetQueue.connection_pool.empty():
             promise = OffsetQueue.request_connection(0, 'test')
             conn = promise.get()
-            assert(OffsetQueue._test_connection(conn))
+            assert (OffsetQueue._test_connection(conn))
             conns.append(conn)
 
         try:
             with Timeout(1):
                 Offset.get_offset(osn)
         except TimeoutError:
-            assert(True), 'Operation has timed out.'
+            assert (True), 'Operation has timed out.'
         else:
-            assert(False), 'Operation should have timed out.'
+            assert (False), 'Operation should have timed out.'
         finally:
             for conn in conns:
                 OffsetQueue.release('test', conn)
@@ -138,7 +138,7 @@ def test_offset_prioritization():
         while not OffsetQueue.connection_pool.empty():
             promise = OffsetQueue.request_connection(0, 'test')
             conn = promise.get()
-            assert(OffsetQueue._test_connection(conn))
+            assert (OffsetQueue._test_connection(conn))
             conns.append(conn)
 
         low_prio = OffsetQueue.request_connection(1, 'low')
@@ -152,13 +152,13 @@ def test_offset_prioritization():
             with Timeout(1):
                 conn = low_prio.get()
         except TimeoutError:
-            assert(True), 'Operation has timed out.'
+            assert (True), 'Operation has timed out.'
         else:
-            assert(False), 'Operation should have timed out.'
+            assert (False), 'Operation should have timed out.'
 
         with Timeout(1):
             conn = high_prio.get()
-            assert(OffsetQueue._test_connection(conn))
+            assert (OffsetQueue._test_connection(conn))
 
         for conn in conns:
             OffsetQueue.release('test', conn)

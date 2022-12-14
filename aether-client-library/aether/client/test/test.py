@@ -22,42 +22,42 @@ from . import *  # noqa
 
 
 def test_1_check_fixture_creation(client, project, schemas, schemadecorators, mapping):
-    assert(project.id is not None)
+    assert (project.id is not None)
     client_schemas = list(client.schemas.paginated('list'))
     assert len(schemas) != 0
-    assert(len(client_schemas) == len(schemas))
+    assert (len(client_schemas) == len(schemas))
     client_sd = list(client.schemadecorators.paginated('list'))
-    assert(len(client_sd) == len(schemas))
-    assert(mapping.id is not None)
+    assert (len(client_sd) == len(schemas))
+    assert (mapping.id is not None)
 
 
 def test_2_count_schemas(client, schemas):
     ct = client.schemas.count('list')
-    assert(ct == len(schemas))
+    assert (ct == len(schemas))
 
 
 def test_3_first_schema(client, schemas):
     first = client.schemas.first('list', ordering='modified')
-    assert(first.id == schemas[0].id)
+    assert (first.id == schemas[0].id)
 
 
 def test_4_iterate_schemas(client, schemas):
     _schemas = list(client.schemas.paginated('list'))
-    assert(len(_schemas) == len(schemas))
+    assert (len(_schemas) == len(schemas))
 
 
 def test_5_make_entities(client, single_entities, bulk_entities):
     single = single_entities(1)
-    assert(single is not None)
+    assert (single is not None)
     many = bulk_entities(10)
-    assert(many is not None)
+    assert (many is not None)
     entities = client.entities.paginated('list')
     i = 0
     for e in entities:
         if LOG_LEVEL == 'DEBUG':
             print(e)
         i += 1
-    assert(i == 11)
+    assert (i == 11)
 
 
 # After this point, the artifacts we cached are invalidated.
@@ -67,7 +67,7 @@ def test_6_update_project(client):
     project.name = new_name
     client.projects.update(id=project.id, data=project)
     project = client.projects.first('list')
-    assert(project.name == new_name)
+    assert (project.name == new_name)
 
 
 def test_7_update_project_partial(client, project):
@@ -75,13 +75,13 @@ def test_7_update_project_partial(client, project):
     pkg = {'name': new_name}
     client.projects.partial_update(id=project.id, data=pkg)
     retrieved = client.projects.first('list')
-    assert(retrieved.name == new_name)
+    assert (retrieved.name == new_name)
 
 
 def test_7_delete_project(client, project):
     client.projects.delete(id=project.id)
     projects = list(client.projects.paginated('list'))
-    assert(len(projects) == 0)
+    assert (len(projects) == 0)
 
 
 def test_8_check_bad_url():
@@ -89,9 +89,9 @@ def test_8_check_bad_url():
         c = Client('http://localhost/bad-url', 'user', 'pw', auth_type='basic')
         c.get('projects')
     except bravado.exception.BravadoConnectionError:
-        assert(True)
+        assert (True)
     else:
-        assert(False)
+        assert (False)
 
 
 def test_9_check_bad_credentials():
@@ -99,6 +99,6 @@ def test_9_check_bad_credentials():
         c = Client(URL, 'user', 'pw', realm='dev', auth_type='basic')
         c.get('projects')
     except bravado.exception.HTTPForbidden:
-        assert(True)
+        assert (True)
     else:
-        assert(False)
+        assert (False)

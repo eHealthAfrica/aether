@@ -75,7 +75,7 @@ def load_redis(redis):
         build_redis_key(ARTEFACT_NAMES.mappingsets, TENANT, MAPPINGSET['id']),
         json.dumps(MAPPINGSET)
     )
-    assert(
+    assert (
         get_from_redis_or_kernel(
             id=MAPPINGSET['id'],
             model_type=ARTEFACT_NAMES.mappingsets,
@@ -89,7 +89,7 @@ def load_redis(redis):
             build_redis_key(ARTEFACT_NAMES.mappings, TENANT, m['id']),
             json.dumps(m)
         )
-        assert(
+        assert (
             get_from_redis_or_kernel(
                 id=m['id'],
                 model_type=ARTEFACT_NAMES.mappings,
@@ -103,7 +103,7 @@ def load_redis(redis):
             build_redis_key(ARTEFACT_NAMES.schemas, TENANT, s['id']),
             json.dumps(s)
         )
-        assert(
+        assert (
             get_from_redis_or_kernel(
                 id=s['id'],
                 model_type=ARTEFACT_NAMES.schemas,
@@ -117,7 +117,7 @@ def load_redis(redis):
             build_redis_key(ARTEFACT_NAMES.schemadecorators, TENANT, sd['id']),
             json.dumps(sd)
         )
-        assert(
+        assert (
             get_from_redis_or_kernel(
                 id=sd['id'],
                 model_type=ARTEFACT_NAMES.schemadecorators,

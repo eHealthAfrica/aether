@@ -26,30 +26,30 @@ from . import *
 
 def test_1_check_fixtures(project, schemas, schemadecorators, mapping, mappingset):
     for asset in [project, mapping, mappingset]:
-        assert(asset.id is not None)
+        assert (asset.id is not None)
     for sch in schemas:
-        assert(sch.id is not None)
+        assert (sch.id is not None)
     for sd in schemadecorators:
-        assert(sd.id is not None)
+        assert (sd.id is not None)
 
 
 def test_2_generate_entities(generate_entities):
     res = generate_entities(REALM)
-    assert(len(res) == SEED_ENTITIES)
+    assert (len(res) == SEED_ENTITIES)
 
 
 def test_3_check_updated_count(entities):
-    assert(len(entities.get(SEED_TYPE)) >= SEED_ENTITIES)
+    assert (len(entities.get(SEED_TYPE)) >= SEED_ENTITIES)
 
 
 def test_4_check_producer_status(wait_for_producer_status):
-    assert(wait_for_producer_status is not None)
-    assert(wait_for_producer_status['kernel_mode'] == PRODUCER_MODE)
+    assert (wait_for_producer_status is not None)
+    assert (wait_for_producer_status['kernel_mode'] == PRODUCER_MODE)
 
 
 def test_5_check_producer_topics(producer_topics):
-    assert(REALM in producer_topics.keys())
-    assert(int(producer_topics[REALM][SEED_TYPE]['count']) == SEED_ENTITIES)
+    assert (REALM in producer_topics.keys())
+    assert (int(producer_topics[REALM][SEED_TYPE]['count']) == SEED_ENTITIES)
 
 
 def test_6_check_stream_entities(read_people, entities):
@@ -60,9 +60,9 @@ def test_6_check_stream_entities(read_people, entities):
         if _id not in kafka_messages:
             failed.append(_id)
 
-    assert(len(failed) == 0)
-    assert(len(kernel_messages) == len(kafka_messages))
-    assert(producer_topic_count(REALM, SEED_TYPE) == len(kafka_messages))
+    assert (len(failed) == 0)
+    assert (len(kernel_messages) == len(kafka_messages))
+    assert (producer_topic_count(REALM, SEED_TYPE) == len(kafka_messages))
 
 
 def test_7_control_topic():
@@ -70,12 +70,12 @@ def test_7_control_topic():
     sleep(.5)
 
     op = topic_status(REALM, SEED_TYPE)['operating_status']
-    assert(op == 'TopicStatus.PAUSED')
+    assert (op == 'TopicStatus.PAUSED')
     producer_control_topic(REALM, SEED_TYPE, 'resume')
     sleep(.5)
 
     op = topic_status(REALM, SEED_TYPE)['operating_status']
-    assert(op == 'TopicStatus.NORMAL')
+    assert (op == 'TopicStatus.NORMAL')
     producer_control_topic(REALM, SEED_TYPE, 'rebuild')
     sleep(.5)
 
@@ -85,4 +85,4 @@ def test_7_control_topic():
             return
         sleep(1)
 
-    assert(False), 'Topic Deletion Timed out.'
+    assert (False), 'Topic Deletion Timed out.'
