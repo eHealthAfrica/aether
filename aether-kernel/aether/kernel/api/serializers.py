@@ -257,8 +257,9 @@ class EntityListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
         if (bulk_size := len(validated_data)) > settings.MAX_BULK_RECORDS:
-            raise(serializers.ValidationError(
-                f'{bulk_size} exceeds max: {settings.MAX_BULK_RECORDS} for a single request.'))
+            raise serializers.ValidationError(
+                f'{bulk_size} exceeds max: {settings.MAX_BULK_RECORDS} for a single request.'
+            )
 
         entities = []
         # remove helper field and validate entity
@@ -270,7 +271,7 @@ class EntityListSerializer(serializers.ListSerializer):
                 entity.clean()
                 entities.append(entity)
             except Exception as e:
-                raise(serializers.ValidationError(str(e)))
+                raise serializers.ValidationError(str(e))
 
         # bulk database operation
         created_entities = models.Entity.objects.bulk_create(entities, ignore_conflicts=True)
@@ -392,8 +393,9 @@ class SubmissionListSerializer(serializers.ListSerializer):
 
     def create(self, validated_data):
         if (bulk_size := len(validated_data)) > settings.MAX_BULK_RECORDS:
-            raise(serializers.ValidationError(
-                f'{bulk_size} exceeds max: {settings.MAX_BULK_RECORDS} for a single request.'))
+            raise serializers.ValidationError(
+                f'{bulk_size} exceeds max: {settings.MAX_BULK_RECORDS} for a single request.'
+            )
 
         for s in validated_data:
             if not s.get('mappingset'):

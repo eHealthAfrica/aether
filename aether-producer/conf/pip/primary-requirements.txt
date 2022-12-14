@@ -23,6 +23,6 @@ sqlalchemy
 
 
 # Test libraries
-flake8
+flake8<6
 flake8-quotes
 pytest

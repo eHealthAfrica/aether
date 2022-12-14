@@ -153,7 +153,7 @@ def show_request(operation, *args, **kwargs):
     request_options = kwargs.pop('_request_options', {})
     request_params = construct_request(
         operation, request_options, **kwargs)
-    return([kwargs, request_params])
+    return [kwargs, request_params]
 
 
 '''
@@ -176,7 +176,7 @@ class AetherDecorator(ResourceDecorator):
         self.name = resource.name
         # The only way to be able to form coherent exceptions is to catch these
         # common types and wrap them in our own, exposing the status and error
-        # feeback from the API.
+        # feedback from the API.
         self.handled_exceptions = [
             bravado.exception.HTTPBadRequest,
             bravado.exception.HTTPBadGateway,

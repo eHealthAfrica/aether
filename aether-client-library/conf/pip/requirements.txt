@@ -10,7 +10,7 @@ requests[security]
 requests_oauthlib
 
 # Test libraries
-flake8
+flake8<6
 flake8-quotes
 pytest
 pytest-runner

@@ -17,7 +17,6 @@
 
 # Aether Django SDK library with extras
 aether.sdk[cache,server,webpack,storage,test]
-django<4
 
 
 # Django specific
