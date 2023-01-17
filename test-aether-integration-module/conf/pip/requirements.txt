@@ -7,7 +7,7 @@
 aet.consumer>=2.0.0
 aether.client
 
-flake8
+flake8<6
 flake8-quotes
 pytest
 pytest-runner

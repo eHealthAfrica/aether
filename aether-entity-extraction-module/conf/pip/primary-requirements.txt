@@ -18,6 +18,7 @@ gevent
 # Test libraries
 coverage
 fakeredis
+flake8<6
 flake8-quotes
 pytest
 tblib

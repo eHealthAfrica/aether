@@ -31,22 +31,27 @@ jobs:
     - name: Aether CORE tests (Extractor, Kernel, Producer)
       stage: test
       env: 'TEST_MODE=core'
+      if: type = pull_request
 
     - name: Aether modules tests (ODK)
       stage: test
       env: 'TEST_MODE=modules'
+      if: type = pull_request
 
     - name: Aether UI tests (UI Module)
       stage: test
       env: 'TEST_MODE=ui'
+      if: type = pull_request
 
     - name: Integration tests (Kernel with Kafka/Zookeeper and Client)
       stage: test
       env: 'TEST_MODE=integration'
+      if: type = pull_request
 
     - name: Test deployment process
       stage: test
       script: ./scripts/test_deployment.sh
+      if: type = pull_request
 
     - name: Publish images in Docker Hub
       stage: deploy
