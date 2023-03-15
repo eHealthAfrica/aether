@@ -19,7 +19,7 @@ psycogreen
 psycopg2-binary
 requests[security]
 spavro
-sqlalchemy
+sqlalchemy<2
 
 
 # Test libraries

@@ -14,7 +14,7 @@ RUN /tmp/setup_revision.sh
 ## using python image to build app
 ################################################################################
 
-FROM python:3.8-slim
+FROM python:3.10-slim
 
 LABEL description="Aether Kafka Producer" \
       name="aether-producer" \
