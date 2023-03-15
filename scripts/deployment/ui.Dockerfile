@@ -31,7 +31,7 @@ RUN npm install -s --no-audit --no-fund --no-package-lock && \
 ## using python image to build app
 ################################################################################
 
-FROM python:3.8-slim AS app
+FROM python:3.10-slim AS app
 
 LABEL description="Aether Kernel UI" \
       name="aether-ui" \

@@ -23,7 +23,7 @@ services:
   # ---------------------------------
 
   postgres-base:
-    image: postgres:14-alpine
+    image: postgres:15-alpine
     environment:
       PGUSER: postgres
       POSTGRES_HOST_AUTH_METHOD: trust
@@ -42,6 +42,11 @@ services:
       --appendonly yes
       --auto-aof-rewrite-percentage 100
       --auto-aof-rewrite-min-size 64mb
+    healthcheck:
+      test: redis-cli ping
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
   nginx-base:
     image: nginx:alpine
