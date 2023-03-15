@@ -8,10 +8,10 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
   font-size: $font-size;
   line-height: 1.3em;
-  color: white;
+  color: $white;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -19,12 +19,14 @@ body {
 a {
   text-decoration: none;
   color: $action-color;
-  &:hover, &:focus {
+
+  &:hover,
+  &:focus {
     color: $action-hover;
   }
 
   &.white-link {
-    color: white;
+    color: $white;
     text-decoration: underline;
   }
 }
@@ -33,26 +35,29 @@ li {
   list-style: none;
 }
 
-h2, h3, h4 {
+h2,
+h3,
+h4 {
   font-weight: 400;
 }
 
 h2 {
   font-size: 1.6em;
-  padding: $unit 0 $unit/2;
+  padding: $unit 0 $unit / 2;
 }
 
 h3 {
   font-size: 1.2em;
-  padding: $unit/2 0 $unit/2;
+  padding: $unit / 2 0 $unit / 2;
 }
+
 h4 {
   font-size: 1em;
-  padding: $unit/2 0;
+  padding: $unit / 2 0;
 }
 
 p {
-  padding: $unit/2 0;
+  padding: $unit / 2 0;
 }
 
 video {
@@ -61,17 +66,18 @@ video {
 
 @mixin angle-right($size, $stroke) {
   display: inline-block;
-  width: $size*4;
-  height: $size*4;
+  width: $size * 4;
+  height: $size * 4;
   position: relative;
-  background: rgba($font-color, .1);
-  box-shadow: 1px 1px 1px rgba(black, .2) inset, 1px 1px 0 rgba(white, .1);
+  background: rgba($font-color, 0.1);
+  box-shadow: 1px 1px 1px rgba($black, 0.2) inset, 1px 1px 0 rgba($white, 0.1);
   transition: all 0.5s;
   border-radius: 50%;
-  &:before {
+
+  &::before {
     content: "";
     display: block;
-    background: white;
+    background: $white;
     width: $stroke;
     height: $size;
     border-radius: $stroke;
@@ -80,15 +86,15 @@ video {
     left: 50%;
     top: 29%;
   }
-  &:after {
+
+  &::after {
     content: "";
     display: block;
-    background: white;
+    background: $white;
     width: $stroke;
     height: $size;
     border-radius: $stroke;
     position: absolute;
-    /*top: -11%;*/
     bottom: 29%;
     left: 50%;
     transform: rotate(45deg);

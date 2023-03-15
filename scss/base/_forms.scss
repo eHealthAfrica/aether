@@ -1,15 +1,16 @@
 .form {
-  padding-top: $unit*2;
+  padding-top: $unit * 2;
 }
 
 .form-row {
   @extend .grid-row;
+
   align-items: flex-end;
 
   button {
     margin: 0;
     margin-top: $unit;
-    height: $unit*4;
+    height: $unit * 4;
   }
 }
 
@@ -22,7 +23,7 @@ label {
   text-transform: uppercase;
 }
 
-.required label:after {
+.required label::after {
   content: " *";
   font-size: 1.4em;
   font-weight: 400;
@@ -36,7 +37,7 @@ label {
   flex-direction: column;
   justify-content: flex-end;
   position: relative;
-  height: $unit*5;
+  height: $unit * 5;
   padding: 0;
   line-height: 0;
   border-bottom: 1px solid $action-color;
@@ -49,27 +50,29 @@ label {
 .input:hover,
 .input.active,
 .input.has-error {
-
   input,
   select {
-    height: $unit*3;
+    height: $unit * 3;
     padding: 5px 15px 0;
   }
+
   textarea {
-    height: $unit*12;
+    height: $unit * 12;
     padding: 20px;
   }
 }
 
 .input input:focus {
-  height: $unit*3;
+  height: $unit * 3;
   padding: 5px 15px 0;
 }
 
-input, textarea, select {
-  border: none;
+input,
+textarea,
+select {
+  border: 0;
   outline: none;
-  font-family: 'Nunito Sans', sans-serif;
+  font-family: "Nunito Sans", sans-serif;
   font-size: $font-size;
   line-height: 1.3em;
 }
@@ -78,22 +81,24 @@ input, textarea, select {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  input, textarea, select {
-    padding: 0px 15px;
-    height: 0px;
+
+  input,
+  textarea,
+  select {
+    padding: 0 15px;
+    height: 0;
     background: $input-color;
     transition: all, 0.2s;
     width: 100%;
   }
 }
 
-
 /* OPTIONS */
 
 .options {
   display: flex;
   flex-wrap: wrap;
-  padding-top: $padding-unit/2;
+  padding-top: $padding-unit / 2;
 }
 
 input[type="checkbox"],
@@ -110,8 +115,9 @@ input[type="radio"] + label {
   text-transform: none;
   color: $font-color;
   margin-right: $padding-unit;
-  margin-top: $padding-unit/4;
-  &:before {
+  margin-top: $padding-unit / 4;
+
+  &::before {
     text-align: center;
     content: "";
     display: inline-block;
@@ -120,20 +126,20 @@ input[type="radio"] + label {
     margin-right: 6px;
     box-shadow: 0 0 0 1px $action-color;
     border-radius: 18px;
-    font-family: "fontawesome";
+    font-family: fontawesome;
     font-size: 1em;
     line-height: 1.4em;
   }
 }
 
 input[type="checkbox"]:checked + label {
-
-  &:before {
+  &::before {
     content: "\f00c";
     background: $action-color;
-    color: white;
+    color: $white;
   }
 }
+
 input[type="radio"] + label {
   color: $grey;
 }
@@ -141,9 +147,9 @@ input[type="radio"] + label {
 input[type="radio"]:checked + label {
   color: $font-color;
 
-  &:before {
+  &::before {
     background: $action-color;
-    box-shadow: 0 0 0 2px $action-color, 0 0 0 3px white inset;
+    box-shadow: 0 0 0 2px $action-color, 0 0 0 3px $white inset;
   }
 }
 
@@ -151,7 +157,6 @@ input[type="radio"]:checked + label {
 
 .input:hover,
 .input.active {
-
   .select {
     height: 42px;
   }
@@ -165,6 +170,7 @@ input[type="radio"]:checked + label {
   margin: 0;
   overflow: hidden;
   padding: 0 15px;
+
   .dropdown-toggle {
     height: 0;
     padding: 0;
@@ -187,10 +193,3 @@ input[type="radio"]:checked + label {
     }
   }
 }
-
-
-
-
-
-
-

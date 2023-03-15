@@ -6,7 +6,7 @@ description: Aether Documentation – Introduction to Aether
 
 # What Is Aether?
 
-Aether is a platform. It’s not tool that can just be deployed and used out of the box (but if that’s what you’re looking for, you might want to look at Gather). Instead it’s a set of modules and best practices for the real-time manipulation and publication of data to a destination of your choice. 
+Aether is a platform. It’s not tool that can just be deployed and used out of the box (but if that’s what you’re looking for, you might want to look at Gather). Instead it’s a set of modules and best practices for the real-time manipulation and publication of data to a destination of your choice.
 
 Aether is for you if:
 
@@ -15,7 +15,6 @@ Aether is for you if:
 - you’re tired of manually exporting data from system A and importing it to system B
 - you need more control over the privacy and anonymity of data that you share with partners
 - you need to perform real-time analysis of a constant stream of incoming data
-
 
 In very broad brush strokes, Aether works in three stages:
 

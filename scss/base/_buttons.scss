@@ -1,20 +1,22 @@
 .btn {
-  border: none;
-  color: white;
+  border: 0;
+  color: $white;
   white-space: nowrap;
   cursor: pointer;
   padding: 1.2em;
   background: $action-color;
-  box-shadow: 1px 1px 2px rgba($font-color, 0.7), 1px 1px 0px rgba(white, 0.3) inset;
+  box-shadow: 1px 1px 2px rgba($font-color, 0.7), 1px 1px 0px rgba($white, 0.3) inset;
   border-radius: 4px;
   text-transform: uppercase;
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 1px;
 
-  &:hover, &:focus, &:active {
+  &:hover,
+  &:focus,
+  &:active {
     background: $action-hover;
-    color: white;
+    color: $white;
   }
 
   &.inactive {
@@ -32,7 +34,9 @@
 .btn--secondary {
   background: $mid-grey;
 
-  &:hover, &:focus, &:active {
+  &:hover,
+  &:focus,
+  &:active {
     background: lighten($mid-grey, 5%);
   }
 }
@@ -46,7 +50,9 @@
   color: $action-color;
   box-shadow: none;
 
-  &:hover, &:focus, &:active {
+  &:hover,
+  &:focus,
+  &:active {
     color: $action-hover;
     background: none;
   }
@@ -63,7 +69,6 @@
 }
 
 .btn--icon-right {
-
   i {
     margin-left: 1.2em;
     margin-right: -0.3em;
@@ -74,7 +79,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  color: white;
+  color: $white;
 
   i {
     z-index: 1;
@@ -94,8 +99,10 @@
     background: $action-color;
   }
 
-  &:hover, &:focus, &:active {
-    color: white;
+  &:hover,
+  &:focus,
+  &:active {
+    color: $white;
   }
 
   .angle-right {
@@ -105,6 +112,7 @@
 
 .circle-button-down {
   @extend .circle-button;
+
   flex-direction: column;
 
   i {
@@ -114,6 +122,7 @@
 
 .circle-button-up {
   @extend .circle-button;
+
   flex-direction: column;
 
   i {
@@ -138,11 +147,12 @@
 
 .top {
   @extend .circle-button-up;
+
   position: absolute;
   bottom: 2rem;
   right: 2rem;
   opacity: 1;
-  transition: opacity .2s;
+  transition: opacity 0.2s;
 
   &:not(.active) {
     opacity: 0;

@@ -4,7 +4,6 @@ permalink: documentation/ui/pipeline-mapping.html
 description: Aether Documentation – UI User Guide
 ---
 
-
 # Create a mapping
 
 You connect the fields of your incoming data to your desired output by mapping them to the properties of your Entity Types.
@@ -13,8 +12,7 @@ In the previous two steps you have learned how to [add your input fields](pipeli
 
 So now let's have a look at how to map them.
 
-
-## The MAPPING screen 
+## The MAPPING screen
 
 ![PIPELINE mapping](../../images/screenshots/mapping-start.png)
 {: .screenshot}
@@ -93,5 +91,6 @@ Great job!
 The output has switched to display a green light:
 This pipeline now produces two Entities from your Input.
 
-### We are almost finished! Just one last step: 
+### We are almost finished! Just one last step:
+
 ### [> Publish the pipeline](pipeline-publish.html)

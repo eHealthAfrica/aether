@@ -4,15 +4,13 @@ permalink: documentation/ui/pipeline-publish.html
 description: Aether Documentation – UI User Guide
 ---
 
-
 # Publish your pipeline
 
 Once you are done with your pipeline, you want it to take effect on your data submissions.
 
 Up to now all the configurations you have made were private. You have used some sample data to validate your mappings, but you actually need to push your Entity Types and Mappings to the Aether Kernel in order to start the process of Entity Extraction of real Data.
 
-
-## Check your Output 
+## Check your Output
 
 You cannot publish your pipeline with Errors. So make sure everything is as it ought to be. When there's green light you can push the button "PUBLISH PIPELINE" in the top bar.
 
@@ -24,14 +22,14 @@ You can also publish a pipeline from the Pipelines Overview:
 ![PIPELINE OVERVIEW](../../images/screenshots/pipelines-overview.png)
 {: .screenshot}
 
-## Publish 
+## Publish
 
 A few moments after you clicked on "PUBLISH PIPELINE", your project with all its schemas and mappings will be created on kernel:
 
 ![PIPELINE OVERVIEW](../../images/screenshots/publish_2.png)
 {: .screenshot}
 
-In the pipelines Overview you can see the information on your last publish. 
+In the pipelines Overview you can see the information on your last publish.
 
 ![PIPELINE OVERVIEW](../../images/screenshots/publish_3.png)
 {: .screenshot}

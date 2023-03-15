@@ -2,27 +2,27 @@
   min-height: 680px;
   position: relative;
   border-bottom: 1px dotted $light-grey;
-  margin: 0 $margin*-1;
+  margin: 0 $margin * -1;
 }
 
 .header__text {
-  margin: 8vH 8vw 0 12.5rem;
-  color: white;
+  margin: 8vh 8vw 0 12.5rem;
+  color: $white;
 }
 
 .header__title {
   font-size: 4em;
   font-weight: 700;
   padding: $unit 0;
-  color: white;
+  color: $white;
 }
 
 .header__subtitle {
   font-size: 1.8em;
   line-height: 1.3em;
   font-weight: 300;
-  padding: $unit 0 $unit*3;
-  color: white;
+  padding: $unit 0 $unit * 3;
+  color: $white;
   width: 60%;
 }
 
@@ -35,7 +35,6 @@
 }
 
 @media screen and (max-width: 1200px) {
-
   .header__text {
     margin-left: $margin;
   }
@@ -46,10 +45,10 @@
 }
 
 @media screen and (max-width: 900px) {
-
   .header {
     font-size: 0.7em;
   }
+
   .header__subtitle {
     width: 80%;
   }
@@ -57,14 +56,13 @@
 
 @media screen and (min-width: 1600px) {
   .header {
-    margin: 0 $margin*-2;
+    margin: 0 $margin * -2;
   }
 }
 
 @media screen and (min-width: 741px) {
-
   .header {
-    height: calc(100vH - 7rem);
+    height: calc(100vh - 7rem);
     overflow: hidden;
   }
 

@@ -5,16 +5,17 @@
   top: 4rem;
   left: 0;
   width: 100%;
-  background: rgba($action-color, .9);
+  background: rgba($action-color, 0.9);
   z-index: 1000;
-  padding: .3rem 2rem;
-  transition: opacity .5s;
+  padding: 0.3rem 2rem;
+  transition: opacity 0.5s;
 
   a {
-    color:rgba(white, .7);
-    padding: 0 .4rem;
+    color: rgba($white, 0.7);
+    padding: 0 0.4rem;
+
     &:hover {
-      color: white;
+      color: $white;
     }
   }
 
@@ -25,10 +26,9 @@
 }
 
 @media screen and (max-width: 680px) {
-
   .anchor-nav {
     top: 3.8rem;
-    padding: .3rem 0;
+    padding: 0.3rem 0;
     text-align: center;
   }
 }

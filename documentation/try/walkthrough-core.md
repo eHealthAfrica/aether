@@ -10,7 +10,7 @@ In the [last demo](first-mapping.html), we built a very simple pipeline to demon
 
 The `assets` folder of the `aether-bootstrap` repository contains some sample data, some schemas and a set of mappings. For the purposes of this walkthrough, we’re going to copy and paste the contents of these files into the Aether UI (for a more detailed overview of the UI, check out its [documentation](/documentation/ui/pipeline-intro.html)).
 
-You should already be set up, logged in and looking at a mostly empty **AUX//Pipelines** screen from the [install step](install) 
+You should already be set up, logged in and looking at a mostly empty **AUX//Pipelines** screen from the [install step](install)
 
 We’re going to create a new pipeline, so hit the button that’s handily labelled _NEW PIPELINE_. Enter a name, and press _START PIPELINE_.
 
@@ -20,7 +20,7 @@ The first thing you see is the input screen. This is where you tell Aether what 
 
 - provide an [AVRO schema](https://en.wikipedia.org/wiki/Apache_Avro#Schema_definition[4])
 - provide a sample of some raw JSON data
- 
+
 For this walkthrough, we’re going to do the latter. Open the `sample-data.json` file from the `assets` folder, copy the contents, and paste it into the text area. It should now look like this:
 
 ![Input data](/images/walkthrough-1.png)
@@ -37,13 +37,12 @@ Now we’re going to add some _entity type definitions_. These are (more) schema
 
 ## Defining Our Mappings
 
-The third and final step is to create the mapping rules that specify how the input data is transformed into entities. Normally you would probably add these mappings one by one using the interface provided by the UI, but for the purposes of this walkthrough we’re going to - you guessed it - copy and paste the mapping definition from the `assets` folder. 
+The third and final step is to create the mapping rules that specify how the input data is transformed into entities. Normally you would probably add these mappings one by one using the interface provided by the UI, but for the purposes of this walkthrough we’re going to - you guessed it - copy and paste the mapping definition from the `assets` folder.
 
 Open up `mapping.json` from `assets/mappings/` and copy the contents. In the UI, click on _MAPPING_, and then go to the tab labelled _JSON_. Paste everything into the text area and click on _APPLY MAPPING RULES TO PIPELINE_.
 
 ![Mappings](/images/walkthrough-3.png)
 {: .screenshot}
-
 
 Fields in the _INPUT_ and _ENTITY TYPES_ sidebars are now highlighted to indicate mappings between them; if you click on the _Mapping rules_ tab you can see the individual mapping rules.
 
@@ -55,13 +54,13 @@ Now you can hit the _PUBLISH PIPELINE_ button at the top right. Your pipeline is
 
 The following `curl` command will tell you all the mappings that have been created on your Aether instance. If you have been following these instructions from a fresh install, there should only be one.
 
-`curl http://admin:adminadmin@kernel.aether.local:8000/mappings/`
+`curl http://admin:adminadmin@aether.local/kernel/mappings/`
 
 (Note that we’re using basic auth here; obviously this is not how you would authenticate on a production instance)
 
 The output of this command should be a JSON description of the mapping that you just created with the UI, looking something like this:
 
-```
+```json
 {
   "count":1,
   "next":null,
@@ -69,19 +68,19 @@ The output of this command should be a JSON description of the mapping that you 
   "results":[
     {
       "id":"2e4d2216-aade-48ef-8bc3-12f4792df07a",
-      "url":"http://kernel.aether.local:8000/mappings/2e4d2216-aade-48ef-8bc3-12f4792df07a/",
-      "project_url":"http://kernel.aether.local:8000/projects/774e33c8-d82b-43f9-82e4-27bb513aff68/",
-      "submissions_url":"http://kernel.aether.local:8000/submissions/?mapping=2e4d2216-aade-48ef-8bc3-12f4792df07a",
-      "created":"2018-07-09T13:11:43.562140Z" 
+      "url":"http://aether.local/kernel/mappings/2e4d2216-aade-48ef-8bc3-12f4792df07a/",
+      "project_url":"http://aether.local/kernel/projects/774e33c8-d82b-43f9-82e4-27bb513aff68/",
+      "submissions_url":"http://aether.local/kernel/submissions/?mapping=2e4d2216-aade-48ef-8bc3-12f4792df07a",
+      "created":"2018-07-09T13:11:43.562140Z"
       ...
     }
   ]
 }
 ```
 
-The important field for us is the `id` of the mapping; this needs to be included in any data that we submit. So let's do that now: open `assets/submission.json` in your favourite editor, and copy and paste your mapping id into the second line where it says `"mapping": "2e4d2216-aade-48ef-8bc3-12f4792df07a"` and replace the `2e4d2216-aade-48ef-8bc3-12f4792df07a` with your id. It should now look something like this:
+The important field for us is the `id` of the mapping; this needs to be included in any data that we submit. So let's do that now: open `assets/submission.json` in your favorite editor, and copy and paste your mapping id into the second line where it says `"mapping": "2e4d2216-aade-48ef-8bc3-12f4792df07a"` and replace the `2e4d2216-aade-48ef-8bc3-12f4792df07a` with your id. It should now look something like this:
 
-```
+```json
 {
   "mapping": "<your id>",
   "payload": {
@@ -95,19 +94,19 @@ The important field for us is the `id` of the mapping; this needs to be included
 
 Now we can use curl to post this file to Aether:
 
-```
-curl -H "Content-Type: application/json" --data @assets/submission.json http://admin:adminadmin@kernel.aether.local/submissions/
+```bash
+curl -H "Content-Type: application/json" --data @assets/submission.json http://admin:adminadmin@aether.local/kernel/submissions/
 ```
 
 Aether is now going to take this submitted data and do entity extractions based on the mappings that we set in the UI. We can check the results of this process by accessing the entities endpoint:
 
-```
-curl http://admin:adminadmin@kernel.aether.local:8000/entities/
+```bash
+curl http://admin:adminadmin@aether.local/kernel/entities/
 ```
 
 You should get a sizeable chunk of JSON code that represents the entities that were extracted from the sample data that you just submitted. The first key in the JSON should be `count`, and the value should be `18` - 18 entities were extracted, as the microcensus data was broken down into `Surveys`, `Buildings`, `Households` and `People` (or actually, `Persons`).
 
-(At this point you may be saying to yourself, “That’s all very nice, but I don’t actually _want_ to break my data up into separate entities”. That’s fine too - Aether can also create a pass-through pipeline for you, whereby the data that comes in is just pased through to the output without any extraction taking place - take a look at the UI documentation to find out more about how to do this)
+(At this point you may be saying to yourself, “That’s all very nice, but I don’t actually _want_ to break my data up into separate entities”. That’s fine too - Aether can also create a pass-through pipeline for you, whereby the data that comes in is just passed through to the output without any extraction taking place - take a look at the UI documentation to find out more about how to do this)
 
 Congratulations! You have just completed the set-up of your first Aether-based solution.
 
@@ -115,9 +114,11 @@ Congratulations! You have just completed the set-up of your first Aether-based s
 
 - We learned about pipelines
 - We learned about the constituent parts of a pipeline:
-    + Input data
-    + Schemas
-    + Mappings
+
+  - Input data
+  - Schemas
+  - Mappings
+
 - We set up an example pipeline with the Aether UI
 - We submitted some data to an API endpoint and saw how the pipeline was used to extract entities
 

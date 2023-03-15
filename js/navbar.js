@@ -15,26 +15,26 @@ if($(document.body).hasClass('home')) {
 
 function onScroll() {
   currentScrollY = $(".content").scrollTop();
-  if(currentScrollY > offset && navBar==false) {
+  if (currentScrollY > offset && navBar == false) {
     navBar = true;
     fixBar();
-  } else if(currentScrollY <= offset && navBar==true){
-    navBar=false;
+  } else if (currentScrollY <= offset && navBar == true) {
+    navBar = false;
     releaseBar();
   }
 
-  if(currentScrollY > offset_B) {
+  if (currentScrollY > offset_B) {
     showTopButton();
-  } else if(currentScrollY < offset_B){
+  } else if (currentScrollY < offset_B) {
     hideTopButton();
   }
 
-  if(home==true) {
-    if(currentScrollY > offset_B && bg==false) {
+  if (home == true) {
+    if (currentScrollY > offset_B && bg == false) {
       bg = true;
       hideBg();
-    } else if(currentScrollY < offset_B && bg==true){
-      bg=false;
+    } else if (currentScrollY < offset_B && bg == true) {
+      bg = false;
       showBg();
     }
   }
@@ -68,18 +68,16 @@ function showBg() {
   $(".anchor-nav").removeClass('active');
 }
 
-
-$('a[href^=#]').on('click', function(e){
-    var href = $(this).attr('href');
-    var position = $(".content").scrollTop() + $(href).offset().top - height;
-        e.preventDefault();
-    $(".content").animate({
-      scrollTop:position
-    },'slow');
-
+$('a[href^=#]').on('click', function(e) {
+  var href = $(this).attr('href');
+  var position = $(".content").scrollTop() + $(href).offset().top - height;
+  e.preventDefault();
+  $(".content").animate({
+    scrollTop:position
+  }, 'slow');
 });
 
-$('.scalable').on('click', function(e){
+$('.scalable').on('click', function(e) {
   e.preventDefault();
   $(this).toggleClass('open');
 });

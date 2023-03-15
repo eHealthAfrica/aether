@@ -1,20 +1,20 @@
 .navbar {
   width: 100%;
-  padding: $unit*.9 $unit*2;
+  padding: $unit * 0.9 $unit * 2;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   position: fixed;
   top: 0;
   height: 4rem;
-  transition: background 0.5s, top .3s;
+  transition: background 0.5s, top 0.3s;
   z-index: 1000;
 }
 
 .navbar.fixed {
-  background: rgba($font-color, .1);
+  background: rgba($font-color, 0.1);
   z-index: 1000;
-  box-shadow: 0 -1px 2px rgba($font-color, .2) inset;
+  box-shadow: 0 -1px 2px rgba($font-color, 0.2) inset;
 }
 
 .logo {
@@ -22,7 +22,7 @@
   overflow: hidden;
   width: 7rem;
   height: 2rem;
-  margin: .1rem 0 .3rem;
+  margin: 0.1rem 0 0.3rem;
   background: url("../images/aether-white.svg") center center no-repeat;
   background-size: contain;
 }
@@ -45,14 +45,14 @@
 
   a {
     display: block;
-    color: white;
+    color: $white;
     text-transform: uppercase;
-    padding: .8em  .1em .1em;
+    padding: 0.8em 0.1em 0.1em;
   }
 
   li.active:not(.navbar-button),
   li:hover:not(.navbar-button) {
-    border-bottom: 1px solid rgba(white, .5);
+    border-bottom: 1px solid rgba($white, 0.5);
   }
 
   .navbar-button {
@@ -60,9 +60,10 @@
   }
 
   .btn {
-    padding: .8em 1.6em;
+    padding: 0.8em 1.6em;
     margin: 0;
-    background: rgba($action-bright, .3);
+    background: rgba($action-bright, 0.3);
+
     &:hover {
       background: $action-color;
     }
@@ -71,25 +72,24 @@
 
 .contact .nav-item__contact,
 .support .nav-item__support,
-.community .nav-item__community  {
-  border-bottom: 1px solid rgba(white, .5);
+.community .nav-item__community {
+  border-bottom: 1px solid rgba($white, 0.5);
 }
 
 @media screen and (max-width: 768px) {
-
   .navbar {
-    padding: .8rem .6rem;
+    padding: 0.8rem 0.6rem;
   }
+
   .navbar__nav {
     margin-left: 2rem;
   }
 }
 
 @media screen and (max-width: 680px) {
-
   .navbar {
     height: 7rem;
-    padding: $unit*.6;
+    padding: $unit * 0.6;
   }
 
   .navbar.fixed {
@@ -99,32 +99,32 @@
   .navbar__nav {
     width: 100%;
     margin-left: 0;
-    padding-top: .5rem;
-    border-top: 1px solid rgba(white, .6);
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba($white, 0.6);
     justify-content: center;
     height: 3.2rem;
 
     .btn {
-      padding: .6em 1.4em;
+      padding: 0.6em 1.4em;
     }
 
     li {
-      margin: 0 2vW;
+      margin: 0 2vw;
     }
 
     a {
-      padding: .2em .1em;
+      padding: 0.2em 0.1em;
     }
   }
+
   .navbar-button {
     position: absolute;
-    top: $unit*.6;
-    right: $unit*.6;
+    top: $unit * 0.6;
+    right: $unit * 0.6;
   }
 
   .content {
     margin-top: 3.8rem;
-    height: calc(100vH - 3.8rem);
+    height: calc(100vh - 3.8rem);
   }
 }
-

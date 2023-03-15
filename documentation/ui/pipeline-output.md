@@ -4,18 +4,16 @@ permalink: documentation/ui/pipeline-output.html
 description: Aether Documentation – UI User Guide
 ---
 
-
 # Model your pipeline output with Entity Types
 
 This is the part where you lay out the different Entity Types you want to generate.
 
-
-## The ENTITY TYPES screen 
+## The ENTITY TYPES screen
 
 ![PIPELINE entity types](../../images/screenshots/entityTypes.png)
 {: .screenshot}
 
-See, when switching over to the Entity Types screen, how the schema of your pipeline input stays in view. So you can always see the incoming fields as a reference when modeling your Enitity Types.
+See, when switching over to the Entity Types screen, how the schema of your pipeline input stays in view. So you can always see the incoming fields as a reference when modeling your Entity Types.
 
 In this first release you have to model your Entity Types by hand.
 You can use an external Text Editor and then simply paste the code snipped into the text area of the Entity Types screen.
@@ -52,5 +50,6 @@ We hit again the "ADD TO PIPELINE" button, and we can see, we've now got two Ent
 
 We are pretty happy with our Entity Types for now. We can still go back and make changes at any point in time to adjust it to our needs.
 
-### Now that we have defined the input and the desired output of our pipeline, we can get to the core of Aether: 
+### Now that we have defined the input and the desired output of our pipeline, we can get to the core of Aether:
+
 ### [> Create a mapping between source (input) and desitination (output)](pipeline-mapping.html)

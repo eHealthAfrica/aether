@@ -3,12 +3,9 @@ title: Aether - Definition of a pipeline
 permalink: documentation/ui/index.html
 ---
 
-
 # Basic Concepts
 
 > What you need to know when working with Aether
-
-
 
 ## Pipelines
 

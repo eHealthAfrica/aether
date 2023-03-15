@@ -8,11 +8,9 @@ description: Aether Documentation – Try It for yourself
 
 Aether is a platform for building solutions that curate and exchange live information. Structured data is "pushed" to Aether via client API.  The input data is combined with known schemas and _mapping functions_ resulting in the extraction of one or more _entity objects._
 
-Entities are standalone data documents that each contain a metadata "contract" or schema.  The schema describes the structure of the data represented by the entity.  The entities (document/schema bundles) are passed along to a queuing mechanism and made available to downstream data consumers.  
+Entities are standalone data documents that each contain a metadata "contract" or schema.  The schema describes the structure of the data represented by the entity.  The entities (document/schema bundles) are passed along to a queuing mechanism and made available to downstream data consumers.
 
 ![Highlevel Flow](/images/highlevel-flow.png)
-
-    
 
 In Aether speak, we call this process a **pipeline**.  A pipeline consists of a path that data takes through Aether, and the transformations that it goes through along the way. Within a pipeline, we define one or more _data contracts_ that specify the format of the transformed data, along with rules that define how the input data is transformed to comply with those contracts.
 
@@ -22,12 +20,15 @@ You should already be set up, logged in and looking at a mostly empty **Aether//
 {: .screenshot}
 
 ## Try it Yourself
+
 In this exercise, we will setup a system for health facilities to report their current stock level of vaccines. Software at each facility will communicate to this reporting system by making REST calls. We don't worry about what the implementation at the facility will be, our job is to define the document structures, make REST endpoints available to accept those documents and handle the downstream data flow.
 
 ### Input
+
 There are two types of information that the system will need to know about.  The registration information for a **new facility** and the actual **stock report** from an existing facility.  We start with facility registration using the document structure below, and define an Aether pipeline.
 
 **A new facility registration document**
+
 ```json
 {
   "name": "Berlin Office Clinic",
@@ -37,18 +38,21 @@ There are two types of information that the system will need to know about.  The
   }
 }
 ```
-On the [Aether UI]([http://ui.aether.local), hit the button that’s labelled _NEW PIPELINE_ , create a new pipeline called `Clinic Registration` and press _START PIPELINE_.
+
+On the [Aether UI](http://aether.local), hit the button that’s labelled _NEW PIPELINE_ , create a new pipeline called `Clinic Registration` and press _START PIPELINE_.
 
 In the input tab page, paste the sample data into the `JSON Data` section, and press `Derive Schema From Data`
 
 ![Input](/images/01-input.png)
 
 _**So what just happened?**_
+
 1. _We "told" the Aether Pipeline Editor that we do not have a schema for the incoming data but we do have a sample of the data._
 2. _We asked Aether to generate a schema from the data._
-3. _Aether showed us a graphical representation of the schema it generated._ 
+3. _Aether showed us a graphical representation of the schema it generated._
 
 ### Output
+
 We used a data sample to generate the schema used as the input contract for facility registration.  For the facility entity that we will send out, we will use an [AVRO Schema](https://en.wikipedia.org/wiki/Apache_Avro).  To keep this example simple, we will not add too much to the facility entity that will we will generate. We already have a name and a location for our clinic but to ensure consistency, in case a clinic is renamed or the original data was incorrect, we should give it an ID and include a revision field as well. Taking that into account, we need a schema for `Health Facility` that looks like this:
 
 ```json
@@ -86,11 +90,13 @@ We used a data sample to generate the schema used as the input contract for faci
   }
 ]
 ```
+
 Click on step 2 `Entity Types`, paste the definition above and select `Add to Pipeline`.
 
 ![Input](/images/02-entities.png)
 
 ### Mapping
+
 Now that we have an input defined and created a schema for our entity, we define our mapping functions. Click on step 3 `Mappings` to bring up the mapping UI. While building a mapping, it's helpful to see what the output of entity extraction will be in real time. Aether provides this feedback via the `Output` section. You can show or hide it at any time by pressing the arrow next to the `Output` label. Open it now.
 
 ![Input](/images/03-mapping.png)
@@ -99,7 +105,7 @@ The mapping is a set of instructions that transform our input in the something c
 
 ![Input](/images/03a-mapping.png)
 
-Once you do this, you'll notice a few things. In the Entities section, the `id` field is highlighted, because it has a mapping instruction associated with it. In the output section, we have a number of mapping errors. The validator is complaining because we have four fields that are required, for which we have no data. 
+Once you do this, you'll notice a few things. In the Entities section, the `id` field is highlighted, because it has a mapping instruction associated with it. In the output section, we have a number of mapping errors. The validator is complaining because we have four fields that are required, for which we have no data.
 
 Let's fix that. First assign another UUID to Facility.rev as we did before. Next we want to assign values from the input for `name`, `lat` and `lng`. For the source, we'll use a jsonpath expression. For example, the correct path for the name field is `$.name`. For a nested field like lat, we need `$.location.lat`. Following this pattern, you should arrive at this:
 
@@ -112,12 +118,15 @@ You can now save this pipeline by pressing `Publish Pipeline` which will return 
 The _Submission URL_ is the URL that your client apps will use to _POST_ clinic registration data to Aether. Data sent to this url will undergo this transformation and be saved in Aether as the entity type Facility.  We will try a post later, but first, a look at the Aether REST API.
 
 ### Explore the Aether REST API
-In the last section we talked about _submission_ URL used to post data to Aether.  There are other useful URLs for debugging, managing and integrating with Aether and we will explore them now.  In your browser, navigate to `http://kernel.aether.local` and you should come to the following page.  If you get a _403_ or _Authentication_ error then you just need to login again.  Remember, the default userid and password are _admin_ and _adminadmin._
+
+In the last section we talked about _submission_ URL used to post data to Aether.  There are other useful URLs for debugging, managing and integrating with Aether and we will explore them now.  In your browser, navigate to `http://aether.local/kernel` and you should come to the following page.  If you get a _403_ or _Authentication_ error then you just need to login again.  Remember, the default username and password are _admin_ and _adminadmin._
 
 ![Input](/images/api-root.png)
 
-
 ### Summary
+
 This is a very straight-forward example. We've added a few fields and taken `lat` and `lng` from the nested `location` object. In the next example, we'll tackle a more complex example that creates many entities from a single input document.
 
-<div style="margin-top: 2rem; text-align: center"><a href="walkthrough-core">Next Step: A More Complex Aether-Based Solution</a></div>
+<div style="margin-top: 2rem; text-align: center">
+<a href="walkthrough-core">Next Step: A More Complex Aether-Based Solution</a>
+</div>

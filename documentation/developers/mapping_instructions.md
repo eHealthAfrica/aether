@@ -2,20 +2,23 @@
 
 A mapping is a set of instructions that when executed transform a source document into one or more entities. We call this process "entity extraction", and it's how Aether turns submissions into normalized entities.
 
-Each mapping is made up of two instuctions, the first describing a source and the second a destination. The destination instruction will always be a reference to one of the entities we're trying to create. The source instruction can pull data from a few places, the most typical will be the source document. However, we can also use it to pull data from entities that have been created previously in the mapping, or to generate a new UUID, or to apply a constant not found in the source document.
+Each mapping is made up of two instructions, the first describing a source and the second a destination. The destination instruction will always be a reference to one of the entities we're trying to create. The source instruction can pull data from a few places, the most typical will be the source document. However, we can also use it to pull data from entities that have been created previously in the mapping, or to generate a new UUID, or to apply a constant not found in the source document.
 
 Mapping instructions are executed in order. To see how we handle missing references and other issues, see the section, [_Extractor Mechanism_](#extractor-mechanism).
 
 ### Types of Mapping
 
-There are two general types of instructions: JSONPath and it's extensions, and Extractor Functions. 
+There are two general types of instructions: JSONPath and it's extensions, and Extractor Functions.
+
 #### [_JSONPath Functions_](#jsonpath-function)
-Look something like this: `$.path.to.somewhere[*].attribue`
-#### [_Extractor Functions_](#extractor-function) 
+
+Look something like this: `$.path.to.somewhere[*].attribute`
+
+#### [_Extractor Functions_](#extractor-function)
+
 Look something like this: `#!uuid` or `#!constant#male#string`
 
 Let's construct an example that we can use to illustrate our mappings. We want to normalize this into two linked types. A Stooge who lives in a house, and a House with an address. We have a form with contact information that arrives in the following (pretty horrible) format:
-
 
 Input
 
@@ -42,8 +45,6 @@ Input
 }
 
 ```
-
-
 
 Schema
 
@@ -96,21 +97,22 @@ Schema
 ]
 ```
 
-
-
 <a name="jsonpath-function"></a>
+
 ## JSONPath Functions
 
-The JSONPath functions used by Aether are based on the [jsonpath-ng](https://github.com/h2non/jsonpath-ng) implementation of the [JSONPath](https://goessner.net/articles/JsonPath/) specification. We recommend reviewing both sets of documentation before you continue. 
+The JSONPath functions used by Aether are based on the [jsonpath-ng](https://github.com/h2non/jsonpath-ng) implementation of the [JSONPath](https://goessner.net/articles/JsonPath/) specification. We recommend reviewing both sets of documentation before you continue.
 
 JSONPath instructions are used to specify a location in the Source. It's conventional to start a JSONPath with the character `$`. We use a similar syntax for the destination, but we do not support the full syntax for reasons we'll discuss in a minute.
 
 ---
+
 ### Simple JSONPath based copy operations
 
 A simple case would be to copy the `address` from the source document and put it into a House entity under the property `address`.
-```
-src:    $.households[*].address 
+
+```text
+src:    $.households[*].address
 dst:    House.address
 ```
 
@@ -126,11 +128,12 @@ As you can see, the Destination instruction `House.address` looks like a JSONPat
   }
 ]
 ```
+
 `House` specifies the type of the object and tells Aether how to validate and where to save the data. It's not, strictly speaking, part of a valid JSONPath. This is why we don't use the `$` convention for destination paths.
 
 Similarly, we can resolve the names of our Stooges.
 
-```
+```text
 src:    $.households[*].names[*]
 dst:    Person.name
 ```
@@ -152,14 +155,16 @@ This yields the expected:
 ```
 
 ---
+
 ### JSONPath extensions
 
-One annoying antipattern shows up in our sample input, the use of numbered keys such as `number1`, `number2` in an object. JSONPath has no native answer for this using the standard wildcard `*` operator, so we've gone beyond the specification. For example:
+One annoying anti-pattern shows up in our sample input, the use of numbered keys such as `number1`, `number2` in an object. JSONPath has no native answer for this using the standard wildcard `*` operator, so we've gone beyond the specification. For example:
 
-```
-src:    $.households[*].number* 
+```text
+src:    $.households[*].number*
 dst:    Person.name
 ```
+
 Yields:
 
 ```json
@@ -180,272 +185,290 @@ Yields:
 ```
 
 ---
+
 ### JSONPath filtering and other functions
 
 Because we use `jsonpath-ng`'s extended parser, there are a number of functional improvements that you can leverage. A reference is available [here](https://github.com/h2non/jsonpath-ng#extensions).
 
 Filtering is an advanced feature and can change the order of the filtered field in the output entities. If you're creating more than one entity of a particular type, you must be sure that your outputs properly align to the source document as you're creating your mapping. The best way to do this is to:
-  - Apply non-overlapping filtering to all instances of any filtered type.
-  - Always apply filters in the same order.
-  - Apply the same filter for all properties of a given type.
+
+- Apply non-overlapping filtering to all instances of any filtered type.
+- Always apply filters in the same order.
+- Apply the same filter for all properties of a given type.
 
 For more information about how the extractor interprets instructions and why filtering order matters, see the section titled [_Extractor Mechanism_](#extractor-mechanism).
 
 <a name="extractor-function"></a>
+
 ## Extractor Functions
 
 #### UUID
-- *call:* `#!uuid`
-- *args:* `none`
-- *explanation:*
 
+- _call:_ `#!uuid`
+- _args:_ `none`
+- _explanation:_
     Generates a random UUID (version 4) which can be assigned as a string to a field. Beyond generating the ID, this is saved as part of the original submission document in a section titled `aether_extractor_enrichment` so that if extraction is performed a second time against the same dataset, the same IDs will be used as long as the the order of the submission data do not change. See [_Extractor Mechanism_](#extractor-mechanism) for more information on instruction ordering.
 
-- *example:* 
-```json
-[
-  "#!uuid",
-  "Person.id"
-]
-```
+- _example:_
+
+    ```json
+    [
+      "#!uuid",
+      "Person.id"
+    ]
+    ```
+
 ---
 
 #### Constant
-- *call:* `#!constant`
-- *args:*
-    - 1: the value of the constant
-    - 2: (optional) the python type to cast the value to. One of the following:
-        - int
-        - boolean
-        - string
-        - float
-        - json
-- *explanation:* 
 
-    Used when you want the apply the same value to every matching field. You can optionally specify the type of the value and the extractor will attempt to cast it. If no cast type is set, the value will be treated as a string. Typically the schema for the output field will dictate the type. It can also be useful in creating empty stuctures for required fields using the json cast. In the examples you can see the various usages.
+- _call:_ `#!constant`
+- _args:_
+  - 1: the value of the constant
+  - 2: (optional) the python type to cast the value to. One of the following:
+    - int
+    - boolean
+    - string
+    - float
+    - json
+- _explanation:_
+    Used when you want the apply the same value to every matching field. You can optionally specify the type of the value and the extractor will attempt to cast it. If no cast type is set, the value will be treated as a string. Typically the schema for the output field will dictate the type. It can also be useful in creating empty structures for required fields using the json cast. In the examples you can see the various usages.
 
-- *examples:*
-```json
-[
-  [
-    "#!constant#1#int",
-    "Person.revision"
-  ],
-  [
-    "#!constant#registered",
-    "Patient.status"
-  ],
-  [
-    "#!constant#pending_approval#string",
-    "Message.approved"
-  ],
-  [
-    "#!constant#false#boolean",
-    "Message.is_public"
-  ],
-  [
-    "#!constant#{\"received\":[], \"sent\":[]}#json",
-    "Queue.archived"
-  ]
-]
-```
+- _example:_
+
+    ```json
+    [
+      [
+        "#!constant#1#int",
+        "Person.revision"
+      ],
+      [
+        "#!constant#registered",
+        "Patient.status"
+      ],
+      [
+        "#!constant#pending_approval#string",
+        "Message.approved"
+      ],
+      [
+        "#!constant#false#boolean",
+        "Message.is_public"
+      ],
+      [
+        "#!constant#{\"received\":[], \"sent\":[]}#json",
+        "Queue.archived"
+      ]
+    ]
+    ```
+
 ---
 
 #### Entity Reference
-- *call:* `#!entity-reference`
-- *args:*
-    - 1: The jsonpath for the resource in the constructed entities.
-    - 2: (optional) An anchor reference in the source to the output entity
-    - 3: (optional) An anchor reference in the source to the referenced entity
-- *explanation and example:*
+
+- _call:_ `#!entity-reference`
+- _args:_
+  - 1: The jsonpath for the resource in the constructed entities.
+  - 2: (optional) An anchor reference in the source to the output entity
+  - 3: (optional) An anchor reference in the source to the referenced entity
+- _explanation and example:_
 
     The simple case (not using the optional anchor references) of entity reference looks at the output of an Entity created in a previous mapping set and copies the value of the field. This is often required when an ID is generated for an entity during extraction, and a reference must be kept using that new ID from other entities.
 
     For example, one might want to reference the newly created ID of a house in each resident's record.
 
     Previous Output Entity State:
-        People
+
+    People
 
     ```json
-[
-  {
-    "name": "Buster",
-    "last_name": "Keaton"
-  },
-  {
-    "name": "Grace",
-    "last_name": "Keaton"
-  },
-  {
-    "name": "Ace",
-    "last_name": "Keaton"
-  },
-  {
-    "name": "Franklin",
-    "last_name": "Keaton"
-  }
-]
+    [
+      {
+        "name": "Buster",
+        "last_name": "Keaton"
+      },
+      {
+        "name": "Grace",
+        "last_name": "Keaton"
+      },
+      {
+        "name": "Ace",
+        "last_name": "Keaton"
+      },
+      {
+        "name": "Franklin",
+        "last_name": "Keaton"
+      }
+    ]
     ```
-        Houses
+
+    Houses
 
     ```json
-[
-  {
-    "id": "e08bafe3-f9af-4412-8e00-93acfc0d68ea",
-    "address": "1000 Chortle Way"
-  }
-]
+    [
+      {
+        "id": "e08bafe3-f9af-4412-8e00-93acfc0d68ea",
+        "address": "1000 Chortle Way"
+      }
+    ]
     ```
 
     Mapping:
-    ```json  
-[
-  "#!entity-reference#$.House[*].id",
-  "Person.house"
-]
-    ```
-    
-    New Output Entity State:
-        - People
 
     ```json
-[
-  {
-    "name": "Buster",
-    "last_name": "Keaton",
-    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
-  },
-  {
-    "name": "Grace",
-    "last_name": "Keaton",
-    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
-  },
-  {
-    "name": "Ace",
-    "last_name": "Keaton",
-    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
-  },
-  {
-    "name": "Franklin",
-    "last_name": "Keaton",
-    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
-  }
-]
+    [
+      "#!entity-reference#$.House[*].id",
+      "Person.house"
+    ]
     ```
-        - Houses
+
+    New Output Entity State:
+
+    People
+
+    ```json
+    [
+      {
+        "name": "Buster",
+        "last_name": "Keaton",
+        "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+      },
+      {
+        "name": "Grace",
+        "last_name": "Keaton",
+        "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+      },
+      {
+        "name": "Ace",
+        "last_name": "Keaton",
+        "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+      },
+      {
+        "name": "Franklin",
+        "last_name": "Keaton",
+        "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+      }
+    ]
+    ```
+
+    Houses
 
     ```json
     [
         {"id": "e08bafe3-f9af-4412-8e00-93acfc0d68ea", "address": "1000 Chortle Way"}
     ]
     ```
+
     Using the reference anchors would be a requirement when there are complex relationships in the source data that need to be respected in the extracted entities. For example look at this source data.
+
     ```json
-{
-  "households": [
     {
-      "names": [
-        "Larry",
-        "Curly"
-      ],
-      "address": "74 Whyioughta St.",
-      "number1": 1,
-      "number2": 2
-    },
-    {
-      "names": [
-        "Moe"
-      ],
-      "address": "1600 Ipoke Ave",
-      "number1": 3
+      "households": [
+        {
+          "names": [
+            "Larry",
+            "Curly"
+          ],
+          "address": "74 Whyioughta St.",
+          "number1": 1,
+          "number2": 2
+        },
+        {
+          "names": [
+            "Moe"
+          ],
+          "address": "1600 Ipoke Ave",
+          "number1": 3
+        }
+      ]
     }
-  ]
-}
     ```
 
     At our current step in extraction, we have all the information we need, except for a reference for the house of each person.
 
     Stooges:
+
     ```json
-[
-  {
-    "id": "a7a1f889-9223-44a2-bbea-b41a415c2989",
-    "name": "Larry",
-    "number": 1
-  },
-  {
-    "id": "40188061-1942-4041-ae1c-1e1d99221698",
-    "name": "Curly",
-    "number": 2
-  },
-  {
-    "id": "767f38e8-ce3c-41ee-bd4f-cc1c41bbbde9",
-    "name": "Moe",
-    "number": 3
-  }
-]
+    [
+      {
+        "id": "a7a1f889-9223-44a2-bbea-b41a415c2989",
+        "name": "Larry",
+        "number": 1
+      },
+      {
+        "id": "40188061-1942-4041-ae1c-1e1d99221698",
+        "name": "Curly",
+        "number": 2
+      },
+      {
+        "id": "767f38e8-ce3c-41ee-bd4f-cc1c41bbbde9",
+        "name": "Moe",
+        "number": 3
+      }
+    ]
     ```
+
     Houses:
+
     ```json
-[
-  {
-    "id": "2aff48d8-917a-4c9b-814d-99639a220773",
-    "address": "74 Whyioughta St."
-  },
-  {
-    "id": "a4354016-1a5a-47ef-9d14-01217f33ff2e",
-    "address": "1600 Ipoke Ave"
-  }
-]
+    [
+      {
+        "id": "2aff48d8-917a-4c9b-814d-99639a220773",
+        "address": "74 Whyioughta St."
+      },
+      {
+        "id": "a4354016-1a5a-47ef-9d14-01217f33ff2e",
+        "address": "1600 Ipoke Ave"
+      }
+    ]
     ```
+
     So, using #!entity-reference, how can we make sure everyone is assigned to the proper house? An anchor reference.
-    The first argument should be the path within the source that describes the output entity, in this case a Person. A path that best represents a person in the source is `households[*].names[*]`. The second argument decribes the source of the information in the source document, in this case it's a House, so the proper path would be `households[*]`. When we add the arguments together, we get:
-    
-    ```
+    The first argument should be the path within the source that describes the output entity, in this case a Person. A path that best represents a person in the source is `households[*].names[*]`. The second argument describes the source of the information in the source document, in this case it's a House, so the proper path would be `households[*]`. When we add the arguments together, we get:
+
+    ```text
     src:    #!entity-reference#House[*].id#households[*].names[*]#households[*]
     dst:    Person.house
     ```
+
     The new values of the Stooges will have them properly referenced to their respective houses:
+
     ```json
-[
-  {
-    "id": "a7a1f889-9223-44a2-bbea-b41a415c2989",
-    "name": "Larry",
-    "number": 1,
-    "house": "2aff48d8-917a-4c9b-814d-99639a220773"
-  },
-  {
-    "id": "40188061-1942-4041-ae1c-1e1d99221698",
-    "name": "Curly",
-    "number": 2,
-    "house": "2aff48d8-917a-4c9b-814d-99639a220773"
-  },
-  {
-    "id": "767f38e8-ce3c-41ee-bd4f-cc1c41bbbde9",
-    "name": "Moe",
-    "number": 3,
-    "house": "a4354016-1a5a-47ef-9d14-01217f33ff2e"
-  }
-]
+    [
+      {
+        "id": "a7a1f889-9223-44a2-bbea-b41a415c2989",
+        "name": "Larry",
+        "number": 1,
+        "house": "2aff48d8-917a-4c9b-814d-99639a220773"
+      },
+      {
+        "id": "40188061-1942-4041-ae1c-1e1d99221698",
+        "name": "Curly",
+        "number": 2,
+        "house": "2aff48d8-917a-4c9b-814d-99639a220773"
+      },
+      {
+        "id": "767f38e8-ce3c-41ee-bd4f-cc1c41bbbde9",
+        "name": "Moe",
+        "number": 3,
+        "house": "a4354016-1a5a-47ef-9d14-01217f33ff2e"
+      }
+    ]
     ```
 
     Notice that Larry and Curly still live together, and Moe still lives alone.
 
-
-
-
 ---
 
 <a name="extractor-mechanism"></a>
+
 ## Extractor Mechanism
 
 As stated previously, Mapping instruction sets are executed in order. If the extractor encounters an error on an instruction, it caches that instruction and continues down the list. Once finished with the list, it will reattempt the instructions that had errors. It will continue to retry until either all instructions have been completed _or_ a round occurs where none of the cached erroneous instructions were able to be completed. If there are errors at the end of extraction, they are reported.
 
 Let's introduce some new artifacts so we can illustrate the process from the extractor point of view.
 
-
 Input
-    
+
 ```json
 {
   "family_name": "Keaton",
@@ -468,8 +491,6 @@ Input
   ]
 }
 ```
-
-
 
 Schemas
 
@@ -522,12 +543,9 @@ Schemas
 ]
 ```
 
-
-
 #### Steps
 
 Let's start with a suboptimal mapping:
-
 
 Mapping
 
@@ -564,8 +582,6 @@ Mapping
 ]
 ```
 
-
-
 ---
 
 First Pass Details
@@ -575,6 +591,7 @@ The first thing the extractor does is try to size the output requirements. In th
 _Starting Objects_
 
 People
+
 ```json
 [
     {},
@@ -583,7 +600,9 @@ People
     {}
 ]
 ```
+
 Households
+
 ```json
 [
   {}
@@ -598,9 +617,11 @@ Instruction
   "Person.house"
 ]
 ```
+
 _Resulting Objects_
 
 People
+
 ```json
 [
   {},
@@ -609,12 +630,15 @@ People
   {}
 ]
 ```
+
 Households
+
 ```json
 [
   {}
 ]
 ```
+
 We don't have anything to reference in `$.House[*.id]` so this fails and is cached.
 
 Instruction
@@ -625,9 +649,11 @@ Instruction
     "Person.last_name"
   ]
 ```
+
 _Resulting Objects_
 
 People
+
 ```json
 [
   {
@@ -644,12 +670,15 @@ People
   }
 ]
 ```
+
 Households
+
 ```json
 [
     {}
 ]
 ```
+
 This is a straight copy from a path that exists so it succeeds. Since there's only one value from `$.family_name` instead of four, the extractor guesses (correctly) that we should apply the same value to all Person objects. If this were just for the first Person, we could force the extractor to acknowledge this by adding the following instruction directly after: `["#!none", "Person.last_name"]`, which would set the `last_name` of everyone but the first (Buster) to null.
 
 Instruction
@@ -660,9 +689,11 @@ Instruction
   "Person.name"
 ]
 ```
+
 _Resulting Objects_
 
 People
+
 ```json
 [
   {
@@ -681,7 +712,9 @@ People
   }
 ]
 ```
+
 Households
+
 ```json
 [
   {}
@@ -689,7 +722,6 @@ Households
 ```
 
 Again, this is a straight copy, so it behaves as expected. Do notice that the adults filled the first two spots. If we switched the order of this instruction with the next one, the children would be first.
-
 
 Instruction
 
@@ -699,9 +731,11 @@ Instruction
   "Person.name"
 ]
 ```
+
 _Resulting Objects_
 
 People
+
 ```json
 [
   {
@@ -722,7 +756,9 @@ People
   }
 ]
 ```
+
 Households
+
 ```json
 [
   {}
@@ -737,9 +773,11 @@ Instruction
   "House.address"
 ]
 ```
+
 _Resulting Objects_
 
 People
+
 ```json
 [
   {
@@ -760,7 +798,9 @@ People
   }
 ]
 ```
+
 Households
+
 ```json
 [
   {
@@ -768,6 +808,7 @@ Households
   }
 ]
 ```
+
 We've finally populated `Household` with something.
 
 Instruction
@@ -778,9 +819,11 @@ Instruction
   "Person.id"
 ]
 ```
+
 _Resulting Objects_
 
 People
+
 ```json
 [
   {
@@ -805,7 +848,9 @@ People
   }
 ]
 ```
+
 Households
+
 ```json
 [
   {
@@ -813,8 +858,8 @@ Households
   }
 ]
 ```
-The UUID function adds its values to the id field of `Person` without any issue.
 
+The UUID function adds its values to the id field of `Person` without any issue.
 
 Instruction
 
@@ -825,10 +870,10 @@ Instruction
 ]
 ```
 
-
 _Resulting Objects_
 
 People
+
 ```json
 [
   {
@@ -853,7 +898,9 @@ People
   }
 ]
 ```
+
 Households
+
 ```json
 [
   {
@@ -887,11 +934,10 @@ Instruction
 
 We can now resolve the Entity Reference as `House[*].id` has a value.
 
-
-
 _Resulting Objects_
 
 People
+
 ```json
 [
   {
@@ -920,7 +966,9 @@ People
   }
 ]
 ```
+
 Households
+
 ```json
 [
   {

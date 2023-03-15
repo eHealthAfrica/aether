@@ -14,7 +14,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{{ page.description }}">
     <title>{{ page.title }}</title>
-    <link  charset="utf-8"  media="screen"  type="text/css" href="{{ "css/index.css" | relative_url }}" rel="stylesheet" />
+    <link charset="utf-8" media="screen" type="text/css" href="{{ "css/index.css" | relative_url }}" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600" rel="stylesheet">
     <link rel="stylesheet" href="{{"/css/font-awesome.min.css" | relative_url }}">
     <link rel="shortcut icon" href="{{"/images/aux-icon.png" | relative_url }}"/>
@@ -31,18 +31,14 @@
     <div id="content" class="content">
       <div id="top"></div>
 
-    {{ content }}
+      {{ content }}
 
-    {% include footer.html %}
+      {% include footer.html %}
 
     </div>
     <a href="#top" class="top circle-button-up"><i class="angle-right"></i></a>
 
-
-
-
-
-        <!-- Bootstrap core JavaScript
+    <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="{{"/js/jquery-2.1.4.min.js" | relative_url }}"></script>

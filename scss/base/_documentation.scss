@@ -4,23 +4,23 @@
 
 .doc-nav-mobile {
   display: none;
-  border-bottom: 1px solid white;
+  border-bottom: 1px solid $white;
   margin: 0 6vw 1rem;
 
   .dropdown-toggle {
-    background: rgba(white, .3);
-    color: white;
+    background: rgba($white, 0.3);
+    color: $white;
   }
 
   .doc-nav-title {
-    border-top: 1px solid rgba($grey, .3);
+    border-top: 1px solid rgba($grey, 0.3);
     color: $grey;
     font-size: 0.8rem;
     font-weight: 300;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin: .5rem 0;
-    padding: .4em 1.2em;
+    margin: 0.5rem 0;
+    padding: 0.4em 1.2em;
 
     &:first-child {
       border-top: 0;
@@ -41,9 +41,9 @@
   margin-top: 1rem;
 
   a {
-    color: white;
+    color: $white;
     display: inline-block;
-    padding: .2rem 0;
+    padding: 0.2rem 0;
   }
 
   h2 {
@@ -70,27 +70,27 @@
   }
 
   .active::before {
-    content:"";
+    content: "";
     display: block;
     width: 0;
     height: 0;
-    border-top: .3em solid transparent;
-    border-bottom: .3em solid transparent;
-    border-left: .4em solid white;
+    border-top: 0.3em solid transparent;
+    border-bottom: 0.3em solid transparent;
+    border-left: 0.4em solid $white;
     position: absolute;
     left: -1rem;
-    top: .5rem;
+    top: 0.5rem;
   }
 }
 
 .doc-nav-title {
-  border-top: 1px solid rgba(white, .3);
+  border-top: 1px solid rgba($white, 0.3);
   font-size: 0.8rem;
   font-weight: 300;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding-top: .75rem;
-  padding-bottom: .75rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
 }
 
 .doc-content {
@@ -100,8 +100,8 @@
 
   h1 {
     font-size: 2.6em;
-    font-weight:600;
-    margin-bottom: $unit*2;
+    font-weight: 600;
+    margin-bottom: $unit * 2;
   }
 
   h2 {
@@ -112,24 +112,24 @@
   }
 
   h3 {
-    margin: 1rem 0 .5rem;
+    margin: 1rem 0 0.5rem;
     font-weight: 600;
   }
 
   h4 {
-    font-weight:600;
-    margin: 1rem 0 .5rem;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem;
   }
 
   ul {
-    padding-top: .3em;
+    padding-top: 0.3em;
     padding-left: 1.2em;
     padding-bottom: 1rem;
   }
 
   li {
     list-style: disc;
-    padding-bottom: .3em;
+    padding-bottom: 0.3em;
 
     li {
       list-style: circle;
@@ -179,10 +179,10 @@
   }
 
   code {
-    background-color: rgba($bg-grey, .5);
+    background-color: rgba($bg-grey, 0.5);
     border-radius: 4px;
-    padding: .1em .3em;
-    font-size: .94em;
+    padding: 0.1em 0.3em;
+    font-size: 0.94em;
   }
 
   table {
@@ -194,8 +194,9 @@
     border-bottom: 2px solid $grey;
   }
 
-  td, th {
-    padding: .5em 1em;
+  td,
+  th {
+    padding: 0.5em 1em;
   }
 
   td {
@@ -210,14 +211,9 @@
   .screenshot {
     display: block;
     padding: 1rem;
-    // box-shadow: 1px 1px 2px $light-grey;
     line-height: 0;
     background: $bg-grey;
     margin-bottom: 2rem;
-
-    img {
-       // box-shadow: 0px 1px 2px $light-grey;
-    }
   }
 
   .scalable {
@@ -225,7 +221,7 @@
     width: 30%;
     float: left;
     margin-right: 1rem;
-    transition: width .2s;
+    transition: width 0.2s;
 
     &.open {
       width: 100%;
@@ -236,7 +232,7 @@
 }
 
 .doc-content:not(.welcome) {
-  background: white;
+  background: $white;
   color: $font-color;
 }
 
@@ -271,7 +267,6 @@
 
 @media screen and (max-width: 640px) {
   .doc-content {
-    font-size: .9em;
+    font-size: 0.9em;
   }
 }
-

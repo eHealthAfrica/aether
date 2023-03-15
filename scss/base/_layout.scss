@@ -1,8 +1,9 @@
 body {
   background: linear-gradient(135deg, $action-bright, $purple);
   position: relative;
-    &::before {
-    content: '';
+
+  &::before {
+    content: "";
     display: block;
     position: fixed;
     bottom: -90vw;
@@ -10,14 +11,14 @@ body {
     width: 110vw;
     height: 110vw;
     border-radius: 100%;
-    border: 1vw solid rgba(white, .1);
-    border-right: 6vw solid rgba(white, .1);
-    border-top: 4vw solid rgba(white, .1);
+    border: 1vw solid rgba($white, 0.1);
+    border-right: 6vw solid rgba($white, 0.1);
+    border-top: 4vw solid rgba($white, 0.1);
     z-index: 1;
   }
 
   &::after {
-    content: '';
+    content: "";
     display: block;
     position: fixed;
     bottom: -30vw;
@@ -25,9 +26,9 @@ body {
     width: 70vw;
     height: 70vw;
     border-radius: 100%;
-    border: .5vw solid rgba(white, .1);
-    border-right: 5vw solid rgba(white, .1);
-    border-top: 3vw solid rgba(white, .1);
+    border: .5vw solid rgba($white, 0.1);
+    border-right: 5vw solid rgba($white, 0.1);
+    border-top: 3vw solid rgba($white, 0.1);
     z-index: 0;
   }
 }
@@ -48,10 +49,10 @@ body {
 }
 
 .content {
-  height: calc(100vH - 4rem);
+  height: calc(100vh - 4rem);
   margin-top: 4rem;
   padding: 4rem $margin 0;
-  overflow: auto;  
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
   z-index: 1;
@@ -61,153 +62,191 @@ body {
   padding: $unit;
 }
 .margin-top {
-  margin-top: $unit*4;
+  margin-top: $unit * 4;
 }
 .margin-bottom {
-  margin-bottom: $unit*4;
+  margin-bottom: $unit * 4;
 }
 
 .grid-row {
   display: flex;
   justify-content: space-between;
-  padding-bottom: $unit*2;
-  &>div, &>p {
+  padding-bottom: $unit * 2;
+
+  &>div,
+  &>p {
     flex: 1;
     margin-right: 4%;
+
     &:last-child {
       margin-right: 0;
     }
   }
+
   .col2 {
     flex:2;
   }
 
 }
 
-.grid2>div{
+.grid2>div {
   &.empty-col1-left {
     margin-left: 52%;
   }
+
   &.empty-col1-right {
     margin-right: 52%;
   }
 }
-.grid3>div{
+
+.grid3>div {
   &.col2 {
-    flex:none;
+    flex: none;
     width: 65.3%;
   }
+
   &.empty-col1-left {
     margin-left: 34.6%;
   }
+
   &.empty-col2-left {
     margin-left: 69.2%;
   }
+
   &.empty-col1-right {
     margin-right: 38.6%;
+
     &:last-child {
       margin-right: 34.6%;
     }
   }
+
   &.empty-col2-right {
     margin-right: 69.2%;
   }
 }
-.grid4>div{
+
+.grid4>div {
   &.col2 {
-    flex:none;
+    flex: none;
     width: 48%;
   }
+
   &.col3 {
-    flex:none;
+    flex: none;
     width: 74%;
   }
+
   &.empty-col1-left {
     margin-left: 26%;
   }
+
   &.empty-col2-left {
     margin-left: 52%;
   }
+
   &.empty-col3-left {
     margin-left: 78%;
   }
+
   &.empty-col1-right {
     margin-right: 30%;
+
     &:last-child {
       margin-right: 26%;
     }
   }
+
   &.empty-col2-right {
     margin-right: 56%;
+
     &:last-child {
       margin-right: 52%;
     }
   }
+
   &.empty-col3-right {
     margin-right: 78%;
   }
 }
 
 @media screen and (min-width: 740px) {
-  .grid2>div{
+  .grid2>div {
     &.empty-col1-left {
       margin-left: 52%;
     }
+
     &.empty-col1-right {
       margin-right: 52%;
     }
   }
-  .grid3>div{
+
+  .grid3>div {
     &.col2 {
-      flex:none;
+      flex: none;
       width: 65.3%;
     }
+
     &.empty-col1-left {
       margin-left: 34.6%;
     }
+
     &.empty-col2-left {
       margin-left: 69.2%;
     }
+
     &.empty-col1-right {
       margin-right: 38.6%;
+
       &:last-child {
         margin-right: 34.6%;
       }
     }
+
     &.empty-col2-right {
       margin-right: 69.2%;
     }
   }
-  .grid4>div{
+
+  .grid4>div {
     &.col2 {
-      flex:none;
+      flex: none;
       width: 48%;
     }
+
     &.col3 {
-      flex:none;
+      flex: none;
       width: 74%;
     }
+
     &.empty-col1-left {
       margin-left: 26%;
     }
+
     &.empty-col2-left {
       margin-left: 52%;
     }
+
     &.empty-col3-left {
       margin-left: 78%;
     }
+
     &.empty-col1-right {
       margin-right: 30%;
+
       &:last-child {
         margin-right: 26%;
       }
     }
+
     &.empty-col2-right {
       margin-right: 56%;
+
       &:last-child {
         margin-right: 52%;
       }
     }
+
     &.empty-col3-right {
       margin-right: 78%;
     }
@@ -217,23 +256,18 @@ body {
 @media screen and (max-width: 740px) {
   .grid-row {
     flex-direction: column;
-    &>div, &>p {
+
+    &>div,
+    &>p {
       width: 100%;
       margin-left: 0;
       margin-right: 0;
     }
   }
 }
+
 @media screen and (min-width: 1600px) {
   .content {
-    padding: 4rem $margin*2 0;
+    padding: 4rem $margin * 2 0;
   }
 }
-
-
-
-
-
-
-
-

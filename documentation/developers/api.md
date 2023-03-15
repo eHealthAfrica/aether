@@ -3,7 +3,6 @@ title: Aether - API - Introduction
 permalink: documentation/developers/api.html
 ---
 
-
 # Using the Aether API
 
 Both the Kernel and the ODK module use the [Django REST Framework](http://www.django-rest-framework.org/) to provide a number of REST API endpoints that can be used for CRUD operations on the data they handle. When accessed from the browser, these endpoints provide a simple UI that can be useful for testing API calls, or for direct access and manipulation of the data.
@@ -15,5 +14,3 @@ You have two options for authentication: Basic (username/password) or Token. It 
 ## Endpoints
 
 ### Kernel
-
-
