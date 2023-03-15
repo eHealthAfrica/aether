@@ -148,3 +148,6 @@ demo
 # persistent data
 .persistent_data
 *.db
+
+# gh-pages
+_site/
