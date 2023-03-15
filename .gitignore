@@ -82,7 +82,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
-*,cover
+*.cover
 
 # Translations
 *.mo
@@ -130,6 +130,10 @@ terraform.tfstate.backup
 
 # Webpack build files
 **/assets/bundles/
+**/static/*-*.*
+**/static/VERSION
+**/static/REVISION
+webpack-stats.json
 
 # Visual Studio files
 .vs
@@ -137,6 +141,13 @@ demo
 
 # npm
 **/package-lock.json
+
+# docker-compose variables
+.env
+
+# persistent data
+.persistent_data
+*.db
 
 # gh-pages
 _site/
