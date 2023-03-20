@@ -11,8 +11,6 @@
 #  * Aether Integration Tests
 # ------------------------------------------------------------------------------
 
-version: "2.4"
-
 volumes:
   db_data_test: {}
   redis_data_test: {}

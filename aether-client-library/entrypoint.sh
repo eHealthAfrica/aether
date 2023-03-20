@@ -69,7 +69,7 @@ case "$1" in
         rm -rf aether.client.egg-info
 
         # create the distribution
-        python setup.py bdist_wheel --universal
+        python3 -m build --wheel
 
         # remove useless content
         rm -rf build

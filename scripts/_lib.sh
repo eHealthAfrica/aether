@@ -56,7 +56,7 @@ function build_ui_assets {
     local container=ui-assets
 
     build_container $container
-    docker-compose run --rm $container build
+    docker compose run --rm $container build
 }
 
 # build the indicated container
@@ -69,7 +69,7 @@ function build_container {
         local APP_VERSION=`cat ./VERSION`
     fi
 
-    local DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
+    local DC="docker compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
 
     echo_message "Building container $container"
     $DC build \
@@ -82,7 +82,7 @@ function build_container {
 # upgrade the dependencies of the indicated container
 function pip_freeze_container {
     local container=$1
-    local DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml"
+    local DC="docker compose -f docker-compose.yml -f docker-compose-connect.yml"
 
     echo_message "Upgrading container $container"
     $DC run --rm --no-deps $container pip_freeze
@@ -90,14 +90,14 @@ function pip_freeze_container {
 
 # Start database container and wait till is up and responding
 function start_db {
-    _wait_for "db" "docker-compose run --rm --no-deps kernel eval pg_isready -q"
+    _wait_for "db" "docker compose run --rm --no-deps kernel eval pg_isready -q"
 }
 
 # Start container and wait till is up and responding
 # Usage:    start_container <container-name> <container-health-url>
 function start_container {
     local container=$1
-    local is_ready="docker-compose run --rm --no-deps kernel eval wget -q --spider $2"
+    local is_ready="docker compose run --rm --no-deps kernel eval wget -q --spider $2"
 
     _wait_for "$container" "$is_ready"
 }
@@ -107,7 +107,7 @@ function _wait_for {
     local is_ready=$2
 
     echo_message "Starting $container server..."
-    docker-compose up -d $container
+    docker compose up -d $container
 
     local retries=1
     until $is_ready > /dev/null; do
@@ -116,7 +116,7 @@ function _wait_for {
         ((retries++))
         if [[ $retries -gt 10 ]]; then
             echo_message "It was not possible to start $container"
-            docker-compose logs $container
+            docker compose logs $container
             echo_message ""
             exit 1
         fi

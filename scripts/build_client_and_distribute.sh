@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-DC_FILE="docker-compose -f ./aether-client-library/docker-compose.yml"
+DC_FILE="docker compose -f ./aether-client-library/docker-compose.yml"
 $DC_FILE down -v
 
 if [ ! -f VERSION ]; then
@@ -36,7 +36,7 @@ $DC_FILE build \
     client
 $DC_FILE run --rm client build
 
-PCK_FILE=aether.client-${APP_VERSION}-py2.py3-none-any.whl
+PCK_FILE=aether.client-${APP_VERSION}-py3-none-any.whl
 
 # distribute within the containers
 FOLDERS=( test-aether-integration-module )

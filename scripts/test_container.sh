@@ -86,7 +86,7 @@ function kill_test {
 # TEST environment
 source .env
 
-DC_TEST="docker-compose -f docker-compose-test.yml"
+DC_TEST="docker compose -f docker-compose-test.yml"
 DC_RUN="$DC_TEST run --rm"
 DC_KERNEL_RUN="$DC_RUN kernel-test"
 KERNEL_HEALTH_URL="http://kernel-test:9100/health"

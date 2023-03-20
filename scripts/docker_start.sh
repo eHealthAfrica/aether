@@ -48,11 +48,11 @@ function show_help {
 
 function start_container {
     if [[ $force = "yes" ]]; then
-        docker-compose kill $1
+        docker compose kill $1
     fi
-    docker-compose up --no-deps -d $1
+    docker compose up --no-deps -d $1
     sleep 2
-    docker-compose logs --tail 20 $1
+    docker compose logs --tail 20 $1
 }
 
 # default values
@@ -135,7 +135,7 @@ esac
 create_credentials
 
 echo ""
-docker-compose ps
+docker compose ps
 echo "----------------------------------------------------------------------"
 echo ""
 
@@ -182,17 +182,17 @@ done
 
 for container in "${SETUP_CONTAINERS[@]}"; do
     if [[ $container != "exm" ]]; then
-        docker-compose run --rm $container setup
+        docker compose run --rm $container setup
     fi
     start_container $container
 done
 
 echo ""
-docker-compose ps
+docker compose ps
 echo "----------------------------------------------------------------------"
 echo ""
 docker ps
 echo "----------------------------------------------------------------------"
 echo ""
 
-docker-compose up $app
+docker compose up $app

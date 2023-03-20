@@ -94,7 +94,7 @@ or
 ./scripts/docker_start.sh --build
 ```
 
-**IMPORTANT NOTE**: the docker-compose files are intended to be used exclusively
+**IMPORTANT NOTE**: the docker compose files are intended to be used exclusively
 for local development. Never deploy these to publicly accessible servers.
 
 ##### Include this entry in your `/etc/hosts` or `C:\Windows\System32\Drivers\etc\hosts` file
@@ -546,11 +546,11 @@ The code style is tested:
 
 ```bash
 # Python files
-docker-compose run --rm --no-deps <container-name> test_lint
+docker compose run --rm --no-deps <container-name> test_lint
 # Javascript files
-docker-compose run --rm --no-deps ui-assets eval npm run test-lint-js
+docker compose run --rm --no-deps ui-assets eval npm run test-lint-js
 # CSS files
-docker-compose run --rm --no-deps ui-assets eval npm run test-lint-sass
+docker compose run --rm --no-deps ui-assets eval npm run test-lint-sass
 ```
 
 - - -
@@ -715,7 +715,7 @@ script offers a range of commands to start services or run commands.
 The full list of commands can be seen in the script.
 
 The pattern to run a command is always
-``docker-compose run --rm <container-name> <entrypoint-command> <...args>``
+``docker compose run --rm <container-name> <entrypoint-command> <...args>``
 
 *[Return to TOC](#table-of-contents)*
 
@@ -755,14 +755,14 @@ or (building also dependencies)
 or
 
 ```bash
-docker-compose -f docker-compose-test.yml run --rm <container-name> test
+docker compose -f docker-compose-test.yml run --rm <container-name> test
 ```
 
 or
 
 ```bash
-docker-compose -f docker-compose-test.yml run --rm <container-name> test_lint
-docker-compose -f docker-compose-test.yml run --rm <container-name> test_coverage
+docker compose -f docker-compose-test.yml run --rm <container-name> test_lint
+docker compose -f docker-compose-test.yml run --rm <container-name> test_coverage
 ```
 
 The e2e tests are run against different containers, the config file used
@@ -771,7 +771,7 @@ for them is [docker-compose-test.yml](docker-compose-test.yml).
 Before running `odk` or `ui` you should start the needed test containers.
 
 ```bash
-docker-compose -f docker-compose-test.yml up -d <container-name>-test
+docker compose -f docker-compose-test.yml up -d <container-name>-test
 ```
 
 > **WARNING**
@@ -801,17 +801,17 @@ and [Enzyme](http://airbnb.io/enzyme/).
 
 ```bash
 # all tests
-docker-compose run --rm ui-assets test
+docker compose run --rm ui-assets test
 
 # by type
-docker-compose run --rm ui-assets test_lint
-docker-compose run --rm ui-assets test_js
+docker compose run --rm ui-assets test_lint
+docker compose run --rm ui-assets test_js
 
 # more detailed
-docker-compose run --rm ui-assets eval npm run test-lint-sass
-docker-compose run --rm ui-assets eval npm run test-lint-js
+docker compose run --rm ui-assets eval npm run test-lint-sass
+docker compose run --rm ui-assets eval npm run test-lint-js
 # in case you need to check `console.log` messages
-docker-compose run --rm ui-assets eval npm run test-js-verbose
+docker compose run --rm ui-assets eval npm run test-js-verbose
 ```
 
 *[Return to TOC](#table-of-contents)*
@@ -821,13 +821,13 @@ docker-compose run --rm ui-assets eval npm run test-js-verbose
 #### Check outdated dependencies
 
 ```bash
-docker-compose run --rm --no-deps <container-name> eval pip list --outdated
+docker compose run --rm --no-deps <container-name> eval pip list --outdated
 ```
 
 Special case for Aether Kernel UI assets (node container)
 
 ```bash
-docker-compose run --rm --no-deps ui-assets eval npm outdated
+docker compose run --rm --no-deps ui-assets eval npm outdated
 ```
 
 #### Update requirements file
@@ -839,7 +839,7 @@ docker-compose run --rm --no-deps ui-assets eval npm outdated
 or
 
 ```bash
-docker-compose run --rm --no-deps <container-name> pip_freeze
+docker compose run --rm --no-deps <container-name> pip_freeze
 ```
 
 The Aether Kernel UI assets [package.json](aether-ui/aether/ui/assets/package.json)

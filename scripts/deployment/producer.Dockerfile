@@ -30,7 +30,7 @@ RUN apt-get update -qq && \
         --allow-downgrades \
         --allow-remove-essential \
         --allow-change-held-packages \
-        install gcc && \
+        install gcc > /dev/null && \
     useradd -ms /bin/false aether
 
 ## copy source code

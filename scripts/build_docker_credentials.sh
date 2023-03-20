@@ -58,12 +58,12 @@ cat << EOF
 #
 # Verify correct substitution with:
 #
-#   docker-compose config
+#   docker compose config
 #
 # If variables are newly added or enabled,
 # please restart the images to pull in changes:
 #
-#   docker-compose restart {container-name}
+#   docker compose restart {container-name}
 #
 
 # ------------------------------------------------------------------

@@ -5,12 +5,10 @@
 #  * Aether Kafka Producer
 # ------------------------------------------------------------------------------
 
-version: "2.4"
-
 networks:
   aether:
-    external:
-      name: ${NETWORK_NAME}
+    name: ${NETWORK_NAME}
+    external: true
 
 services:
 

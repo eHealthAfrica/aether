@@ -19,7 +19,7 @@
 # under the License.
 
 from io import open
-from setuptools import setup, find_packages
+from setuptools import find_namespace_packages, setup
 
 
 def read(f):
@@ -38,6 +38,7 @@ setup(
     author_email='aether@ehealthafrica.org',
     license='Apache2 License',
 
+    python_requires='>=3.6',
     install_requires=[
         'bravado',
         'jsonschema[format]<4',
@@ -45,6 +46,15 @@ setup(
         'requests_oauthlib'
     ],
 
-    packages=find_packages(),
+    packages=find_namespace_packages(),
     include_package_data=True,
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3 :: Only',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+    ],
 )

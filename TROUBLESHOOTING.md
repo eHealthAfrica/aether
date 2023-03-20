@@ -7,7 +7,7 @@ This is the list of most common problems and how to solve them.
 Visit:
 
 - [docker command line reference](https://docs.docker.com/engine/reference/commandline/cli/)
-- [docker-compose command line reference](https://docs.docker.com/compose/reference/overview/)
+- [docker compose command line reference](https://docs.docker.com/compose/reference/overview/)
 
 Sometimes helps.
 
@@ -27,7 +27,7 @@ How to free space:
 ./scripts/clean_all.sh
 # based on
 # https://docs.docker.com/compose/reference/down/
-docker-compose down
+docker compose down
 
 # remove unused data
 # https://docs.docker.com/engine/reference/commandline/system_prune/
@@ -40,7 +40,7 @@ docker system prune --all --volumes --force
 #   volumes
 #   ...
 # https://docs.docker.com/compose/reference/down/
-docker-compose down --rmi all -v
+docker compose down --rmi all -v
 ```
 
 ### [UBUNTU] `ERROR: Couldn't connect to Docker daemon at http+docker://localunixsocket - is it running?`
