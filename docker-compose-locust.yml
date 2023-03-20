@@ -5,7 +5,7 @@
 #
 # 1. Start the app as usual.
 #
-# 2. Run:    docker-compose -f docker-compose-locust.yml up --quiet-pull
+# 2. Run:    docker compose -f docker-compose-locust.yml up --quiet-pull
 #
 # 3. Go to:  http://localhost:8089
 #

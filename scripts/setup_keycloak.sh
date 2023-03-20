@@ -32,12 +32,12 @@ KC_DB=keycloak
 KC_USER=keycloak
 KC_URL="http://keycloak:8080/auth"
 
-docker-compose kill keycloak
-docker-compose pull keycloak
+docker compose kill keycloak
+docker compose pull keycloak
 
 start_db
 
-DB_ID=$(docker-compose ps -q db)
+DB_ID=$(docker compose ps -q db)
 PSQL="docker container exec -i $DB_ID psql"
 
 echo_message "Recreating keycloak database..."
@@ -56,7 +56,7 @@ EOSQL
 
 start_container keycloak $KC_URL
 
-KCADM="docker-compose exec keycloak /opt/jboss/keycloak/bin/kcadm.sh"
+KCADM="docker compose exec keycloak /opt/jboss/keycloak/bin/kcadm.sh"
 
 echo_message "Connecting to keycloak server..."
 $KCADM \
@@ -103,5 +103,5 @@ $KCADM \
 
 echo_message "Done!"
 
-# docker-compose kill keycloak
-# docker-compose rm -f keycloak
+# docker compose kill keycloak
+# docker compose rm -f keycloak

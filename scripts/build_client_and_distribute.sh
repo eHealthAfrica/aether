@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-DC_FILE="docker-compose -f ./aether-client-library/docker-compose.yml"
+DC_FILE="docker compose -f ./aether-client-library/docker-compose.yml"
 $DC_FILE down -v
 
 if [ ! -f VERSION ]; then

@@ -21,7 +21,7 @@ Frontend assets are mounted on the pages via the
   that watches assets, rebuilds and does hot reloading of JS Components and CSS files.
 
   ```bash
-  docker-compose up ui-assets
+  docker compose up ui-assets
   ```
 
 ### CSS Build
