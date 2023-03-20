@@ -8,20 +8,18 @@
 #  * Aether UI & UI Assets
 # ------------------------------------------------------------------------------
 
-version: "2.4"
-
 networks:
   # docker network create ${NETWORK_NAME}
   internal:
-    external:
-      # if this isn't explicitly set it inherits from the containing folder name (aether or not)
-      name: ${NETWORK_NAME}
+    # if this isn't explicitly set it inherits from the containing folder name (aether or not)
+    name: ${NETWORK_NAME}
+    external: true
 
 volumes:
   # docker volume create ${DB_VOLUME}
   database_data:
-    external:
-      name: ${DB_VOLUME}
+    name: ${DB_VOLUME}
+    external: true
   redis_data: {}
 
 services:
