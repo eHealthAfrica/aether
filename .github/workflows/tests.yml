@@ -1,0 +1,62 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - /^release\-[0-9]+\.[0-9]+$/
+
+  push:
+    branches:
+      - develop
+      - /^release\-[0-9]+\.[0-9]+$/
+
+jobs:
+
+  test-apps:
+    name: Test apps
+    runs-on: ubuntu-22.04
+    env:
+      CONFLUENTINC_VERSION: 6.1.1
+
+    strategy:
+      fail-fast: true
+      matrix:
+        app: [core, modules, ui, integration]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run tests
+        run: |
+          export TERM=xterm
+          ./.github/scripts/test_ci.sh ${{ matrix.app }}
+
+      - name: Tests failed
+        if: ${{ failure() }}
+        run: |
+          export TERM=xterm
+          ./.github/scripts/test_ci_failure.sh ${{ matrix.app }}
+
+
+  test-deployment:
+    name: Test docker build
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: true
+      matrix:
+        app: [kernel, exm, odk, ui, producer, integration-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build production containers
+        run: |
+          export TERM=xterm
+          docker build \
+              --tag test-${{ matrix.app }} \
+              --file ./scripts/deployment/${{ matrix.app }}.Dockerfile \
+              .

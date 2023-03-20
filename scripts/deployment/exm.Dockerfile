@@ -30,7 +30,7 @@ RUN apt-get update -qq && \
         --allow-downgrades \
         --allow-remove-essential \
         --allow-change-held-packages \
-        install gcc redis-server curl && \
+        install gcc redis-server curl > /dev/null && \
     useradd -ms /bin/false aether
 
 ## copy source code
