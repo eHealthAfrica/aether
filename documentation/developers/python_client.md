@@ -1,6 +1,6 @@
 ## Using the Aether Kernel's Python Client.
 
-Since aether-kernel uses OpenAPI to describe it's interfaces, we can use a number of generic clients to communicate with it. When running locally, you can view the OpenAPI (formerly called Swagger) specification at [http://aether.local/kernel/v1/swagger/](http://aether.local/kernel/v1/swagger/). This is a good place to familiarize yourself with the API, and a good reference when you run into issues using the client. The client itself really only knows what's in the spec, and applies a light wrapper around the OpenAPI client library [bravado](https://bravado.readthedocs.io/en/stable/).
+Since aether-kernel uses OpenAPI to describe it's interfaces, we can use a number of generic clients to communicate with it. When running locally, you can view the OpenAPI (formerly called Swagger) specification at [http://aether.local/dev/kernel/v1/swagger/](http://aether.local/dev/kernel/v1/swagger/). This is a good place to familiarize yourself with the API, and a good reference when you run into issues using the client. The client itself really only knows what's in the spec, and applies a light wrapper around the OpenAPI client library [bravado](https://bravado.readthedocs.io/en/stable/).
 
 Bravado provides us with models and methods that we can use to interact with the API. If you want to follow along, you'll need a python environment into which you've installed `aether.client` and a local instance of Aether Kernel. I suggest grabbing [aether-bootstrap](https://github.com/eHealthAfrica/aether-bootstrap). If you do, you can find a copy of `aether.client` in the folder `aether-bootstrap/assets/generation/pip/requires`. This guide refers to v 0.10 and above. I also highly recommend you use [pipenv](https://pipenv.readthedocs.io/en/latest/) to isolate your python workspaces.
 
@@ -9,13 +9,13 @@ Connecting to the API is simple.
 ```python
 from aether.client import Client
 
-URL = 'http://aether.local/kernel'  # or the value of KERNEL_URL in the .env file
-USER = 'admin'                      # or the value of KERNEL_USERNAME in the .env file
-PW = 'adminadmin'                   # or the value of KERNEL_USERNAME in the .env file
+URL = 'http://aether.local/dev/kernel'  # or the value of KERNEL_URL in the .env file
+USER = 'admin'                          # or the value of KERNEL_USERNAME in the .env file
+PW = 'adminadmin'                       # or the value of KERNEL_USERNAME in the .env file
 client = Client(URL, USER, PW)
 ```
 
-If we want to create project, we can get a model for it, and then populate it with our data and submit it to the kernel. You'll want to look at the Swagger spec hosted by [kernel](http://aether.local/kernel/v1/swagger/) to see what the required fields are for a given API call. In the case of a project, specifically the API method `projects_create`, it's just a name.
+If we want to create project, we can get a model for it, and then populate it with our data and submit it to the kernel. You'll want to look at the Swagger spec hosted by [kernel](http://aether.local/dev/kernel/v1/swagger/) to see what the required fields are for a given API call. In the case of a project, specifically the API method `projects_create`, it's just a name.
 
 ```python
 Project = client.get_model('Project')  # get a copy of the model

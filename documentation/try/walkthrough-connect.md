@@ -10,9 +10,14 @@ So far we have set up mappings so that we can be sure that our data conforms to 
 
 We’re now going to find out how we can get this mapped data to be published in real time. This is done by **Aether Connect**, which is a system that uses Kafka plus pluggable "consumers" in order to stream entities out to various destinations. Right now we have a consumer for [CKAN](https://github.com/eHealthAfrica/aether-ckan-consumer) and an [SDK](https://github.com/eHealthAfrica/aether-consumer-sdk) to enable anyone to develop their own.
 
-Bringing up Aether Connect is just a question of running `docker-compose up` on the relevant file:
+Bringing up Aether Connect is just a question of enabling it on the relevant file `options.txt`:
 
-`docker-compose -f docker-compose-connect.yml up`
+```text
+## CKAN
+ENABLE_CKAN=true
+```
+
+Then
 
 You can check that this worked by opening [http://localhost:5005/status](http://localhost:5005/status) in your browser. You should see something like this:
 
@@ -62,7 +67,7 @@ Now you can open CKAN in your browser - go to [http://localhost:5000](http://loc
 To start the CKAN Consumer:
 
 ```bash
-docker-compose -f ckan-consumer/docker-compose.yml up
+docker compose -f ckan-consumer/docker-compose.yml up
 ```
 
 The `docker-compose.yml` file mounts an example configuration that we’ve included in this example, so feel free to take a look at it in `ckan-consumer/config/config.json`. Note that we’re telling the consumer which Kafka topics we’re interested in, and that we reference the organization that we set up in CKAN a moment ago.
@@ -72,8 +77,9 @@ The `docker-compose.yml` file mounts an example configuration that we’ve inclu
 If you want to see how data is published to CKAN in real time, you can re-submit the data via curl:
 
 ```bash
-cd ../aether-bootstrap
-curl -H "Content-Type: application/json" --data @assets/submission.json http://admin:adminadmin@aether.local/kernel/submissions/
+curl -H "Content-Type: application/json" \
+    --data @assets/resources/submission.json \
+    http://admin:adminadmin@aether.local/dev/kernel/submissions/
 ```
 
 ## Create a view in CKAN

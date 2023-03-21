@@ -119,7 +119,7 @@ The _Submission URL_ is the URL that your client apps will use to _POST_ clinic 
 
 ### Explore the Aether REST API
 
-In the last section we talked about _submission_ URL used to post data to Aether.  There are other useful URLs for debugging, managing and integrating with Aether and we will explore them now.  In your browser, navigate to `http://aether.local/kernel` and you should come to the following page.  If you get a _403_ or _Authentication_ error then you just need to login again.  Remember, the default username and password are _admin_ and _adminadmin._
+In the last section we talked about _submission_ URL used to post data to Aether.  There are other useful URLs for debugging, managing and integrating with Aether and we will explore them now.  In your browser, navigate to `http://aether.local/dev/kernel` and you should come to the following page.  If you get a _403_ or _Authentication_ error then you just need to login again.  Remember, the default username and password are _admin_ and _adminadmin._
 
 ![Input](/images/api-root.png)
 
@@ -127,6 +127,4 @@ In the last section we talked about _submission_ URL used to post data to Aether
 
 This is a very straight-forward example. We've added a few fields and taken `lat` and `lng` from the nested `location` object. In the next example, we'll tackle a more complex example that creates many entities from a single input document.
 
-<div style="margin-top: 2rem; text-align: center">
-<a href="walkthrough-core">Next Step: A More Complex Aether-Based Solution</a>
-</div>
+The [next step](walkthrough-core) is to create a more complex Aether-based solution.
