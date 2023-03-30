@@ -42,14 +42,22 @@ Please note that your changes won't have effect on production data, unless you e
 
 Choose your Input Source. Maybe you have an AVRO schema you want to use. Or you simply want to add a JSON file, like a data example of your form. In that case we will automatically derive an AVRO schema for you.
 
+[Read more](pipeline-input.html)
+
 ## [2. Model your pipeline output](pipeline-output.html)
 
 Learn how to model your data output by using Entity Types.
 
+[Read more](pipeline-output.html)
+
 ## [3. Map the input to your output](pipeline-mapping.html)
 
-Create a mapping between fields of your Input source and properties of your Entity Types
+Create a mapping between fields of your Input source and properties of your Entity Types.
+
+[Read more](pipeline-mapping.html)
 
 ## [4. Publish your pipeline](pipeline-publish.html)
 
-Check the output and publish
+Check the output and publish.
+
+[Read more](pipeline-publish.html)

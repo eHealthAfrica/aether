@@ -16,7 +16,7 @@ This guide will take you through the steps required to get your Windows based co
 * Both server and client browser are running on the same machine
 * You have Administrator privileges
 
-_These instructions have been tested with Windows 10 Pro (1607)_
+_These instructions have been tested with Windows 10 Pro (1607)._
 
 ## Overview of the setup process
 

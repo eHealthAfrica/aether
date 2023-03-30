@@ -16,7 +16,7 @@ This guide will take you through the steps required to get your Ubuntu system re
 * Both server and client browser are running on the same machine
 * You are authorized and have the password to `sudo` as root
 
-_These instructions have been tested with Version 16.04_
+_These instructions have been tested with Version 16.04._
 
 ## Overview of the setup process
 

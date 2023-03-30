@@ -16,7 +16,7 @@ This guide will take you through the steps required to get your Mac ready to eva
 * Both server and client browser are running on the same machine
 * You have Administrator and `sudo` privileges
 
-_These instructions have been tested with macOS High Sierra 10.13_
+_These instructions have been tested with macOS High Sierra 10.13._
 
 ## Overview of the setup process
 

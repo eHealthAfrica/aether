@@ -52,4 +52,4 @@ We are pretty happy with our Entity Types for now. We can still go back and make
 
 ### Now that we have defined the input and the desired output of our pipeline, we can get to the core of Aether:
 
-### [> Create a mapping between source (input) and desitination (output)](pipeline-mapping.html)
+### [> Create a mapping between source (input) and destination (output)](pipeline-mapping.html)

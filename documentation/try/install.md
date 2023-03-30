@@ -38,22 +38,26 @@ git clone https://github.com/eHealthAfrica/aether-bootstrap.git
 cd aether-bootstrap
 ```
 
-If you are starting Aether or Gather for the first time, you will need to create some docker resources (networks and volumes) and generate credentials for all applications:
+If you are starting Aether or Gather for the first time, you will need to create some docker resources (networks and volumes), generate credentials for all applications and download the docker images:
 
 ```bash
 ./scripts/init.sh
 ```
 
-Now you just need to tell Docker to download the images and start them up:
+_Note: Aether-Bootstrap enables multitenancy! The default setup creates three tenants: dev, prod and test._
+
+Now you just need to tell Docker to start them up:
 
 ```bash
 ./scripts/start.sh
 ```
 
-Once the console output has stopped, you should be able to access the Aether UI in your browser at [http://aether.local/dev/](http://aether.local/dev/). Use these credentials to log in:
+Once the console output has stopped, you should be able to access the Aether UI in your browser at <http://aether.local/dev/>. Use these credentials to log in:
 
 - _Username:_ **user**
 - _Password:_ **password**
+
+Then click on **ae**ther box, this will redirect to: <http://aether.local/dev//kernel-ui/>
 
 If you see this screen, you are all configured and ready to move on:
 

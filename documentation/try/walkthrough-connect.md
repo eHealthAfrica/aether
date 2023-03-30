@@ -19,7 +19,7 @@ ENABLE_CKAN=true
 
 Then
 
-You can check that this worked by opening [http://localhost:5005/status](http://localhost:5005/status) in your browser. You should see something like this:
+You can check that this worked by opening <http://localhost:5005/status> in your browser. You should see something like this:
 
 ```json
 {
@@ -60,7 +60,7 @@ Copy and save the API key. _Its the part between the single quotes_
 
 Open `ckan-consumer/config/config.json` in your favorite editor, and change the value of `API_KEY` to what you just copied.
 
-Now you can open CKAN in your browser - go to [http://localhost:5000](http://localhost:5000). Login using the password that you just entered. Select _Organizations_ from the top bar and create an organization with the name `eHADemo`.
+Now you can open CKAN in your browser - go to <http://localhost:5000>. Login using the password that you just entered. Select _Organizations_ from the top bar and create an organization with the name `eHADemo`.
 
 ## Start the CKAN Consumer and Do Some More CKAN Configuration
 
@@ -84,7 +84,7 @@ curl -H "Content-Type: application/json" \
 
 ## Create a view in CKAN
 
-If you now load the datasets page for our organization and see the various types of entities: [http://localhost:5000/dataset](http://localhost:5000/dataset). We're going to create a map of the [Buildings](http://localhost:5000/dataset/building) which have been submitted.
+If you now load the datasets page for our organization and see the various types of entities: <http://localhost:5000/dataset>. We're going to create a map of the [Buildings](http://localhost:5000/dataset/building) which have been submitted.
 
 - Select Building from the Dataset screen. You should see metadata about the Dataset.
 - Under **Data and Resources** click on the resource titled "Building". You should see a data dictionary for the resource.
