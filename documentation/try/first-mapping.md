@@ -39,7 +39,7 @@ There are two types of information that the system will need to know about.  The
 }
 ```
 
-On the [Aether UI](http://aether.local), hit the button that’s labelled _NEW PIPELINE_ , create a new pipeline called `Clinic Registration` and press _START PIPELINE_.
+On the [Aether UI](http://aether.local/dev/kernel-ui), hit the button that’s labelled _NEW PIPELINE_ , create a new pipeline called `Clinic Registration` and press _START PIPELINE_.
 
 In the input tab page, paste the sample data into the `JSON Data` section, and press `Derive Schema From Data`
 

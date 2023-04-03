@@ -14,7 +14,7 @@ Control over your data is back to you!
 
 ## Access the Web Interface
 
-Once you are up and running and you can access aether through `http://aether.local/dev/ui/`.
+Once you are up and running and you can access aether through `http://aether.local/dev/kernel-ui/`.
 Do you see the Aether Pipeline screen? Great, your setup is working!
 
 ## A new Pipeline

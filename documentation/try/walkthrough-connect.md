@@ -13,23 +13,37 @@ We’re now going to find out how we can get this mapped data to be published in
 Bringing up Aether Connect is just a question of enabling it on the relevant file `options.txt`:
 
 ```text
-## CKAN
-ENABLE_CKAN=true
+## Kafka
+ENABLE_CONNECT=true
+AETHER_CONNECT_MODE=LOCAL
 ```
 
 Then
 
-You can check that this worked by opening <http://localhost:5005/status> in your browser. You should see something like this:
+You can check that this worked by opening <http://aether.local/dev/producer/check-app> in your browser. You should see something like this:
 
 ```json
 {
-    kafka: true,
-    kernel: true,
-    topics: { ...
+    "app_name": "aether-producer",
+    "app_version": "2.2.10",
+    "app_revision": "608273ddf24124437deee1d5627a2ad015546b0b",
+    "now": "..."
 }
 ```
 
-This is the status page for the Aether Producer, which sits between the Aether Kernel and Kafka, passing out entities as they are created. We can see that both `kafka` and `kernel` are set to `true`. This means that the Aether Producer has successfully communicated with both of them.
+Also opening <http://aether.local/dev/producer/check-app/aether-kernel> or <http://aether.local/dev/producer/check-app/kafka> in your browser.
+
+You should see something like this:
+
+```json
+{
+    "healthy": true
+}
+```
+
+This is the health check pages for the Aether Producer, which sits between the Aether Kernel and Kafka, passing out entities as they are created. We can see that both `kafka` and `aether-kernel` have `healthy` set to `true`. This means that the Aether Producer has successfully communicated with both of them.
+
+To check the current topics open <http://aether.local/dev/producer/topics> with the producer credential included in `.env` file.
 
 We can also see that four topics have been created, `Survey`, `Building`, `Household` and `Person`. Kafka separates its data feeds into separate topics, and the Producer automatically creates a new topic for each schema in Kernel. The Producer has found the entities that were created when we submitted data using `curl`, and has passed them to Kafka.
 
@@ -37,40 +51,51 @@ So now that we have got some entities _into_ Kafka, how do we get them out? That
 
 ## Installing CKAN
 
-We've included `docker-compose` configurations for both the CKAN Consumer and itself CKAN in the aether-bootstrap repository for easy installation. As with Aether, the images you need will be pulled from dockerhub. From the aether-bootstrap base folder, we'll start by installing CKAN.
+We've included `docker-compose` configurations for both the CKAN Consumer and itself CKAN in the aether-bootstrap repository for easy installation. As with Aether, the images you need will be pulled from dockerhub. From the aether-bootstrap base folder, we'll start by setting up CKAN.
 
-```bash
-scripts/setup_ckan.sh
+Bringing up CKAN is just a question of enabling it on the relevant file `options.txt`:
+
+```text
+## CKAN
+ENABLE_CKAN=true
 ```
 
-This script will prompt you to create a user named `admin`, enter an email address and ask you for a password. Don’t forget the password that you enter; you will need it shortly. The email address can be any correctly formatted address but doesn't have to be a real one.
+Then
 
-At the end of the process the script will output registration information, including an API key.
+```bash
+scripts/start.sh
+```
+
+Now go to <http://localhost:5000/organization> and add a new organization:
+
+![Adding an Organization in CKAN](/images/ckan-organizations.png)
+
+Name it `eHADemo` and click **Create Organization**.
+
+Now that we have CKAN running, we need to turn to Aether Connect, the data publishing half of the Aether platform.
+
+## Setting Up the CKAN Consumer
+
+In order to communicate with CKAN, the CKAN Consumer needs an API Key. This can be found in the CKAN User page at <http://localhost:5000/user/admin>:
+
+![Getting the CKAN API Key](/images/ckan-api-key.png)
+
+If it's not present you can regenerate it in this page <http://localhost:5000/user/edit/admin>, clicking on **Regenerate API Key**.
+
+![Getting the CKAN API Key](/images/ckan-regenerate-api-key.png)
+
+Now you need to set up it in the CKAN Consumer.  Using the consumer API usually on <http://aether.local/dev/ckan-consumer>, register the following artifact.
+
+POST <http://aether.local/dev/ckan-consumer/add>
 
 ```json
-Creating user: 'admin'
-{'about': None,
- 'activity_streams_email_notifications': False,
- 'apikey': u'586c0901-65a6-4547-a80a-97438bcb9dd4',
-  ...
-}
+  {
+    "id": "ckan-id",
+    "name": "CKAN Instance",
+    "url": "http://ckan:5000",
+    "key": "[your-ckan-api-key]"
+  }
 ```
-
-Copy and save the API key. _Its the part between the single quotes_
-
-Open `ckan-consumer/config/config.json` in your favorite editor, and change the value of `API_KEY` to what you just copied.
-
-Now you can open CKAN in your browser - go to <http://localhost:5000>. Login using the password that you just entered. Select _Organizations_ from the top bar and create an organization with the name `eHADemo`.
-
-## Start the CKAN Consumer and Do Some More CKAN Configuration
-
-To start the CKAN Consumer:
-
-```bash
-docker compose -f ckan-consumer/docker-compose.yml up
-```
-
-The `docker-compose.yml` file mounts an example configuration that we’ve included in this example, so feel free to take a look at it in `ckan-consumer/config/config.json`. Note that we’re telling the consumer which Kafka topics we’re interested in, and that we reference the organization that we set up in CKAN a moment ago.
 
 ## Submit Some More Data
 

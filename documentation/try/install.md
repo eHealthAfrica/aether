@@ -57,7 +57,9 @@ Once the console output has stopped, you should be able to access the Aether UI 
 - _Username:_ **user**
 - _Password:_ **password**
 
-Then click on **ae**ther box, this will redirect to: <http://aether.local/dev//kernel-ui/>
+Then click on **ae**ther box, this will redirect to: <http://aether.local/dev/kernel-ui/>
+
+![Home page](/images/server-home.png)
 
 If you see this screen, you are all configured and ready to move on:
 
