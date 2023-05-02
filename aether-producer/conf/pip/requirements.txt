@@ -20,7 +20,7 @@ confluent-kafka==2.0.2
 exceptiongroup==1.1.1
 flake8==5.0.4
 flake8-quotes==3.3.2
-Flask==2.2.3
+Flask==2.3.2
 gevent==22.10.2
 greenlet==2.0.2
 idna==3.4
